@@ -1,26 +1,48 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* 七段数码管风格数字字体（LED 计数器） */
+@font-face {
+  font-family: 'Seven Segmentiments';
+  font-style: normal;
+  font-weight: 400;
+  src: url('https://fonts.cdnfonts.com/s/97756/SevenSegmentiments-ywMVM.woff') format('woff');
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* 老版 Windows 桌面 - 像素/复古风格 */
+.windows-desktop {
+  font-family: 'MS Sans Serif', 'Microsoft Sans Serif', Tahoma, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.windows-title {
+  font-family: 'MS Sans Serif', 'Microsoft Sans Serif', Tahoma, sans-serif;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.15);
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.pixel-text {
+  font-family: 'MS Sans Serif', 'Microsoft Sans Serif', Tahoma, sans-serif;
+}
+
+.pixel-icon {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.pixel-border {
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* 任务栏立体边框（经典 Win95/98 凸起效果） */
+.windows-taskbar {
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* 老版 Windows 弹窗 */
+.windows-window .windows-window-title {
+  font-family: 'MS Sans Serif', 'Microsoft Sans Serif', Tahoma, sans-serif;
+}
+
+.windows-window .windows-window-body {
+  font-family: 'MS Sans Serif', 'Microsoft Sans Serif', Tahoma, sans-serif;
 }
