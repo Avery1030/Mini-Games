@@ -4,7 +4,7 @@
  */
 
 /** 可打开窗口的应用 id，与任务栏、窗口 id 一致；新增应用时在此补充 */
-export type DesktopAppId = 'minesweeper' | 'mario' | 'donation'
+export type DesktopAppId = 'minesweeper' | 'tetris' | 'donation'
 
 export interface DesktopAppConfig {
   id: DesktopAppId
@@ -19,7 +19,7 @@ export interface DesktopAppConfig {
   /** 窗口高度（px） */
   height: number
   /** 内容类型，由桌面组件映射到具体 React 组件 */
-  contentType: 'minesweeper' | 'mario' | 'donation'
+  contentType: 'minesweeper' | 'mario' | 'tetris' | 'tanks' | 'donation'
 }
 
 /** 桌面可启动的应用列表（小游戏等），配置窗口与入口展示 */
@@ -34,13 +34,13 @@ export const DESKTOP_APPS: readonly DesktopAppConfig[] = [
     contentType: 'minesweeper',
   },
   {
-    id: 'mario',
-    label: '超级玛丽',
-    icon: '🍄',
-    title: '超级玛丽',
-    width: 840,
-    height: 460,
-    contentType: 'mario',
+    id: 'tetris',
+    label: '俄罗斯方块',
+    icon: '🧱',
+    title: '俄罗斯方块',
+    width: 560,
+    height: 640,
+    contentType: 'tetris',
   },
   {
     id: 'donation',
@@ -54,9 +54,7 @@ export const DESKTOP_APPS: readonly DesktopAppConfig[] = [
 ]
 
 /** 桌面图标项：可为可启动应用（appId）或仅展示的占位图标（label + icon） */
-export type DesktopIconItem =
-  | { appId: DesktopAppId }
-  | { label: string; icon: string }
+export type DesktopIconItem = { appId: DesktopAppId } | { label: string; icon: string }
 
 /** 桌面图标顺序：前 7 个为左列，后 7 个为右列；带 appId 的项点击后打开对应窗口 */
 export const DESKTOP_ICONS: readonly DesktopIconItem[] = [
@@ -65,8 +63,8 @@ export const DESKTOP_ICONS: readonly DesktopIconItem[] = [
   { label: 'Claim', icon: '📥' },
   { label: 'Stake', icon: '📊' },
   { label: 'Market', icon: '🛒' },
-  { appId: 'mario' },
   { appId: 'minesweeper' },
+  { appId: 'tetris' },
   { label: 'Governance', icon: '🏛️' },
   { label: 'Foundry', icon: '⚙️' },
   { label: 'Document', icon: '📄' },
@@ -87,7 +85,7 @@ export const DESKTOP_ICONS_RIGHT = DESKTOP_ICONS.slice(ICONS_PER_COLUMN, ICONS_P
 /** 根据图标配置解析出用于显示的 label 与 icon */
 export function getDesktopIconDisplay(
   item: DesktopIconItem,
-  apps: readonly DesktopAppConfig[] = DESKTOP_APPS
+  apps: readonly DesktopAppConfig[] = DESKTOP_APPS,
 ): { label: string; icon: string } {
   if ('appId' in item) {
     const app = apps.find((a) => a.id === item.appId)

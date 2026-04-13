@@ -200,10 +200,13 @@ export function WindowsWindow({
       data-window-id={id}
       className={`windows-window fixed flex flex-col bg-[#c0c0c0] ${maximized ? 'border-0 rounded-none' : 'border-2 border-t-white border-l-white border-r-[#808080] border-b-[#808080]'}`}
       style={{
-        left: position.x,
-        top: position.y,
+        // 用 transform 位移，拖拽时通常比 left/top 更平滑（走合成层）
+        left: 0,
+        top: 0,
+        transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
         width: size.width,
         minHeight: size.height,
+        willChange: isDragging || resizing ? 'transform' : undefined,
         zIndex: isActive ? 1001 : 1000,
         visibility: minimized ? 'hidden' : 'visible',
         pointerEvents: minimized ? 'none' : 'auto',

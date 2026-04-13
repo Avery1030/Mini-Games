@@ -200,7 +200,10 @@ function getDeterministicMoves(board: Cell[][], deadline?: number): Deterministi
 
   const dfs = (varIdx: number) => {
     if (aborted) return
-    if (explored > MAX_SEARCH_NODES || (deadline != null && explored > 0 && explored % CHECK_DEADLINE_EVERY_NODES === 0 && Date.now() > deadline)) {
+    if (
+      explored > MAX_SEARCH_NODES ||
+      (deadline != null && explored > 0 && explored % CHECK_DEADLINE_EVERY_NODES === 0 && Date.now() > deadline)
+    ) {
       aborted = true
       return
     }
@@ -274,7 +277,13 @@ function canSolveWithoutGuess(board: Cell[][], firstClick: Position, totalMines:
   return revealedSafe === totalSafe
 }
 
-function generateNoGuessBoard(rows: number, cols: number, mines: number, firstClick: Position, deadlineMs = FIRST_CLICK_MAX_MS): Cell[][] {
+function generateNoGuessBoard(
+  rows: number,
+  cols: number,
+  mines: number,
+  firstClick: Position,
+  deadlineMs = FIRST_CLICK_MAX_MS,
+): Cell[][] {
   const forbidden = new Set<string>()
   for (let dr = -1; dr <= 1; dr++) {
     for (let dc = -1; dc <= 1; dc++) {
@@ -440,7 +449,9 @@ export class MinesweeperGame {
       const neighbors = getNeighbors(this.board, row, col)
       const flaggedCount = neighbors.filter((n) => n.isFlagged).length
       if (flaggedCount !== cell.adjacentMines) {
-        this.highlightCells = neighbors.filter((n) => !n.isRevealed && !n.isFlagged).map((n) => ({ row: n.row, col: n.col }))
+        this.highlightCells = neighbors
+          .filter((n) => !n.isRevealed && !n.isFlagged)
+          .map((n) => ({ row: n.row, col: n.col }))
         this.emit()
         return
       }
@@ -451,7 +462,9 @@ export class MinesweeperGame {
           this.status = 'lost'
           this.message = '很遗憾，这局还是踩雷了（不过理论上是可以无猜通关的）'
           this.explodedCell = { row: n.row, col: n.col }
-          this.board.flat().forEach((c) => { if (c.isMine) c.isRevealed = true })
+          this.board.flat().forEach((c) => {
+            if (c.isMine) c.isRevealed = true
+          })
           this.clearTimer()
           this.emit()
           return
@@ -487,7 +500,9 @@ export class MinesweeperGame {
       this.status = 'lost'
       this.message = '很遗憾，这局还是踩雷了（不过理论上是可以无猜通关的）'
       this.explodedCell = { row, col }
-      this.board.flat().forEach((c) => { if (c.isMine) c.isRevealed = true })
+      this.board.flat().forEach((c) => {
+        if (c.isMine) c.isRevealed = true
+      })
       this.clearTimer()
       this.emit()
       return

@@ -9,16 +9,13 @@ import {
   getDesktopIconDisplay,
   isDesktopAppIcon,
 } from '../config/desktop'
-import { MarioGame } from './MarioGame'
-import { Minesweeper } from './Minesweeper'
+import { Minesweeper } from '../games/minesweeper'
+import { Tetris } from '../games/tetris'
 import { WindowsWindow } from './WindowsWindow'
 import type { DesktopAppConfig } from '../config/desktop'
 
 function createDefaultState(): Record<DesktopAppId, boolean> {
-  return Object.fromEntries(DESKTOP_APPS.map((app) => [app.id, false])) as Record<
-    DesktopAppId,
-    boolean
-  >
+  return Object.fromEntries(DESKTOP_APPS.map((app) => [app.id, false])) as Record<DesktopAppId, boolean>
 }
 
 /** 根据 contentType 渲染窗口内容 */
@@ -30,10 +27,10 @@ function AppWindowContent({ contentType }: { contentType: DesktopAppConfig['cont
           <Minesweeper embedded />
         </div>
       )
-    case 'mario':
+    case 'tetris':
       return (
-        <div className='bg-[#2d2d2d] -m-3 p-0 min-h-full flex items-center justify-center'>
-          <MarioGame embedded />
+        <div className='bg-[#0f172a] -m-3 p-0 min-h-full'>
+          <Tetris embedded />
         </div>
       )
     case 'donation':
@@ -53,16 +50,17 @@ export function WindowsDesktop() {
 
   const hasVisibleWindow = useMemo(
     () => DESKTOP_APPS.some((app) => open[app.id] && !minimized[app.id]),
-    [open, minimized]
+    [open, minimized],
   )
 
   const taskbarWindows = useMemo(
-    () => DESKTOP_APPS.filter((app) => open[app.id]).map((app) => ({
-      id: app.id,
-      title: app.title,
-      minimized: minimized[app.id],
-    })),
-    [open, minimized]
+    () =>
+      DESKTOP_APPS.filter((app) => open[app.id]).map((app) => ({
+        id: app.id,
+        title: app.title,
+        minimized: minimized[app.id],
+      })),
+    [open, minimized],
   )
 
   const setOpenById = (id: DesktopAppId, value: boolean) => {
@@ -156,7 +154,7 @@ export function WindowsDesktop() {
             >
               <AppWindowContent contentType={app.contentType} />
             </WindowsWindow>
-          ) : null
+          ) : null,
         )}
       </div>
 
@@ -227,15 +225,7 @@ export function WindowsDesktop() {
   )
 }
 
-function DesktopIcon({
-  label,
-  icon,
-  onClick,
-}: {
-  label: string
-  icon: string
-  onClick?: () => void
-}) {
+function DesktopIcon({ label, icon, onClick }: { label: string; icon: string; onClick?: () => void }) {
   return (
     <button
       type='button'
