@@ -2354,6 +2354,11 @@ loose-envify@^1.4.0:
   dependencies:
     js-tokens "^3.0.0 || ^4.0.0"
 
+lucide-react@^1.24.0:
+  version "1.24.0"
+  resolved "https://registry.yarnpkg.com/lucide-react/-/lucide-react-1.24.0.tgz#5f6da7f37d9107d192e54b7654a99b3468a212c6"
+  integrity sha512-YT6mBD8lGKkg4nM39enlm94/sfJIiW0YKUT60fBy4YK8tai31ylg1VhGNWxkpSKHo9UagfnZqwIff3HTDQwXeA==
+
 magic-string@^0.30.17:
   version "0.30.18"
   resolved "https://registry.yarnpkg.com/magic-string/-/magic-string-0.30.18.tgz#905bfbbc6aa5692703a93db26a9edcaa0007d2bb"
@@ -2458,6 +2463,11 @@ next-intl@^4.13.2:
     next-intl-swc-plugin-extractor "^4.13.2"
     po-parser "^2.1.1"
     use-intl "^4.13.2"
+
+next-themes@^0.4.6:
+  version "0.4.6"
+  resolved "https://registry.yarnpkg.com/next-themes/-/next-themes-0.4.6.tgz#8d7e92d03b8fea6582892a50a928c9b23502e8b6"
+  integrity sha512-pZvgD5L0IEvX5/9GWyHMf3m8BKiVQwsCMHfoFosXtXBMnaS0ZnIJ9ST4b4NqLVKDEm8QBxoNNGNaBv2JNF6XNA==
 
 next@15.5.2:
   version "15.5.2"

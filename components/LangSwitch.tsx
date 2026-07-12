@@ -11,10 +11,20 @@ export default function LangSwitch() {
 
   const handleSwitch = (newLang: Locale) => {
     if (newLang === currentLang) return
-    // 1. 前端写入Cookie持久化语言
     document.cookie = `${COOKIE_KEY}=${newLang}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`
     router.refresh()
   }
+
+  useEffect(() => {
+    const hasCookie = document.cookie.includes(COOKIE_KEY)
+    if (!hasCookie) {
+      const browserLang = navigator.language
+      const match = locales.find((lang) => lang.startsWith(browserLang.slice(0, 2)))
+      const targetLang = match || defaultLocale
+      document.cookie = `${COOKIE_KEY}=${targetLang}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`
+      router.refresh()
+    }
+  }, [router])
 
   return (
     <select

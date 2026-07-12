@@ -16,7 +16,6 @@
 .windows-title {
   font-family: 'MS Sans Serif', 'Microsoft Sans Serif', Tahoma, sans-serif;
   text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.15);
-  image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
 
@@ -25,17 +24,7 @@
 }
 
 .pixel-icon {
-  image-rendering: pixelated;
   image-rendering: crisp-edges;
-}
-
-.pixel-border {
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-/* 任务栏立体边框（经典 Win95/98 凸起效果） */
-.windows-taskbar {
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 /* 老版 Windows 弹窗 */

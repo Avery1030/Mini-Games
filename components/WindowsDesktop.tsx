@@ -15,6 +15,7 @@ import { WindowsWindow } from './WindowsWindow'
 import type { DesktopAppConfig } from '@/config/desktop'
 import LangSwitch from './LangSwitch'
 import { useTranslations } from 'next-intl'
+import ThemeSwitch from './ThemeSwitch'
 
 function createDefaultState(): Record<DesktopAppId, boolean> {
   return Object.fromEntries(DESKTOP_APPS.map((app) => [app.id, false])) as Record<DesktopAppId, boolean>
@@ -129,7 +130,10 @@ export function WindowsDesktop() {
 
         <div className='absolute inset-0 flex items-center justify-center pointer-events-none'>
           <div className='flex items-end gap-6 -mr-32'>
-            <div className='w-24 h-32 flex items-end justify-center bg-gray-300/30 rounded border-2 border-gray-400/50 pixel-border'>
+            <div
+              className='w-24 h-32 flex items-end justify-center bg-gray-300/30 rounded border-2 border-gray-400/50 
+                shadow-[inset_1px_1px_0_rgba(255,255,255,0.5)]'
+            >
               <span className='text-4xl mb-2'>👋</span>
             </div>
             <h1 className='windows-title text-6xl md:text-7xl lg:text-8xl font-bold text-amber-200/95 tracking-tighter drop-shadow-md'>
@@ -161,7 +165,7 @@ export function WindowsDesktop() {
         )}
       </div>
 
-      <footer className='windows-taskbar relative z-[1100] h-12 flex items-center px-2 bg-[#c0c0c0] border-t-2 border-white shadow-[inset_1px_1px_0_#fff] min-h-[48px]'>
+      <footer className='relative z-[1100] h-12 flex items-center px-2 bg-[#c0c0c0] border-t-2 border-white shadow-[inset_1px_1px_0_rgba(255,255,255,0.8)] min-h-[48px]'>
         <div className='flex items-center gap-1 h-full px-3 bg-[#c0c0c0] border-2 border-t-white border-l-white border-r-[#808080] border-b-[#808080] hover:bg-[#a8a8a8] active:border-t-[#808080] active:border-l-[#808080] active:border-r-white active:border-b-white cursor-pointer'>
           <div className='w-6 h-6 flex items-center justify-center text-sm font-bold bg-amber-400/80 border border-amber-600/60'>
             D
@@ -193,9 +197,8 @@ export function WindowsDesktop() {
           <div className='w-7 h-7 rounded-full bg-amber-300 border border-amber-500/80 flex items-center justify-center text-xs font-bold'>
             $
           </div>
-          <div className='w-7 h-7 flex items-center justify-center border border-gray-600 bg-gray-300 rounded cursor-pointer hover:bg-gray-200'>
-            <span className='text-sm'>⚙</span>
-          </div>
+          <ThemeSwitch />
+
           <button
             type='button'
             className='px-3 py-1.5 text-sm font-medium bg-[#c0c0c0] border-2 border-t-white border-l-white border-r-[#808080] border-b-[#808080] hover:bg-[#a8a8a8] active:border-t-[#808080] active:border-l-[#808080] active:border-r-white active:border-b-white cursor-pointer'
