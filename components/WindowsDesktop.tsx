@@ -8,11 +8,13 @@ import {
   DESKTOP_ICONS_RIGHT,
   getDesktopIconDisplay,
   isDesktopAppIcon,
-} from '../config/desktop'
+} from '@/config/desktop'
 import { Minesweeper } from '../games/minesweeper'
 import { Tetris } from '../games/tetris'
 import { WindowsWindow } from './WindowsWindow'
-import type { DesktopAppConfig } from '../config/desktop'
+import type { DesktopAppConfig } from '@/config/desktop'
+import LangSwitch from './LangSwitch'
+import { useTranslations } from 'next-intl'
 
 function createDefaultState(): Record<DesktopAppId, boolean> {
   return Object.fromEntries(DESKTOP_APPS.map((app) => [app.id, false])) as Record<DesktopAppId, boolean>
@@ -47,6 +49,7 @@ export function WindowsDesktop() {
   const [open, setOpen] = useState<Record<DesktopAppId, boolean>>(createDefaultState)
   const [minimized, setMinimized] = useState<Record<DesktopAppId, boolean>>(createDefaultState)
   const [activeWindowId, setActiveWindowId] = useState<DesktopAppId | null>(null)
+  const t = useTranslations('Index')
 
   const hasVisibleWindow = useMemo(
     () => DESKTOP_APPS.some((app) => open[app.id] && !minimized[app.id]),
@@ -130,7 +133,7 @@ export function WindowsDesktop() {
               <span className='text-4xl mb-2'>👋</span>
             </div>
             <h1 className='windows-title text-6xl md:text-7xl lg:text-8xl font-bold text-amber-200/95 tracking-tighter drop-shadow-md'>
-              DEMO
+              {t('title')}
             </h1>
           </div>
         </div>
@@ -200,13 +203,7 @@ export function WindowsDesktop() {
             Settings
           </button>
           <div className='flex items-center gap-3 mr-2'>
-            <select
-              className='text-xs bg-[#c0c0c0] border-2 border-t-[#808080] border-l-[#808080] border-r-white border-b-white px-2 py-1 cursor-pointer min-w-[72px]'
-              defaultValue='en'
-            >
-              <option value='en'>English</option>
-              <option value='zh'>中文</option>
-            </select>
+            <LangSwitch />
             <div className='flex items-center gap-1'>
               {socialIcons.map((icon, i) => (
                 <button
