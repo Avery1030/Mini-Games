@@ -260,8 +260,6 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
             横
             <input
               type='number'
-              // min={5}
-              // max={50}
               value={customInputs.cols}
               onChange={(e) => setCustomInputs((p) => ({ ...p, cols: Number(e.target.value) }))}
               className='w-12 px-1 py-0.5 border border-[#808080] bg-white text-center text-sm'
@@ -271,8 +269,6 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
             竖
             <input
               type='number'
-              // min={5}
-              // max={50}
               value={customInputs.rows}
               onChange={(e) => setCustomInputs((p) => ({ ...p, rows: Number(e.target.value) }))}
               className='w-12 px-1 py-0.5 border border-[#808080] bg-white text-center text-sm'
