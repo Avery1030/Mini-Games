@@ -1,22 +1,20 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useMemo, useRef, type CSSProperties, type ReactNode } from 'react'
 import { WindowsWindow } from './WindowsWindow'
 import { useTranslations } from 'next-intl'
 import LangSwitch from './LangSwitch'
 import ThemeSwitch from './ThemeSwitch'
 import { cn } from '@/utils/cn'
 import { winChrome, winChromePressed } from '@/utils/winChrome'
-import { useAppStore } from '@/store/app'
-import type { DesktopAppId } from '@/config/desktop'
+import { useDesktopApps, useDesktopHydrated } from '@/hooks/useDesktopApps'
+import { useDesktopIconDrag } from '@/hooks/useDesktopIconDrag'
+import { useDesktopStore } from '@/store/desktop'
+import { useWindowStore } from '@/store/window'
 import {
+  CELL_GAP,
   CELL_SIZE,
-  DRAG_THRESHOLD,
-  type DesktopCoordinate,
   coordinateToPosition,
-  diffCoordinates,
-  positionToCoordinate,
-  previewPlacement,
   resolveCoordinate,
 } from '@/utils/desktopLayout'
 
@@ -33,37 +31,24 @@ function getCascadedPosition(stackIndex: number, width: number, height: number) 
   }
 }
 
-type DragSession = {
-  id: DesktopAppId
-  pointerId: number
-  startX: number
-  startY: number
-  /** 指针相对图标左上角（viewport） */
-  offsetX: number
-  offsetY: number
-  moved: boolean
-}
-
 export function WindowsDesktop() {
   const t = useTranslations()
-  const apps = useAppStore((s) => s.apps)
-  const hasHydrated = useAppStore((s) => s._hasHydrated)
-  const openWindow = useAppStore((s) => s.openWindow)
-  const closeWindow = useAppStore((s) => s.closeWindow)
-  const minimizeWindow = useAppStore((s) => s.minimizeWindow)
-  const focusWindow = useAppStore((s) => s.focusWindow)
-  const handleTaskbarClick = useAppStore((s) => s.handleTaskbarClick)
-  const updateCoordinates = useAppStore((s) => s.updateCoordinates)
+  const apps = useDesktopApps()
+  const hasHydrated = useDesktopHydrated()
+  const openWindow = useWindowStore((s) => s.openWindow)
+  const closeWindow = useWindowStore((s) => s.closeWindow)
+  const minimizeWindow = useWindowStore((s) => s.minimizeWindow)
+  const focusWindow = useWindowStore((s) => s.focusWindow)
+  const handleTaskbarClick = useWindowStore((s) => s.handleTaskbarClick)
+  const updateCoordinates = useDesktopStore((s) => s.updateCoordinates)
 
   const desktopRef = useRef<HTMLDivElement>(null)
-  const appsRef = useRef(apps)
-  appsRef.current = apps
-  const sessionRef = useRef<DragSession | null>(null)
-
-  const [draggingId, setDraggingId] = useState<DesktopAppId | null>(null)
-  /** fixed 定位时的 viewport 坐标 */
-  const [dragPixel, setDragPixel] = useState<{ left: number; top: number } | null>(null)
-  const [previewCoords, setPreviewCoords] = useState<Map<DesktopAppId, DesktopCoordinate> | null>(null)
+  const { draggingId, dragPixel, previewCoords, handleIconPointerDown } = useDesktopIconDrag({
+    apps,
+    desktopRef,
+    onOpen: openWindow,
+    onCommit: updateCoordinates,
+  })
 
   const hasVisibleWindow = useMemo(
     () => hasHydrated && apps.some((app) => app.isOpen && !app.minimized),
@@ -83,119 +68,6 @@ export function WindowsDesktop() {
     [openApps, t],
   )
 
-  const desktopLocalFromViewport = useCallback((viewportLeft: number, viewportTop: number) => {
-    const desktop = desktopRef.current
-    if (!desktop) return { left: viewportLeft, top: viewportTop }
-    const rect = desktop.getBoundingClientRect()
-    const style = getComputedStyle(desktop)
-    const padL = parseFloat(style.paddingLeft) || 0
-    const padT = parseFloat(style.paddingTop) || 0
-    return {
-      left: viewportLeft - rect.left - padL,
-      top: viewportTop - rect.top - padT,
-    }
-  }, [])
-
-  const updatePreviewFromIconViewport = useCallback(
-    (id: DesktopAppId, viewportLeft: number, viewportTop: number) => {
-      const local = desktopLocalFromViewport(viewportLeft, viewportTop)
-      const target = positionToCoordinate(local.left, local.top)
-      setPreviewCoords(previewPlacement(appsRef.current, id, target))
-    },
-    [desktopLocalFromViewport],
-  )
-
-  const endDrag = useCallback(
-    (viewportLeft: number, viewportTop: number, commit: boolean) => {
-      const session = sessionRef.current
-      sessionRef.current = null
-      if (!session) return
-
-      if (!session.moved) {
-        openWindow(session.id)
-        setDraggingId(null)
-        setDragPixel(null)
-        setPreviewCoords(null)
-        return
-      }
-
-      if (commit) {
-        const local = desktopLocalFromViewport(viewportLeft, viewportTop)
-        const target = positionToCoordinate(local.left, local.top)
-        const next = previewPlacement(appsRef.current, session.id, target)
-        const updates = diffCoordinates(appsRef.current, next)
-        if (updates.length > 0) {
-          updateCoordinates(updates)
-        }
-      }
-
-      setDraggingId(null)
-      setDragPixel(null)
-      setPreviewCoords(null)
-    },
-    [desktopLocalFromViewport, openWindow, updateCoordinates],
-  )
-
-  useEffect(() => {
-    const onMove = (e: PointerEvent) => {
-      const session = sessionRef.current
-      if (!session || e.pointerId !== session.pointerId) return
-
-      const dx = e.clientX - session.startX
-      const dy = e.clientY - session.startY
-
-      if (!session.moved) {
-        if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return
-        session.moved = true
-        setDraggingId(session.id)
-      }
-
-      const left = e.clientX - session.offsetX
-      const top = e.clientY - session.offsetY
-      setDragPixel({ left, top })
-      updatePreviewFromIconViewport(session.id, left, top)
-    }
-
-    const onUp = (e: PointerEvent) => {
-      const session = sessionRef.current
-      if (!session || e.pointerId !== session.pointerId) return
-      const left = e.clientX - session.offsetX
-      const top = e.clientY - session.offsetY
-      endDrag(left, top, true)
-    }
-
-    const onCancel = () => {
-      const session = sessionRef.current
-      if (!session) return
-      endDrag(0, 0, false)
-    }
-
-    window.addEventListener('pointermove', onMove)
-    window.addEventListener('pointerup', onUp)
-    window.addEventListener('pointercancel', onCancel)
-    return () => {
-      window.removeEventListener('pointermove', onMove)
-      window.removeEventListener('pointerup', onUp)
-      window.removeEventListener('pointercancel', onCancel)
-    }
-  }, [endDrag, updatePreviewFromIconViewport])
-
-  const handleIconPointerDown = useCallback((id: DesktopAppId, e: React.PointerEvent<HTMLElement>) => {
-    if (e.button !== 0) return
-    e.preventDefault()
-
-    const iconRect = e.currentTarget.getBoundingClientRect()
-    sessionRef.current = {
-      id,
-      pointerId: e.pointerId,
-      startX: e.clientX,
-      startY: e.clientY,
-      offsetX: e.clientX - iconRect.left,
-      offsetY: e.clientY - iconRect.top,
-      moved: false,
-    }
-  }, [])
-
   return (
     <div
       className={cn(
@@ -207,7 +79,12 @@ export function WindowsDesktop() {
         {/* grid 放在无 padding 的内层，absolute 让位时与 grid 原点一致，避免拖拽瞬间「内边距消失」 */}
         <div
           ref={desktopRef}
-          className='relative h-full min-h-0 grid auto-rows-[80px] grid-cols-[repeat(auto-fill,80px)] gap-2 items-start content-start'
+          className='relative h-full min-h-0 grid items-start content-start'
+          style={{
+            gridAutoRows: CELL_SIZE,
+            gridTemplateColumns: `repeat(auto-fill, ${CELL_SIZE}px)`,
+            gap: CELL_GAP,
+          }}
         >
           {hasHydrated &&
             apps.map((app) => {

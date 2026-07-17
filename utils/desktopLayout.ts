@@ -1,8 +1,8 @@
-import type { DesktopAppConfig, DesktopAppId } from '@/config/desktop'
+import type { DesktopAppId, DesktopCoordinate } from '@/config/desktop'
 
-export type DesktopCoordinate = [number, number]
+export type { DesktopCoordinate }
 
-/** 与桌面 grid 一致：auto-rows/cols 80px + gap-2(8px) */
+/** 与桌面 grid 一致：单元格边长 + 间距 */
 export const CELL_SIZE = 80
 export const CELL_GAP = 8
 export const CELL_STEP = CELL_SIZE + CELL_GAP
@@ -113,12 +113,14 @@ export function resolveOverlaps(
   return next
 }
 
+type CoordApp = { id: DesktopAppId; coordinate: DesktopCoordinate }
+
 /**
  * 将 dragId 放到 target；冲突时其他图标让位。
  * 返回完整布局（每个 app 的最终坐标），保证无重叠。
  */
 export function previewPlacement(
-  apps: Pick<DesktopAppConfig, 'id' | 'coordinate'>[],
+  apps: CoordApp[],
   dragId: DesktopAppId,
   target: DesktopCoordinate,
 ): Map<DesktopAppId, DesktopCoordinate> {
@@ -136,7 +138,7 @@ export function previewPlacement(
 
 /** 仅取出相对原始坐标有变化的项，用于写入 store */
 export function diffCoordinates(
-  apps: Pick<DesktopAppConfig, 'id' | 'coordinate'>[],
+  apps: CoordApp[],
   next: Map<DesktopAppId, DesktopCoordinate>,
 ): Array<{ id: DesktopAppId; coordinate: DesktopCoordinate }> {
   const updates: Array<{ id: DesktopAppId; coordinate: DesktopCoordinate }> = []
@@ -151,7 +153,7 @@ export function diffCoordinates(
 }
 
 export function resolveCoordinate(
-  app: Pick<DesktopAppConfig, 'id' | 'coordinate'>,
+  app: CoordApp,
   preview: Map<DesktopAppId, DesktopCoordinate> | null,
 ): DesktopCoordinate {
   return preview?.get(app.id) ?? app.coordinate

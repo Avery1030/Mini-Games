@@ -20,15 +20,21 @@ import { Tetris } from '@/games/tetris'
 import { apps } from '@/messages/zh-CN.json'
 
 export type DesktopAppId = keyof typeof apps
+export type DesktopCoordinate = [number, number]
 
-export interface DesktopAppConfig {
+/** 静态定义：图标、默认格点、窗口组件等（不进 persist） */
+export interface DesktopAppDefinition {
   id: DesktopAppId
   icon: ComponentType<{ className?: string; size?: number }>
-  coordinate: [number, number]
+  defaultCoordinate: DesktopCoordinate
   /** 有 app 组件的图标才能打开窗口 */
   app?: ComponentType<{ embedded?: boolean }>
   width?: number
   height?: number
+}
+
+/** 窗口运行时状态（可序列化） */
+export interface DesktopWindowRuntime {
   isOpen: boolean
   minimized: boolean
   active: boolean
@@ -36,65 +42,64 @@ export interface DesktopAppConfig {
   zIndex: number
 }
 
-/** 仅可序列化的窗口状态，用于 persist */
-export type DesktopAppWindowState = Pick<
-  DesktopAppConfig,
-  'id' | 'isOpen' | 'minimized' | 'active' | 'zIndex' | 'coordinate'
->
+/** UI 合并视图：定义 + 坐标 + 窗口状态 */
+export type DesktopAppView = DesktopAppDefinition &
+  DesktopWindowRuntime & {
+    coordinate: DesktopCoordinate
+  }
 
-const DEFAULT_WINDOW_STATE = {
+export const DEFAULT_WINDOW_RUNTIME: DesktopWindowRuntime = {
   isOpen: false,
   minimized: false,
   active: false,
   zIndex: 0,
-} as const
+}
 
-export const DESKTOP_APPS: DesktopAppConfig[] = [
-  { id: 'referral', icon: UserPlus, coordinate: [1, 1], ...DEFAULT_WINDOW_STATE },
-  { id: 'bridge', icon: Castle, coordinate: [1, 2], ...DEFAULT_WINDOW_STATE },
-  { id: 'claim', icon: Gift, coordinate: [1, 3], ...DEFAULT_WINDOW_STATE },
-  { id: 'stake', icon: ChartColumnBig, coordinate: [1, 4], ...DEFAULT_WINDOW_STATE },
-  { id: 'market', icon: Store, coordinate: [1, 5], ...DEFAULT_WINDOW_STATE },
+export const DESKTOP_APP_DEFINITIONS: DesktopAppDefinition[] = [
+  { id: 'referral', icon: UserPlus, defaultCoordinate: [1, 1] },
+  { id: 'bridge', icon: Castle, defaultCoordinate: [1, 2] },
+  { id: 'claim', icon: Gift, defaultCoordinate: [1, 3] },
+  { id: 'stake', icon: ChartColumnBig, defaultCoordinate: [1, 4] },
+  { id: 'market', icon: Store, defaultCoordinate: [1, 5] },
   {
     id: 'minesweeper',
     icon: Gamepad,
-    coordinate: [1, 6],
+    defaultCoordinate: [1, 6],
     width: 520,
     height: 520,
     app: Minesweeper,
-    ...DEFAULT_WINDOW_STATE,
   },
   {
     id: 'tetris',
     icon: Gamepad2,
-    coordinate: [1, 7],
+    defaultCoordinate: [1, 7],
     width: 560,
     height: 640,
     app: Tetris,
-    ...DEFAULT_WINDOW_STATE,
   },
-  { id: 'governance', icon: Building2, coordinate: [2, 1], ...DEFAULT_WINDOW_STATE },
-  { id: 'foundry', icon: Wrench, coordinate: [2, 2], ...DEFAULT_WINDOW_STATE },
-  { id: 'document', icon: BookOpenText, coordinate: [2, 3], ...DEFAULT_WINDOW_STATE },
-  { id: 'donation', icon: Rose, coordinate: [2, 4], ...DEFAULT_WINDOW_STATE },
-  { id: 'email', icon: Mail, coordinate: [2, 5], ...DEFAULT_WINDOW_STATE },
-  { id: 'log', icon: Notebook, coordinate: [2, 6], ...DEFAULT_WINDOW_STATE },
-  { id: 'settings', icon: Settings, coordinate: [2, 7], ...DEFAULT_WINDOW_STATE },
+  { id: 'governance', icon: Building2, defaultCoordinate: [2, 1] },
+  { id: 'foundry', icon: Wrench, defaultCoordinate: [2, 2] },
+  { id: 'document', icon: BookOpenText, defaultCoordinate: [2, 3] },
+  { id: 'donation', icon: Rose, defaultCoordinate: [2, 4] },
+  { id: 'email', icon: Mail, defaultCoordinate: [2, 5] },
+  { id: 'log', icon: Notebook, defaultCoordinate: [2, 6] },
+  { id: 'settings', icon: Settings, defaultCoordinate: [2, 7] },
 ]
 
-/** 用持久化状态合并静态配置（icon/app 无法序列化） */
-export function mergeDesktopApps(saved?: DesktopAppWindowState[]): DesktopAppConfig[] {
-  const stateMap = new Map(saved?.map((s) => [s.id, s]))
-  return DESKTOP_APPS.map((app) => {
-    const state = stateMap.get(app.id)
-    if (!state) return { ...app }
-    return {
-      ...app,
-      isOpen: state.isOpen,
-      minimized: state.minimized,
-      active: state.active,
-      zIndex: state.zIndex ?? 0,
-      coordinate: state.coordinate ?? app.coordinate,
-    }
-  })
+const definitionMap = new Map(DESKTOP_APP_DEFINITIONS.map((app) => [app.id, app]))
+
+export function getAppDefinition(id: DesktopAppId): DesktopAppDefinition | undefined {
+  return definitionMap.get(id)
+}
+
+export function createDefaultWindows(): Record<DesktopAppId, DesktopWindowRuntime> {
+  return Object.fromEntries(
+    DESKTOP_APP_DEFINITIONS.map((app) => [app.id, { ...DEFAULT_WINDOW_RUNTIME }]),
+  ) as Record<DesktopAppId, DesktopWindowRuntime>
+}
+
+export function createDefaultCoordinates(): Record<DesktopAppId, DesktopCoordinate> {
+  return Object.fromEntries(
+    DESKTOP_APP_DEFINITIONS.map((app) => [app.id, [...app.defaultCoordinate] as DesktopCoordinate]),
+  ) as Record<DesktopAppId, DesktopCoordinate>
 }
