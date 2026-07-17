@@ -1,42 +1,40 @@
 'use client'
 
-import { Sun, Moon, Laptop } from 'lucide-react'
+import { Sun, Moon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
+import { cn } from '@/utils/cn'
 
 export default function ThemeSwitch() {
-  const { theme, setTheme } = useTheme()
+  const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
+  const isDark = resolvedTheme === 'dark'
+
   const toggleTheme = () => {
-    if (theme === 'light') setTheme('dark')
-    else if (theme === 'dark') setTheme('system')
-    else setTheme('light')
+    setTheme(isDark ? 'light' : 'dark')
   }
 
-  // 挂载前渲染空白占位，解决SSR水合不匹配
   if (!mounted) {
-    return (
-      <div className='w-7 h-7 flex items-center justify-center border border-gray-600 bg-gray-300 rounded cursor-pointer hover:bg-gray-200' />
-    )
-  }
-
-  const renderIcon = () => {
-    if (theme === 'light') return <Sun className='w-4 h-4' />
-    if (theme === 'dark') return <Moon className='w-4 h-4' />
-    return <Laptop className='w-4 h-4' />
+    return <div className='w-7 h-7 rounded bg-theme-switch border border-theme-switch-border' aria-hidden />
   }
 
   return (
-    <div
-      className='w-7 h-7 flex items-center justify-center border border-gray-600 bg-gray-300 rounded cursor-pointer hover:bg-gray-200'
+    <button
+      type='button'
+      className={cn(
+        'w-7 h-7 flex items-center justify-center rounded cursor-pointer transition-colors',
+        'bg-theme-switch border border-theme-switch-border text-theme-switch-icon hover:bg-theme-switch-hover',
+      )}
       onClick={toggleTheme}
+      aria-label={isDark ? '切换到浅色主题' : '切换到深色主题'}
+      title={isDark ? '浅色' : '深色'}
     >
-      {renderIcon()}
-    </div>
+      {isDark ? <Moon className='w-4 h-4' /> : <Sun className='w-4 h-4' />}
+    </button>
   )
 }

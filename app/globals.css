@@ -8,20 +8,139 @@
   src: url('https://fonts.cdnfonts.com/s/97756/SevenSegmentiments-ywMVM.woff') format('woff');
 }
 
-/* 老版 Windows 桌面 - 像素/复古风格 */
-.windows-desktop,
-.pixel-text,
-.windows-title,
-.windows-window .windows-window-title,
-.windows-window .windows-window-body {
-  font-family: 'MS Sans Serif', 'Microsoft Sans Serif', Tahoma, sans-serif;
+/* ========== Light（默认）========== */
+:root {
+  color-scheme: light;
+
+  --desktop-bg: #3a8f8c;
+  --desktop-bg-deep: #2a6b69;
+  --desktop-bg-glow: rgba(255, 220, 140, 0.18);
+  --desktop-overlay: rgba(0, 40, 40, 0.22);
+  --desktop-pattern: rgba(255, 255, 255, 0.04);
+
+  --title-color: #ffe9a8;
+  --title-shadow: rgba(20, 50, 40, 0.35);
+  --text-on-desktop: #ffffff;
+  --text-on-chrome: #111111;
+
+  --icon-bg: rgba(240, 240, 240, 0.88);
+  --icon-border: #8a8a8a;
+  --icon-hover-bg: rgba(255, 255, 255, 0.28);
+  --icon-hover-border: rgba(255, 255, 255, 0.45);
+  --icon-active-bg: rgba(255, 255, 255, 0.45);
+  --icon-label-shadow: rgba(0, 0, 0, 0.35);
+
+  --hero-plate-bg: rgba(220, 230, 230, 0.35);
+  --hero-plate-border: rgba(120, 140, 140, 0.55);
+
+  --chrome-face: #c0c0c0;
+  --chrome-face-hover: #a8a8a8;
+  --chrome-face-active: #999999;
+  --chrome-light: #ffffff;
+  --chrome-dark: #808080;
+
+  --accent: #f5c542;
+  --accent-border: #c48a12;
+
+  --window-face: #c0c0c0;
+  --window-title-active: #000080;
+  --window-title-inactive: #808080;
+  --window-title-text: #ffffff;
+  --window-body-bg: #1a1a1a;
+  --window-btn-hover: #0000aa;
+
+  --taskbar-bg: #c0c0c0;
+  --taskbar-edge: #ffffff;
+  --taskbar-shadow: rgba(255, 255, 255, 0.8);
+
+  --theme-switch-bg: #dcdcdc;
+  --theme-switch-border: #606060;
+  --theme-switch-hover: #efefef;
+  --theme-switch-icon: #1a1a1a;
 }
 
-.windows-title {
-  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.15);
-  image-rendering: crisp-edges;
+/* ========== Dark ========== */
+.dark {
+  color-scheme: dark;
+
+  --desktop-bg: #1a3d3c;
+  --desktop-bg-deep: #0f2423;
+  --desktop-bg-glow: rgba(90, 180, 170, 0.12);
+  --desktop-overlay: rgba(0, 0, 0, 0.4);
+  --desktop-pattern: rgba(255, 255, 255, 0.03);
+
+  --title-color: #f0d78c;
+  --title-shadow: rgba(0, 0, 0, 0.55);
+  --text-on-desktop: #e8f2f1;
+  --text-on-chrome: #f0f0f0;
+
+  --icon-bg: rgba(50, 62, 62, 0.9);
+  --icon-border: #6a7a7a;
+  --icon-hover-bg: rgba(255, 255, 255, 0.12);
+  --icon-hover-border: rgba(200, 230, 220, 0.35);
+  --icon-active-bg: rgba(255, 255, 255, 0.2);
+  --icon-label-shadow: rgba(0, 0, 0, 0.6);
+
+  --hero-plate-bg: rgba(40, 60, 58, 0.55);
+  --hero-plate-border: rgba(100, 130, 125, 0.5);
+
+  --chrome-face: #3d3d3d;
+  --chrome-face-hover: #4a4a4a;
+  --chrome-face-active: #555555;
+  --chrome-light: #6a6a6a;
+  --chrome-dark: #1a1a1a;
+
+  --accent: #e0b84a;
+  --accent-border: #a87818;
+
+  --window-face: #3d3d3d;
+  --window-title-active: #1e3a8a;
+  --window-title-inactive: #4a5568;
+  --window-title-text: #f5f5f5;
+  --window-body-bg: #0c0c0c;
+  --window-btn-hover: #2563eb;
+
+  --taskbar-bg: #2e2e2e;
+  --taskbar-edge: #5a5a5a;
+  --taskbar-shadow: rgba(0, 0, 0, 0.45);
+
+  --theme-switch-bg: #3a3a3a;
+  --theme-switch-border: #7a7a7a;
+  --theme-switch-hover: #4a4a4a;
+  --theme-switch-icon: #f0e6c8;
 }
 
-.pixel-icon {
-  image-rendering: crisp-edges;
+/* 映射为 Tailwind 颜色工具类（bg-chrome / text-on-desktop 等） */
+@theme inline {
+  --color-desktop: var(--desktop-bg);
+  --color-desktop-deep: var(--desktop-bg-deep);
+  --color-desktop-glow: var(--desktop-bg-glow);
+  --color-desktop-overlay: var(--desktop-overlay);
+  --color-title: var(--title-color);
+  --color-on-desktop: var(--text-on-desktop);
+  --color-on-chrome: var(--text-on-chrome);
+  --color-icon: var(--icon-bg);
+  --color-icon-border: var(--icon-border);
+  --color-icon-hover: var(--icon-hover-bg);
+  --color-icon-hover-border: var(--icon-hover-border);
+  --color-icon-active: var(--icon-active-bg);
+  --color-hero-plate: var(--hero-plate-bg);
+  --color-hero-plate-border: var(--hero-plate-border);
+  --color-chrome: var(--chrome-face);
+  --color-chrome-hover: var(--chrome-face-hover);
+  --color-chrome-active: var(--chrome-face-active);
+  --color-chrome-light: var(--chrome-light);
+  --color-chrome-dark: var(--chrome-dark);
+  --color-accent: var(--accent);
+  --color-accent-border: var(--accent-border);
+  --color-window: var(--window-face);
+  --color-window-body: var(--window-body-bg);
+  --color-window-btn-hover: var(--window-btn-hover);
+  --color-taskbar: var(--taskbar-bg);
+  --color-taskbar-edge: var(--taskbar-edge);
+  --color-theme-switch: var(--theme-switch-bg);
+  --color-theme-switch-border: var(--theme-switch-border);
+  --color-theme-switch-hover: var(--theme-switch-hover);
+  --color-theme-switch-icon: var(--theme-switch-icon);
+  --font-pixel: 'MS Sans Serif', 'Microsoft Sans Serif', Tahoma, sans-serif;
 }

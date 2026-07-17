@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import LangSwitch from './LangSwitch'
 import ThemeSwitch from './ThemeSwitch'
 import { cn } from '@/utils/cn'
+import { winChrome, winChromePressed } from '@/utils/winChrome'
 import { useAppStore } from '@/store/app'
 
 const CASCADE_OFFSET = 28
@@ -49,11 +50,15 @@ export function WindowsDesktop() {
   )
 
   return (
-    <div className='windows-desktop min-h-screen flex flex-col bg-[#2d6b6a]/90 select-none'>
+    <div
+      className={cn(
+        'min-h-screen flex flex-col select-none font-pixel text-on-desktop transition-[background,color] duration-300',
+        'bg-[radial-gradient(ellipse_80%_50%_at_70%_20%,var(--desktop-bg-glow),transparent_55%),radial-gradient(ellipse_60%_40%_at_15%_80%,var(--desktop-pattern),transparent_50%),linear-gradient(165deg,var(--desktop-bg),var(--desktop-bg-deep))]',
+      )}
+    >
       <div className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem] grid auto-rows-[80px] grid-cols-[repeat(auto-fill,80px)] gap-2'>
-        {/* pointer-events-none：有窗口时仍可点击桌面图标打开其他窗口 */}
         {hasVisibleWindow && (
-          <div className='absolute inset-0 bg-black/20 z-[100] pointer-events-none' aria-hidden />
+          <div className='absolute inset-0 z-[100] bg-desktop-overlay pointer-events-none' aria-hidden />
         )}
         {apps.map((app) => {
           const [colIndex, rowIndex] = app.coordinate
@@ -72,13 +77,13 @@ export function WindowsDesktop() {
 
         <div className='absolute inset-0 flex items-center justify-center pointer-events-none'>
           <div className='flex items-end gap-6 -mr-32'>
-            <div
-              className='w-24 h-32 flex items-end justify-center bg-gray-300/30 rounded border-2 border-gray-400/50 
-                shadow-[inset_1px_1px_0_rgba(255,255,255,0.5)]'
-            >
+            <div className='w-24 h-32 flex items-end justify-center rounded border-2 bg-hero-plate border-hero-plate-border shadow-[inset_1px_1px_0_rgba(255,255,255,0.35)]'>
               <span className='text-4xl mb-2'>👋</span>
             </div>
-            <h1 className='windows-title text-6xl md:text-7xl lg:text-8xl font-bold text-amber-200/95 tracking-tighter drop-shadow-md'>
+            <h1
+              className='text-6xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-title [image-rendering:crisp-edges]'
+              style={{ textShadow: '2px 2px 0 var(--title-shadow)' }}
+            >
               {t('index.title')}
             </h1>
           </div>
@@ -89,7 +94,6 @@ export function WindowsDesktop() {
           const App = app.app
           const width = app.width ?? 400
           const height = app.height ?? 320
-          // 按打开先后（zIndex）错开位置，避免多窗口完全重叠
           const cascadeIndex = openApps.filter((item) => item.zIndex < app.zIndex).length
 
           return (
@@ -113,12 +117,12 @@ export function WindowsDesktop() {
         })}
       </div>
 
-      <footer className='relative z-[1100] h-12 flex items-center px-2 bg-[#c0c0c0] border-t-2 border-white shadow-[inset_1px_1px_0_rgba(255,255,255,0.8)] min-h-[48px]'>
-        <div className='flex items-center gap-1 h-full px-3 bg-[#c0c0c0] border-2 border-t-white border-l-white border-r-[#808080] border-b-[#808080] hover:bg-[#a8a8a8] active:border-t-[#808080] active:border-l-[#808080] active:border-r-white active:border-b-white cursor-pointer'>
-          <div className='w-6 h-6 flex items-center justify-center text-sm font-bold bg-amber-400/80 border border-amber-600/60'>
+      <footer className='relative z-[1100] h-12 min-h-[48px] flex items-center px-2 bg-taskbar text-on-chrome border-t-2 border-taskbar-edge shadow-[inset_1px_1px_0_var(--taskbar-shadow)]'>
+        <div className={cn(winChrome, 'flex items-center gap-1 h-full px-3 cursor-pointer')}>
+          <div className='w-6 h-6 flex items-center justify-center text-sm font-bold border bg-accent border-accent-border text-black'>
             D
           </div>
-          <span className='text-sm font-bold text-black ml-1 hidden sm:inline'>{t('index.home')}</span>
+          <span className='text-sm font-bold ml-1 hidden sm:inline'>{t('index.home')}</span>
         </div>
 
         <div className='flex items-center gap-1 min-w-0 ml-1'>
@@ -126,14 +130,10 @@ export function WindowsDesktop() {
             <button
               key={w.id}
               type='button'
-              className={cn('px-3 py-1.5 text-sm font-medium shrink-0 max-w-[140px] truncate border-2', {
-                'bg-[#c0c0c0] border-t-[#808080] border-l-[#808080] border-r-white border-b-white hover:bg-[#a8a8a8]':
-                  w.minimized,
-                'bg-[#c0c0c0] border-t-white border-l-white border-r-[#808080] border-b-[#808080]':
-                  !w.minimized && !w.isActive,
-                'bg-[#a8a8a8] border-t-[#808080] border-l-[#808080] border-r-white border-b-white':
-                  !w.minimized && w.isActive,
-              })}
+              className={cn(
+                'px-3 py-1.5 text-sm font-medium shrink-0 max-w-[140px] truncate',
+                w.minimized || w.isActive ? winChromePressed : winChrome,
+              )}
               onClick={() => handleTaskbarClick(w.id)}
             >
               {w.title}
@@ -141,14 +141,11 @@ export function WindowsDesktop() {
           ))}
         </div>
         <div className='flex items-center gap-2 ml-auto pl-2 shrink-0'>
-          <div className='w-7 h-7 rounded-full bg-amber-300 border border-amber-500/80 flex items-center justify-center text-xs font-bold'>
+          <div className='w-7 h-7 rounded-full border flex items-center justify-center text-xs font-bold bg-accent border-accent-border text-black'>
             $
           </div>
           <ThemeSwitch />
-          <button
-            type='button'
-            className='px-3 py-1.5 text-sm font-medium bg-[#c0c0c0] border-2 border-t-white border-l-white border-r-[#808080] border-b-[#808080] hover:bg-[#a8a8a8] active:border-t-[#808080] active:border-l-[#808080] active:border-r-white active:border-b-white cursor-pointer'
-          >
+          <button type='button' className={cn(winChrome, 'px-3 py-1.5 text-sm font-medium cursor-pointer')}>
             Settings
           </button>
           <div className='flex items-center gap-3 mr-2'>
@@ -158,7 +155,7 @@ export function WindowsDesktop() {
                 <button
                   key={i}
                   type='button'
-                  className='w-6 h-6 flex items-center justify-center text-xs bg-[#c0c0c0] border border-[#808080] hover:bg-[#a8a8a8] cursor-pointer'
+                  className={cn(winChrome, 'w-6 h-6 flex items-center justify-center text-xs cursor-pointer')}
                 >
                   {icon}
                 </button>
@@ -185,14 +182,17 @@ function DesktopIcon({
   return (
     <button
       type='button'
-      className='group relative z-[101] flex flex-col items-center gap-3 p-1 rounded hover:bg-white/30 active:bg-white/50 cursor-pointer border border-transparent hover:border-white/40'
+      className='group relative z-[101] flex flex-col items-center gap-3 p-1 rounded cursor-pointer border border-transparent hover:bg-icon-hover hover:border-icon-hover-border active:bg-icon-active'
       onClick={onClick}
       style={style}
     >
-      <div className='w-12 h-12 flex items-center justify-center bg-gray-200/80 border-2 border-gray-400 rounded pixel-icon shadow-sm'>
+      <div className='w-12 h-12 flex items-center justify-center border-2 rounded shadow-sm bg-icon border-icon-border text-on-chrome [image-rendering:crisp-edges]'>
         {icon}
       </div>
-      <span className='text-xs font-medium text-white text-center leading-tight max-w-full truncate drop-shadow-sm pixel-text'>
+      <span
+        className='text-xs font-medium text-center leading-tight max-w-full truncate text-on-desktop font-pixel'
+        style={{ textShadow: '1px 1px 0 var(--icon-label-shadow)' }}
+      >
         {label}
       </span>
     </button>

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { cn } from '@/utils/cn'
+import { winChrome } from '@/utils/winChrome'
 
 const MIN_WIDTH = 200
 const MIN_HEIGHT = 150
@@ -198,10 +199,10 @@ export function WindowsWindow({
     <div
       data-window-id={id}
       className={cn(
-        'windows-window fixed flex flex-col bg-[#c0c0c0]',
+        'fixed flex flex-col bg-window text-on-chrome font-pixel transition-colors duration-200',
         maximized
           ? 'border-0 rounded-none'
-          : 'border-2 border-t-white border-l-white border-r-[#808080] border-b-[#808080]',
+          : 'border-2 border-t-chrome-light border-l-chrome-light border-r-chrome-dark border-b-chrome-dark',
       )}
       style={{
         // 用 transform 位移，拖拽时通常比 left/top 更平滑（走合成层）
@@ -228,25 +229,25 @@ export function WindowsWindow({
           />
         ))}
 
-      <div className='windows-window-border flex flex-col flex-1 min-h-0 relative'>
+      <div className='flex flex-col flex-1 min-h-0 relative'>
         {/* 标题栏：深蓝底 + 白字 + 最小化 + 最大化/还原 + 关闭 */}
         <div
           className={cn(
-            'windows-window-title flex items-center justify-between shrink-0 h-8 px-1 pr-0 select-none',
+            'flex items-center justify-between shrink-0 h-8 px-1 pr-0 select-none font-pixel',
             maximized ? 'cursor-default' : 'cursor-grab active:cursor-grabbing',
           )}
           onMouseDown={handleTitleMouseDown}
-          style={{ background: isActive ? '#000080' : '#808080' }}
+          style={{ background: isActive ? 'var(--window-title-active)' : 'var(--window-title-inactive)' }}
         >
-          <span className='text-white text-sm font-bold pl-2 truncate pixel-text'>{title}</span>
+          <span className='text-[var(--window-title-text)] text-sm font-bold pl-2 truncate'>{title}</span>
           <div className='flex items-stretch shrink-0'>
             {onMinimize != null && (
               <button
                 type='button'
-                className='shrink-0 w-6 h-6 flex items-center justify-center 
-                  text-black text-sm font-bold border-2 border-t-white border-l-white border-r-[#808080] border-b-[#808080] 
-                  hover:bg-[#0000aa] hover:text-white active:border-t-[#808080] 
-                  active:border-l-[#808080] active:border-r-white active:border-b-white active:bg-[#000080] bg-[#c0c0c0]'
+                className={cn(
+                  winChrome,
+                  'shrink-0 w-6 h-6 flex items-center justify-center text-sm font-bold hover:bg-window-btn-hover hover:text-white',
+                )}
                 aria-label='最小化'
                 onClick={(e) => {
                   e.stopPropagation()
@@ -258,10 +259,10 @@ export function WindowsWindow({
             )}
             <button
               type='button'
-              className='shrink-0 w-6 h-6 flex items-center justify-center text-black text-xs font-bold border-2 
-                border-t-white border-l-white border-r-[#808080] border-b-[#808080] 
-                hover:bg-[#0000aa] hover:text-white active:border-t-[#808080] 
-                active:border-l-[#808080] active:border-r-white active:border-b-white active:bg-[#000080] bg-[#c0c0c0]'
+              className={cn(
+                winChrome,
+                'shrink-0 w-6 h-6 flex items-center justify-center text-xs font-bold hover:bg-window-btn-hover hover:text-white',
+              )}
               onClick={(e) => {
                 e.stopPropagation()
                 handleMaximize()
@@ -272,10 +273,10 @@ export function WindowsWindow({
             </button>
             <button
               type='button'
-              className='windows-window-close shrink-0 w-6 h-6 flex items-center justify-center 
-              text-black text-xs font-bold border-2 border-t-white border-l-white border-r-[#808080] border-b-[#808080] 
-              hover:bg-[#0000aa] hover:text-white active:border-t-[#808080] active:border-l-[#808080] 
-              active:border-r-white active:border-b-white active:bg-[#000080] bg-[#c0c0c0]'
+              className={cn(
+                winChrome,
+                'shrink-0 w-6 h-6 flex items-center justify-center text-xs font-bold hover:bg-window-btn-hover hover:text-white',
+              )}
               onClick={(e) => {
                 e.stopPropagation()
                 onClose?.()
@@ -290,8 +291,10 @@ export function WindowsWindow({
         {/* 内容区：最大化时去掉边框 */}
         <div
           className={cn(
-            'windows-window-body flex-1 min-h-0 overflow-auto bg-black p-3',
-            maximized ? 'border-0' : 'border-2 border-t-[#808080] border-l-[#808080] border-r-white border-b-white',
+            'flex-1 min-h-0 overflow-auto p-3 bg-window-body font-pixel',
+            maximized
+              ? 'border-0'
+              : 'border-2 border-t-chrome-dark border-l-chrome-dark border-r-chrome-light border-b-chrome-light',
           )}
         >
           {children}

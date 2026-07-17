@@ -4,6 +4,8 @@ import { COOKIE_KEY, COOKIE_MAX_AGE, Locale, defaultLocale, locales } from '@/i1
 import { useRouter } from '@/i18n/routing'
 import { useLocale } from 'next-intl'
 import { useEffect } from 'react'
+import { cn } from '@/utils/cn'
+import { winChromeSunken } from '@/utils/winChrome'
 
 export default function LangSwitch() {
   const router = useRouter()
@@ -28,8 +30,7 @@ export default function LangSwitch() {
 
   return (
     <select
-      className='text-xs bg-[#c0c0c0] border-2 border-t-[#808080] 
-        border-l-[#808080] border-r-white border-b-white px-2 py-1 cursor-pointer min-w-[72px]'
+      className={cn(winChromeSunken, 'text-xs px-2 py-1 cursor-pointer min-w-[72px]')}
       defaultValue={currentLang}
       onChange={(e) => handleSwitch(e.target.value as Locale)}
     >
