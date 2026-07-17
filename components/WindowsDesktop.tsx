@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, type CSSProperties, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { WindowsWindow } from './WindowsWindow'
 import { useTranslations } from 'next-intl'
 import LangSwitch from './LangSwitch'
@@ -8,8 +8,20 @@ import ThemeSwitch from './ThemeSwitch'
 import { cn } from '@/utils/cn'
 import { winChrome, winChromePressed } from '@/utils/winChrome'
 import { useAppStore } from '@/store/app'
+import type { DesktopAppId } from '@/config/desktop'
+import {
+  CELL_SIZE,
+  DRAG_THRESHOLD,
+  type DesktopCoordinate,
+  coordinateToPosition,
+  diffCoordinates,
+  positionToCoordinate,
+  previewPlacement,
+  resolveCoordinate,
+} from '@/utils/desktopLayout'
 
 const CASCADE_OFFSET = 28
+const YIELD_TRANSITION = 'left 220ms ease, top 220ms ease'
 
 function getCascadedPosition(stackIndex: number, width: number, height: number) {
   if (typeof window === 'undefined') {
@@ -21,6 +33,17 @@ function getCascadedPosition(stackIndex: number, width: number, height: number) 
   }
 }
 
+type DragSession = {
+  id: DesktopAppId
+  pointerId: number
+  startX: number
+  startY: number
+  /** 指针相对图标左上角（viewport） */
+  offsetX: number
+  offsetY: number
+  moved: boolean
+}
+
 export function WindowsDesktop() {
   const t = useTranslations()
   const apps = useAppStore((s) => s.apps)
@@ -30,6 +53,17 @@ export function WindowsDesktop() {
   const minimizeWindow = useAppStore((s) => s.minimizeWindow)
   const focusWindow = useAppStore((s) => s.focusWindow)
   const handleTaskbarClick = useAppStore((s) => s.handleTaskbarClick)
+  const updateCoordinates = useAppStore((s) => s.updateCoordinates)
+
+  const desktopRef = useRef<HTMLDivElement>(null)
+  const appsRef = useRef(apps)
+  appsRef.current = apps
+  const sessionRef = useRef<DragSession | null>(null)
+
+  const [draggingId, setDraggingId] = useState<DesktopAppId | null>(null)
+  /** fixed 定位时的 viewport 坐标 */
+  const [dragPixel, setDragPixel] = useState<{ left: number; top: number } | null>(null)
+  const [previewCoords, setPreviewCoords] = useState<Map<DesktopAppId, DesktopCoordinate> | null>(null)
 
   const hasVisibleWindow = useMemo(
     () => hasHydrated && apps.some((app) => app.isOpen && !app.minimized),
@@ -49,6 +83,119 @@ export function WindowsDesktop() {
     [openApps, t],
   )
 
+  const desktopLocalFromViewport = useCallback((viewportLeft: number, viewportTop: number) => {
+    const desktop = desktopRef.current
+    if (!desktop) return { left: viewportLeft, top: viewportTop }
+    const rect = desktop.getBoundingClientRect()
+    const style = getComputedStyle(desktop)
+    const padL = parseFloat(style.paddingLeft) || 0
+    const padT = parseFloat(style.paddingTop) || 0
+    return {
+      left: viewportLeft - rect.left - padL,
+      top: viewportTop - rect.top - padT,
+    }
+  }, [])
+
+  const updatePreviewFromIconViewport = useCallback(
+    (id: DesktopAppId, viewportLeft: number, viewportTop: number) => {
+      const local = desktopLocalFromViewport(viewportLeft, viewportTop)
+      const target = positionToCoordinate(local.left, local.top)
+      setPreviewCoords(previewPlacement(appsRef.current, id, target))
+    },
+    [desktopLocalFromViewport],
+  )
+
+  const endDrag = useCallback(
+    (viewportLeft: number, viewportTop: number, commit: boolean) => {
+      const session = sessionRef.current
+      sessionRef.current = null
+      if (!session) return
+
+      if (!session.moved) {
+        openWindow(session.id)
+        setDraggingId(null)
+        setDragPixel(null)
+        setPreviewCoords(null)
+        return
+      }
+
+      if (commit) {
+        const local = desktopLocalFromViewport(viewportLeft, viewportTop)
+        const target = positionToCoordinate(local.left, local.top)
+        const next = previewPlacement(appsRef.current, session.id, target)
+        const updates = diffCoordinates(appsRef.current, next)
+        if (updates.length > 0) {
+          updateCoordinates(updates)
+        }
+      }
+
+      setDraggingId(null)
+      setDragPixel(null)
+      setPreviewCoords(null)
+    },
+    [desktopLocalFromViewport, openWindow, updateCoordinates],
+  )
+
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      const session = sessionRef.current
+      if (!session || e.pointerId !== session.pointerId) return
+
+      const dx = e.clientX - session.startX
+      const dy = e.clientY - session.startY
+
+      if (!session.moved) {
+        if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return
+        session.moved = true
+        setDraggingId(session.id)
+      }
+
+      const left = e.clientX - session.offsetX
+      const top = e.clientY - session.offsetY
+      setDragPixel({ left, top })
+      updatePreviewFromIconViewport(session.id, left, top)
+    }
+
+    const onUp = (e: PointerEvent) => {
+      const session = sessionRef.current
+      if (!session || e.pointerId !== session.pointerId) return
+      const left = e.clientX - session.offsetX
+      const top = e.clientY - session.offsetY
+      endDrag(left, top, true)
+    }
+
+    const onCancel = () => {
+      const session = sessionRef.current
+      if (!session) return
+      endDrag(0, 0, false)
+    }
+
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+    window.addEventListener('pointercancel', onCancel)
+    return () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+      window.removeEventListener('pointercancel', onCancel)
+    }
+  }, [endDrag, updatePreviewFromIconViewport])
+
+  const handleIconPointerDown = useCallback((id: DesktopAppId, e: React.PointerEvent<HTMLElement>) => {
+    if (e.button !== 0) return
+    e.preventDefault()
+
+    const iconRect = e.currentTarget.getBoundingClientRect()
+    sessionRef.current = {
+      id,
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      offsetX: e.clientX - iconRect.left,
+      offsetY: e.clientY - iconRect.top,
+      moved: false,
+    }
+  }, [])
+
   return (
     <div
       className={cn(
@@ -56,24 +203,44 @@ export function WindowsDesktop() {
         'bg-[radial-gradient(ellipse_80%_50%_at_70%_20%,var(--desktop-bg-glow),transparent_55%),radial-gradient(ellipse_60%_40%_at_15%_80%,var(--desktop-pattern),transparent_50%),linear-gradient(165deg,var(--desktop-bg),var(--desktop-bg-deep))]',
       )}
     >
-      <div className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem] grid auto-rows-[80px] grid-cols-[repeat(auto-fill,80px)] gap-2'>
+      <div className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem]'>
+        {/* grid 放在无 padding 的内层，absolute 让位时与 grid 原点一致，避免拖拽瞬间「内边距消失」 */}
+        <div
+          ref={desktopRef}
+          className='relative h-full min-h-0 grid auto-rows-[80px] grid-cols-[repeat(auto-fill,80px)] gap-2 items-start content-start'
+        >
+          {hasHydrated &&
+            apps.map((app) => {
+              const coord = resolveCoordinate(app, previewCoords)
+              const [col, row] = coord
+              const { left, top } = coordinateToPosition(coord)
+              const isDragging = draggingId === app.id
+              const Icon = app.icon
+              const yielding = draggingId != null && !isDragging
+
+              return (
+                <DesktopIcon
+                  key={app.id}
+                  label={t(`apps.${app.id}`)}
+                  icon={<Icon size={28} />}
+                  col={col}
+                  row={row}
+                  left={left}
+                  top={top}
+                  isDragging={isDragging}
+                  yielding={yielding}
+                  animateYield={yielding && previewCoords != null}
+                  dragLeft={isDragging ? dragPixel?.left : undefined}
+                  dragTop={isDragging ? dragPixel?.top : undefined}
+                  onPointerDown={(e) => handleIconPointerDown(app.id, e)}
+                />
+              )
+            })}
+        </div>
+
         {hasVisibleWindow && (
           <div className='absolute inset-0 z-[100] bg-desktop-overlay pointer-events-none' aria-hidden />
         )}
-        {apps.map((app) => {
-          const [colIndex, rowIndex] = app.coordinate
-          const Icon = app.icon
-
-          return (
-            <DesktopIcon
-              key={app.id}
-              label={t(`apps.${app.id}`)}
-              icon={<Icon size={28} />}
-              style={{ gridColumn: colIndex, gridRow: rowIndex }}
-              onClick={() => openWindow(app.id)}
-            />
-          )
-        })}
 
         <div className='absolute inset-0 flex items-center justify-center pointer-events-none'>
           <div className='flex items-end gap-6 -mr-32'>
@@ -171,30 +338,79 @@ export function WindowsDesktop() {
 function DesktopIcon({
   label,
   icon,
-  onClick,
-  style,
+  col,
+  row,
+  left,
+  top,
+  isDragging,
+  yielding,
+  animateYield,
+  dragLeft,
+  dragTop,
+  onPointerDown,
 }: {
   label: string
   icon: ReactNode
-  onClick?: () => void
-  style?: CSSProperties
+  col: number
+  row: number
+  left: number
+  top: number
+  isDragging: boolean
+  yielding: boolean
+  animateYield: boolean
+  dragLeft?: number
+  dragTop?: number
+  onPointerDown: (e: React.PointerEvent<HTMLElement>) => void
 }) {
+  const layoutStyle: CSSProperties =
+    isDragging && dragLeft != null && dragTop != null
+      ? {
+          position: 'fixed',
+          left: dragLeft,
+          top: dragTop,
+          transition: 'opacity 120ms ease',
+        }
+      : yielding
+        ? {
+            position: 'absolute',
+            left,
+            top,
+            transition: animateYield ? YIELD_TRANSITION : 'none',
+          }
+        : {
+            gridColumn: col,
+            gridRow: row,
+            transition: 'none',
+          }
+
   return (
-    <button
-      type='button'
-      className='group relative z-[101] flex flex-col items-center gap-3 p-1 rounded cursor-pointer border border-transparent hover:bg-icon-hover hover:border-icon-hover-border active:bg-icon-active'
-      onClick={onClick}
-      style={style}
+    <div
+      role='button'
+      tabIndex={0}
+      className={cn(
+        'group flex flex-col items-center gap-3 p-1 rounded border border-transparent self-start',
+        'hover:bg-icon-hover hover:border-icon-hover-border active:bg-icon-active',
+        isDragging ? 'z-[200] opacity-90 cursor-grabbing' : 'z-[101] cursor-pointer',
+        !isDragging && !yielding && 'relative',
+      )}
+      style={{
+        width: CELL_SIZE,
+        boxSizing: 'border-box',
+        touchAction: 'none',
+        userSelect: 'none',
+        ...layoutStyle,
+      }}
+      onPointerDown={onPointerDown}
     >
-      <div className='w-12 h-12 flex items-center justify-center border-2 rounded shadow-sm bg-icon border-icon-border text-on-chrome [image-rendering:crisp-edges]'>
+      <div className='w-12 h-12 flex items-center justify-center border-2 rounded shadow-sm bg-icon border-icon-border text-on-chrome [image-rendering:crisp-edges] pointer-events-none'>
         {icon}
       </div>
       <span
-        className='text-xs font-medium text-center leading-tight max-w-full truncate text-on-desktop font-pixel'
+        className='text-xs font-medium text-center leading-tight max-w-full truncate text-on-desktop font-pixel pointer-events-none'
         style={{ textShadow: '1px 1px 0 var(--icon-label-shadow)' }}
       >
         {label}
       </span>
-    </button>
+    </div>
   )
 }

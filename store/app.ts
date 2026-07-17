@@ -6,8 +6,17 @@ import {
   type DesktopAppWindowState,
   mergeDesktopApps,
 } from '@/config/desktop'
+import { resolveOverlaps } from '@/utils/desktopLayout'
 
 const WINDOW_Z_BASE = 1000
+
+function withUniqueCoordinates(apps: DesktopAppConfig[]): DesktopAppConfig[] {
+  const unique = resolveOverlaps(new Map(apps.map((app) => [app.id, app.coordinate])))
+  return apps.map((app) => ({
+    ...app,
+    coordinate: unique.get(app.id) ?? app.coordinate,
+  }))
+}
 
 interface AppState {
   apps: DesktopAppConfig[]
@@ -23,6 +32,8 @@ interface AppActions {
   minimizeWindow: (id: DesktopAppId) => void
   focusWindow: (id: DesktopAppId) => void
   handleTaskbarClick: (id: DesktopAppId) => void
+  /** 仅更新受影响 app 的 coordinate */
+  updateCoordinates: (updates: Array<{ id: DesktopAppId; coordinate: [number, number] }>) => void
 }
 
 export type AppStore = AppState & AppActions
@@ -75,7 +86,7 @@ function getNextZ(apps: DesktopAppConfig[], topZIndex: number): number {
 export const useAppStore = create<AppStore>()(
   persist(
     (set, get) => ({
-      apps: mergeDesktopApps(),
+      apps: withUniqueCoordinates(mergeDesktopApps()),
       topZIndex: WINDOW_Z_BASE,
       _hasHydrated: false,
 
@@ -151,24 +162,38 @@ export const useAppStore = create<AppStore>()(
         }
         focusWindow(id)
       },
+
+      updateCoordinates: (updates) => {
+        if (updates.length === 0) return
+        const map = new Map(updates.map((item) => [item.id, item.coordinate]))
+        set((state) => ({
+          apps: withUniqueCoordinates(
+            state.apps.map((app) => {
+              const next = map.get(app.id)
+              return next ? { ...app, coordinate: next } : app
+            }),
+          ),
+        }))
+      },
     }),
     {
       name: 'desktop-app-windows',
       partialize: (state): { apps: DesktopAppWindowState[]; topZIndex: number } => ({
         topZIndex: state.topZIndex,
-        apps: state.apps.map(({ id, isOpen, minimized, active, zIndex }) => ({
+        apps: state.apps.map(({ id, isOpen, minimized, active, zIndex, coordinate }) => ({
           id,
           isOpen,
           minimized,
           active,
           zIndex,
+          coordinate,
         })),
       }),
       merge: (persisted, current) => {
         const saved = persisted as { apps?: DesktopAppWindowState[]; topZIndex?: number } | undefined
         return {
           ...current,
-          apps: mergeDesktopApps(saved?.apps),
+          apps: withUniqueCoordinates(mergeDesktopApps(saved?.apps)),
           topZIndex: saved?.topZIndex ?? WINDOW_Z_BASE,
         }
       },

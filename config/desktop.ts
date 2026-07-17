@@ -39,7 +39,7 @@ export interface DesktopAppConfig {
 /** 仅可序列化的窗口状态，用于 persist */
 export type DesktopAppWindowState = Pick<
   DesktopAppConfig,
-  'id' | 'isOpen' | 'minimized' | 'active' | 'zIndex'
+  'id' | 'isOpen' | 'minimized' | 'active' | 'zIndex' | 'coordinate'
 >
 
 const DEFAULT_WINDOW_STATE = {
@@ -94,6 +94,7 @@ export function mergeDesktopApps(saved?: DesktopAppWindowState[]): DesktopAppCon
       minimized: state.minimized,
       active: state.active,
       zIndex: state.zIndex ?? 0,
+      coordinate: state.coordinate ?? app.coordinate,
     }
   })
 }
