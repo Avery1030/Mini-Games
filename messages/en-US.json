@@ -1,6 +1,22 @@
 {
-  "Index": {
+  "index": {
     "title": "Home Title",
-    "switchText": "Switch Language"
+    "home": "Home"
+  },
+  "apps": {
+    "referral": "Referral",
+    "bridge": "Bridge",
+    "claim": "Claim",
+    "stake": "Stake",
+    "market": "Market",
+    "minesweeper": "Minesweeper",
+    "tetris": "Tetris",
+    "governance": "Governance",
+    "foundry": "Foundry",
+    "document": "Document",
+    "donation": "Donation",
+    "email": "Email",
+    "log": "Log",
+    "settings": "Settings"
   }
 }

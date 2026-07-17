@@ -1,6 +1,22 @@
 {
-  "Index": {
+  "index": {
     "title": "首页标题",
-    "switchText": "切换语言"
+    "home": "开始"
+  },
+  "apps": {
+    "referral": "邀请",
+    "bridge": "桥",
+    "claim": "领取",
+    "stake": "质押",
+    "market": "市场",
+    "minesweeper": "扫雷",
+    "tetris": "俄罗斯方块",
+    "governance": "治理",
+    "foundry": "铸造",
+    "document": "文档",
+    "donation": "捐赠",
+    "email": "邮箱",
+    "log": "日志",
+    "settings": "设置"
   }
 }

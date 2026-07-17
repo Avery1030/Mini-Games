@@ -1,132 +1,74 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import {
-  type DesktopAppId,
-  DESKTOP_APPS,
-  DESKTOP_ICONS_LEFT,
-  DESKTOP_ICONS_RIGHT,
-  getDesktopIconDisplay,
-  isDesktopAppIcon,
-} from '@/config/desktop'
-import { Minesweeper } from '../games/minesweeper'
-import { Tetris } from '../games/tetris'
+import { useMemo, type CSSProperties, type ReactNode } from 'react'
 import { WindowsWindow } from './WindowsWindow'
-import type { DesktopAppConfig } from '@/config/desktop'
-import LangSwitch from './LangSwitch'
 import { useTranslations } from 'next-intl'
+import LangSwitch from './LangSwitch'
 import ThemeSwitch from './ThemeSwitch'
+import { cn } from '@/utils/cn'
+import { useAppStore } from '@/store/app'
 
-function createDefaultState(): Record<DesktopAppId, boolean> {
-  return Object.fromEntries(DESKTOP_APPS.map((app) => [app.id, false])) as Record<DesktopAppId, boolean>
-}
+const CASCADE_OFFSET = 28
 
-/** 根据 contentType 渲染窗口内容 */
-function AppWindowContent({ contentType }: { contentType: DesktopAppConfig['contentType'] }) {
-  switch (contentType) {
-    case 'minesweeper':
-      return (
-        <div className='bg-[#f7f7f1] -m-3 p-0 min-h-full'>
-          <Minesweeper embedded />
-        </div>
-      )
-    case 'tetris':
-      return (
-        <div className='bg-[#0f172a] -m-3 p-0 min-h-full'>
-          <Tetris embedded />
-        </div>
-      )
-    case 'donation':
-      return <p className='text-gray-300 text-sm'>弹窗内容区域，可自由替换。</p>
-    default:
-      return null
+function getCascadedPosition(stackIndex: number, width: number, height: number) {
+  if (typeof window === 'undefined') {
+    return { x: 100 + stackIndex * CASCADE_OFFSET, y: 80 + stackIndex * CASCADE_OFFSET }
+  }
+  return {
+    x: Math.max(20, (window.innerWidth - width) / 2 + stackIndex * CASCADE_OFFSET),
+    y: Math.max(20, (window.innerHeight - height) / 2 - 40 + stackIndex * CASCADE_OFFSET),
   }
 }
 
-/**
- * 老版 Windows 风格桌面主界面 - 图标与可打开应用由 config/desktop 配置驱动
- */
 export function WindowsDesktop() {
-  const [open, setOpen] = useState<Record<DesktopAppId, boolean>>(createDefaultState)
-  const [minimized, setMinimized] = useState<Record<DesktopAppId, boolean>>(createDefaultState)
-  const [activeWindowId, setActiveWindowId] = useState<DesktopAppId | null>(null)
-  const t = useTranslations('Index')
+  const t = useTranslations()
+  const apps = useAppStore((s) => s.apps)
+  const hasHydrated = useAppStore((s) => s._hasHydrated)
+  const openWindow = useAppStore((s) => s.openWindow)
+  const closeWindow = useAppStore((s) => s.closeWindow)
+  const minimizeWindow = useAppStore((s) => s.minimizeWindow)
+  const focusWindow = useAppStore((s) => s.focusWindow)
+  const handleTaskbarClick = useAppStore((s) => s.handleTaskbarClick)
 
   const hasVisibleWindow = useMemo(
-    () => DESKTOP_APPS.some((app) => open[app.id] && !minimized[app.id]),
-    [open, minimized],
+    () => hasHydrated && apps.some((app) => app.isOpen && !app.minimized),
+    [hasHydrated, apps],
   )
+
+  const openApps = useMemo(() => (hasHydrated ? apps.filter((app) => app.isOpen) : []), [hasHydrated, apps])
 
   const taskbarWindows = useMemo(
     () =>
-      DESKTOP_APPS.filter((app) => open[app.id]).map((app) => ({
+      openApps.map((app) => ({
         id: app.id,
-        title: app.title,
-        minimized: minimized[app.id],
+        title: t(`apps.${app.id}`),
+        minimized: app.minimized,
+        isActive: app.active,
       })),
-    [open, minimized],
+    [openApps, t],
   )
-
-  const setOpenById = (id: DesktopAppId, value: boolean) => {
-    setOpen((prev) => ({ ...prev, [id]: value }))
-  }
-
-  const setMinimizedById = (id: DesktopAppId, value: boolean) => {
-    setMinimized((prev) => ({ ...prev, [id]: value }))
-  }
-
-  const toggleMinimizedById = (id: DesktopAppId) => {
-    setMinimized((prev) => ({ ...prev, [id]: !prev[id] }))
-  }
-
-  /** 关闭某窗口时，将焦点移到另一个已打开窗口 */
-  const getNextActiveId = (closedId: DesktopAppId): DesktopAppId | null => {
-    const others = DESKTOP_APPS.filter((app) => app.id !== closedId && open[app.id])
-    return others.length > 0 ? others[0].id : null
-  }
-
-  const handleIconClick = (appId: DesktopAppId) => {
-    setOpenById(appId, true)
-    setActiveWindowId(appId)
-  }
-
-  const socialIcons = ['✉️', '📤', '🐦', '▶️', '📰', '🔗']
 
   return (
     <div className='windows-desktop min-h-screen flex flex-col bg-[#2d6b6a]/90 select-none'>
-      <div className='flex-1 flex relative overflow-hidden pt-2 pb-1'>
-        {hasVisibleWindow && <div className='absolute inset-0 bg-black/20 z-[100]' aria-hidden />}
+      <div className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem] grid auto-rows-[80px] grid-cols-[repeat(auto-fill,80px)] gap-2'>
+        {/* pointer-events-none：有窗口时仍可点击桌面图标打开其他窗口 */}
+        {hasVisibleWindow && (
+          <div className='absolute inset-0 bg-black/20 z-[100] pointer-events-none' aria-hidden />
+        )}
+        {apps.map((app) => {
+          const [colIndex, rowIndex] = app.coordinate
+          const Icon = app.icon
 
-        <div className='flex gap-x-8 pl-6 pt-2'>
-          <div className='flex flex-col gap-y-6'>
-            {DESKTOP_ICONS_LEFT.map((item, i) => {
-              const { label, icon } = getDesktopIconDisplay(item)
-              const appId = isDesktopAppIcon(item) ? item.appId : undefined
-              return (
-                <DesktopIcon
-                  key={i}
-                  label={label}
-                  icon={icon}
-                  onClick={appId != null ? () => handleIconClick(appId) : undefined}
-                />
-              )
-            })}
-          </div>
-          <div className='flex flex-col gap-y-6'>
-            {DESKTOP_ICONS_RIGHT.map((item, i) => {
-              const { label, icon } = getDesktopIconDisplay(item)
-              const appId = isDesktopAppIcon(item) ? item.appId : undefined
-              return (
-                <DesktopIcon
-                  key={i}
-                  label={label}
-                  icon={icon}
-                  onClick={appId != null ? () => handleIconClick(appId) : undefined}
-                />
-              )
-            })}
-          </div>
-        </div>
+          return (
+            <DesktopIcon
+              key={app.id}
+              label={t(`apps.${app.id}`)}
+              icon={<Icon size={28} />}
+              style={{ gridColumn: colIndex, gridRow: rowIndex }}
+              onClick={() => openWindow(app.id)}
+            />
+          )
+        })}
 
         <div className='absolute inset-0 flex items-center justify-center pointer-events-none'>
           <div className='flex items-end gap-6 -mr-32'>
@@ -137,32 +79,38 @@ export function WindowsDesktop() {
               <span className='text-4xl mb-2'>👋</span>
             </div>
             <h1 className='windows-title text-6xl md:text-7xl lg:text-8xl font-bold text-amber-200/95 tracking-tighter drop-shadow-md'>
-              {t('title')}
+              {t('index.title')}
             </h1>
           </div>
         </div>
 
-        {DESKTOP_APPS.map((app) =>
-          open[app.id] ? (
+        {openApps.map((app) => {
+          if (!app.app) return null
+          const App = app.app
+          const width = app.width ?? 400
+          const height = app.height ?? 320
+          // 按打开先后（zIndex）错开位置，避免多窗口完全重叠
+          const cascadeIndex = openApps.filter((item) => item.zIndex < app.zIndex).length
+
+          return (
             <WindowsWindow
               key={app.id}
               id={app.id}
-              title={app.title}
-              width={app.width}
-              height={app.height}
-              onClose={() => {
-                setOpenById(app.id, false)
-                if (activeWindowId === app.id) setActiveWindowId(getNextActiveId(app.id))
-              }}
-              onMinimize={() => setMinimizedById(app.id, true)}
-              minimized={minimized[app.id]}
-              isActive={activeWindowId === app.id}
-              onFocus={() => setActiveWindowId(app.id)}
+              title={t(`apps.${app.id}`)}
+              width={width}
+              height={height}
+              defaultPosition={getCascadedPosition(cascadeIndex, width, height)}
+              onClose={() => closeWindow(app.id)}
+              onMinimize={() => minimizeWindow(app.id)}
+              minimized={app.minimized}
+              isActive={app.active}
+              zIndex={app.zIndex}
+              onFocus={() => focusWindow(app.id)}
             >
-              <AppWindowContent contentType={app.contentType} />
+              <App embedded />
             </WindowsWindow>
-          ) : null,
-        )}
+          )
+        })}
       </div>
 
       <footer className='relative z-[1100] h-12 flex items-center px-2 bg-[#c0c0c0] border-t-2 border-white shadow-[inset_1px_1px_0_rgba(255,255,255,0.8)] min-h-[48px]'>
@@ -170,7 +118,7 @@ export function WindowsDesktop() {
           <div className='w-6 h-6 flex items-center justify-center text-sm font-bold bg-amber-400/80 border border-amber-600/60'>
             D
           </div>
-          <span className='text-sm font-bold text-black ml-1 hidden sm:inline'>DEMO</span>
+          <span className='text-sm font-bold text-black ml-1 hidden sm:inline'>{t('index.home')}</span>
         </div>
 
         <div className='flex items-center gap-1 min-w-0 ml-1'>
@@ -178,27 +126,25 @@ export function WindowsDesktop() {
             <button
               key={w.id}
               type='button'
-              onClick={() => {
-                setActiveWindowId(w.id)
-                toggleMinimizedById(w.id)
-              }}
-              className={`px-3 py-1.5 text-sm font-medium shrink-0 max-w-[140px] truncate border-2 ${
-                w.minimized
-                  ? 'bg-[#c0c0c0] border-t-[#808080] border-l-[#808080] border-r-white border-b-white hover:bg-[#a8a8a8]'
-                  : 'bg-[#c0c0c0] border-t-white border-l-white border-r-[#808080] border-b-[#808080]'
-              }`}
+              className={cn('px-3 py-1.5 text-sm font-medium shrink-0 max-w-[140px] truncate border-2', {
+                'bg-[#c0c0c0] border-t-[#808080] border-l-[#808080] border-r-white border-b-white hover:bg-[#a8a8a8]':
+                  w.minimized,
+                'bg-[#c0c0c0] border-t-white border-l-white border-r-[#808080] border-b-[#808080]':
+                  !w.minimized && !w.isActive,
+                'bg-[#a8a8a8] border-t-[#808080] border-l-[#808080] border-r-white border-b-white':
+                  !w.minimized && w.isActive,
+              })}
+              onClick={() => handleTaskbarClick(w.id)}
             >
               {w.title}
             </button>
           ))}
         </div>
-
         <div className='flex items-center gap-2 ml-auto pl-2 shrink-0'>
           <div className='w-7 h-7 rounded-full bg-amber-300 border border-amber-500/80 flex items-center justify-center text-xs font-bold'>
             $
           </div>
           <ThemeSwitch />
-
           <button
             type='button'
             className='px-3 py-1.5 text-sm font-medium bg-[#c0c0c0] border-2 border-t-white border-l-white border-r-[#808080] border-b-[#808080] hover:bg-[#a8a8a8] active:border-t-[#808080] active:border-l-[#808080] active:border-r-white active:border-b-white cursor-pointer'
@@ -208,7 +154,7 @@ export function WindowsDesktop() {
           <div className='flex items-center gap-3 mr-2'>
             <LangSwitch />
             <div className='flex items-center gap-1'>
-              {socialIcons.map((icon, i) => (
+              {['✉️', '📤', '🐦', '▶️', '📰', '🔗'].map((icon, i) => (
                 <button
                   key={i}
                   type='button'
@@ -225,17 +171,28 @@ export function WindowsDesktop() {
   )
 }
 
-function DesktopIcon({ label, icon, onClick }: { label: string; icon: string; onClick?: () => void }) {
+function DesktopIcon({
+  label,
+  icon,
+  onClick,
+  style,
+}: {
+  label: string
+  icon: ReactNode
+  onClick?: () => void
+  style?: CSSProperties
+}) {
   return (
     <button
       type='button'
-      className='desktop-icon group flex flex-col items-center w-16 gap-0.5 p-1 rounded hover:bg-white/30 active:bg-white/50 cursor-pointer border border-transparent hover:border-white/40'
+      className='group relative z-[101] flex flex-col items-center gap-3 p-1 rounded hover:bg-white/30 active:bg-white/50 cursor-pointer border border-transparent hover:border-white/40'
       onClick={onClick}
+      style={style}
     >
-      <div className='w-12 h-12 flex items-center justify-center text-2xl bg-gray-200/80 border-2 border-gray-400 rounded pixel-icon shadow-sm'>
+      <div className='w-12 h-12 flex items-center justify-center bg-gray-200/80 border-2 border-gray-400 rounded pixel-icon shadow-sm'>
         {icon}
       </div>
-      <span className='text-xs font-medium text-black text-center leading-tight max-w-full truncate drop-shadow-sm pixel-text'>
+      <span className='text-xs font-medium text-white text-center leading-tight max-w-full truncate drop-shadow-sm pixel-text'>
         {label}
       </span>
     </button>

@@ -9,29 +9,19 @@
 }
 
 /* 老版 Windows 桌面 - 像素/复古风格 */
-.windows-desktop {
+.windows-desktop,
+.pixel-text,
+.windows-title,
+.windows-window .windows-window-title,
+.windows-window .windows-window-body {
   font-family: 'MS Sans Serif', 'Microsoft Sans Serif', Tahoma, sans-serif;
 }
 
 .windows-title {
-  font-family: 'MS Sans Serif', 'Microsoft Sans Serif', Tahoma, sans-serif;
   text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.15);
   image-rendering: crisp-edges;
 }
 
-.pixel-text {
-  font-family: 'MS Sans Serif', 'Microsoft Sans Serif', Tahoma, sans-serif;
-}
-
 .pixel-icon {
   image-rendering: crisp-edges;
-}
-
-/* 老版 Windows 弹窗 */
-.windows-window .windows-window-title {
-  font-family: 'MS Sans Serif', 'Microsoft Sans Serif', Tahoma, sans-serif;
-}
-
-.windows-window .windows-window-body {
-  font-family: 'MS Sans Serif', 'Microsoft Sans Serif', Tahoma, sans-serif;
 }
