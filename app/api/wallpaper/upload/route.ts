@@ -1,32 +1,41 @@
+import { mkdir, writeFile } from 'fs/promises'
+import path from 'path'
+import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
+import { WALLPAPER_DATA_DIR } from '@/utils/wallpaperDir'
 
-type ImgBBResponse = {
-  success?: boolean
-  status?: number
-  error?: { message?: string }
-  data?: {
-    url?: string
-    display_url?: string
-    delete_url?: string
-    image?: { url?: string }
+const MAX_BYTES = 15 * 1024 * 1024
+
+function extFromFile(file: File): 'jpg' | 'png' | 'webp' | 'gif' {
+  const t = file.type.toLowerCase()
+  if (t.includes('png')) return 'png'
+  if (t.includes('webp')) return 'webp'
+  if (t.includes('gif')) return 'gif'
+  const name = file.name.toLowerCase()
+  if (name.endsWith('.png')) return 'png'
+  if (name.endsWith('.webp')) return 'webp'
+  if (name.endsWith('.gif')) return 'gif'
+  return 'jpg'
+}
+
+function contentType(ext: string): string {
+  switch (ext) {
+    case 'png':
+      return 'image/png'
+    case 'webp':
+      return 'image/webp'
+    case 'gif':
+      return 'image/gif'
+    default:
+      return 'image/jpeg'
   }
 }
 
 /**
- * 上传壁纸到 ImgBB，返回 CDN 直链。
- * 需在环境变量配置 IMGBB_API_KEY（https://api.imgbb.com/ 免费申请）
+ * 将壁纸原图保存到本机 .data/wallpapers，返回同源 URL。
+ * 不再走 ImgBB，避免 CDN 缩略图导致全屏模糊。
  */
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.IMGBB_API_KEY?.trim()
-  if (!apiKey) {
-    return NextResponse.json(
-      {
-        error: '未配置 IMGBB_API_KEY。请到 https://api.imgbb.com/ 申请免费 Key，写入 .env.local',
-      },
-      { status: 503 },
-    )
-  }
-
   let form: FormData
   try {
     form = await req.formData()
@@ -41,53 +50,28 @@ export async function POST(req: NextRequest) {
   if (!file.type.startsWith('image/') && !/\.(jpe?g|png|gif|webp|bmp)$/i.test(file.name)) {
     return NextResponse.json({ error: '仅支持图片文件' }, { status: 400 })
   }
-  if (file.size > 10 * 1024 * 1024) {
-    return NextResponse.json({ error: '上传文件请小于 10MB（请先压缩）' }, { status: 400 })
+  if (file.size > MAX_BYTES) {
+    return NextResponse.json({ error: '图片请小于 15MB' }, { status: 400 })
   }
 
-  const bytes = Buffer.from(await file.arrayBuffer())
-  const base64 = bytes.toString('base64')
-
-  const body = new FormData()
-  body.append('image', base64)
-  body.append('name', `wallpaper-${Date.now()}`)
-
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 30_000)
-
   try {
-    const upstream = await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(apiKey)}`, {
-      method: 'POST',
-      body,
-      signal: controller.signal,
-    })
+    await mkdir(WALLPAPER_DATA_DIR, { recursive: true })
+    const ext = extFromFile(file)
+    const id = randomUUID()
+    const filename = `${id}.${ext}`
+    const buf = Buffer.from(await file.arrayBuffer())
+    await writeFile(path.join(WALLPAPER_DATA_DIR, filename), buf)
 
-    const json = (await upstream.json()) as ImgBBResponse
-    if (!upstream.ok || !json.success) {
-      return NextResponse.json(
-        { error: json.error?.message || `图床上传失败 (${upstream.status})` },
-        { status: 502 },
-      )
-    }
-
-    // 优先原图直链；display_url 常为中等缩略图，全屏会糊
-    const url = json.data?.image?.url || json.data?.url || json.data?.display_url
-    if (!url) {
-      return NextResponse.json({ error: '图床未返回图片地址' }, { status: 502 })
-    }
-
+    const url = `/api/wallpaper/file/${filename}`
     return NextResponse.json({
       url,
-      deleteUrl: json.data?.delete_url,
-      provider: 'imgbb',
+      thumbUrl: url,
+      provider: 'local',
+      contentType: contentType(ext),
+      size: buf.length,
     })
   } catch (err) {
-    const aborted = err instanceof Error && err.name === 'AbortError'
-    return NextResponse.json(
-      { error: aborted ? '上传超时，请稍后重试' : '上传服务暂时不可用' },
-      { status: 502 },
-    )
-  } finally {
-    clearTimeout(timer)
+    console.error('[wallpaper/upload]', err)
+    return NextResponse.json({ error: '保存壁纸失败' }, { status: 500 })
   }
 }

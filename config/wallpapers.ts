@@ -110,10 +110,14 @@ export function getWallpaper(id: WallpaperId | string | undefined): WallpaperPre
   return wallpaperMap.get(id ?? '') ?? wallpaperMap.get(DEFAULT_WALLPAPER_ID)!
 }
 
-/** 自定义壁纸地址：CDN https 或历史 data URL */
+/** 本机壁纸文件路径（同源 API） */
+const LOCAL_WALLPAPER_RE = /^\/api\/wallpaper\/file\/[a-f0-9-]{36}\.(jpe?g|png|webp|gif)$/i
+
+/** 自定义壁纸地址：本机文件、CDN https、或历史 data URL */
 export function isValidCustomWallpaperSrc(src: unknown): src is string {
   if (typeof src !== 'string' || !src) return false
   if (src.startsWith('data:image/')) return true
+  if (LOCAL_WALLPAPER_RE.test(src)) return true
   try {
     const u = new URL(src)
     return u.protocol === 'https:' || u.protocol === 'http:'

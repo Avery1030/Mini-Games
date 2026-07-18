@@ -51,8 +51,12 @@ export function WindowsDesktop() {
 
   useLayoutEffect(() => {
     const boot = readWallpaperBoot()
+    const gallery = useSettingsStore.getState().wallpaperGallery
     if (boot?.wallpaperId === CUSTOM_WALLPAPER_ID && boot.customUrl) {
-      setDesktopBgStyle(resolveDesktopBackgroundStyle(CUSTOM_WALLPAPER_ID, boot.customUrl))
+      const full =
+        gallery.find((g) => g.url === boot.customUrl || g.thumbUrl === boot.customUrl)?.url ??
+        boot.customUrl
+      setDesktopBgStyle(resolveDesktopBackgroundStyle(CUSTOM_WALLPAPER_ID, full))
       return
     }
     if (boot?.wallpaperId && boot.wallpaperId !== CUSTOM_WALLPAPER_ID) {
@@ -62,7 +66,12 @@ export function WindowsDesktop() {
 
   useEffect(() => {
     if (!settingsHydrated) return
-    setDesktopBgStyle(resolveDesktopBackgroundStyle(wallpaperId, customWallpaperUrl))
+    const gallery = useSettingsStore.getState().wallpaperGallery
+    const full =
+      customWallpaperUrl &&
+      (gallery.find((g) => g.url === customWallpaperUrl || g.thumbUrl === customWallpaperUrl)?.url ??
+        customWallpaperUrl)
+    setDesktopBgStyle(resolveDesktopBackgroundStyle(wallpaperId, full))
   }, [settingsHydrated, wallpaperId, customWallpaperUrl])
 
   const desktopRef = useRef<HTMLDivElement>(null)
