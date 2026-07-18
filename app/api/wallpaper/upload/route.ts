@@ -33,7 +33,6 @@ function contentType(ext: string): string {
 
 /**
  * 将壁纸原图保存到本机 .data/wallpapers，返回同源 URL。
- * 不再走 ImgBB，避免 CDN 缩略图导致全屏模糊。
  */
 export async function POST(req: NextRequest) {
   let form: FormData

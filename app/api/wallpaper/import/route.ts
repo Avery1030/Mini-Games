@@ -18,7 +18,7 @@ function extFromContentType(ct: string | null, url: string): 'jpg' | 'png' | 'we
 }
 
 /**
- * 把外链图片拉取到本机再保存，避免 ImgBB 等 CDN 缩略图。
+ * 把外链图片拉取到本机再保存
  */
 export async function POST(req: NextRequest) {
   let body: { url?: string }
@@ -78,10 +78,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url, thumbUrl: url, provider: 'local', size: buf.length })
   } catch (err) {
     const aborted = err instanceof Error && err.name === 'AbortError'
-    return NextResponse.json(
-      { error: aborted ? '拉取超时' : '导入失败' },
-      { status: 502 },
-    )
+    return NextResponse.json({ error: aborted ? '拉取超时' : '导入失败' }, { status: 502 })
   } finally {
     clearTimeout(timer)
   }

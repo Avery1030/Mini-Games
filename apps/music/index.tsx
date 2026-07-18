@@ -365,7 +365,9 @@ export function Music({ embedded = false }: MusicProps = {}) {
         return
       }
       setHits(data.results ?? [])
-      if (!(data.results?.length)) setSearchError('没有找到结果，换个关键词试试')
+      if (!(data.results?.length)) {
+        setSearchError(data.error || '没有找到结果，换个关键词试试')
+      }
     } catch {
       setHits([])
       setSearchError('网络错误')
@@ -376,11 +378,11 @@ export function Music({ embedded = false }: MusicProps = {}) {
 
   const addSearchHit = async (hit: SearchHit, playNow: boolean) => {
     if (!hit.previewUrl) {
-      setSearchError('该曲目没有可播放的试听')
+      setSearchError('该曲目没有可播放的音源')
       return
     }
 
-    const trackId = `itunes-${hit.id}`
+    const trackId = `${hit.source || 'remote'}-${hit.id}`
     const existing = tracks.findIndex((t) => t.id === trackId)
     if (existing >= 0) {
       setTab('playlist')
@@ -400,7 +402,7 @@ export function Music({ embedded = false }: MusicProps = {}) {
         artist: hit.artist,
         src: toPlayableSrc(hit.previewUrl),
         durationHint: hit.durationHint,
-        source: 'itunes',
+        source: hit.source || 'audius',
       }
       setTracks((prev) => {
         if (playNow) {
@@ -556,7 +558,7 @@ export function Music({ embedded = false }: MusicProps = {}) {
           </div>
         </div>
 
-        {/* 搜索：Internet Archive 开放音频 */}
+        {/* 搜索：Audius 完整曲 */}
         <form
           className='mt-2 flex gap-1'
           onSubmit={(e) => {
@@ -567,7 +569,7 @@ export function Music({ embedded = false }: MusicProps = {}) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder='搜索歌曲 / 艺人（iTunes 官方试听）…'
+            placeholder='搜索歌曲 / 艺人（Audius 完整曲）…'
             className='flex-1 min-w-0 h-7 px-2 text-[12px] bg-[#111] border border-[#555] text-[#eee] outline-none focus:border-[#f5c542]'
           />
           <button
@@ -580,7 +582,8 @@ export function Music({ embedded = false }: MusicProps = {}) {
           </button>
         </form>
         <p className='mt-1 text-[10px] text-[#666] leading-snug'>
-          使用 Apple iTunes Search 官方接口，结果为约 30 秒试听预览。
+          搜索 Audius 开放曲库（完整曲）。「周杰伦」等热门正版常被版权拦截，请搜 lofi / chill
+          等独立音乐，或用「本地」导入自己的文件。
         </p>
       </div>
 
@@ -664,10 +667,13 @@ export function Music({ embedded = false }: MusicProps = {}) {
               <li className='px-3 py-3 text-[11px] text-[#ff8080]'>{searchError}</li>
             )}
             {!searching && !searchError && hits.length === 0 && (
-              <li className='px-3 py-8 text-center text-[#777] text-xs'>输入关键词搜索曲目试听</li>
+              <li className='px-3 py-8 text-center text-[#777] text-xs'>输入关键词搜索完整曲目</li>
             )}
             {hits.map((hit) => {
               const busy = resolvingId === hit.id
+              const mins = hit.durationHint
+                ? `${Math.floor(hit.durationHint / 60)}:${String(Math.floor(hit.durationHint % 60)).padStart(2, '0')}`
+                : null
               return (
                 <li
                   key={hit.id}
@@ -675,7 +681,10 @@ export function Music({ embedded = false }: MusicProps = {}) {
                 >
                   <div className='min-w-0 flex-1'>
                     <div className='truncate text-[12px] font-medium'>{hit.title}</div>
-                    <div className='truncate text-[10px] text-[#999]'>{hit.artist}</div>
+                    <div className='truncate text-[10px] text-[#999]'>
+                      {hit.artist}
+                      {mins ? ` · ${mins}` : ''}
+                    </div>
                   </div>
                   <button
                     type='button'
