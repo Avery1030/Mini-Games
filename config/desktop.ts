@@ -20,6 +20,7 @@ import { Minesweeper } from '@/apps/minesweeper'
 import { Tetris } from '@/apps/tetris'
 import { Music as MusicApp } from '@/apps/music'
 import { SettingsApp } from '@/apps/settings'
+import { DocumentApp } from '@/apps/document'
 import { apps } from '@/messages/zh-CN.json'
 
 export type DesktopAppId = keyof typeof apps
@@ -43,6 +44,8 @@ export interface DesktopWindowRuntime {
   active: boolean
   /** 窗口叠放层级，数值越大越靠前 */
   zIndex: number
+  /** 任务栏从左到右顺序：越大越靠右（越晚打开）；关闭为 0 */
+  openOrder: number
 }
 
 /** UI 合并视图：定义 + 坐标 + 窗口状态 */
@@ -56,6 +59,7 @@ export const DEFAULT_WINDOW_RUNTIME: DesktopWindowRuntime = {
   minimized: false,
   active: false,
   zIndex: 0,
+  openOrder: 0,
 }
 
 export const DESKTOP_APP_DEFINITIONS: DesktopAppDefinition[] = [
@@ -82,7 +86,14 @@ export const DESKTOP_APP_DEFINITIONS: DesktopAppDefinition[] = [
   },
   { id: 'governance', icon: Building2, defaultCoordinate: [2, 1] },
   { id: 'foundry', icon: Wrench, defaultCoordinate: [2, 2] },
-  { id: 'document', icon: BookOpenText, defaultCoordinate: [2, 3] },
+  {
+    id: 'document',
+    icon: BookOpenText,
+    defaultCoordinate: [2, 3],
+    width: 520,
+    height: 420,
+    app: DocumentApp,
+  },
   { id: 'donation', icon: Rose, defaultCoordinate: [2, 4] },
   { id: 'email', icon: Mail, defaultCoordinate: [2, 5] },
   { id: 'log', icon: Notebook, defaultCoordinate: [2, 6] },

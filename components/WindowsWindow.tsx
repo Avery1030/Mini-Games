@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { cn } from '@/utils/cn'
-import { winChrome } from '@/utils/winChrome'
+import { Button } from '@/components/ui'
 
 const MIN_WIDTH = 200
 const MIN_HEIGHT = 150
@@ -242,12 +242,10 @@ export function WindowsWindow({
           <span className='text-[var(--window-title-text)] text-sm font-bold pl-2 truncate'>{title}</span>
           <div className='flex items-stretch shrink-0'>
             {onMinimize != null && (
-              <button
-                type='button'
-                className={cn(
-                  winChrome,
-                  'shrink-0 w-6 h-6 flex items-center justify-center text-sm font-bold hover:bg-window-btn-hover hover:text-white',
-                )}
+              <Button
+                variant='title'
+                size='icon-sm'
+                className='text-sm'
                 aria-label='最小化'
                 onClick={(e) => {
                   e.stopPropagation()
@@ -255,14 +253,11 @@ export function WindowsWindow({
                 }}
               >
                 —
-              </button>
+              </Button>
             )}
-            <button
-              type='button'
-              className={cn(
-                winChrome,
-                'shrink-0 w-6 h-6 flex items-center justify-center text-xs font-bold hover:bg-window-btn-hover hover:text-white',
-              )}
+            <Button
+              variant='title'
+              size='icon-sm'
               onClick={(e) => {
                 e.stopPropagation()
                 handleMaximize()
@@ -270,13 +265,10 @@ export function WindowsWindow({
               aria-label={maximized ? '还原' : '最大化'}
             >
               {maximized ? '⧉' : '□'}
-            </button>
-            <button
-              type='button'
-              className={cn(
-                winChrome,
-                'shrink-0 w-6 h-6 flex items-center justify-center text-xs font-bold hover:bg-window-btn-hover hover:text-white',
-              )}
+            </Button>
+            <Button
+              variant='title'
+              size='icon-sm'
               onClick={(e) => {
                 e.stopPropagation()
                 onClose?.()
@@ -284,7 +276,7 @@ export function WindowsWindow({
               aria-label='关闭'
             >
               ✕
-            </button>
+            </Button>
           </div>
         </div>
 

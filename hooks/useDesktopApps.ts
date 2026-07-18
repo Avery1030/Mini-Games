@@ -17,7 +17,13 @@ export function useDesktopApps(): DesktopAppView[] {
     () =>
       DESKTOP_APP_DEFINITIONS.map((def) => ({
         ...def,
-        ...(windows[def.id] ?? { isOpen: false, minimized: false, active: false, zIndex: 0 }),
+        ...(windows[def.id] ?? {
+          isOpen: false,
+          minimized: false,
+          active: false,
+          zIndex: 0,
+          openOrder: 0,
+        }),
         coordinate: coordinates[def.id] ?? def.defaultCoordinate,
       })),
     [windows, coordinates],

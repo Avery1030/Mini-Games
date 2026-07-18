@@ -59,6 +59,7 @@ export function migrateLegacyDesktopPersist(): void {
         minimized: app.minimized ?? false,
         active: app.active ?? false,
         zIndex: app.zIndex ?? 0,
+        openOrder: app.isOpen ? app.zIndex ?? 0 : 0,
       }
       if (app.coordinate) {
         coordinates[app.id] = app.coordinate

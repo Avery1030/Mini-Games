@@ -6,7 +6,8 @@ import { useTranslations } from 'next-intl'
 import LangSwitch from './LangSwitch'
 import ThemeSwitch from './ThemeSwitch'
 import { cn } from '@/utils/cn'
-import { winChrome, winChromePressed } from '@/utils/winChrome'
+import { Button } from '@/components/ui'
+import { winChrome } from '@/utils/winChrome'
 import { useDesktopApps, useDesktopHydrated } from '@/hooks/useDesktopApps'
 import { useDesktopIconDrag } from '@/hooks/useDesktopIconDrag'
 import { useDesktopStore } from '@/store/desktop'
@@ -53,9 +54,7 @@ export function WindowsDesktop() {
     const boot = readWallpaperBoot()
     const gallery = useSettingsStore.getState().wallpaperGallery
     if (boot?.wallpaperId === CUSTOM_WALLPAPER_ID && boot.customUrl) {
-      const full =
-        gallery.find((g) => g.url === boot.customUrl || g.thumbUrl === boot.customUrl)?.url ??
-        boot.customUrl
+      const full = gallery.find((g) => g.url === boot.customUrl || g.thumbUrl === boot.customUrl)?.url ?? boot.customUrl
       setDesktopBgStyle(resolveDesktopBackgroundStyle(CUSTOM_WALLPAPER_ID, full))
       return
     }
@@ -87,13 +86,23 @@ export function WindowsDesktop() {
     [hasHydrated, apps],
   )
 
-  const openApps = useMemo(() => (hasHydrated ? apps.filter((app) => app.isOpen) : []), [hasHydrated, apps])
+  const openApps = useMemo(
+    () =>
+      hasHydrated
+        ? apps
+            .filter((app) => app.isOpen)
+            .slice()
+            .sort((a, b) => a.openOrder - b.openOrder || a.zIndex - b.zIndex)
+        : [],
+    [hasHydrated, apps],
+  )
 
   const taskbarWindows = useMemo(
     () =>
       openApps.map((app) => ({
         id: app.id,
         title: t(`apps.${app.id}`),
+        icon: app.icon,
         minimized: app.minimized,
         isActive: app.active,
       })),
@@ -101,10 +110,7 @@ export function WindowsDesktop() {
   )
 
   return (
-    <div
-      className='min-h-screen flex flex-col select-none font-pixel text-on-desktop'
-      style={desktopBgStyle}
-    >
+    <div className='min-h-screen flex flex-col select-none font-pixel text-on-desktop' style={desktopBgStyle}>
       <div className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem]'>
         {/* grid 放在无 padding 的内层，absolute 让位时与 grid 原点一致，避免拖拽瞬间「内边距消失」 */}
         <div
@@ -144,32 +150,15 @@ export function WindowsDesktop() {
               )
             })}
         </div>
-
         {hasVisibleWindow && (
           <div className='absolute inset-0 z-[100] bg-desktop-overlay pointer-events-none' aria-hidden />
         )}
-
-        {/* <div className='absolute inset-0 flex items-center justify-center pointer-events-none'>
-          <div className='flex items-end gap-6 -mr-32'>
-            <div className='w-24 h-32 flex items-end justify-center rounded border-2 bg-hero-plate border-hero-plate-border shadow-[inset_1px_1px_0_rgba(255,255,255,0.35)]'>
-              <span className='text-4xl mb-2'>👋</span>
-            </div>
-            <h1
-              className='text-6xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-title [image-rendering:crisp-edges]'
-              style={{ textShadow: '2px 2px 0 var(--title-shadow)' }}
-            >
-              {t('index.title')}
-            </h1>
-          </div>
-        </div> */}
-
         {openApps.map((app) => {
           if (!app.app) return null
           const App = app.app
           const width = app.width ?? 400
           const height = app.height ?? 320
           const cascadeIndex = openApps.filter((item) => item.zIndex < app.zIndex).length
-
           return (
             <WindowsWindow
               key={app.id}
@@ -199,44 +188,41 @@ export function WindowsDesktop() {
           <span className='text-sm font-bold ml-1 hidden sm:inline'>{t('index.home')}</span>
         </div>
 
-        <div className='flex items-center gap-1 min-w-0 ml-1'>
-          {taskbarWindows.map((w) => (
-            <button
-              key={w.id}
-              type='button'
-              className={cn(
-                'px-3 py-1.5 text-sm font-medium shrink-0 max-w-[140px] truncate',
-                w.minimized || w.isActive ? winChromePressed : winChrome,
-              )}
-              onClick={() => handleTaskbarClick(w.id)}
-            >
-              {w.title}
-            </button>
-          ))}
+        <div className='flex items-center gap-1 min-w-0 ml-1 overflow-x-auto'>
+          {taskbarWindows.map((w) => {
+            const Icon = w.icon
+            // 前台可见窗口：凹陷；最小化 / 非激活：凸起
+            const pressed = w.isActive && !w.minimized
+            return (
+              <Button
+                key={w.id}
+                size='md'
+                variant={pressed ? 'pressed' : 'raised'}
+                className='max-w-[160px] px-2 py-1.5 h-auto gap-1.5 justify-start'
+                title={w.title}
+                onClick={() => handleTaskbarClick(w.id)}
+              >
+                <Icon size={14} className='shrink-0' aria-hidden />
+                <span className='truncate'>{w.title}</span>
+              </Button>
+            )
+          })}
         </div>
         <div className='flex items-center gap-2 ml-auto pl-2 shrink-0'>
           <div className='w-7 h-7 rounded-full border flex items-center justify-center text-xs font-bold bg-accent border-accent-border text-black'>
             $
           </div>
           <ThemeSwitch />
-          <button
-            type='button'
-            className={cn(winChrome, 'px-3 py-1.5 text-sm font-medium cursor-pointer')}
-            onClick={() => openWindow('settings')}
-          >
+          <Button size='md' className='px-3 py-1.5 h-auto' onClick={() => openWindow('settings')}>
             Settings
-          </button>
+          </Button>
           <div className='flex items-center gap-3 mr-2'>
             <LangSwitch />
             <div className='flex items-center gap-1'>
               {['✉️', '📤', '🐦', '▶️', '📰', '🔗'].map((icon, i) => (
-                <button
-                  key={i}
-                  type='button'
-                  className={cn(winChrome, 'w-6 h-6 flex items-center justify-center text-xs cursor-pointer')}
-                >
+                <Button key={i} size='icon-sm'>
                   {icon}
-                </button>
+                </Button>
               ))}
             </div>
           </div>

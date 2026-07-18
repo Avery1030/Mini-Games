@@ -24,10 +24,9 @@ import {
   Music2,
   Search,
   Plus,
-  Loader2,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
-import { winChrome } from '@/utils/winChrome'
+import { Button, Input, Tab } from '@/components/ui'
 import {
   DEMO_TRACKS,
   buildShuffleOrder,
@@ -516,15 +515,15 @@ export function Music({ embedded = false }: MusicProps = {}) {
             <ControlBtn label='上一首' onClick={goPrev}>
               <SkipBack size={16} />
             </ControlBtn>
-            <button
-              type='button'
+            <Button
+              size='icon-lg'
+              className='rounded-sm mx-0.5'
               aria-label={playing ? '暂停' : '播放'}
-              className={cn(winChrome, 'w-9 h-9 flex items-center justify-center rounded-sm mx-0.5')}
               onClick={() => void togglePlay()}
               disabled={!current}
             >
               {playing ? <Pause size={18} /> : <Play size={18} className='ml-0.5' />}
-            </button>
+            </Button>
             <ControlBtn label='下一首' onClick={() => goNext(false)}>
               <SkipForward size={16} />
             </ControlBtn>
@@ -534,14 +533,13 @@ export function Music({ embedded = false }: MusicProps = {}) {
           </div>
 
           <div className='flex items-center gap-1 min-w-0'>
-            <button
-              type='button'
+            <Button
+              size='icon'
               aria-label={muted ? '取消静音' : '静音'}
-              className={cn(winChrome, 'w-7 h-7 flex items-center justify-center shrink-0')}
               onClick={() => setMuted((m) => !m)}
             >
               {muted || volume === 0 ? <VolumeX size={14} /> : <Volume2 size={14} />}
-            </button>
+            </Button>
             <input
               type='range'
               min={0}
@@ -566,20 +564,18 @@ export function Music({ embedded = false }: MusicProps = {}) {
             void runSearch()
           }}
         >
-          <input
+          <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder='搜索歌曲 / 艺人（Audius 完整曲）…'
-            className='flex-1 min-w-0 h-7 px-2 text-[12px] bg-[#111] border border-[#555] text-[#eee] outline-none focus:border-[#f5c542]'
+            tone='dark'
+            size='md'
+            className='flex-1'
           />
-          <button
-            type='submit'
-            className={cn(winChrome, 'h-7 px-2 text-[11px] flex items-center gap-1 shrink-0')}
-            disabled={searching}
-          >
-            {searching ? <Loader2 size={12} className='animate-spin' /> : <Search size={12} />}
+          <Button type='submit' size='md' className='px-2' loading={searching} disabled={searching}>
+            {!searching && <Search size={12} />}
             搜索
-          </button>
+          </Button>
         </form>
         <p className='mt-1 text-[10px] text-[#666] leading-snug'>
           搜索 Audius 开放曲库（完整曲）。「周杰伦」等热门正版常被版权拦截，请搜 lofi / chill
@@ -590,23 +586,19 @@ export function Music({ embedded = false }: MusicProps = {}) {
       <div className='flex-1 min-h-0 flex flex-col'>
         <div className='shrink-0 flex items-center justify-between px-2 py-1.5 border-b border-[#333] bg-[#222] gap-2'>
           <div className='flex items-center gap-1'>
-            <TabBtn active={tab === 'playlist'} onClick={() => setTab('playlist')}>
+            <Tab active={tab === 'playlist'} onClick={() => setTab('playlist')}>
               <ListMusic size={12} />
               播放列表 ({tracks.length})
-            </TabBtn>
-            <TabBtn active={tab === 'search'} onClick={() => setTab('search')}>
+            </Tab>
+            <Tab active={tab === 'search'} onClick={() => setTab('search')}>
               <Search size={12} />
               搜索结果 ({hits.length})
-            </TabBtn>
+            </Tab>
           </div>
-          <button
-            type='button'
-            className={cn(winChrome, 'h-6 px-2 text-[11px] flex items-center gap-1')}
-            onClick={() => fileInputRef.current?.click()}
-          >
+          <Button size='sm' onClick={() => fileInputRef.current?.click()}>
             <FolderPlus size={12} />
             本地
-          </button>
+          </Button>
           <input
             ref={fileInputRef}
             type='file'
@@ -686,24 +678,25 @@ export function Music({ embedded = false }: MusicProps = {}) {
                       {mins ? ` · ${mins}` : ''}
                     </div>
                   </div>
-                  <button
-                    type='button'
-                    className={cn(winChrome, 'h-6 px-1.5 text-[10px] flex items-center gap-0.5 shrink-0')}
+                  <Button
+                    size='sm'
+                    className='px-1.5 text-[10px]'
+                    loading={busy}
                     disabled={busy}
                     onClick={() => void addSearchHit(hit, false)}
                     title='加入播放列表'
                   >
-                    {busy ? <Loader2 size={11} className='animate-spin' /> : <Plus size={11} />}
-                  </button>
-                  <button
-                    type='button'
-                    className={cn(winChrome, 'h-6 px-1.5 text-[10px] flex items-center gap-0.5 shrink-0')}
+                    {!busy && <Plus size={11} />}
+                  </Button>
+                  <Button
+                    size='sm'
+                    className='px-1.5 text-[10px]'
                     disabled={busy}
                     onClick={() => void addSearchHit(hit, true)}
                     title='立即播放'
                   >
                     <Play size={11} />
-                  </button>
+                  </Button>
                 </li>
               )
             })}
@@ -722,31 +715,6 @@ export function Music({ embedded = false }: MusicProps = {}) {
   )
 }
 
-function TabBtn({
-  children,
-  active,
-  onClick,
-}: {
-  children: ReactNode
-  active: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      type='button'
-      className={cn(
-        'h-6 px-2 text-[11px] flex items-center gap-1 border',
-        active
-          ? 'bg-[#333] border-[#666] text-[#f5c542]'
-          : 'bg-transparent border-transparent text-[#aaa] hover:text-[#ddd]',
-      )}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  )
-}
-
 function ControlBtn({
   children,
   onClick,
@@ -759,18 +727,8 @@ function ControlBtn({
   label: string
 }) {
   return (
-    <button
-      type='button'
-      aria-label={label}
-      title={label}
-      className={cn(
-        winChrome,
-        'w-7 h-7 flex items-center justify-center',
-        active && 'ring-1 ring-[#f5c542] text-[#f5c542]',
-      )}
-      onClick={onClick}
-    >
+    <Button size='icon' aria-label={label} title={label} active={active} onClick={onClick}>
       {children}
-    </button>
+    </Button>
   )
 }

@@ -15,10 +15,6 @@ export default function ThemeSwitch() {
 
   const isDark = resolvedTheme === 'dark'
 
-  const toggleTheme = () => {
-    setTheme(isDark ? 'light' : 'dark')
-  }
-
   if (!mounted) {
     return <div className='w-7 h-7 rounded bg-theme-switch border border-theme-switch-border' aria-hidden />
   }
@@ -30,7 +26,7 @@ export default function ThemeSwitch() {
         'w-7 h-7 flex items-center justify-center rounded cursor-pointer transition-colors',
         'bg-theme-switch border border-theme-switch-border text-theme-switch-icon hover:bg-theme-switch-hover',
       )}
-      onClick={toggleTheme}
+      onClick={() => setTheme(isDark ? 'light' : 'dark')}
       aria-label={isDark ? '切换到浅色主题' : '切换到深色主题'}
       title={isDark ? '浅色' : '深色'}
     >

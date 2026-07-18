@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { FolderOpen, Trash2, Loader2, Link2 } from 'lucide-react'
+import { FolderOpen, Trash2, Link2 } from 'lucide-react'
 import { cn } from '@/utils/cn'
-import { winChrome, winChromeSunken } from '@/utils/winChrome'
+import { Button, Input, Panel } from '@/components/ui'
 import {
   CUSTOM_WALLPAPER_ID,
   WALLPAPERS,
@@ -38,10 +38,15 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
   const [draft, setDraft] = useState<Draft>(() =>
     wallpaperId === CUSTOM_WALLPAPER_ID && customWallpaperUrl
       ? { kind: 'custom', url: customWallpaperUrl }
-      : { kind: 'preset', id: (wallpaperId === CUSTOM_WALLPAPER_ID ? 'classic-teal' : wallpaperId) as Exclude<WallpaperId, 'custom'> },
+      : {
+          kind: 'preset',
+          id: (wallpaperId === CUSTOM_WALLPAPER_ID ? 'classic-teal' : wallpaperId) as Exclude<
+            WallpaperId,
+            'custom'
+          >,
+        },
   )
 
-  // store 水合后同步草稿为当前已应用项
   useEffect(() => {
     if (wallpaperId === CUSTOM_WALLPAPER_ID && customWallpaperUrl) {
       setDraft({ kind: 'custom', url: customWallpaperUrl })
@@ -63,7 +68,6 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
     setUploading(true)
     setUploadError(null)
     try {
-      // 直接上传原图，不做 canvas 重压，避免画质损失
       const form = new FormData()
       form.append('file', file, file.name)
 
@@ -130,10 +134,7 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
     applyWallpaper(CUSTOM_WALLPAPER_ID, draft.url)
   }
 
-  const draftLabel =
-    draft.kind === 'preset'
-      ? getWallpaperLabel(draft.id, false)
-      : '自定义图片'
+  const draftLabel = draft.kind === 'preset' ? getWallpaperLabel(draft.id, false) : '自定义图片'
 
   return (
     <div
@@ -145,22 +146,22 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
     >
       <div className={cn('flex-1 min-h-0 overflow-y-auto p-3', embedded && 'p-4')}>
         <h2 className='text-base font-bold mb-1'>显示</h2>
-        <p className='text-xs text-[#444] mb-3'>
+        <p className='text-xs text-[#444] dark:text-[#aaa] mb-3'>
           先点选壁纸，再点下方「应用」才会切换桌面。图片保存在本机（原图），刷新后仍清晰。
         </p>
 
-        <div className={cn(winChromeSunken, 'p-3 bg-[#f0f0f0] mb-3')}>
+        <Panel inset className='mb-3'>
           <div className='flex items-center justify-between gap-2 mb-2'>
             <div className='text-xs font-bold'>我的图片</div>
-            <button
-              type='button'
-              className={cn(winChrome, 'h-6 px-2 text-[11px] flex items-center gap-1')}
+            <Button
+              size='sm'
+              loading={uploading}
               disabled={uploading}
               onClick={() => inputRef.current?.click()}
             >
-              {uploading ? <Loader2 size={12} className='animate-spin' /> : <FolderOpen size={12} />}
+              {!uploading && <FolderOpen size={12} />}
               {uploading ? '上传中…' : '上传'}
-            </button>
+            </Button>
             <input
               ref={inputRef}
               type='file'
@@ -227,28 +228,31 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
           )}
 
           <div className='flex gap-1 items-center'>
-            <input
+            <Input
               value={importUrl}
               onChange={(e) => setImportUrl(e.target.value)}
               placeholder='粘贴图片直链，将转存到本机 https://…'
-              className={cn(winChromeSunken, 'flex-1 min-w-0 h-7 px-2 text-[11px] bg-white outline-none')}
+              size='md'
+              tone='field'
               disabled={uploading}
+              className='flex-1'
             />
-            <button
-              type='button'
-              className={cn(winChrome, 'h-7 px-2 text-[11px] flex items-center gap-1 shrink-0')}
+            <Button
+              size='md'
+              className='px-2'
+              loading={uploading}
               disabled={uploading}
               onClick={() => void onImportLink()}
             >
-              <Link2 size={12} />
+              {!uploading && <Link2 size={12} />}
               导入
-            </button>
+            </Button>
           </div>
           {uploadError && <p className='mt-1 text-[11px] text-[#c00]'>{uploadError}</p>}
           {importError && <p className='mt-1 text-[11px] text-[#c00]'>{importError}</p>}
-        </div>
+        </Panel>
 
-        <div className={cn(winChromeSunken, 'p-3 bg-[#f0f0f0]')}>
+        <Panel inset>
           <div className='text-xs font-bold mb-2'>预设壁纸</div>
           <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto pr-1'>
             {WALLPAPERS.map((paper) => {
@@ -275,26 +279,17 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
               )
             })}
           </div>
-        </div>
+        </Panel>
       </div>
 
-      <div className='shrink-0 flex items-center justify-between gap-2 px-3 py-2 border-t border-[#808080] bg-[#d4d0c8]'>
-        <span className='text-[11px] text-[#444] truncate min-w-0'>
+      <div className='shrink-0 flex items-center justify-between gap-2 px-3 py-2 border-t border-[#808080] bg-[#d4d0c8] dark:bg-[#2e2e2e]'>
+        <span className='text-[11px] text-[#444] dark:text-[#aaa] truncate min-w-0'>
           已选：{draftLabel}
           {dirty ? '（未应用）' : '（当前）'}
         </span>
-        <button
-          type='button'
-          className={cn(
-            winChrome,
-            'h-7 px-4 text-xs font-bold shrink-0',
-            !dirty && 'opacity-50 cursor-not-allowed',
-          )}
-          disabled={!dirty}
-          onClick={onApply}
-        >
+        <Button size='md' className='px-4 font-bold' disabled={!dirty} onClick={onApply}>
           应用
-        </button>
+        </Button>
       </div>
     </div>
   )
