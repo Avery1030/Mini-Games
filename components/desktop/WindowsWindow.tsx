@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { cn } from '@/utils/cn'
+import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui'
 
 const MIN_WIDTH = 200

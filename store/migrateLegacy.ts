@@ -1,5 +1,5 @@
 import type { DesktopAppId, DesktopWindowRuntime } from '@/config/desktop'
-import type { DesktopCoordinate } from '@/utils/desktopLayout'
+import type { DesktopCoordinate } from '@/lib/desktop'
 
 const LEGACY_KEY = 'desktop-app-windows'
 const WINDOWS_KEY = 'desktop-windows'

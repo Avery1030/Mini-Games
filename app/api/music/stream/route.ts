@@ -3,7 +3,7 @@ import {
   AUDIUS_TRACK_ID_RE,
   fetchAudiusAudio,
   fetchAudiusTrackStreamInfo,
-} from '@/utils/audiusStream'
+} from '@/lib/music'
 
 /**
  * 代理 Audius 完整音轨：主节点失败时自动换 mirror。

@@ -15,7 +15,7 @@ import {
   diffCoordinates,
   positionToCoordinate,
   previewPlacement,
-} from '@/utils/desktopLayout'
+} from '@/lib/desktop'
 
 type CoordApp = { id: DesktopAppId; coordinate: DesktopCoordinate }
 

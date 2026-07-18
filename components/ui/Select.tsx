@@ -10,8 +10,8 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react'
-import { cn } from '@/utils/cn'
-import { winChrome, winChromeSunken } from '@/utils/winChrome'
+import { cn } from '@/lib/cn'
+import { winChrome, winChromeSunken } from '@/lib/winChrome'
 
 export type SelectSize = 'sm' | 'md'
 

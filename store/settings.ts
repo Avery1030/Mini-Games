@@ -7,7 +7,7 @@ import {
   isWallpaperId,
   type WallpaperId,
 } from '@/config/wallpapers'
-import { writeWallpaperBoot } from '@/utils/wallpaperBoot'
+import { writeWallpaperBoot } from '@/lib/wallpaper'
 
 const SETTINGS_KEY = 'desktop-settings'
 const MAX_GALLERY = 40

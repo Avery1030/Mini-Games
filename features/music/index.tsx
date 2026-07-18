@@ -6,51 +6,22 @@ import {
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from 'react'
-import {
-  ListMusic,
-  Pause,
-  Play,
-  SkipBack,
-  SkipForward,
-  Volume2,
-  VolumeX,
-  Repeat,
-  Repeat1,
-  Shuffle,
-  FolderPlus,
-  Trash2,
-  Music2,
-  Search,
-  Plus,
-} from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { cn } from '@/utils/cn'
-import { Button, Input, Tab } from '@/components/ui'
+import { cn } from '@/lib/cn'
 import {
   DEMO_TRACKS,
   buildShuffleOrder,
-  formatTime,
   toPlayableSrc,
   type RepeatMode,
   type Track,
 } from './tracks'
+import { NowPlayingPanel } from './NowPlayingPanel'
+import { LibraryPanel, type SearchHit } from './LibraryPanel'
 
 export interface MusicProps {
   embedded?: boolean
 }
-
-type SearchHit = {
-  id: string
-  title: string
-  artist: string
-  source: string
-  previewUrl: string
-  artwork?: string
-  durationHint?: number
-}
-
 export function Music({ embedded = false }: MusicProps = {}) {
   const t = useTranslations('music')
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -419,7 +390,6 @@ export function Music({ embedded = false }: MusicProps = {}) {
   }
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
-  const RepeatIcon = repeat === 'one' ? Repeat1 : Repeat
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -463,273 +433,56 @@ export function Music({ embedded = false }: MusicProps = {}) {
     >
       <audio ref={audioRef} preload='metadata' />
 
-      <div className='shrink-0 px-3 pt-3 pb-2 border-b border-[#333]'>
-        <div className='flex gap-3'>
-          <div
-            className='w-[72px] h-[72px] shrink-0 rounded flex items-center justify-center border border-[#555] shadow-inner'
-            style={{
-              background: `linear-gradient(145deg, hsl(${coverHue} 45% 28%), hsl(${(coverHue + 40) % 360} 50% 16%))`,
-            }}
-          >
-            <Music2 size={28} className='text-white/80' />
-          </div>
-          <div className='min-w-0 flex-1 flex flex-col justify-center gap-0.5'>
-            <div className='font-bold truncate text-[#f5c542]'>{current?.title ?? t('emptyPlaylist')}</div>
-            <div className='text-xs text-[#aaa] truncate'>{current?.artist ?? '—'}</div>
-            <canvas ref={barsRef} width={200} height={28} className='w-full h-7 mt-1 opacity-90' />
-          </div>
-        </div>
+      <NowPlayingPanel
+        current={current ?? undefined}
+        coverHue={coverHue}
+        barsRef={barsRef}
+        currentTime={currentTime}
+        duration={duration}
+        progress={progress}
+        playing={playing}
+        volume={volume}
+        muted={muted}
+        shuffle={shuffle}
+        repeat={repeat}
+        error={error}
+        query={query}
+        searching={searching}
+        seekDragging={seekDragging}
+        onSeek={onSeek}
+        onTogglePlay={() => void togglePlay()}
+        onGoPrev={goPrev}
+        onGoNext={() => goNext(false)}
+        onToggleShuffle={toggleShuffle}
+        onCycleRepeat={cycleRepeat}
+        onVolumeChange={(v) => {
+          setVolume(v)
+          if (v > 0) setMuted(false)
+        }}
+        onToggleMute={() => setMuted((m) => !m)}
+        onQueryChange={setQuery}
+        onSearch={() => void runSearch()}
+        onCurrentTimePreview={setCurrentTime}
+      />
 
-        <div className='mt-3 flex items-center gap-2'>
-          <span className='text-[10px] tabular-nums text-[#999] w-8 text-right'>{formatTime(currentTime)}</span>
-          <input
-            type='range'
-            min={0}
-            max={duration || 0}
-            step={0.1}
-            value={Number.isFinite(currentTime) ? currentTime : 0}
-            className='flex-1 h-1.5 accent-[#f5c542] cursor-pointer'
-            aria-valuenow={progress}
-            onPointerDown={() => {
-              seekDragging.current = true
-            }}
-            onPointerUp={(e) => {
-              seekDragging.current = false
-              onSeek(Number((e.target as HTMLInputElement).value))
-            }}
-            onChange={(e) => {
-              const v = Number(e.target.value)
-              setCurrentTime(v)
-              if (!seekDragging.current) onSeek(v)
-            }}
-            disabled={!current || !duration}
-          />
-          <span className='text-[10px] tabular-nums text-[#999] w-8'>{formatTime(duration)}</span>
-        </div>
-
-        {error && <p className='mt-1 text-[11px] text-[#ff8080]'>{error}</p>}
-
-        <div className='mt-2 flex items-center justify-between gap-1'>
-          <div className='flex items-center gap-0.5'>
-            <ControlBtn label={t('shuffle')} active={shuffle} onClick={toggleShuffle}>
-              <Shuffle size={14} />
-            </ControlBtn>
-            <ControlBtn label={t('prev')} onClick={goPrev}>
-              <SkipBack size={16} />
-            </ControlBtn>
-            <Button
-              size='icon-lg'
-              className='rounded-sm mx-0.5'
-              aria-label={playing ? t('pause') : t('play')}
-              onClick={() => void togglePlay()}
-              disabled={!current}
-            >
-              {playing ? <Pause size={18} /> : <Play size={18} className='ml-0.5' />}
-            </Button>
-            <ControlBtn label={t('next')} onClick={() => goNext(false)}>
-              <SkipForward size={16} />
-            </ControlBtn>
-            <ControlBtn label={t('repeat')} active={repeat !== 'off'} onClick={cycleRepeat}>
-              <RepeatIcon size={14} />
-            </ControlBtn>
-          </div>
-
-          <div className='flex items-center gap-1 min-w-0'>
-            <Button
-              size='icon'
-              aria-label={muted ? t('unmute') : t('mute')}
-              onClick={() => setMuted((m) => !m)}
-            >
-              {muted || volume === 0 ? <VolumeX size={14} /> : <Volume2 size={14} />}
-            </Button>
-            <input
-              type='range'
-              min={0}
-              max={1}
-              step={0.01}
-              value={muted ? 0 : volume}
-              className='w-16 sm:w-20 h-1.5 accent-[#f5c542] cursor-pointer'
-              onChange={(e) => {
-                const v = Number(e.target.value)
-                setVolume(v)
-                if (v > 0) setMuted(false)
-              }}
-            />
-          </div>
-        </div>
-
-        {/* 搜索：Audius 完整曲 */}
-        <form
-          className='mt-2 flex gap-1'
-          onSubmit={(e) => {
-            e.preventDefault()
-            void runSearch()
-          }}
-        >
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t('searchPlaceholder')}
-            tone='dark'
-            size='md'
-            className='flex-1'
-          />
-          <Button type='submit' size='md' className='px-2' loading={searching} disabled={searching}>
-            {!searching && <Search size={12} />}
-            {t('search')}
-          </Button>
-        </form>
-        <p className='mt-1 text-[10px] text-[#666] leading-snug'>
-          {t('searchHint')}
-        </p>
-      </div>
-
-      <div className='flex-1 min-h-0 flex flex-col'>
-        <div className='shrink-0 flex items-center justify-between px-2 py-1.5 border-b border-[#333] bg-[#222] gap-2'>
-          <div className='flex items-center gap-1'>
-            <Tab active={tab === 'playlist'} onClick={() => setTab('playlist')}>
-              <ListMusic size={12} />
-              {t('playlist', { count: tracks.length })}
-            </Tab>
-            <Tab active={tab === 'search'} onClick={() => setTab('search')}>
-              <Search size={12} />
-              {t('searchResults', { count: hits.length })}
-            </Tab>
-          </div>
-          <Button size='sm' onClick={() => fileInputRef.current?.click()}>
-            <FolderPlus size={12} />
-            {t('local')}
-          </Button>
-          <input
-            ref={fileInputRef}
-            type='file'
-            accept='audio/*,.mp3,.wav,.ogg,.m4a,.flac'
-            multiple
-            className='hidden'
-            onChange={(e) => {
-              addLocalFiles(e.target.files)
-              e.target.value = ''
-            }}
-          />
-        </div>
-
-        {tab === 'playlist' ? (
-          <ul className='flex-1 min-h-0 overflow-y-auto'>
-            {tracks.length === 0 && (
-              <li className='px-3 py-8 text-center text-[#777] text-xs'>{t('emptyList')}</li>
-            )}
-            {tracks.map((track, index) => {
-              const active = index === currentIndex
-              return (
-                <li
-                  key={track.id}
-                  className={cn(
-                    'group flex items-center gap-2 px-2 py-1.5 border-b border-[#2a2a2a] cursor-pointer',
-                    active ? 'bg-[#000080]/70 text-white' : 'hover:bg-[#2c2c2c]',
-                  )}
-                  onClick={() => void playAt(index)}
-                >
-                  <span className='w-5 text-[10px] text-center tabular-nums text-[#888] shrink-0'>
-                    {active && playing ? '♪' : index + 1}
-                  </span>
-                  <div className='min-w-0 flex-1'>
-                    <div className='truncate text-[12px] font-medium'>{track.title}</div>
-                    <div className='truncate text-[10px] text-[#999]'>{track.artist}</div>
-                  </div>
-                  {track.source && (
-                    <span className='text-[9px] px-1 rounded bg-[#444] text-[#ccc] shrink-0'>{track.source}</span>
-                  )}
-                  <button
-                    type='button'
-                    aria-label={t('remove')}
-                    className='opacity-0 group-hover:opacity-100 p-1 text-[#aaa] hover:text-[#f88] shrink-0'
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      removeTrack(track.id)
-                    }}
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-        ) : (
-          <ul className='flex-1 min-h-0 overflow-y-auto'>
-            {searchError && (
-              <li className='px-3 py-3 text-[11px] text-[#ff8080]'>{searchError}</li>
-            )}
-            {!searching && !searchError && hits.length === 0 && (
-              <li className='px-3 py-8 text-center text-[#777] text-xs'>{t('searchPrompt')}</li>
-            )}
-            {hits.map((hit) => {
-              const busy = resolvingId === hit.id
-              const mins = hit.durationHint
-                ? `${Math.floor(hit.durationHint / 60)}:${String(Math.floor(hit.durationHint % 60)).padStart(2, '0')}`
-                : null
-              return (
-                <li
-                  key={hit.id}
-                  className='flex items-center gap-2 px-2 py-1.5 border-b border-[#2a2a2a] hover:bg-[#2c2c2c]'
-                >
-                  <div className='min-w-0 flex-1'>
-                    <div className='truncate text-[12px] font-medium'>{hit.title}</div>
-                    <div className='truncate text-[10px] text-[#999]'>
-                      {hit.artist}
-                      {mins ? ` · ${mins}` : ''}
-                    </div>
-                  </div>
-                  <Button
-                    size='sm'
-                    className='px-1.5 text-[10px]'
-                    loading={busy}
-                    disabled={busy}
-                    onClick={() => void addSearchHit(hit, false)}
-                    title={t('addToPlaylist')}
-                  >
-                    {!busy && <Plus size={11} />}
-                  </Button>
-                  <Button
-                    size='sm'
-                    className='px-1.5 text-[10px]'
-                    disabled={busy}
-                    onClick={() => void addSearchHit(hit, true)}
-                    title={t('playNow')}
-                  >
-                    <Play size={11} />
-                  </Button>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </div>
-
-      <div className='shrink-0 px-2 py-1 text-[10px] text-[#666] border-t border-[#333] flex justify-between gap-2'>
-        <span className='truncate'>{t('shortcuts')}</span>
-        <span className='shrink-0'>
-          {repeat === 'off' ? t('repeatOff') : repeat === 'all' ? t('repeatAll') : t('repeatOne')}
-          {shuffle ? ` · ${t('shuffleOn')}` : ''}
-        </span>
-      </div>
+      <LibraryPanel
+        tab={tab}
+        tracks={tracks}
+        hits={hits}
+        currentIndex={currentIndex}
+        playing={playing}
+        searching={searching}
+        searchError={searchError}
+        resolvingId={resolvingId}
+        repeat={repeat}
+        shuffle={shuffle}
+        fileInputRef={fileInputRef}
+        onTabChange={setTab}
+        onPlayAt={(index) => void playAt(index)}
+        onRemoveTrack={removeTrack}
+        onAddLocalFiles={addLocalFiles}
+        onAddSearchHit={(hit, playNow) => void addSearchHit(hit, playNow)}
+      />
     </div>
-  )
-}
-
-function ControlBtn({
-  children,
-  onClick,
-  active,
-  label,
-}: {
-  children: ReactNode
-  onClick: () => void
-  active?: boolean
-  label: string
-}) {
-  return (
-    <Button size='icon' aria-label={label} title={label} active={active} onClick={onClick}>
-      {children}
-    </Button>
   )
 }

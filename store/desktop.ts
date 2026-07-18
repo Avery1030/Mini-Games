@@ -6,7 +6,7 @@ import {
   type DesktopAppId,
   type DesktopCoordinate,
 } from '@/config/desktop'
-import { resolveOverlaps } from '@/utils/desktopLayout'
+import { resolveOverlaps } from '@/lib/desktop'
 import { COORDINATES_KEY, migrateLegacyDesktopPersist } from '@/store/migrateLegacy'
 
 type CoordinatesMap = Record<DesktopAppId, DesktopCoordinate>

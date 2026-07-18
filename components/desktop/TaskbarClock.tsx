@@ -9,8 +9,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useSettingsStore } from '@/store/settings'
 import { Button } from '@/components/ui'
-import { winChrome, winChromePressed, winChromeSunken } from '@/utils/winChrome'
-import { cn } from '@/utils/cn'
+import { winChrome, winChromePressed, winChromeSunken } from '@/lib/winChrome'
+import { cn } from '@/lib/cn'
 import 'react-day-picker/style.css'
 
 function formatClock(formatMode: '12h' | '24h', date: Date): string {

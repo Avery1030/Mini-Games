@@ -1,5 +1,5 @@
 import { type ButtonHTMLAttributes, type ReactNode } from 'react'
-import { cn } from '@/utils/cn'
+import { cn } from '@/lib/cn'
 
 export interface TabProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   active?: boolean

@@ -1,7 +1,7 @@
 import { readFile, stat } from 'fs/promises'
 import path from 'path'
 import { NextRequest, NextResponse } from 'next/server'
-import { WALLPAPER_DATA_DIR } from '@/utils/wallpaperDir'
+import { WALLPAPER_DATA_DIR } from '@/lib/wallpaper'
 
 function contentType(filename: string): string {
   const lower = filename.toLowerCase()

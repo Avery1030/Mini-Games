@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { isAudiusStreamPlayable, type AudiusStreamInfo } from '@/utils/audiusStream'
+import { isAudiusStreamPlayable, type AudiusStreamInfo } from '@/lib/music'
 
 type AudiusUser = {
   name?: string

@@ -2,7 +2,7 @@ import { mkdir, writeFile } from 'fs/promises'
 import path from 'path'
 import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
-import { WALLPAPER_DATA_DIR } from '@/utils/wallpaperDir'
+import { WALLPAPER_DATA_DIR } from '@/lib/wallpaper'
 
 const MAX_BYTES = 15 * 1024 * 1024
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { cn } from '@/utils/cn'
+import { cn } from '@/lib/cn'
 import { Panel } from '@/components/ui'
 
 export interface DocumentProps {

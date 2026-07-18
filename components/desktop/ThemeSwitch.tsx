@@ -4,7 +4,7 @@ import { Sun, Moon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
-import { cn } from '@/utils/cn'
+import { cn } from '@/lib/cn'
 
 export default function ThemeSwitch() {
   const t = useTranslations('theme')

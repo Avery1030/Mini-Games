@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { WindowsDesktop } from '@/components/WindowsDesktop'
+import { WindowsDesktop } from '@/components/desktop'
 
 export const metadata: Metadata = {
   title: 'Avery',

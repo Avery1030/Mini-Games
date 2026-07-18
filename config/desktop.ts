@@ -16,11 +16,11 @@ import {
   Settings,
   Music,
 } from 'lucide-react'
-import { Minesweeper } from '@/apps/minesweeper'
-import { Tetris } from '@/apps/tetris'
-import { Music as MusicApp } from '@/apps/music'
-import { SettingsApp } from '@/apps/settings'
-import { DocumentApp } from '@/apps/document'
+import { Minesweeper } from '@/features/minesweeper'
+import { Tetris } from '@/features/tetris'
+import { Music as MusicApp } from '@/features/music'
+import { SettingsApp } from '@/features/settings'
+import { DocumentApp } from '@/features/document'
 import { apps } from '@/messages/zh-CN.json'
 
 export type DesktopAppId = keyof typeof apps

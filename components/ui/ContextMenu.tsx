@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { cn } from '@/utils/cn'
-import { winChrome } from '@/utils/winChrome'
+import { cn } from '@/lib/cn'
+import { winChrome } from '@/lib/winChrome'
 
 export type ContextMenuItem = {
   id: string
