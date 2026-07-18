@@ -25,6 +25,7 @@ import {
   Search,
   Plus,
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/utils/cn'
 import { Button, Input, Tab } from '@/components/ui'
 import {
@@ -51,6 +52,7 @@ type SearchHit = {
 }
 
 export function Music({ embedded = false }: MusicProps = {}) {
+  const t = useTranslations('music')
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const seekDragging = useRef(false)
@@ -308,7 +310,7 @@ export function Music({ embedded = false }: MusicProps = {}) {
       added.push({
         id: `local-${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2, 7)}`,
         title: file.name.replace(/\.[^.]+$/, ''),
-        artist: '本地文件',
+        artist: t('local'),
         src: URL.createObjectURL(file),
         local: true,
         source: 'local',
@@ -349,7 +351,7 @@ export function Music({ embedded = false }: MusicProps = {}) {
   const runSearch = async () => {
     const q = query.trim()
     if (!q) {
-      setSearchError('请输入关键词')
+      setSearchError(t('needKeyword'))
       return
     }
     setSearching(true)
@@ -360,16 +362,16 @@ export function Music({ embedded = false }: MusicProps = {}) {
       const data = (await res.json()) as { results?: SearchHit[]; error?: string }
       if (!res.ok) {
         setHits([])
-        setSearchError(data.error || '搜索失败')
+        setSearchError(data.error || t('searchFail'))
         return
       }
       setHits(data.results ?? [])
       if (!(data.results?.length)) {
-        setSearchError(data.error || '没有找到结果，换个关键词试试')
+        setSearchError(data.error || t('noResults'))
       }
     } catch {
       setHits([])
-      setSearchError('网络错误')
+      setSearchError(t('networkError'))
     } finally {
       setSearching(false)
     }
@@ -377,7 +379,7 @@ export function Music({ embedded = false }: MusicProps = {}) {
 
   const addSearchHit = async (hit: SearchHit, playNow: boolean) => {
     if (!hit.previewUrl) {
-      setSearchError('该曲目没有可播放的音源')
+      setSearchError(t('noSource'))
       return
     }
 
@@ -472,7 +474,7 @@ export function Music({ embedded = false }: MusicProps = {}) {
             <Music2 size={28} className='text-white/80' />
           </div>
           <div className='min-w-0 flex-1 flex flex-col justify-center gap-0.5'>
-            <div className='font-bold truncate text-[#f5c542]'>{current?.title ?? '空播放列表'}</div>
+            <div className='font-bold truncate text-[#f5c542]'>{current?.title ?? t('emptyPlaylist')}</div>
             <div className='text-xs text-[#aaa] truncate'>{current?.artist ?? '—'}</div>
             <canvas ref={barsRef} width={200} height={28} className='w-full h-7 mt-1 opacity-90' />
           </div>
@@ -509,25 +511,25 @@ export function Music({ embedded = false }: MusicProps = {}) {
 
         <div className='mt-2 flex items-center justify-between gap-1'>
           <div className='flex items-center gap-0.5'>
-            <ControlBtn label='随机' active={shuffle} onClick={toggleShuffle}>
+            <ControlBtn label={t('shuffle')} active={shuffle} onClick={toggleShuffle}>
               <Shuffle size={14} />
             </ControlBtn>
-            <ControlBtn label='上一首' onClick={goPrev}>
+            <ControlBtn label={t('prev')} onClick={goPrev}>
               <SkipBack size={16} />
             </ControlBtn>
             <Button
               size='icon-lg'
               className='rounded-sm mx-0.5'
-              aria-label={playing ? '暂停' : '播放'}
+              aria-label={playing ? t('pause') : t('play')}
               onClick={() => void togglePlay()}
               disabled={!current}
             >
               {playing ? <Pause size={18} /> : <Play size={18} className='ml-0.5' />}
             </Button>
-            <ControlBtn label='下一首' onClick={() => goNext(false)}>
+            <ControlBtn label={t('next')} onClick={() => goNext(false)}>
               <SkipForward size={16} />
             </ControlBtn>
-            <ControlBtn label='循环' active={repeat !== 'off'} onClick={cycleRepeat}>
+            <ControlBtn label={t('repeat')} active={repeat !== 'off'} onClick={cycleRepeat}>
               <RepeatIcon size={14} />
             </ControlBtn>
           </div>
@@ -535,7 +537,7 @@ export function Music({ embedded = false }: MusicProps = {}) {
           <div className='flex items-center gap-1 min-w-0'>
             <Button
               size='icon'
-              aria-label={muted ? '取消静音' : '静音'}
+              aria-label={muted ? t('unmute') : t('mute')}
               onClick={() => setMuted((m) => !m)}
             >
               {muted || volume === 0 ? <VolumeX size={14} /> : <Volume2 size={14} />}
@@ -567,19 +569,18 @@ export function Music({ embedded = false }: MusicProps = {}) {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder='搜索歌曲 / 艺人（Audius 完整曲）…'
+            placeholder={t('searchPlaceholder')}
             tone='dark'
             size='md'
             className='flex-1'
           />
           <Button type='submit' size='md' className='px-2' loading={searching} disabled={searching}>
             {!searching && <Search size={12} />}
-            搜索
+            {t('search')}
           </Button>
         </form>
         <p className='mt-1 text-[10px] text-[#666] leading-snug'>
-          搜索 Audius 开放曲库（完整曲）。「周杰伦」等热门正版常被版权拦截，请搜 lofi / chill
-          等独立音乐，或用「本地」导入自己的文件。
+          {t('searchHint')}
         </p>
       </div>
 
@@ -588,16 +589,16 @@ export function Music({ embedded = false }: MusicProps = {}) {
           <div className='flex items-center gap-1'>
             <Tab active={tab === 'playlist'} onClick={() => setTab('playlist')}>
               <ListMusic size={12} />
-              播放列表 ({tracks.length})
+              {t('playlist', { count: tracks.length })}
             </Tab>
             <Tab active={tab === 'search'} onClick={() => setTab('search')}>
               <Search size={12} />
-              搜索结果 ({hits.length})
+              {t('searchResults', { count: hits.length })}
             </Tab>
           </div>
           <Button size='sm' onClick={() => fileInputRef.current?.click()}>
             <FolderPlus size={12} />
-            本地
+            {t('local')}
           </Button>
           <input
             ref={fileInputRef}
@@ -615,7 +616,7 @@ export function Music({ embedded = false }: MusicProps = {}) {
         {tab === 'playlist' ? (
           <ul className='flex-1 min-h-0 overflow-y-auto'>
             {tracks.length === 0 && (
-              <li className='px-3 py-8 text-center text-[#777] text-xs'>列表为空，请搜索或添加本地音频</li>
+              <li className='px-3 py-8 text-center text-[#777] text-xs'>{t('emptyList')}</li>
             )}
             {tracks.map((track, index) => {
               const active = index === currentIndex
@@ -640,7 +641,7 @@ export function Music({ embedded = false }: MusicProps = {}) {
                   )}
                   <button
                     type='button'
-                    aria-label='移除'
+                    aria-label={t('remove')}
                     className='opacity-0 group-hover:opacity-100 p-1 text-[#aaa] hover:text-[#f88] shrink-0'
                     onClick={(e) => {
                       e.stopPropagation()
@@ -659,7 +660,7 @@ export function Music({ embedded = false }: MusicProps = {}) {
               <li className='px-3 py-3 text-[11px] text-[#ff8080]'>{searchError}</li>
             )}
             {!searching && !searchError && hits.length === 0 && (
-              <li className='px-3 py-8 text-center text-[#777] text-xs'>输入关键词搜索完整曲目</li>
+              <li className='px-3 py-8 text-center text-[#777] text-xs'>{t('searchPrompt')}</li>
             )}
             {hits.map((hit) => {
               const busy = resolvingId === hit.id
@@ -684,7 +685,7 @@ export function Music({ embedded = false }: MusicProps = {}) {
                     loading={busy}
                     disabled={busy}
                     onClick={() => void addSearchHit(hit, false)}
-                    title='加入播放列表'
+                    title={t('addToPlaylist')}
                   >
                     {!busy && <Plus size={11} />}
                   </Button>
@@ -693,7 +694,7 @@ export function Music({ embedded = false }: MusicProps = {}) {
                     className='px-1.5 text-[10px]'
                     disabled={busy}
                     onClick={() => void addSearchHit(hit, true)}
-                    title='立即播放'
+                    title={t('playNow')}
                   >
                     <Play size={11} />
                   </Button>
@@ -705,10 +706,10 @@ export function Music({ embedded = false }: MusicProps = {}) {
       </div>
 
       <div className='shrink-0 px-2 py-1 text-[10px] text-[#666] border-t border-[#333] flex justify-between gap-2'>
-        <span className='truncate'>空格 播放 · ←/→ 快进退 · ↑/↓ 音量</span>
+        <span className='truncate'>{t('shortcuts')}</span>
         <span className='shrink-0'>
-          {repeat === 'off' ? '不循环' : repeat === 'all' ? '列表循环' : '单曲循环'}
-          {shuffle ? ' · 随机' : ''}
+          {repeat === 'off' ? t('repeatOff') : repeat === 'all' ? t('repeatAll') : t('repeatOne')}
+          {shuffle ? ` · ${t('shuffleOn')}` : ''}
         </span>
       </div>
     </div>

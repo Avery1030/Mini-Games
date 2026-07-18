@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* 与 next-themes 的 class 策略对齐（不要用系统 prefers-color-scheme） */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* 七段数码管风格数字字体（LED 计数器） */
 @font-face {
   font-family: 'Seven Segmentiments';
@@ -22,6 +25,7 @@
   --title-shadow: rgba(20, 50, 40, 0.35);
   --text-on-desktop: #ffffff;
   --text-on-chrome: #111111;
+  --text-muted: #555555;
 
   --icon-bg: rgba(240, 240, 240, 0.88);
   --icon-border: #8a8a8a;
@@ -46,8 +50,14 @@
   --window-title-active: #000080;
   --window-title-inactive: #808080;
   --window-title-text: #ffffff;
-  --window-body-bg: #1a1a1a;
+  /* 与窗口 chrome 一致，避免设置/文档等应用露出深色底边 */
+  --window-body-bg: #c0c0c0;
   --window-btn-hover: #0000aa;
+
+  --panel-inset: #f0f0f0;
+  --field-bg: #ffffff;
+  --status-bar-bg: #d4d0c8;
+  --status-bar-fg: #555555;
 
   --taskbar-bg: #c0c0c0;
   --taskbar-edge: #ffffff;
@@ -73,6 +83,7 @@
   --title-shadow: rgba(0, 0, 0, 0.55);
   --text-on-desktop: #e8f2f1;
   --text-on-chrome: #f0f0f0;
+  --text-muted: #b0b0b0;
 
   --icon-bg: rgba(50, 62, 62, 0.9);
   --icon-border: #6a7a7a;
@@ -97,8 +108,13 @@
   --window-title-active: #1e3a8a;
   --window-title-inactive: #4a5568;
   --window-title-text: #f5f5f5;
-  --window-body-bg: #0c0c0c;
+  --window-body-bg: #3d3d3d;
   --window-btn-hover: #2563eb;
+
+  --panel-inset: #2a2a2a;
+  --field-bg: #1a1a1a;
+  --status-bar-bg: #2e2e2e;
+  --status-bar-fg: #aaaaaa;
 
   --taskbar-bg: #2e2e2e;
   --taskbar-edge: #5a5a5a;
@@ -122,6 +138,7 @@ body {
   --color-title: var(--title-color);
   --color-on-desktop: var(--text-on-desktop);
   --color-on-chrome: var(--text-on-chrome);
+  --color-muted: var(--text-muted);
   --color-icon: var(--icon-bg);
   --color-icon-border: var(--icon-border);
   --color-icon-hover: var(--icon-hover-bg);
@@ -139,6 +156,10 @@ body {
   --color-window: var(--window-face);
   --color-window-body: var(--window-body-bg);
   --color-window-btn-hover: var(--window-btn-hover);
+  --color-panel-inset: var(--panel-inset);
+  --color-field: var(--field-bg);
+  --color-status-bar: var(--status-bar-bg);
+  --color-status-bar-fg: var(--status-bar-fg);
   --color-taskbar: var(--taskbar-bg);
   --color-taskbar-edge: var(--taskbar-edge);
   --color-theme-switch: var(--theme-switch-bg);
@@ -146,4 +167,12 @@ body {
   --color-theme-switch-hover: var(--theme-switch-hover);
   --color-theme-switch-icon: var(--theme-switch-icon);
   --font-pixel: 'MS Sans Serif', 'Microsoft Sans Serif', Tahoma, sans-serif;
+}
+
+/* 日历：跟随桌面 chrome，避免默认浅色变量干扰暗色主题 */
+.rdp-win95-root {
+  --rdp-accent-color: var(--window-title-active);
+  --rdp-accent-background-color: color-mix(in srgb, var(--window-title-active) 18%, transparent);
+  --rdp-today-color: var(--accent);
+  color: var(--text-on-chrome);
 }

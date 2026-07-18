@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/utils/cn'
 import { Button } from '@/components/ui'
 
@@ -44,6 +45,7 @@ export function WindowsWindow({
   zIndex = 1000,
   onFocus,
 }: WindowsWindowProps) {
+  const t = useTranslations('window')
   const [position, setPosition] = useState(() => {
     if (defaultPosition) return defaultPosition
     if (typeof window === 'undefined') return { x: 100, y: 80 }
@@ -246,7 +248,7 @@ export function WindowsWindow({
                 variant='title'
                 size='icon-sm'
                 className='text-sm'
-                aria-label='最小化'
+                aria-label={t('minimize')}
                 onClick={(e) => {
                   e.stopPropagation()
                   onMinimize()
@@ -262,7 +264,7 @@ export function WindowsWindow({
                 e.stopPropagation()
                 handleMaximize()
               }}
-              aria-label={maximized ? '还原' : '最大化'}
+              aria-label={maximized ? t('restore') : t('maximize')}
             >
               {maximized ? '⧉' : '□'}
             </Button>
@@ -273,7 +275,7 @@ export function WindowsWindow({
                 e.stopPropagation()
                 onClose?.()
               }}
-              aria-label='关闭'
+              aria-label={t('close')}
             >
               ✕
             </Button>

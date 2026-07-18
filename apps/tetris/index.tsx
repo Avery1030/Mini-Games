@@ -226,7 +226,11 @@ export function Tetris({ embedded = false }: TetrisProps = {}) {
   }, [state.status])
 
   return (
-    <div className={`w-full h-full text-white bg-[#0f172a] p-4 ${embedded ? '' : 'min-h-screen'}`}>
+    <div
+      className={`w-full h-full text-white bg-[#0f172a] p-4 ${
+        embedded ? '-m-3 h-[calc(100%+1.5rem)] min-h-0' : 'min-h-screen'
+      }`}
+    >
       <div className='flex items-start gap-4 h-full'>
         <div className='bg-black/50 border-2 border-[#334155] p-1'>
           <canvas ref={canvasRef} className='block' />

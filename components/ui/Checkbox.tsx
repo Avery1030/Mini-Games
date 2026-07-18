@@ -41,8 +41,8 @@ export function Checkbox({
           aria-hidden
           className={cn(
             winChromeSunken,
-            'absolute inset-0 flex items-center justify-center bg-white dark:bg-[#1a1a1a]',
-            'peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-[#000080]',
+            'absolute inset-0 flex items-center justify-center bg-field',
+            'peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-[var(--window-title-active)]',
           )}
         >
           <span

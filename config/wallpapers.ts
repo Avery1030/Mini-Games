@@ -160,9 +160,13 @@ export function isWallpaperId(id: unknown): id is WallpaperId {
   return wallpaperMap.has(id)
 }
 
-export function getWallpaperLabel(wallpaperId: WallpaperId, hasCustom: boolean): string {
+export function getWallpaperLabel(
+  wallpaperId: WallpaperId,
+  hasCustom: boolean,
+  t: (key: string) => string,
+): string {
   if (wallpaperId === CUSTOM_WALLPAPER_ID) {
-    return hasCustom ? '自定义图片' : '自定义图片（未上传）'
+    return hasCustom ? t('custom') : t('customEmpty')
   }
-  return WALLPAPERS.find((w) => w.id === wallpaperId)?.name ?? wallpaperId
+  return t(wallpaperId)
 }

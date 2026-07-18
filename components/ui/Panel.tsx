@@ -6,7 +6,7 @@ export interface PanelProps extends HTMLAttributes<HTMLDivElement> {
   children?: ReactNode
   /** 默认带内边距 */
   padded?: boolean
-  /** 浅灰内容底（设置页分组） */
+  /** 分组内容底（跟随主题 token） */
   inset?: boolean
 }
 
@@ -25,7 +25,7 @@ export function Panel({
       className={cn(
         winChromeSunken,
         padded && 'p-3',
-        inset && 'bg-[#f0f0f0] dark:bg-[#2a2a2a]',
+        inset && 'bg-panel-inset',
         className,
       )}
       {...props}

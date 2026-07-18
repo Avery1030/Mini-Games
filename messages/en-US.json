@@ -1,7 +1,7 @@
 {
   "index": {
     "title": "Home Title",
-    "home": "Home"
+    "home": "Start"
   },
   "apps": {
     "referral": "Referral",
@@ -19,5 +19,167 @@
     "log": "Log",
     "settings": "Settings",
     "music": "Music"
+  },
+  "desktop": {
+    "open": "Open",
+    "refresh": "Refresh",
+    "settings": "Settings"
+  },
+  "window": {
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "restore": "Restore",
+    "close": "Close"
+  },
+  "theme": {
+    "toLight": "Switch to light theme",
+    "toDark": "Switch to dark theme",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "lang": {
+    "label": "Language"
+  },
+  "clock": {
+    "openCalendar": "Open calendar",
+    "calendar": "Calendar",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "today": "Today: {date}",
+    "monthTitle": "{month} {year}",
+    "dateFull": "{weekday}, {month} {day}, {year}"
+  },
+  "wallpapers": {
+    "classic-teal": "Classic Teal",
+    "bliss-hill": "Bliss Hill",
+    "clouds": "Blue Skies",
+    "midnight": "Midnight",
+    "desert": "Desert Dusk",
+    "lavender": "Lavender Mist",
+    "matrix": "Terminal Matrix",
+    "solid-teal": "Solid Teal",
+    "solid-navy": "Solid Navy",
+    "solid-olive": "Solid Olive",
+    "custom": "Custom image",
+    "customEmpty": "Custom image (none)"
+  },
+  "settings": {
+    "title": "Settings",
+    "sections": {
+      "display": "Display",
+      "appearance": "Appearance",
+      "taskbar": "Taskbar",
+      "desktop": "Desktop"
+    },
+    "displayHint": "Select a wallpaper, then click Apply to change the desktop.",
+    "myImages": "My images",
+    "upload": "Upload",
+    "uploading": "Uploading…",
+    "import": "Import",
+    "importPlaceholder": "Paste image URL https://…",
+    "noImages": "No images yet. Upload a file or paste a direct link.",
+    "removeFromList": "Remove from list",
+    "customFallback": "Custom",
+    "presets": "Presets",
+    "selected": "Selected: {label}",
+    "pending": " (not applied)",
+    "current": " (current)",
+    "apply": "Apply",
+    "appearanceHint": "Changes apply immediately.",
+    "colorTheme": "Color theme",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeResolved": "Resolved as: {theme}",
+    "themeResolvedLight": "Light",
+    "themeResolvedDark": "Dark",
+    "iconSize": "Desktop icon size",
+    "iconSm": "Small",
+    "iconMd": "Medium (default)",
+    "iconLg": "Large",
+    "showIconLabels": "Show icon labels",
+    "taskbarHint": "Changes apply immediately.",
+    "showClock": "Show clock",
+    "clockFormat": "Clock format",
+    "clock24": "24-hour",
+    "clock12": "12-hour",
+    "showTrayDecor": "Show decorative tray icons",
+    "desktopHint": "Organize desktop icons. Changes apply immediately.",
+    "hidePlaceholders": "Hide placeholder icons (Referral, Market, etc.)",
+    "hidePlaceholdersHelp": "When enabled, only apps with real windows remain (Minesweeper, Tetris, Music, Settings, Document, etc.)."
+  },
+  "docs": {
+    "toc": "Contents",
+    "footer": "Read-only · {count} articles · Current: {title}",
+    "welcome": {
+      "title": "Welcome",
+      "body": [
+        "Welcome to this little desktop.",
+        "It is not a real OS, but it deliberately looks like a 1990s PC: beveled buttons, a taskbar, draggable icons, and the occasional stuck mood.",
+        "Double-click desktop icons to open windows. The taskbar remembers open order — the newest sits further to the right.",
+        "If you are just browsing, pick an article on the left. There is no account and no submit button."
+      ]
+    },
+    "desktop": {
+      "title": "Desktop guide",
+      "body": [
+        "Icons can be dragged. Move them to a comfortable grid; positions persist after refresh.",
+        "Change wallpapers in Settings: presets or your own uploads, stored locally. Prefer originals for a sharp fullscreen look.",
+        "Drag the title bar to move a window, drag edges to resize, use — to minimize, □ to maximize, and ✕ to close.",
+        "The taskbar has Start on the left, open windows in the middle, and theme, language, and decorative buttons on the right — the last ones are placeholders for now."
+      ]
+    },
+    "apps": {
+      "title": "Built-in apps",
+      "body": [
+        "Minesweeper and Tetris: classic games for zoning out.",
+        "Music: demo tracks plus Audius search; for popular copyrighted songs, import local files.",
+        "Settings: display, appearance, taskbar, and desktop options.",
+        "Document: the window you are reading. Offline content, no annotations saved.",
+        "Other icons (Referral, Bridge, Market…) are still under construction — treat them as coming-soon posters."
+      ]
+    },
+    "about": {
+      "title": "About",
+      "body": [
+        "Name: Mini Desktop",
+        "Vibe: Win95 nostalgia shell + a bit of modern web",
+        "Fonts: aiming for that classic dialog sans-serif feel",
+        "Notice: wallpapers, music, and copy here are for demo and personal fun. Respect copyright.",
+        "Version note: Document window · v1 · no revision history · no Save As."
+      ]
+    }
+  },
+  "music": {
+    "emptyPlaylist": "Empty playlist",
+    "shuffle": "Shuffle",
+    "prev": "Previous",
+    "next": "Next",
+    "play": "Play",
+    "pause": "Pause",
+    "repeat": "Repeat",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "searchPlaceholder": "Search songs / artists (Audius)…",
+    "search": "Search",
+    "searchHint": "Search the Audius open catalog. Popular copyrighted tracks are often blocked — try lofi / chill, or import local files.",
+    "playlist": "Playlist ({count})",
+    "searchResults": "Results ({count})",
+    "local": "Local",
+    "emptyList": "Playlist is empty. Search or add local audio.",
+    "remove": "Remove",
+    "needKeyword": "Enter a keyword",
+    "searchFail": "Search failed",
+    "noResults": "No results. Try another keyword.",
+    "networkError": "Network error",
+    "noSource": "No playable source for this track",
+    "searchPrompt": "Enter a keyword to search full tracks",
+    "addToPlaylist": "Add to playlist",
+    "playNow": "Play now",
+    "shortcuts": "Space play · ←/→ seek · ↑/↓ volume",
+    "repeatOff": "No repeat",
+    "repeatAll": "Repeat all",
+    "repeatOne": "Repeat one",
+    "shuffleOn": "Shuffle"
   }
 }

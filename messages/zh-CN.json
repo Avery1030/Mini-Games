@@ -19,5 +19,167 @@
     "log": "日志",
     "settings": "设置",
     "music": "音乐"
+  },
+  "desktop": {
+    "open": "打开",
+    "refresh": "刷新",
+    "settings": "设置"
+  },
+  "window": {
+    "minimize": "最小化",
+    "maximize": "最大化",
+    "restore": "还原",
+    "close": "关闭"
+  },
+  "theme": {
+    "toLight": "切换到浅色主题",
+    "toDark": "切换到深色主题",
+    "light": "浅色",
+    "dark": "深色"
+  },
+  "lang": {
+    "label": "语言"
+  },
+  "clock": {
+    "openCalendar": "打开日历",
+    "calendar": "日历",
+    "prevMonth": "上个月",
+    "nextMonth": "下个月",
+    "today": "今天：{date}",
+    "monthTitle": "{year}年 {month}月",
+    "dateFull": "{year}年{month}月{day}日 {weekday}"
+  },
+  "wallpapers": {
+    "classic-teal": "经典青绿",
+    "bliss-hill": "山丘晴空",
+    "clouds": "蓝天白云",
+    "midnight": "午夜星空",
+    "desert": "沙漠黄昏",
+    "lavender": "淡紫薄雾",
+    "matrix": "终端矩阵",
+    "solid-teal": "纯色青绿",
+    "solid-navy": "纯色海军蓝",
+    "solid-olive": "纯色橄榄",
+    "custom": "自定义图片",
+    "customEmpty": "自定义图片（未上传）"
+  },
+  "settings": {
+    "title": "设置",
+    "sections": {
+      "display": "显示",
+      "appearance": "外观",
+      "taskbar": "任务栏",
+      "desktop": "桌面"
+    },
+    "displayHint": "先点选壁纸，再点下方「应用」才会切换桌面。",
+    "myImages": "我的图片",
+    "upload": "上传",
+    "uploading": "上传中…",
+    "import": "导入",
+    "importPlaceholder": "粘贴图片直链 https://…",
+    "noImages": "还没有图片，可上传或粘贴直链导入。",
+    "removeFromList": "从列表移除",
+    "customFallback": "自定义",
+    "presets": "预设壁纸",
+    "selected": "已选：{label}",
+    "pending": "（未应用）",
+    "current": "（当前）",
+    "apply": "应用",
+    "appearanceHint": "改完立即生效，无需点应用。",
+    "colorTheme": "颜色主题",
+    "themeSystem": "跟随系统",
+    "themeLight": "浅色",
+    "themeDark": "深色",
+    "themeResolved": "当前解析为：{theme}",
+    "themeResolvedLight": "浅色",
+    "themeResolvedDark": "深色",
+    "iconSize": "桌面图标大小",
+    "iconSm": "小",
+    "iconMd": "中（默认）",
+    "iconLg": "大",
+    "showIconLabels": "在图标下方显示名称",
+    "taskbarHint": "改完立即生效。",
+    "showClock": "显示时钟",
+    "clockFormat": "时钟格式",
+    "clock24": "24 小时制",
+    "clock12": "12 小时制",
+    "showTrayDecor": "显示右侧装饰托盘图标",
+    "desktopHint": "整理图标显示，改完立即生效。",
+    "hidePlaceholders": "隐藏尚未开放的占位图标（邀请、市场等）",
+    "hidePlaceholdersHelp": "开启后，桌面只保留已实现窗口的应用（扫雷、俄罗斯方块、音乐、设置、文档等），看起来更干净。"
+  },
+  "docs": {
+    "toc": "目录",
+    "footer": "只读文档 · 共 {count} 篇 · 当前：{title}",
+    "welcome": {
+      "title": "欢迎",
+      "body": [
+        "欢迎来到这台小小的桌面。",
+        "它不是真正的操作系统，却故意长得像一台上世纪 90 年代的个人电脑：立体按钮、任务栏、可拖拽的图标，以及偶尔会卡住的心情。",
+        "双击桌面上的图标可以打开对应窗口；任务栏会记住你打开的顺序——最新打开的会排在更靠右的位置。",
+        "如果你只是想随便逛逛，从左边选一篇文档读一读就好。这里没有账号，也没有提交按钮。"
+      ]
+    },
+    "desktop": {
+      "title": "桌面指南",
+      "body": [
+        "图标可以拖动。把它们挪到舒服的格子里，位置会记住，刷新之后还在。",
+        "壁纸可以在「设置」里更换：有几张预设，也可以上传自己的图片。图片会保存在本机，尽量用原图，全屏会更清晰。",
+        "窗口可以拖动标题栏移动，拖边缘调整大小，点「—」最小化，点「□」最大化，点「✕」关闭。",
+        "任务栏左侧是开始区，中间是已打开的窗口，右侧有主题、语言和一些装饰按钮——后者暂时只是摆设。"
+      ]
+    },
+    "apps": {
+      "title": "内置应用",
+      "body": [
+        "扫雷与俄罗斯方块：两款经典小游戏，适合发呆。",
+        "音乐：可以播演示曲，也能搜 Audius 上的开放曲库；热门正版歌请用「本地」导入自己的文件。",
+        "设置：可调整显示、外观、任务栏与桌面相关选项。",
+        "文档：就是你现在看到的这个窗口。内容不会联网，也不会保存你的批注。",
+        "其余图标（邀请、桥、市场……）还在装修中，双击暂时打不开——请当作未来的预告海报。"
+      ]
+    },
+    "about": {
+      "title": "关于",
+      "body": [
+        "名称：Mini Desktop",
+        "气质：Win95 怀旧壳 + 一点当代网页",
+        "字体：尽量像系统对话框里的那种无衬线字",
+        "声明：本应用中的壁纸、音乐与文案仅供演示与自娱。请尊重版权，不要把别人的作品当成自己的发布。",
+        "版本札记：文档窗口 · 第一版 · 没有修订历史 · 也没有「另存为」。"
+      ]
+    }
+  },
+  "music": {
+    "emptyPlaylist": "空播放列表",
+    "shuffle": "随机",
+    "prev": "上一首",
+    "next": "下一首",
+    "play": "播放",
+    "pause": "暂停",
+    "repeat": "循环",
+    "mute": "静音",
+    "unmute": "取消静音",
+    "searchPlaceholder": "搜索歌曲 / 艺人（Audius 完整曲）…",
+    "search": "搜索",
+    "searchHint": "搜索 Audius 开放曲库（完整曲）。热门正版歌常被版权拦截，请搜 lofi / chill 等独立音乐，或用「本地」导入自己的文件。",
+    "playlist": "播放列表 ({count})",
+    "searchResults": "搜索结果 ({count})",
+    "local": "本地",
+    "emptyList": "列表为空，请搜索或添加本地音频",
+    "remove": "移除",
+    "needKeyword": "请输入关键词",
+    "searchFail": "搜索失败",
+    "noResults": "没有找到结果，换个关键词试试",
+    "networkError": "网络错误",
+    "noSource": "该曲目没有可播放的音源",
+    "searchPrompt": "输入关键词搜索完整曲目",
+    "addToPlaylist": "加入播放列表",
+    "playNow": "立即播放",
+    "shortcuts": "空格 播放 · ←/→ 快进退 · ↑/↓ 音量",
+    "repeatOff": "不循环",
+    "repeatAll": "列表循环",
+    "repeatOne": "单曲循环",
+    "shuffleOn": "随机"
   }
 }

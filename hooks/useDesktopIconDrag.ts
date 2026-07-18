@@ -10,6 +10,7 @@ import {
 } from 'react'
 import type { DesktopAppId, DesktopCoordinate } from '@/config/desktop'
 import {
+  DBLCLICK_MS,
   DRAG_THRESHOLD,
   diffCoordinates,
   positionToCoordinate,
@@ -51,6 +52,8 @@ export function useDesktopIconDrag({ apps, desktopRef, onOpen, onCommit }: UseDe
   const [previewCoords, setPreviewCoords] = useState<Map<DesktopAppId, DesktopCoordinate> | null>(
     null,
   )
+  /** 用于双击打开：记录上一次未拖拽的点击 */
+  const lastClickRef = useRef<{ id: DesktopAppId; time: number } | null>(null)
 
   const desktopLocalFromViewport = useCallback(
     (viewportLeft: number, viewportTop: number) => {
@@ -84,12 +87,22 @@ export function useDesktopIconDrag({ apps, desktopRef, onOpen, onCommit }: UseDe
       if (!session) return
 
       if (!session.moved) {
-        onOpenRef.current(session.id)
+        // 单击不打开；同一图标在时间窗口内点第二次才打开（Win 经典行为）
+        const now = Date.now()
+        const last = lastClickRef.current
+        if (last && last.id === session.id && now - last.time <= DBLCLICK_MS) {
+          onOpenRef.current(session.id)
+          lastClickRef.current = null
+        } else {
+          lastClickRef.current = { id: session.id, time: now }
+        }
         setDraggingId(null)
         setDragPixel(null)
         setPreviewCoords(null)
         return
       }
+
+      lastClickRef.current = null
 
       if (commit) {
         const local = desktopLocalFromViewport(viewportLeft, viewportTop)

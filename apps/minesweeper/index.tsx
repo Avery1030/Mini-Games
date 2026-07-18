@@ -234,7 +234,11 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
   }, [state.board, state.explodedCell, boardRows, boardCols, highlightSet, hoveredCell, pressedCell])
 
   return (
-    <div className={`flex flex-col items-center text-[#000] p-4 ${embedded ? '' : 'min-h-screen'}`}>
+    <div
+      className={`flex flex-col items-center text-[#000] bg-[#c0c0c0] p-4 ${
+        embedded ? '-m-3 h-[calc(100%+1.5rem)] min-h-0' : 'min-h-screen'
+      }`}
+    >
       <div className='flex gap-0 mb-2 border border-[#808080] border-b-0 rounded-t overflow-hidden'>
         {(['basic', 'intermediate', 'expert', 'fullscreen', 'custom'] as const).map((d) => (
           <button

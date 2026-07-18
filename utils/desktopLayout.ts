@@ -10,6 +10,9 @@ export const CELL_STEP = CELL_SIZE + CELL_GAP
 /** 超过该像素位移才视为拖拽（区分点击打开） */
 export const DRAG_THRESHOLD = 6
 
+/** 双击打开的时间窗口（ms） */
+export const DBLCLICK_MS = 450
+
 export function coordKey(coord: DesktopCoordinate): string {
   return `${coord[0]},${coord[1]}`
 }

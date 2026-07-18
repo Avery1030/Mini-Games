@@ -2,12 +2,13 @@
 
 import { COOKIE_KEY, COOKIE_MAX_AGE, Locale, defaultLocale, locales } from '@/i18n/config'
 import { useRouter } from '@/i18n/routing'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useEffect } from 'react'
 import { Select } from '@/components/ui'
 
 export default function LangSwitch() {
   const router = useRouter()
+  const t = useTranslations('lang')
   const currentLang = useLocale() as Locale
 
   const handleSwitch = (newLang: Locale) => {
@@ -31,7 +32,7 @@ export default function LangSwitch() {
     <Select
       size='sm'
       className='min-w-[88px]'
-      aria-label='Language'
+      aria-label={t('label')}
       value={currentLang}
       onValueChange={(v) => handleSwitch(v as Locale)}
       options={[

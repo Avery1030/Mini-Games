@@ -7,7 +7,7 @@ export type InputTone = 'chrome' | 'field' | 'dark'
 
 export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
   size?: InputSize
-  /** chrome=控件灰底；field=白底表单；dark=深色窗口内输入 */
+  /** chrome=控件灰底；field=表单底；dark=深色窗口内输入 */
   tone?: InputTone
 }
 
@@ -17,8 +17,8 @@ const sizeClass: Record<InputSize, string> = {
 }
 
 const toneClass: Record<InputTone, string> = {
-  chrome: cn(winChromeSunken, 'bg-chrome'),
-  field: cn(winChromeSunken, 'bg-white dark:bg-[#2a2a2a]'),
+  chrome: cn(winChromeSunken, 'bg-chrome text-on-chrome'),
+  field: cn(winChromeSunken, 'bg-field text-on-chrome'),
   dark: 'bg-[#111] border border-[#555] text-[#eee] focus:border-accent',
 }
 

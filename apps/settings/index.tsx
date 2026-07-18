@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { FolderOpen, Trash2, Link2 } from 'lucide-react'
 import { useTheme } from 'next-themes'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/utils/cn'
 import { Button, Checkbox, Input, Panel, Select } from '@/components/ui'
 import {
@@ -24,14 +25,11 @@ type Draft =
   | { kind: 'preset'; id: Exclude<WallpaperId, 'custom'> }
   | { kind: 'custom'; url: string }
 
-const SECTIONS: { id: SectionId; label: string }[] = [
-  { id: 'display', label: '显示' },
-  { id: 'appearance', label: '外观' },
-  { id: 'taskbar', label: '任务栏' },
-  { id: 'desktop', label: '桌面' },
-]
+const SECTIONS: SectionId[] = ['display', 'appearance', 'taskbar', 'desktop']
 
 export function SettingsApp({ embedded = false }: SettingsProps = {}) {
+  const t = useTranslations('settings')
+  const tw = useTranslations('wallpapers')
   const [section, setSection] = useState<SectionId>('display')
 
   const wallpaperId = useSettingsStore((s) => s.wallpaperId)
@@ -151,7 +149,7 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
     applyWallpaper(CUSTOM_WALLPAPER_ID, draft.url)
   }
 
-  const draftLabel = draft.kind === 'preset' ? getWallpaperLabel(draft.id, false) : '自定义图片'
+  const draftLabel = draft.kind === 'preset' ? getWallpaperLabel(draft.id, false, tw) : tw('custom')
   const themeValue = themeMounted ? theme ?? 'system' : 'system'
 
   return (
@@ -159,16 +157,16 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
       className={cn(
         'h-full min-h-0 flex text-sm text-on-chrome bg-window font-pixel',
         !embedded && 'min-h-screen p-4',
-        embedded && '-m-3 min-h-[440px]',
+        embedded && '-m-3 h-[calc(100%+1.5rem)] min-h-[440px]',
       )}
     >
       <Panel padded={false} className='w-[108px] shrink-0 flex flex-col overflow-hidden m-2 mr-0'>
-        <div className='px-2 py-1.5 text-[11px] font-bold border-b border-chrome-dark'>设置</div>
+        <div className='px-2 py-1.5 text-[11px] font-bold border-b border-chrome-dark'>{t('title')}</div>
         <ul className='flex-1 overflow-y-auto p-1'>
-          {SECTIONS.map((item) => {
-            const selected = item.id === section
+          {SECTIONS.map((id) => {
+            const selected = id === section
             return (
-              <li key={item.id}>
+              <li key={id}>
                 <button
                   type='button'
                   className={cn(
@@ -177,9 +175,9 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
                       ? 'bg-[var(--window-title-active)] text-[var(--window-title-text)]'
                       : 'hover:bg-chrome-hover',
                   )}
-                  onClick={() => setSection(item.id)}
+                  onClick={() => setSection(id)}
                 >
-                  {item.label}
+                  {t(`sections.${id}`)}
                 </button>
               </li>
             )
@@ -191,17 +189,17 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
         {section === 'display' && (
           <>
             <div className={cn('flex-1 min-h-0 overflow-y-auto p-3', embedded && 'p-3')}>
-              <h2 className='text-base font-bold mb-1'>显示</h2>
-              <p className='text-xs text-[#444] dark:text-[#aaa] mb-3'>
-                先点选壁纸，再点下方「应用」才会切换桌面。
+              <h2 className='text-base font-bold mb-1'>{t('sections.display')}</h2>
+              <p className='text-xs text-muted mb-3'>
+                {t('displayHint')}
               </p>
 
               <Panel inset className='mb-3'>
                 <div className='flex items-center justify-between gap-2 mb-2'>
-                  <div className='text-xs font-bold'>我的图片</div>
+                  <div className='text-xs font-bold'>{t('myImages')}</div>
                   <Button size='sm' loading={uploading} disabled={uploading} onClick={() => inputRef.current?.click()}>
                     {!uploading && <FolderOpen size={12} />}
-                    {uploading ? '上传中…' : '上传'}
+                    {uploading ? t('uploading') : t('upload')}
                   </Button>
                   <input
                     ref={inputRef}
@@ -241,13 +239,13 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
                               }}
                             />
                             <span className='text-[11px] truncate px-0.5 block mt-1'>
-                              {item.name || '自定义'}
+                              {item.name || t('customFallback')}
                             </span>
                           </button>
                           <button
                             type='button'
                             className='absolute top-2 right-2 p-0.5 bg-black/50 text-white rounded-sm hover:bg-black/70'
-                            title='从列表移除'
+                            title={t('removeFromList')}
                             onClick={(e) => {
                               e.stopPropagation()
                               removeFromWallpaperGallery(item.id)
@@ -263,14 +261,14 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
                     })}
                   </div>
                 ) : (
-                  <p className='text-[11px] text-[#666] mb-2'>还没有图片，可上传或粘贴直链导入。</p>
+                  <p className='text-[11px] text-muted mb-2'>{t('noImages')}</p>
                 )}
 
                 <div className='flex gap-1 items-center'>
                   <Input
                     value={importUrl}
                     onChange={(e) => setImportUrl(e.target.value)}
-                    placeholder='粘贴图片直链 https://…'
+                    placeholder={t('importPlaceholder')}
                     size='md'
                     tone='field'
                     disabled={uploading}
@@ -284,7 +282,7 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
                     onClick={() => void onImportLink()}
                   >
                     {!uploading && <Link2 size={12} />}
-                    导入
+                    {t('import')}
                   </Button>
                 </div>
                 {uploadError && <p className='mt-1 text-[11px] text-[#c00]'>{uploadError}</p>}
@@ -292,7 +290,7 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
               </Panel>
 
               <Panel inset>
-                <div className='text-xs font-bold mb-2'>预设壁纸</div>
+                <div className='text-xs font-bold mb-2'>{t('presets')}</div>
                 <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[160px] overflow-y-auto pr-1'>
                   {WALLPAPERS.map((paper) => {
                     const selected = draft.kind === 'preset' && draft.id === paper.id
@@ -313,7 +311,7 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
                           style={{ background: paper.preview }}
                           aria-hidden
                         />
-                        <span className='text-[11px] truncate px-0.5'>{paper.name}</span>
+                        <span className='text-[11px] truncate px-0.5'>{tw(paper.id)}</span>
                       </button>
                     )
                   })}
@@ -321,13 +319,13 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
               </Panel>
             </div>
 
-            <div className='shrink-0 flex items-center justify-between gap-2 px-3 py-2 border-t border-[#808080] bg-[#d4d0c8] dark:bg-[#2e2e2e]'>
-              <span className='text-[11px] text-[#444] dark:text-[#aaa] truncate min-w-0'>
-                已选：{draftLabel}
-                {dirty ? '（未应用）' : '（当前）'}
+            <div className='shrink-0 flex items-center justify-between gap-2 px-3 py-2 border-t border-chrome-dark bg-status-bar'>
+              <span className='text-[11px] text-status-bar-fg truncate min-w-0'>
+                {t('selected', { label: draftLabel })}
+                {dirty ? t('pending') : t('current')}
               </span>
               <Button size='md' className='px-4 font-bold' disabled={!dirty} onClick={onApplyWallpaper}>
-                应用
+                {t('apply')}
               </Button>
             </div>
           </>
@@ -335,39 +333,45 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
 
         {section === 'appearance' && (
           <div className='flex-1 min-h-0 overflow-y-auto p-3 space-y-3'>
-            <h2 className='text-base font-bold mb-1'>外观</h2>
-            <p className='text-xs text-[#444] dark:text-[#aaa]'>改完立即生效，无需点应用。</p>
+            <h2 className='text-base font-bold mb-1'>{t('sections.appearance')}</h2>
+            <p className='text-xs text-muted'>{t('appearanceHint')}</p>
 
             <Panel inset className='space-y-3'>
               <div>
-                <div className='text-xs font-bold mb-1.5'>颜色主题</div>
+                <div className='text-xs font-bold mb-1.5'>{t('colorTheme')}</div>
                 <Select
                   size='sm'
                   className='min-w-[140px]'
                   value={themeValue}
                   onValueChange={(v) => setTheme(v)}
                   options={[
-                    { value: 'system', label: '跟随系统' },
-                    { value: 'light', label: '浅色' },
-                    { value: 'dark', label: '深色' },
+                    { value: 'system', label: t('themeSystem') },
+                    { value: 'light', label: t('themeLight') },
+                    { value: 'dark', label: t('themeDark') },
                   ]}
                 />
-                <p className='mt-1 text-[10px] text-[#666]'>
-                  当前解析为：{themeMounted ? (resolvedTheme === 'dark' ? '深色' : '浅色') : '…'}
+                <p className='mt-1 text-[10px] text-muted'>
+                  {t('themeResolved', {
+                    theme: themeMounted
+                      ? resolvedTheme === 'dark'
+                        ? t('themeResolvedDark')
+                        : t('themeResolvedLight')
+                      : '…',
+                  })}
                 </p>
               </div>
 
               <div>
-                <div className='text-xs font-bold mb-1.5'>桌面图标大小</div>
+                <div className='text-xs font-bold mb-1.5'>{t('iconSize')}</div>
                 <Select
                   size='sm'
                   className='min-w-[140px]'
                   value={iconSize}
                   onValueChange={(v) => setIconSize(v as 'sm' | 'md' | 'lg')}
                   options={[
-                    { value: 'sm', label: '小' },
-                    { value: 'md', label: '中（默认）' },
-                    { value: 'lg', label: '大' },
+                    { value: 'sm', label: t('iconSm') },
+                    { value: 'md', label: t('iconMd') },
+                    { value: 'lg', label: t('iconLg') },
                   ]}
                 />
               </div>
@@ -375,7 +379,7 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
               <Checkbox
                 checked={showIconLabels}
                 onChange={(e) => setShowIconLabels(e.target.checked)}
-                label='在图标下方显示名称'
+                label={t('showIconLabels')}
               />
             </Panel>
           </div>
@@ -383,32 +387,32 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
 
         {section === 'taskbar' && (
           <div className='flex-1 min-h-0 overflow-y-auto p-3 space-y-3'>
-            <h2 className='text-base font-bold mb-1'>任务栏</h2>
-            <p className='text-xs text-[#444] dark:text-[#aaa]'>改完立即生效。</p>
+            <h2 className='text-base font-bold mb-1'>{t('sections.taskbar')}</h2>
+            <p className='text-xs text-muted'>{t('taskbarHint')}</p>
 
             <Panel inset className='space-y-3'>
               <Checkbox
                 checked={showTaskbarClock}
                 onChange={(e) => setShowTaskbarClock(e.target.checked)}
-                label='显示时钟'
+                label={t('showClock')}
               />
               <div className={cn(!showTaskbarClock && 'opacity-50 pointer-events-none')}>
-                <div className='text-xs font-bold mb-1.5'>时钟格式</div>
+                <div className='text-xs font-bold mb-1.5'>{t('clockFormat')}</div>
                 <Select
                   size='sm'
                   className='min-w-[140px]'
                   value={clockFormat}
                   onValueChange={(v) => setClockFormat(v as '12h' | '24h')}
                   options={[
-                    { value: '24h', label: '24 小时制' },
-                    { value: '12h', label: '12 小时制' },
+                    { value: '24h', label: t('clock24') },
+                    { value: '12h', label: t('clock12') },
                   ]}
                 />
               </div>
               <Checkbox
                 checked={showTrayDecor}
                 onChange={(e) => setShowTrayDecor(e.target.checked)}
-                label='显示右侧装饰托盘图标'
+                label={t('showTrayDecor')}
               />
             </Panel>
           </div>
@@ -416,17 +420,17 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
 
         {section === 'desktop' && (
           <div className='flex-1 min-h-0 overflow-y-auto p-3 space-y-3'>
-            <h2 className='text-base font-bold mb-1'>桌面</h2>
-            <p className='text-xs text-[#444] dark:text-[#aaa]'>整理图标显示，改完立即生效。</p>
+            <h2 className='text-base font-bold mb-1'>{t('sections.desktop')}</h2>
+            <p className='text-xs text-muted'>{t('desktopHint')}</p>
 
             <Panel inset className='space-y-3'>
               <Checkbox
                 checked={hidePlaceholderIcons}
                 onChange={(e) => setHidePlaceholderIcons(e.target.checked)}
-                label='隐藏尚未开放的占位图标（邀请、市场等）'
+                label={t('hidePlaceholders')}
               />
-              <p className='text-[10px] text-[#666] leading-relaxed'>
-                开启后，桌面只保留已实现窗口的应用（扫雷、俄罗斯方块、音乐、设置、文档等），看起来更干净。
+              <p className='text-[10px] text-muted leading-relaxed'>
+                {t('hidePlaceholdersHelp')}
               </p>
             </Panel>
           </div>

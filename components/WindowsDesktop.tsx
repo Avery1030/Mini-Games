@@ -7,7 +7,8 @@ import LangSwitch from './LangSwitch'
 import ThemeSwitch from './ThemeSwitch'
 import { TaskbarClock } from './TaskbarClock'
 import { cn } from '@/utils/cn'
-import { Button } from '@/components/ui'
+import { Button, ContextMenu, type ContextMenuState } from '@/components/ui'
+import type { DesktopAppId } from '@/config/desktop'
 import { winChrome } from '@/utils/winChrome'
 import { useDesktopApps, useDesktopHydrated } from '@/hooks/useDesktopApps'
 import { useDesktopIconDrag } from '@/hooks/useDesktopIconDrag'
@@ -39,6 +40,7 @@ function getCascadedPosition(stackIndex: number, width: number, height: number) 
 
 export function WindowsDesktop() {
   const t = useTranslations()
+  const td = useTranslations('desktop')
   const apps = useDesktopApps()
   const hasHydrated = useDesktopHydrated()
   const openWindow = useWindowStore((s) => s.openWindow)
@@ -60,6 +62,7 @@ export function WindowsDesktop() {
    * 真实壁纸在 useLayoutEffect / settings 水合后再写入。
    */
   const [desktopBgStyle, setDesktopBgStyle] = useState<CSSProperties>(DESKTOP_BG_PLACEHOLDER_STYLE)
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
 
   useLayoutEffect(() => {
     const boot = readWallpaperBoot()
@@ -129,9 +132,48 @@ export function WindowsDesktop() {
     [openApps, t],
   )
 
+  const closeContextMenu = () => setContextMenu(null)
+
+  const handleDesktopContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault()
+    const target = e.target as Element | null
+    // 窗口上的右键不弹出桌面菜单
+    if (target?.closest?.('[data-window-id]')) return
+
+    const iconEl = target?.closest?.('[data-desktop-icon]') as HTMLElement | null
+    const iconId = (iconEl?.dataset.desktopIcon ?? null) as DesktopAppId | null
+    const app = iconId ? desktopIcons.find((a) => a.id === iconId) : undefined
+    const canOpen = Boolean(app?.app)
+
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items: [
+        {
+          id: 'open',
+          label: td('open'),
+          disabled: !canOpen,
+          onSelect: () => {
+            if (iconId && canOpen) openWindow(iconId)
+          },
+        },
+        {
+          id: 'refresh',
+          label: td('refresh'),
+          onSelect: () => {
+            window.location.reload()
+          },
+        },
+      ],
+    })
+  }
+
   return (
     <div className='min-h-screen flex flex-col select-none font-pixel text-on-desktop' style={desktopBgStyle}>
-      <div className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem]'>
+      <div
+        className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem]'
+        onContextMenu={handleDesktopContextMenu}
+      >
         {/* grid 放在无 padding 的内层，absolute 让位时与 grid 原点一致，避免拖拽瞬间「内边距消失」 */}
         <div
           ref={desktopRef}
@@ -154,6 +196,7 @@ export function WindowsDesktop() {
               return (
                 <DesktopIcon
                   key={app.id}
+                  appId={app.id}
                   label={t(`apps.${app.id}`)}
                   showLabel={showIconLabels}
                   iconBoxClass={iconVis.box}
@@ -237,7 +280,7 @@ export function WindowsDesktop() {
           </div>
           <ThemeSwitch />
           <Button size='md' className='px-3 py-1.5 h-auto' onClick={() => openWindow('settings')}>
-            Settings
+            {td('settings')}
           </Button>
           <div className='flex items-center gap-2 mr-1'>
             <LangSwitch />
@@ -254,11 +297,14 @@ export function WindowsDesktop() {
           </div>
         </div>
       </footer>
+
+      <ContextMenu menu={contextMenu} onClose={closeContextMenu} />
     </div>
   )
 }
 
 function DesktopIcon({
+  appId,
   label,
   showLabel,
   iconBoxClass,
@@ -275,6 +321,7 @@ function DesktopIcon({
   dragTop,
   onPointerDown,
 }: {
+  appId: DesktopAppId
   label: string
   showLabel: boolean
   iconBoxClass: string
@@ -317,6 +364,7 @@ function DesktopIcon({
       role='button'
       tabIndex={0}
       aria-label={label}
+      data-desktop-icon={appId}
       className={cn(
         'group flex flex-col items-center gap-2 p-1 rounded border border-transparent self-start',
         'hover:bg-icon-hover hover:border-icon-hover-border active:bg-icon-active',
