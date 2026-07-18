@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { WindowsWindow } from './WindowsWindow'
 import { useTranslations } from 'next-intl'
 import LangSwitch from './LangSwitch'
@@ -11,12 +11,10 @@ import { useDesktopApps, useDesktopHydrated } from '@/hooks/useDesktopApps'
 import { useDesktopIconDrag } from '@/hooks/useDesktopIconDrag'
 import { useDesktopStore } from '@/store/desktop'
 import { useWindowStore } from '@/store/window'
-import {
-  CELL_GAP,
-  CELL_SIZE,
-  coordinateToPosition,
-  resolveCoordinate,
-} from '@/utils/desktopLayout'
+import { useSettingsStore } from '@/store/settings'
+import { resolveDesktopBackgroundStyle, DESKTOP_BG_PLACEHOLDER_STYLE, CUSTOM_WALLPAPER_ID } from '@/config/wallpapers'
+import { readWallpaperBoot } from '@/utils/wallpaperBoot'
+import { CELL_GAP, CELL_SIZE, coordinateToPosition, resolveCoordinate } from '@/utils/desktopLayout'
 
 const CASCADE_OFFSET = 28
 const YIELD_TRANSITION = 'left 220ms ease, top 220ms ease'
@@ -41,6 +39,31 @@ export function WindowsDesktop() {
   const focusWindow = useWindowStore((s) => s.focusWindow)
   const handleTaskbarClick = useWindowStore((s) => s.handleTaskbarClick)
   const updateCoordinates = useDesktopStore((s) => s.updateCoordinates)
+  const wallpaperId = useSettingsStore((s) => s.wallpaperId)
+  const customWallpaperUrl = useSettingsStore((s) => s.customWallpaperUrl)
+  const settingsHydrated = useSettingsStore((s) => s._hasHydrated)
+
+  /**
+   * SSR 与首屏 hydrate 必须相同：禁止在 render 里读 localStorage。
+   * 真实壁纸在 useLayoutEffect / settings 水合后再写入。
+   */
+  const [desktopBgStyle, setDesktopBgStyle] = useState<CSSProperties>(DESKTOP_BG_PLACEHOLDER_STYLE)
+
+  useLayoutEffect(() => {
+    const boot = readWallpaperBoot()
+    if (boot?.wallpaperId === CUSTOM_WALLPAPER_ID && boot.customUrl) {
+      setDesktopBgStyle(resolveDesktopBackgroundStyle(CUSTOM_WALLPAPER_ID, boot.customUrl))
+      return
+    }
+    if (boot?.wallpaperId && boot.wallpaperId !== CUSTOM_WALLPAPER_ID) {
+      setDesktopBgStyle(resolveDesktopBackgroundStyle(boot.wallpaperId, null))
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!settingsHydrated) return
+    setDesktopBgStyle(resolveDesktopBackgroundStyle(wallpaperId, customWallpaperUrl))
+  }, [settingsHydrated, wallpaperId, customWallpaperUrl])
 
   const desktopRef = useRef<HTMLDivElement>(null)
   const { draggingId, dragPixel, previewCoords, handleIconPointerDown } = useDesktopIconDrag({
@@ -70,10 +93,8 @@ export function WindowsDesktop() {
 
   return (
     <div
-      className={cn(
-        'min-h-screen flex flex-col select-none font-pixel text-on-desktop transition-[background,color] duration-300',
-        'bg-[radial-gradient(ellipse_80%_50%_at_70%_20%,var(--desktop-bg-glow),transparent_55%),radial-gradient(ellipse_60%_40%_at_15%_80%,var(--desktop-pattern),transparent_50%),linear-gradient(165deg,var(--desktop-bg),var(--desktop-bg-deep))]',
-      )}
+      className='min-h-screen flex flex-col select-none font-pixel text-on-desktop'
+      style={desktopBgStyle}
     >
       <div className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem]'>
         {/* grid 放在无 padding 的内层，absolute 让位时与 grid 原点一致，避免拖拽瞬间「内边距消失」 */}
@@ -119,7 +140,7 @@ export function WindowsDesktop() {
           <div className='absolute inset-0 z-[100] bg-desktop-overlay pointer-events-none' aria-hidden />
         )}
 
-        <div className='absolute inset-0 flex items-center justify-center pointer-events-none'>
+        {/* <div className='absolute inset-0 flex items-center justify-center pointer-events-none'>
           <div className='flex items-end gap-6 -mr-32'>
             <div className='w-24 h-32 flex items-end justify-center rounded border-2 bg-hero-plate border-hero-plate-border shadow-[inset_1px_1px_0_rgba(255,255,255,0.35)]'>
               <span className='text-4xl mb-2'>👋</span>
@@ -131,7 +152,7 @@ export function WindowsDesktop() {
               {t('index.title')}
             </h1>
           </div>
-        </div>
+        </div> */}
 
         {openApps.map((app) => {
           if (!app.app) return null
@@ -189,7 +210,11 @@ export function WindowsDesktop() {
             $
           </div>
           <ThemeSwitch />
-          <button type='button' className={cn(winChrome, 'px-3 py-1.5 text-sm font-medium cursor-pointer')}>
+          <button
+            type='button'
+            className={cn(winChrome, 'px-3 py-1.5 text-sm font-medium cursor-pointer')}
+            onClick={() => openWindow('settings')}
+          >
             Settings
           </button>
           <div className='flex items-center gap-3 mr-2'>

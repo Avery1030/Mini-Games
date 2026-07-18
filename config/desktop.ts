@@ -14,9 +14,12 @@ import {
   Mail,
   Notebook,
   Settings,
+  Music,
 } from 'lucide-react'
-import { Minesweeper } from '@/games/minesweeper'
-import { Tetris } from '@/games/tetris'
+import { Minesweeper } from '@/apps/minesweeper'
+import { Tetris } from '@/apps/tetris'
+import { Music as MusicApp } from '@/apps/music'
+import { SettingsApp } from '@/apps/settings'
 import { apps } from '@/messages/zh-CN.json'
 
 export type DesktopAppId = keyof typeof apps
@@ -83,7 +86,22 @@ export const DESKTOP_APP_DEFINITIONS: DesktopAppDefinition[] = [
   { id: 'donation', icon: Rose, defaultCoordinate: [2, 4] },
   { id: 'email', icon: Mail, defaultCoordinate: [2, 5] },
   { id: 'log', icon: Notebook, defaultCoordinate: [2, 6] },
-  { id: 'settings', icon: Settings, defaultCoordinate: [2, 7] },
+  {
+    id: 'settings',
+    icon: Settings,
+    defaultCoordinate: [2, 7],
+    width: 440,
+    height: 480,
+    app: SettingsApp,
+  },
+  {
+    id: 'music',
+    icon: Music,
+    defaultCoordinate: [2, 8],
+    width: 420,
+    height: 620,
+    app: MusicApp,
+  },
 ]
 
 const definitionMap = new Map(DESKTOP_APP_DEFINITIONS.map((app) => [app.id, app]))
@@ -93,9 +111,10 @@ export function getAppDefinition(id: DesktopAppId): DesktopAppDefinition | undef
 }
 
 export function createDefaultWindows(): Record<DesktopAppId, DesktopWindowRuntime> {
-  return Object.fromEntries(
-    DESKTOP_APP_DEFINITIONS.map((app) => [app.id, { ...DEFAULT_WINDOW_RUNTIME }]),
-  ) as Record<DesktopAppId, DesktopWindowRuntime>
+  return Object.fromEntries(DESKTOP_APP_DEFINITIONS.map((app) => [app.id, { ...DEFAULT_WINDOW_RUNTIME }])) as Record<
+    DesktopAppId,
+    DesktopWindowRuntime
+  >
 }
 
 export function createDefaultCoordinates(): Record<DesktopAppId, DesktopCoordinate> {

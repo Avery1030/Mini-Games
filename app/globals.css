@@ -110,7 +110,10 @@
   --theme-switch-icon: #f0e6c8;
 }
 
-/* 映射为 Tailwind 颜色工具类（bg-chrome / text-on-desktop 等） */
+body {
+  background: #1a2a29;
+}
+
 @theme inline {
   --color-desktop: var(--desktop-bg);
   --color-desktop-deep: var(--desktop-bg-deep);
