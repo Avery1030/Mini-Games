@@ -195,6 +195,17 @@ interface SettingsState {
   customWallpaperUrl: string | null
   /** 本应用上传/导入过的壁纸列表（本机或外链） */
   wallpaperGallery: WallpaperGalleryItem[]
+  /** 桌面图标是否显示文字 */
+  showIconLabels: boolean
+  /** 桌面图标视觉尺寸 */
+  iconSize: 'sm' | 'md' | 'lg'
+  /** 隐藏尚未实现窗口的占位图标 */
+  hidePlaceholderIcons: boolean
+  /** 任务栏显示时钟 */
+  showTaskbarClock: boolean
+  clockFormat: '24h' | '12h'
+  /** 任务栏右侧装饰托盘图标 */
+  showTrayDecor: boolean
   _hasHydrated: boolean
 }
 
@@ -204,6 +215,12 @@ interface SettingsActions {
   addToWallpaperGallery: (item: Omit<WallpaperGalleryItem, 'id' | 'createdAt'> & { id?: string }) => void
   removeFromWallpaperGallery: (id: string) => void
   clearCustomWallpaper: () => void
+  setShowIconLabels: (value: boolean) => void
+  setIconSize: (value: 'sm' | 'md' | 'lg') => void
+  setHidePlaceholderIcons: (value: boolean) => void
+  setShowTaskbarClock: (value: boolean) => void
+  setClockFormat: (value: '24h' | '12h') => void
+  setShowTrayDecor: (value: boolean) => void
 }
 
 export type SettingsStore = SettingsState & SettingsActions
@@ -214,9 +231,26 @@ export const useSettingsStore = create<SettingsStore>()(
       wallpaperId: DEFAULT_WALLPAPER_ID,
       customWallpaperUrl: null,
       wallpaperGallery: [],
+      showIconLabels: true,
+      iconSize: 'md',
+      hidePlaceholderIcons: false,
+      showTaskbarClock: true,
+      clockFormat: '24h',
+      showTrayDecor: true,
       _hasHydrated: false,
 
       setHasHydrated: (value) => set({ _hasHydrated: value }),
+
+      setShowIconLabels: (value) => set({ showIconLabels: value }),
+      setIconSize: (value) => {
+        if (value === 'sm' || value === 'md' || value === 'lg') set({ iconSize: value })
+      },
+      setHidePlaceholderIcons: (value) => set({ hidePlaceholderIcons: value }),
+      setShowTaskbarClock: (value) => set({ showTaskbarClock: value }),
+      setClockFormat: (value) => {
+        if (value === '12h' || value === '24h') set({ clockFormat: value })
+      },
+      setShowTrayDecor: (value) => set({ showTrayDecor: value }),
 
       applyWallpaper: (id, customUrl) => {
         if (!isWallpaperId(id)) return
@@ -281,12 +315,18 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: SETTINGS_KEY,
-      version: 5,
+      version: 6,
       storage: createJSONStorage(() => settingsStorage),
       partialize: (state) => ({
         wallpaperId: state.wallpaperId,
         customWallpaperUrl: state.customWallpaperUrl,
         wallpaperGallery: state.wallpaperGallery,
+        showIconLabels: state.showIconLabels,
+        iconSize: state.iconSize,
+        hidePlaceholderIcons: state.hidePlaceholderIcons,
+        showTaskbarClock: state.showTaskbarClock,
+        clockFormat: state.clockFormat,
+        showTrayDecor: state.showTrayDecor,
       }),
       migrate: (persisted) => {
         const raw = (persisted ?? {}) as {
@@ -294,6 +334,12 @@ export const useSettingsStore = create<SettingsStore>()(
           customWallpaperUrl?: unknown
           customWallpaperDataUrl?: unknown
           wallpaperGallery?: unknown
+          showIconLabels?: unknown
+          iconSize?: unknown
+          hidePlaceholderIcons?: unknown
+          showTaskbarClock?: unknown
+          clockFormat?: unknown
+          showTrayDecor?: unknown
         }
         let custom =
           normalizeCustomSrc(raw.customWallpaperUrl) ??
@@ -304,7 +350,20 @@ export const useSettingsStore = create<SettingsStore>()(
           wallpaperId = DEFAULT_WALLPAPER_ID
         }
         const gallery = ensureGalleryHasUrl(normalizeGallery(raw.wallpaperGallery), custom)
-        return { wallpaperId, customWallpaperUrl: custom, wallpaperGallery: gallery }
+        const iconSize =
+          raw.iconSize === 'sm' || raw.iconSize === 'md' || raw.iconSize === 'lg' ? raw.iconSize : 'md'
+        const clockFormat = raw.clockFormat === '12h' || raw.clockFormat === '24h' ? raw.clockFormat : '24h'
+        return {
+          wallpaperId,
+          customWallpaperUrl: custom,
+          wallpaperGallery: gallery,
+          showIconLabels: raw.showIconLabels !== false,
+          iconSize,
+          hidePlaceholderIcons: raw.hidePlaceholderIcons === true,
+          showTaskbarClock: raw.showTaskbarClock !== false,
+          clockFormat,
+          showTrayDecor: raw.showTrayDecor !== false,
+        }
       },
       merge: (persisted, current) => {
         const saved = persisted as {
@@ -312,6 +371,12 @@ export const useSettingsStore = create<SettingsStore>()(
           customWallpaperUrl?: unknown
           customWallpaperDataUrl?: unknown
           wallpaperGallery?: unknown
+          showIconLabels?: unknown
+          iconSize?: unknown
+          hidePlaceholderIcons?: unknown
+          showTaskbarClock?: unknown
+          clockFormat?: unknown
+          showTrayDecor?: unknown
         } | undefined
         let custom =
           normalizeCustomSrc(saved?.customWallpaperUrl) ??
@@ -324,11 +389,23 @@ export const useSettingsStore = create<SettingsStore>()(
           wallpaperId = DEFAULT_WALLPAPER_ID
         }
         const gallery = ensureGalleryHasUrl(normalizeGallery(saved?.wallpaperGallery), custom)
+        const iconSize =
+          saved?.iconSize === 'sm' || saved?.iconSize === 'md' || saved?.iconSize === 'lg'
+            ? saved.iconSize
+            : 'md'
+        const clockFormat =
+          saved?.clockFormat === '12h' || saved?.clockFormat === '24h' ? saved.clockFormat : '24h'
         return {
           ...current,
           wallpaperId,
           customWallpaperUrl: custom,
           wallpaperGallery: gallery,
+          showIconLabels: saved?.showIconLabels !== false,
+          iconSize,
+          hidePlaceholderIcons: saved?.hidePlaceholderIcons === true,
+          showTaskbarClock: saved?.showTaskbarClock !== false,
+          clockFormat,
+          showTrayDecor: saved?.showTrayDecor !== false,
         }
       },
       onRehydrateStorage: () => (state) => {

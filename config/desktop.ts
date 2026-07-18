@@ -101,8 +101,8 @@ export const DESKTOP_APP_DEFINITIONS: DesktopAppDefinition[] = [
     id: 'settings',
     icon: Settings,
     defaultCoordinate: [2, 7],
-    width: 440,
-    height: 480,
+    width: 560,
+    height: 520,
     app: SettingsApp,
   },
   {

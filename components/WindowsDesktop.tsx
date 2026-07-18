@@ -5,6 +5,7 @@ import { WindowsWindow } from './WindowsWindow'
 import { useTranslations } from 'next-intl'
 import LangSwitch from './LangSwitch'
 import ThemeSwitch from './ThemeSwitch'
+import { TaskbarClock } from './TaskbarClock'
 import { cn } from '@/utils/cn'
 import { Button } from '@/components/ui'
 import { winChrome } from '@/utils/winChrome'
@@ -19,6 +20,12 @@ import { CELL_GAP, CELL_SIZE, coordinateToPosition, resolveCoordinate } from '@/
 
 const CASCADE_OFFSET = 28
 const YIELD_TRANSITION = 'left 220ms ease, top 220ms ease'
+
+const ICON_VIS = {
+  sm: { box: 'w-10 h-10', px: 22, label: 'text-[10px]' },
+  md: { box: 'w-12 h-12', px: 28, label: 'text-xs' },
+  lg: { box: 'w-14 h-14', px: 32, label: 'text-sm' },
+} as const
 
 function getCascadedPosition(stackIndex: number, width: number, height: number) {
   if (typeof window === 'undefined') {
@@ -43,6 +50,10 @@ export function WindowsDesktop() {
   const wallpaperId = useSettingsStore((s) => s.wallpaperId)
   const customWallpaperUrl = useSettingsStore((s) => s.customWallpaperUrl)
   const settingsHydrated = useSettingsStore((s) => s._hasHydrated)
+  const showIconLabels = useSettingsStore((s) => s.showIconLabels)
+  const iconSize = useSettingsStore((s) => s.iconSize)
+  const hidePlaceholderIcons = useSettingsStore((s) => s.hidePlaceholderIcons)
+  const showTrayDecor = useSettingsStore((s) => s.showTrayDecor)
 
   /**
    * SSR 与首屏 hydrate 必须相同：禁止在 render 里读 localStorage。
@@ -74,12 +85,21 @@ export function WindowsDesktop() {
   }, [settingsHydrated, wallpaperId, customWallpaperUrl])
 
   const desktopRef = useRef<HTMLDivElement>(null)
+
+  const desktopIcons = useMemo(() => {
+    if (!hasHydrated) return []
+    if (!hidePlaceholderIcons) return apps
+    return apps.filter((app) => app.app != null)
+  }, [apps, hasHydrated, hidePlaceholderIcons])
+
   const { draggingId, dragPixel, previewCoords, handleIconPointerDown } = useDesktopIconDrag({
-    apps,
+    apps: desktopIcons,
     desktopRef,
     onOpen: openWindow,
     onCommit: updateCoordinates,
   })
+
+  const iconVis = ICON_VIS[iconSize] ?? ICON_VIS.md
 
   const hasVisibleWindow = useMemo(
     () => hasHydrated && apps.some((app) => app.isOpen && !app.minimized),
@@ -123,7 +143,7 @@ export function WindowsDesktop() {
           }}
         >
           {hasHydrated &&
-            apps.map((app) => {
+            desktopIcons.map((app) => {
               const coord = resolveCoordinate(app, previewCoords)
               const [col, row] = coord
               const { left, top } = coordinateToPosition(coord)
@@ -135,7 +155,10 @@ export function WindowsDesktop() {
                 <DesktopIcon
                   key={app.id}
                   label={t(`apps.${app.id}`)}
-                  icon={<Icon size={28} />}
+                  showLabel={showIconLabels}
+                  iconBoxClass={iconVis.box}
+                  labelClass={iconVis.label}
+                  icon={<Icon size={iconVis.px} />}
                   col={col}
                   row={row}
                   left={left}
@@ -216,15 +239,18 @@ export function WindowsDesktop() {
           <Button size='md' className='px-3 py-1.5 h-auto' onClick={() => openWindow('settings')}>
             Settings
           </Button>
-          <div className='flex items-center gap-3 mr-2'>
+          <div className='flex items-center gap-2 mr-1'>
             <LangSwitch />
-            <div className='flex items-center gap-1'>
-              {['✉️', '📤', '🐦', '▶️', '📰', '🔗'].map((icon, i) => (
-                <Button key={i} size='icon-sm'>
-                  {icon}
-                </Button>
-              ))}
-            </div>
+            {showTrayDecor && (
+              <div className='flex items-center gap-1'>
+                {['✉️', '📤', '🐦', '▶️', '📰', '🔗'].map((icon, i) => (
+                  <Button key={i} size='icon-sm'>
+                    {icon}
+                  </Button>
+                ))}
+              </div>
+            )}
+            <TaskbarClock />
           </div>
         </div>
       </footer>
@@ -234,6 +260,9 @@ export function WindowsDesktop() {
 
 function DesktopIcon({
   label,
+  showLabel,
+  iconBoxClass,
+  labelClass,
   icon,
   col,
   row,
@@ -247,6 +276,9 @@ function DesktopIcon({
   onPointerDown,
 }: {
   label: string
+  showLabel: boolean
+  iconBoxClass: string
+  labelClass: string
   icon: ReactNode
   col: number
   row: number
@@ -284,8 +316,9 @@ function DesktopIcon({
     <div
       role='button'
       tabIndex={0}
+      aria-label={label}
       className={cn(
-        'group flex flex-col items-center gap-3 p-1 rounded border border-transparent self-start',
+        'group flex flex-col items-center gap-2 p-1 rounded border border-transparent self-start',
         'hover:bg-icon-hover hover:border-icon-hover-border active:bg-icon-active',
         isDragging ? 'z-[200] opacity-90 cursor-grabbing' : 'z-[101] cursor-pointer',
         !isDragging && !yielding && 'relative',
@@ -299,15 +332,25 @@ function DesktopIcon({
       }}
       onPointerDown={onPointerDown}
     >
-      <div className='w-12 h-12 flex items-center justify-center border-2 rounded shadow-sm bg-icon border-icon-border text-on-chrome [image-rendering:crisp-edges] pointer-events-none'>
+      <div
+        className={cn(
+          iconBoxClass,
+          'flex items-center justify-center border-2 rounded shadow-sm bg-icon border-icon-border text-on-chrome [image-rendering:crisp-edges] pointer-events-none',
+        )}
+      >
         {icon}
       </div>
-      <span
-        className='text-xs font-medium text-center leading-tight max-w-full truncate text-on-desktop font-pixel pointer-events-none'
-        style={{ textShadow: '1px 1px 0 var(--icon-label-shadow)' }}
-      >
-        {label}
-      </span>
+      {showLabel && (
+        <span
+          className={cn(
+            labelClass,
+            'font-medium text-center leading-tight max-w-full truncate text-on-desktop font-pixel pointer-events-none',
+          )}
+          style={{ textShadow: '1px 1px 0 var(--icon-label-shadow)' }}
+        >
+          {label}
+        </span>
+      )}
     </div>
   )
 }

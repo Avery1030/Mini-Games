@@ -75,9 +75,7 @@ export function DocumentApp({ embedded = false }: DocumentProps = {}) {
     >
       <div className={cn('flex-1 min-h-0 flex gap-2 p-2', embedded && 'p-3')}>
         <Panel padded={false} className='w-[128px] shrink-0 flex flex-col overflow-hidden'>
-          <div className='px-2 py-1.5 text-[11px] font-bold border-b border-chrome-dark bg-chrome-hover/40'>
-            目录
-          </div>
+          <div className='px-2 py-1.5 text-[11px] font-bold border-b border-chrome-dark bg-chrome-hover/40'>目录</div>
           <ul className='flex-1 overflow-y-auto p-1'>
             {DOCS.map((doc) => {
               const selected = doc.id === activeId
@@ -102,9 +100,7 @@ export function DocumentApp({ embedded = false }: DocumentProps = {}) {
         </Panel>
 
         <Panel inset className='flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden'>
-          <h2 className='text-base font-bold mb-2 shrink-0 border-b border-[#808080] pb-1'>
-            {active.title}
-          </h2>
+          <h2 className='text-base font-bold mb-2 shrink-0 border-b border-[#808080] pb-1'>{active.title}</h2>
           <div className='flex-1 min-h-0 overflow-y-auto space-y-3 text-[12px] leading-relaxed text-[#222] dark:text-[#ddd]'>
             {active.body.map((para, i) => (
               <p key={i}>{para}</p>
