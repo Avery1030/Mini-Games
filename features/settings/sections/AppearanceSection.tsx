@@ -4,18 +4,22 @@ import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Checkbox, Panel, Select } from '@/components/ui'
+import { UI_SCALE_FACTOR, type UiScale } from '@/lib/uiScale'
 import { useSettingsStore } from '@/store/settings'
 
 export function AppearanceSection() {
   const t = useTranslations('settings')
   const showIconLabels = useSettingsStore((s) => s.showIconLabels)
   const iconSize = useSettingsStore((s) => s.iconSize)
+  const uiScale = useSettingsStore((s) => s.uiScale)
   const setShowIconLabels = useSettingsStore((s) => s.setShowIconLabels)
   const setIconSize = useSettingsStore((s) => s.setIconSize)
+  const setUiScale = useSettingsStore((s) => s.setUiScale)
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [themeMounted, setThemeMounted] = useState(false)
   useEffect(() => setThemeMounted(true), [])
   const themeValue = themeMounted ? theme ?? 'system' : 'system'
+  const scalePercent = Math.round(UI_SCALE_FACTOR[uiScale] * 100)
 
   return (
     <div className='flex-1 min-h-0 overflow-y-auto p-3 space-y-3'>
@@ -23,6 +27,23 @@ export function AppearanceSection() {
       <p className='text-xs text-muted'>{t('appearanceHint')}</p>
 
       <Panel inset className='space-y-3'>
+        <div>
+          <div className='text-xs font-bold mb-1.5'>{t('uiScale')}</div>
+          <Select
+            size='sm'
+            className='min-w-[160px]'
+            value={uiScale}
+            onValueChange={(v) => setUiScale(v as UiScale)}
+            options={[
+              { value: 'sm', label: t('uiScaleSm') },
+              { value: 'md', label: t('uiScaleMd') },
+              { value: 'lg', label: t('uiScaleLg') },
+              { value: 'xl', label: t('uiScaleXl') },
+            ]}
+          />
+          <p className='mt-1 text-[10px] text-muted'>{t('uiScaleHint', { percent: scalePercent })}</p>
+        </div>
+
         <div>
           <div className='text-xs font-bold mb-1.5'>{t('colorTheme')}</div>
           <Select
@@ -60,6 +81,7 @@ export function AppearanceSection() {
               { value: 'lg', label: t('iconLg') },
             ]}
           />
+          <p className='mt-1 text-[10px] text-muted'>{t('iconSizeHint')}</p>
         </div>
 
         <Checkbox

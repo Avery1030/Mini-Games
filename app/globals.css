@@ -131,6 +131,88 @@ body {
   background: #1a2a29;
 }
 
+/* ========== 文字 / 图标显示大小（非整页缩放）========== */
+:root {
+  --ui-text-scale: 1;
+  --ui-icon-scale: 1;
+}
+
+/* rem 工具类（text-sm / text-xs 等）随根字号变化 */
+html {
+  font-size: calc(16px * var(--ui-text-scale));
+}
+
+/*
+ * 大量 text-[Npx] 为绝对像素，需单独按倍率改写字号。
+ * 窗口宽高、任务栏高度等布局尺寸不受影响。
+ */
+.text-\[10px\] {
+  font-size: calc(10px * var(--ui-text-scale)) !important;
+}
+.text-\[11px\] {
+  font-size: calc(11px * var(--ui-text-scale)) !important;
+}
+.text-\[12px\] {
+  font-size: calc(12px * var(--ui-text-scale)) !important;
+}
+.text-\[13px\] {
+  font-size: calc(13px * var(--ui-text-scale)) !important;
+}
+.text-\[14px\] {
+  font-size: calc(14px * var(--ui-text-scale)) !important;
+}
+.text-\[15px\] {
+  font-size: calc(15px * var(--ui-text-scale)) !important;
+}
+.text-\[16px\] {
+  font-size: calc(16px * var(--ui-text-scale)) !important;
+}
+
+/*
+ * Lucide 图标：按常见 size 属性放大宽高（非整页、不用 zoom）。
+ * 未列出的尺寸仍可通过组件侧 scalePx 显式传入。
+ */
+svg.lucide[width='12'] {
+  width: calc(12px * var(--ui-icon-scale)) !important;
+  height: calc(12px * var(--ui-icon-scale)) !important;
+}
+svg.lucide[width='14'] {
+  width: calc(14px * var(--ui-icon-scale)) !important;
+  height: calc(14px * var(--ui-icon-scale)) !important;
+}
+svg.lucide[width='16'] {
+  width: calc(16px * var(--ui-icon-scale)) !important;
+  height: calc(16px * var(--ui-icon-scale)) !important;
+}
+svg.lucide[width='18'] {
+  width: calc(18px * var(--ui-icon-scale)) !important;
+  height: calc(18px * var(--ui-icon-scale)) !important;
+}
+svg.lucide[width='20'] {
+  width: calc(20px * var(--ui-icon-scale)) !important;
+  height: calc(20px * var(--ui-icon-scale)) !important;
+}
+svg.lucide[width='22'] {
+  width: calc(22px * var(--ui-icon-scale)) !important;
+  height: calc(22px * var(--ui-icon-scale)) !important;
+}
+svg.lucide[width='24'] {
+  width: calc(24px * var(--ui-icon-scale)) !important;
+  height: calc(24px * var(--ui-icon-scale)) !important;
+}
+svg.lucide[width='28'] {
+  width: calc(28px * var(--ui-icon-scale)) !important;
+  height: calc(28px * var(--ui-icon-scale)) !important;
+}
+svg.lucide[width='32'] {
+  width: calc(32px * var(--ui-icon-scale)) !important;
+  height: calc(32px * var(--ui-icon-scale)) !important;
+}
+svg.lucide[width='36'] {
+  width: calc(36px * var(--ui-icon-scale)) !important;
+  height: calc(36px * var(--ui-icon-scale)) !important;
+}
+
 @theme inline {
   --color-desktop: var(--desktop-bg);
   --color-desktop-deep: var(--desktop-bg-deep);

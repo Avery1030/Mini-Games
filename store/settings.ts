@@ -9,6 +9,7 @@ import {
 } from '@/config/wallpapers'
 import { writeWallpaperBoot } from '@/lib/wallpaper'
 import { isServer, isClient } from '@/lib/env'
+import { isUiScale, type UiScale } from '@/lib/uiScale'
 
 const SETTINGS_KEY = 'desktop-settings'
 const MAX_GALLERY = 40
@@ -195,6 +196,8 @@ interface SettingsState {
   showIconLabels: boolean
   /** 桌面图标视觉尺寸 */
   iconSize: 'sm' | 'md' | 'lg'
+  /** 系统文字与图标整体缩放 */
+  uiScale: UiScale
   /** 隐藏尚未实现窗口的占位图标 */
   hidePlaceholderIcons: boolean
   /** 任务栏显示时钟 */
@@ -213,6 +216,7 @@ interface SettingsActions {
   clearCustomWallpaper: () => void
   setShowIconLabels: (value: boolean) => void
   setIconSize: (value: 'sm' | 'md' | 'lg') => void
+  setUiScale: (value: UiScale) => void
   setHidePlaceholderIcons: (value: boolean) => void
   setShowTaskbarClock: (value: boolean) => void
   setClockFormat: (value: '24h' | '12h') => void
@@ -229,6 +233,7 @@ export const useSettingsStore = create<SettingsStore>()(
       wallpaperGallery: [],
       showIconLabels: true,
       iconSize: 'md',
+      uiScale: 'md',
       hidePlaceholderIcons: false,
       showTaskbarClock: true,
       clockFormat: '24h',
@@ -240,6 +245,9 @@ export const useSettingsStore = create<SettingsStore>()(
       setShowIconLabels: (value) => set({ showIconLabels: value }),
       setIconSize: (value) => {
         if (value === 'sm' || value === 'md' || value === 'lg') set({ iconSize: value })
+      },
+      setUiScale: (value) => {
+        if (isUiScale(value)) set({ uiScale: value })
       },
       setHidePlaceholderIcons: (value) => set({ hidePlaceholderIcons: value }),
       setShowTaskbarClock: (value) => set({ showTaskbarClock: value }),
@@ -311,7 +319,7 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: SETTINGS_KEY,
-      version: 6,
+      version: 7,
       storage: createJSONStorage(() => settingsStorage),
       partialize: (state) => ({
         wallpaperId: state.wallpaperId,
@@ -319,6 +327,7 @@ export const useSettingsStore = create<SettingsStore>()(
         wallpaperGallery: state.wallpaperGallery,
         showIconLabels: state.showIconLabels,
         iconSize: state.iconSize,
+        uiScale: state.uiScale,
         hidePlaceholderIcons: state.hidePlaceholderIcons,
         showTaskbarClock: state.showTaskbarClock,
         clockFormat: state.clockFormat,
@@ -332,6 +341,7 @@ export const useSettingsStore = create<SettingsStore>()(
           wallpaperGallery?: unknown
           showIconLabels?: unknown
           iconSize?: unknown
+          uiScale?: unknown
           hidePlaceholderIcons?: unknown
           showTaskbarClock?: unknown
           clockFormat?: unknown
@@ -345,6 +355,7 @@ export const useSettingsStore = create<SettingsStore>()(
         }
         const gallery = ensureGalleryHasUrl(normalizeGallery(raw.wallpaperGallery), custom)
         const iconSize = raw.iconSize === 'sm' || raw.iconSize === 'md' || raw.iconSize === 'lg' ? raw.iconSize : 'md'
+        const uiScale = isUiScale(raw.uiScale) ? raw.uiScale : 'md'
         const clockFormat = raw.clockFormat === '12h' || raw.clockFormat === '24h' ? raw.clockFormat : '24h'
         return {
           wallpaperId,
@@ -352,6 +363,7 @@ export const useSettingsStore = create<SettingsStore>()(
           wallpaperGallery: gallery,
           showIconLabels: raw.showIconLabels !== false,
           iconSize,
+          uiScale,
           hidePlaceholderIcons: raw.hidePlaceholderIcons === true,
           showTaskbarClock: raw.showTaskbarClock !== false,
           clockFormat,
@@ -367,6 +379,7 @@ export const useSettingsStore = create<SettingsStore>()(
               wallpaperGallery?: unknown
               showIconLabels?: unknown
               iconSize?: unknown
+              uiScale?: unknown
               hidePlaceholderIcons?: unknown
               showTaskbarClock?: unknown
               clockFormat?: unknown
@@ -382,6 +395,7 @@ export const useSettingsStore = create<SettingsStore>()(
         const gallery = ensureGalleryHasUrl(normalizeGallery(saved?.wallpaperGallery), custom)
         const iconSize =
           saved?.iconSize === 'sm' || saved?.iconSize === 'md' || saved?.iconSize === 'lg' ? saved.iconSize : 'md'
+        const uiScale = isUiScale(saved?.uiScale) ? saved.uiScale : 'md'
         const clockFormat = saved?.clockFormat === '12h' || saved?.clockFormat === '24h' ? saved.clockFormat : '24h'
         return {
           ...current,
@@ -390,6 +404,7 @@ export const useSettingsStore = create<SettingsStore>()(
           wallpaperGallery: gallery,
           showIconLabels: saved?.showIconLabels !== false,
           iconSize,
+          uiScale,
           hidePlaceholderIcons: saved?.hidePlaceholderIcons === true,
           showTaskbarClock: saved?.showTaskbarClock !== false,
           clockFormat,

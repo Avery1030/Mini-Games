@@ -19,6 +19,7 @@ import { resolveDesktopBackgroundStyle, DESKTOP_BG_PLACEHOLDER_STYLE, CUSTOM_WAL
 import { readWallpaperBoot } from '@/lib/wallpaper'
 import { CELL_GAP, CELL_SIZE, coordinateToPosition, resolveCoordinate } from '@/lib/desktop'
 import { isServer } from '@/lib/env'
+import { scalePx } from '@/lib/uiScale'
 
 const CASCADE_OFFSET = 28
 const YIELD_TRANSITION = 'left 220ms ease, top 220ms ease'
@@ -59,6 +60,7 @@ export function WindowsDesktop() {
   const settingsHydrated = useSettingsStore((s) => s._hasHydrated)
   const showIconLabels = useSettingsStore((s) => s.showIconLabels)
   const iconSize = useSettingsStore((s) => s.iconSize)
+  const uiScale = useSettingsStore((s) => s.uiScale)
   const hidePlaceholderIcons = useSettingsStore((s) => s.hidePlaceholderIcons)
   const showTrayDecor = useSettingsStore((s) => s.showTrayDecor)
 
@@ -109,6 +111,7 @@ export function WindowsDesktop() {
   })
 
   const iconVis = ICON_VIS[iconSize] ?? ICON_VIS.md
+  const iconBoxPx = scalePx(iconVis.px, uiScale)
 
   const hasVisibleWindow = useMemo(
     () => hasHydrated && apps.some((app) => app.isOpen && !app.minimized),
@@ -202,7 +205,7 @@ export function WindowsDesktop() {
                   appId={app.id}
                   label={t(`apps.${app.id}`)}
                   showLabel={showIconLabels}
-                  iconBoxClass={iconVis.box}
+                  iconBoxPx={iconBoxPx}
                   labelClass={iconVis.label}
                   icon={<Icon size={iconVis.px} strokeWidth={iconVis.stroke} absoluteStrokeWidth />}
                   col={col}
@@ -326,7 +329,7 @@ function DesktopIcon({
   appId,
   label,
   showLabel,
-  iconBoxClass,
+  iconBoxPx,
   labelClass,
   icon,
   col,
@@ -343,7 +346,7 @@ function DesktopIcon({
   appId: DesktopAppId
   label: string
   showLabel: boolean
-  iconBoxClass: string
+  iconBoxPx: number
   labelClass: string
   icon: ReactNode
   col: number
@@ -401,13 +404,14 @@ function DesktopIcon({
       {/* 复古桌面：图标独立悬浮，无圆角底板 */}
       <div
         className={cn(
-          iconBoxClass,
           'relative flex items-center justify-center text-icon-glyph pointer-events-none',
           '[image-rendering:pixelated]',
           'group-focus-visible:outline-1 group-focus-visible:outline-dashed group-focus-visible:outline-[var(--icon-focus-ring)] group-focus-visible:outline-offset-1',
           '[&_svg]:fill-current [&_svg]:fill-opacity-25',
         )}
         style={{
+          width: iconBoxPx,
+          height: iconBoxPx,
           filter: 'drop-shadow(1px 1px 0 var(--icon-glyph-shadow))',
         }}
       >

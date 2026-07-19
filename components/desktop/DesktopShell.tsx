@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { WindowsDesktop } from './WindowsDesktop'
+import { useApplyUiScale } from '@/hooks/desktop'
 import { useDesktopStore } from '@/store/desktop'
 import { useWindowStore } from '@/store/window'
 import { useSettingsStore } from '@/store/settings'
@@ -21,6 +22,8 @@ export function DesktopShell() {
   const desktopHydrated = useDesktopStore((s) => s._hasHydrated)
   const settingsHydrated = useSettingsStore((s) => s._hasHydrated)
   const storesReady = windowsHydrated && desktopHydrated && settingsHydrated
+
+  useApplyUiScale()
 
   const [booting, setBooting] = useState(true)
   const [fading, setFading] = useState(false)
