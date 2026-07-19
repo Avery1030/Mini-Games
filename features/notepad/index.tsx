@@ -1,0 +1,243 @@
+'use client'
+
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { cn } from '@/lib/cn'
+import { useNotepadStore } from '@/store/notepad'
+import {
+  createNoteApi,
+  deleteNoteApi,
+  fetchNote,
+  fetchNoteList,
+  updateNoteApi,
+} from './api'
+import { NoteEditor } from './NoteEditor'
+import { NoteSidebar } from './NoteSidebar'
+import type { NoteMeta } from './types'
+
+export interface NotepadProps {
+  embedded?: boolean
+}
+
+export function NotepadApp({ embedded = false }: NotepadProps = {}) {
+  const t = useTranslations('notepad')
+  const lastNoteId = useNotepadStore((s) => s.lastNoteId)
+  const wordWrap = useNotepadStore((s) => s.wordWrap)
+  const setLastNoteId = useNotepadStore((s) => s.setLastNoteId)
+  const setWordWrap = useNotepadStore((s) => s.setWordWrap)
+
+  const [notes, setNotes] = useState<NoteMeta[]>([])
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
+  const [savedTitle, setSavedTitle] = useState('')
+  const [savedContent, setSavedContent] = useState('')
+  const [listLoading, setListLoading] = useState(true)
+  const [busy, setBusy] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [status, setStatus] = useState<string | null>(null)
+
+  const activeIdRef = useRef<string | null>(null)
+  activeIdRef.current = activeId
+
+  const dirty = activeId != null && (title !== savedTitle || content !== savedContent)
+
+  const applyNote = useCallback(
+    (note: { id: string; title: string; content: string }) => {
+      setActiveId(note.id)
+      setTitle(note.title)
+      setContent(note.content)
+      setSavedTitle(note.title)
+      setSavedContent(note.content)
+      setLastNoteId(note.id)
+      setError(null)
+    },
+    [setLastNoteId],
+  )
+
+  const refreshList = useCallback(async () => {
+    const list = await fetchNoteList()
+    setNotes(list)
+    return list
+  }, [])
+
+  const openNote = useCallback(
+    async (id: string) => {
+      if (id === activeIdRef.current) return
+      if (dirty) {
+        const ok = window.confirm(t('confirmDiscard'))
+        if (!ok) return
+      }
+      setBusy(true)
+      setError(null)
+      try {
+        const note = await fetchNote(id)
+        applyNote(note)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t('loadFail'))
+      } finally {
+        setBusy(false)
+      }
+    },
+    [applyNote, dirty, t],
+  )
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      setListLoading(true)
+      setError(null)
+      try {
+        const list = await refreshList()
+        if (cancelled) return
+        const prefer =
+          (lastNoteId && list.find((n) => n.id === lastNoteId)?.id) || list[0]?.id || null
+        if (prefer) {
+          const note = await fetchNote(prefer)
+          if (!cancelled) applyNote(note)
+        }
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : t('loadFail'))
+      } finally {
+        if (!cancelled) setListLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+    // 仅首屏加载
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const onCreate = async () => {
+    if (dirty) {
+      const ok = window.confirm(t('confirmDiscard'))
+      if (!ok) return
+    }
+    setBusy(true)
+    setError(null)
+    setStatus(null)
+    try {
+      const note = await createNoteApi({ title: t('untitled'), content: '' })
+      await refreshList()
+      applyNote(note)
+      setStatus(t('created'))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('createFail'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const onSave = async () => {
+    if (!activeId || !dirty) return
+    setSaving(true)
+    setError(null)
+    setStatus(null)
+    try {
+      const note = await updateNoteApi(activeId, {
+        title: title.trim() || t('untitled'),
+        content,
+      })
+      setSavedTitle(note.title)
+      setSavedContent(note.content)
+      setTitle(note.title)
+      await refreshList()
+      setStatus(t('savedOk'))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('saveFail'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const onDelete = async (id: string) => {
+    const target = notes.find((n) => n.id === id)
+    const ok = window.confirm(t('confirmDelete', { title: target?.title || t('untitled') }))
+    if (!ok) return
+
+    setBusy(true)
+    setError(null)
+    setStatus(null)
+    try {
+      await deleteNoteApi(id)
+      const list = await refreshList()
+      if (id === activeId) {
+        const next = list[0]
+        if (next) {
+          const note = await fetchNote(next.id)
+          applyNote(note)
+        } else {
+          setActiveId(null)
+          setTitle('')
+          setContent('')
+          setSavedTitle('')
+          setSavedContent('')
+          setLastNoteId(null)
+        }
+      }
+      setStatus(t('deleted'))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('deleteFail'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault()
+        void onSave()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
+
+  return (
+    <div
+      className={cn(
+        'h-full min-h-0 flex flex-col text-sm text-on-chrome bg-window font-pixel',
+        !embedded && 'min-h-screen p-4',
+        embedded && '-m-3 h-[calc(100%+1.5rem)] min-h-[400px]',
+      )}
+    >
+      <div className={cn('flex-1 min-h-0 flex gap-2 p-2', embedded && 'p-3')}>
+        <NoteSidebar
+          notes={notes}
+          activeId={activeId}
+          loading={listLoading}
+          busy={busy || saving}
+          onSelect={(id) => void openNote(id)}
+          onCreate={() => void onCreate()}
+          onDelete={(id) => void onDelete(id)}
+        />
+        <NoteEditor
+          title={title}
+          content={content}
+          wordWrap={wordWrap}
+          dirty={dirty}
+          saving={saving}
+          disabled={!activeId}
+          onTitleChange={setTitle}
+          onContentChange={setContent}
+          onWordWrapChange={setWordWrap}
+          onSave={() => void onSave()}
+        />
+      </div>
+
+      <div className='shrink-0 px-3 py-1.5 border-t border-chrome-dark bg-status-bar text-[10px] text-status-bar-fg flex justify-between gap-2'>
+        <span className='truncate min-w-0'>
+          {error ? (
+            <span className='text-[#c00]'>{error}</span>
+          ) : (
+            status || t('footer', { count: notes.length })
+          )}
+        </span>
+        <span className='shrink-0 opacity-80'>{t('shortcutSave')}</span>
+      </div>
+    </div>
+  )
+}

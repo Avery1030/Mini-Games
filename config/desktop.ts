@@ -13,6 +13,7 @@ import {
   Rose,
   Mail,
   Notebook,
+  FileText,
   Settings,
   Music,
 } from 'lucide-react'
@@ -21,6 +22,8 @@ import { Tetris } from '@/features/tetris'
 import { Music as MusicApp } from '@/features/music'
 import { SettingsApp } from '@/features/settings'
 import { DocumentApp } from '@/features/document'
+import { LogApp } from '@/features/log'
+import { NotepadApp } from '@/features/notepad'
 import { apps } from '@/messages/zh-CN.json'
 
 export type DesktopAppId = keyof typeof apps
@@ -96,7 +99,22 @@ export const DESKTOP_APP_DEFINITIONS: DesktopAppDefinition[] = [
   },
   { id: 'donation', icon: Rose, defaultCoordinate: [2, 4] },
   { id: 'email', icon: Mail, defaultCoordinate: [2, 5] },
-  { id: 'log', icon: Notebook, defaultCoordinate: [2, 6] },
+  {
+    id: 'log',
+    icon: Notebook,
+    defaultCoordinate: [2, 6],
+    width: 520,
+    height: 420,
+    app: LogApp,
+  },
+  {
+    id: 'notepad',
+    icon: FileText,
+    defaultCoordinate: [3, 1],
+    width: 560,
+    height: 460,
+    app: NotepadApp,
+  },
   {
     id: 'settings',
     icon: Settings,
