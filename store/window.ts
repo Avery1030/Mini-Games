@@ -24,6 +24,7 @@ interface WindowActions {
   setHasHydrated: (value: boolean) => void
   openWindow: (id: DesktopAppId) => void
   closeWindow: (id: DesktopAppId) => void
+  closeAllWindows: () => void
   minimizeWindow: (id: DesktopAppId) => void
   focusWindow: (id: DesktopAppId) => void
   handleTaskbarClick: (id: DesktopAppId) => void
@@ -158,6 +159,14 @@ export const useWindowStore = create<WindowStore>()(
           next = activateNext(next, id)
         }
         set({ windows: next })
+      },
+
+      closeAllWindows: () => {
+        set({
+          windows: createDefaultWindows(),
+          topZIndex: WINDOW_Z_BASE,
+          nextOpenOrder: 1,
+        })
       },
 
       minimizeWindow: (id) => {

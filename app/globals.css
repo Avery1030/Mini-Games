@@ -27,12 +27,13 @@
   --text-on-chrome: #111111;
   --text-muted: #555555;
 
-  --icon-bg: rgba(240, 240, 240, 0.88);
-  --icon-border: #8a8a8a;
-  --icon-hover-bg: rgba(255, 255, 255, 0.28);
-  --icon-hover-border: rgba(255, 255, 255, 0.45);
-  --icon-active-bg: rgba(255, 255, 255, 0.45);
-  --icon-label-shadow: rgba(0, 0, 0, 0.35);
+  /* 复古桌面图标：无底板，选中为经典蓝底白字 */
+  --icon-glyph: #f8f8f8;
+  --icon-glyph-shadow: #000000;
+  --icon-select-bg: #000080;
+  --icon-select-fg: #ffffff;
+  --icon-label-outline: #000000;
+  --icon-focus-ring: #ffffff;
 
   --hero-plate-bg: rgba(220, 230, 230, 0.35);
   --hero-plate-border: rgba(120, 140, 140, 0.55);
@@ -85,12 +86,12 @@
   --text-on-chrome: #f0f0f0;
   --text-muted: #b0b0b0;
 
-  --icon-bg: rgba(50, 62, 62, 0.9);
-  --icon-border: #6a7a7a;
-  --icon-hover-bg: rgba(255, 255, 255, 0.12);
-  --icon-hover-border: rgba(200, 230, 220, 0.35);
-  --icon-active-bg: rgba(255, 255, 255, 0.2);
-  --icon-label-shadow: rgba(0, 0, 0, 0.6);
+  --icon-glyph: #e8f2f1;
+  --icon-glyph-shadow: #000000;
+  --icon-select-bg: #000080;
+  --icon-select-fg: #ffffff;
+  --icon-label-outline: #000000;
+  --icon-focus-ring: #c0c0c0;
 
   --hero-plate-bg: rgba(40, 60, 58, 0.55);
   --hero-plate-border: rgba(100, 130, 125, 0.5);
@@ -139,11 +140,9 @@ body {
   --color-on-desktop: var(--text-on-desktop);
   --color-on-chrome: var(--text-on-chrome);
   --color-muted: var(--text-muted);
-  --color-icon: var(--icon-bg);
-  --color-icon-border: var(--icon-border);
-  --color-icon-hover: var(--icon-hover-bg);
-  --color-icon-hover-border: var(--icon-hover-border);
-  --color-icon-active: var(--icon-active-bg);
+  --color-icon-glyph: var(--icon-glyph);
+  --color-icon-select: var(--icon-select-bg);
+  --color-icon-select-fg: var(--icon-select-fg);
   --color-hero-plate: var(--hero-plate-bg);
   --color-hero-plate-border: var(--hero-plate-border);
   --color-chrome: var(--chrome-face);

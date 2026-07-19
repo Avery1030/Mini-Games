@@ -7,6 +7,7 @@ import {
 } from '@/config/desktop'
 import { useDesktopStore } from '@/store/desktop'
 import { useWindowStore } from '@/store/window'
+import { useSettingsStore } from '@/store/settings'
 
 /** 合并静态定义 + 窗口状态 + 图标坐标，供桌面 UI 使用 */
 export function useDesktopApps(): DesktopAppView[] {
@@ -33,5 +34,6 @@ export function useDesktopApps(): DesktopAppView[] {
 export function useDesktopHydrated(): boolean {
   const windowsHydrated = useWindowStore((s) => s._hasHydrated)
   const desktopHydrated = useDesktopStore((s) => s._hasHydrated)
-  return windowsHydrated && desktopHydrated
+  const settingsHydrated = useSettingsStore((s) => s._hasHydrated)
+  return windowsHydrated && desktopHydrated && settingsHydrated
 }

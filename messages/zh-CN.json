@@ -27,6 +27,29 @@
     "refresh": "刷新",
     "settings": "设置"
   },
+  "startMenu": {
+    "brand": "Mini App",
+    "programs": "程序",
+    "documents": "文档",
+    "settings": "设置",
+    "help": "帮助",
+    "restart": "重新启动...",
+    "shutdown": "关闭系统...",
+    "restartTitle": "重新启动",
+    "restartConfirm": "确定要重新加载桌面吗？未保存的内容可能会丢失。",
+    "shutdownTitle": "关闭系统",
+    "shutdownConfirm": "确定要关闭所有窗口并退出桌面会话吗？",
+    "shutdownDone": "现在可以安全地关闭计算机了。"
+  },
+  "boot": {
+    "title": "Avery",
+    "starting": "正在启动 Windows...",
+    "loading": "正在加载个人设置...",
+    "ready": "即将进入桌面...",
+    "preparing": "正在准备桌面...",
+    "skip": "跳过",
+    "hint": "按 Esc / Enter / 空格，或点击「跳过」直接进入"
+  },
   "window": {
     "minimize": "最小化",
     "maximize": "最大化",

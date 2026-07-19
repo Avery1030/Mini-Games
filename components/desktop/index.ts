@@ -1,5 +1,7 @@
 export { WindowsDesktop } from './WindowsDesktop'
+export { DesktopShell } from './DesktopShell'
 export { WindowsWindow } from './WindowsWindow'
+export { StartMenu } from './StartMenu'
 export { TaskbarClock } from './TaskbarClock'
 export { default as ThemeSwitch } from './ThemeSwitch'
 export { default as LangSwitch } from './LangSwitch'

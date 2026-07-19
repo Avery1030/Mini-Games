@@ -27,6 +27,29 @@
     "refresh": "Refresh",
     "settings": "Settings"
   },
+  "startMenu": {
+    "brand": "Mini App",
+    "programs": "Programs",
+    "documents": "Documents",
+    "settings": "Settings",
+    "help": "Help",
+    "restart": "Restart...",
+    "shutdown": "Shut Down...",
+    "restartTitle": "Restart",
+    "restartConfirm": "Reload the desktop? Unsaved changes may be lost.",
+    "shutdownTitle": "Shut Down",
+    "shutdownConfirm": "Close all windows and end this desktop session?",
+    "shutdownDone": "It is now safe to turn off your computer."
+  },
+  "boot": {
+    "title": "Avery",
+    "starting": "Starting Windows...",
+    "loading": "Loading your personal settings...",
+    "ready": "Entering the desktop...",
+    "preparing": "Preparing the desktop...",
+    "skip": "Skip",
+    "hint": "Press Esc / Enter / Space, or click Skip to enter"
+  },
   "window": {
     "minimize": "Minimize",
     "maximize": "Maximize",

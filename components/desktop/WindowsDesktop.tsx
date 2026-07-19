@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { WindowsWindow } from './WindowsWindow'
+import { StartMenu } from './StartMenu'
 import { useTranslations } from 'next-intl'
 import LangSwitch from './LangSwitch'
 import ThemeSwitch from './ThemeSwitch'
@@ -9,7 +10,7 @@ import { TaskbarClock } from './TaskbarClock'
 import { cn } from '@/lib/cn'
 import { Button, ContextMenu, type ContextMenuState } from '@/components/ui'
 import type { DesktopAppId } from '@/config/desktop'
-import { winChrome } from '@/lib/winChrome'
+import { winChrome, winChromePressed } from '@/lib/winChrome'
 import { useDesktopApps, useDesktopHydrated, useDesktopIconDrag } from '@/hooks/desktop'
 import { useDesktopStore } from '@/store/desktop'
 import { useWindowStore } from '@/store/window'
@@ -23,10 +24,14 @@ const CASCADE_OFFSET = 28
 const YIELD_TRANSITION = 'left 220ms ease, top 220ms ease'
 
 const ICON_VIS = {
-  sm: { box: 'w-10 h-10', px: 22, label: 'text-[10px]' },
-  md: { box: 'w-12 h-12', px: 28, label: 'text-xs' },
-  lg: { box: 'w-14 h-14', px: 32, label: 'text-sm' },
+  sm: { box: 'w-8 h-8', px: 28, label: 'text-[10px]', stroke: 1.5 },
+  md: { box: 'w-9 h-9', px: 32, label: 'text-[11px]', stroke: 1.6 },
+  lg: { box: 'w-10 h-10', px: 36, label: 'text-xs', stroke: 1.75 },
 } as const
+
+/** Win95 桌面图标标签描边（未选中时） */
+const ICON_LABEL_OUTLINE =
+  '1px 0 0 var(--icon-label-outline), -1px 0 0 var(--icon-label-outline), 0 1px 0 var(--icon-label-outline), 0 -1px 0 var(--icon-label-outline), 1px 1px 0 var(--icon-label-outline)'
 
 function getCascadedPosition(stackIndex: number, width: number, height: number) {
   if (isServer) {
@@ -63,6 +68,7 @@ export function WindowsDesktop() {
    */
   const [desktopBgStyle, setDesktopBgStyle] = useState<CSSProperties>(DESKTOP_BG_PLACEHOLDER_STYLE)
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
+  const [startMenuOpen, setStartMenuOpen] = useState(false)
 
   useLayoutEffect(() => {
     const boot = readWallpaperBoot()
@@ -198,7 +204,7 @@ export function WindowsDesktop() {
                   showLabel={showIconLabels}
                   iconBoxClass={iconVis.box}
                   labelClass={iconVis.label}
-                  icon={<Icon size={iconVis.px} />}
+                  icon={<Icon size={iconVis.px} strokeWidth={iconVis.stroke} absoluteStrokeWidth />}
                   col={col}
                   row={row}
                   left={left}
@@ -244,11 +250,27 @@ export function WindowsDesktop() {
       </div>
 
       <footer className='relative z-[1100] h-12 min-h-[48px] flex items-center px-2 bg-taskbar text-on-chrome border-t-2 border-taskbar-edge shadow-[inset_1px_1px_0_var(--taskbar-shadow)]'>
-        <div className={cn(winChrome, 'flex items-center gap-1 h-full px-3 cursor-pointer')}>
-          <div className='w-6 h-6 flex items-center justify-center text-sm font-bold border bg-accent border-accent-border text-black'>
-            D
-          </div>
-          <span className='text-sm font-bold ml-1 hidden sm:inline'>{t('index.home')}</span>
+        <div className='relative h-full flex items-center' data-start-menu-root>
+          <button
+            type='button'
+            aria-haspopup='menu'
+            aria-expanded={startMenuOpen}
+            className={cn(
+              startMenuOpen ? winChromePressed : winChrome,
+              'flex items-center gap-1 h-full px-3 cursor-pointer',
+            )}
+            onClick={() => setStartMenuOpen((v) => !v)}
+          >
+            <div className='w-6 h-6 flex items-center justify-center text-sm font-bold border bg-accent border-accent-border text-black'>
+              D
+            </div>
+            <span className='text-sm font-bold ml-1 hidden sm:inline'>{t('index.home')}</span>
+          </button>
+          <StartMenu
+            open={startMenuOpen}
+            onClose={() => setStartMenuOpen(false)}
+            onOpenApp={openWindow}
+          />
         </div>
 
         <div className='flex items-center gap-1 min-w-0 ml-1 overflow-x-auto'>
@@ -363,9 +385,8 @@ function DesktopIcon({
       aria-label={label}
       data-desktop-icon={appId}
       className={cn(
-        'group flex flex-col items-center gap-2 p-1 rounded border border-transparent self-start',
-        'hover:bg-icon-hover hover:border-icon-hover-border active:bg-icon-active',
-        isDragging ? 'z-[200] opacity-90 cursor-grabbing' : 'z-[101] cursor-pointer',
+        'group flex flex-col items-center gap-1 px-0.5 py-1 self-start outline-none',
+        isDragging ? 'z-[200] opacity-85 cursor-grabbing' : 'z-[101] cursor-pointer',
         !isDragging && !yielding && 'relative',
       )}
       style={{
@@ -377,11 +398,18 @@ function DesktopIcon({
       }}
       onPointerDown={onPointerDown}
     >
+      {/* 复古桌面：图标独立悬浮，无圆角底板 */}
       <div
         className={cn(
           iconBoxClass,
-          'flex items-center justify-center border-2 rounded shadow-sm bg-icon border-icon-border text-on-chrome [image-rendering:crisp-edges] pointer-events-none',
+          'relative flex items-center justify-center text-icon-glyph pointer-events-none',
+          '[image-rendering:pixelated]',
+          'group-focus-visible:outline-1 group-focus-visible:outline-dashed group-focus-visible:outline-[var(--icon-focus-ring)] group-focus-visible:outline-offset-1',
+          '[&_svg]:fill-current [&_svg]:fill-opacity-25',
         )}
+        style={{
+          filter: 'drop-shadow(1px 1px 0 var(--icon-glyph-shadow))',
+        }}
       >
         {icon}
       </div>
@@ -389,9 +417,13 @@ function DesktopIcon({
         <span
           className={cn(
             labelClass,
-            'font-medium text-center leading-tight max-w-full truncate text-on-desktop font-pixel pointer-events-none',
+            'text-center leading-snug max-w-[4.5rem] px-0.5 font-pixel pointer-events-none',
+            'text-on-desktop whitespace-normal break-words',
+            'group-hover:bg-icon-select group-hover:text-icon-select-fg group-hover:[text-shadow:none]',
+            'group-focus-visible:bg-icon-select group-focus-visible:text-icon-select-fg group-focus-visible:[text-shadow:none]',
+            'group-active:bg-icon-select group-active:text-icon-select-fg group-active:[text-shadow:none]',
           )}
-          style={{ textShadow: '1px 1px 0 var(--icon-label-shadow)' }}
+          style={{ textShadow: ICON_LABEL_OUTLINE }}
         >
           {label}
         </span>

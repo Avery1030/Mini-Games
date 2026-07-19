@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { WindowsDesktop } from '@/components/desktop'
+import { DesktopShell } from '@/components/desktop'
 
 export const metadata: Metadata = {
   title: 'Avery',
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <main className='min-h-screen w-screen overflow-hidden'>
-      <WindowsDesktop />
+      <DesktopShell />
     </main>
   )
 }
