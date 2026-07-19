@@ -17,6 +17,7 @@ import { useSettingsStore } from '@/store/settings'
 import { resolveDesktopBackgroundStyle, DESKTOP_BG_PLACEHOLDER_STYLE, CUSTOM_WALLPAPER_ID } from '@/config/wallpapers'
 import { readWallpaperBoot } from '@/lib/wallpaper'
 import { CELL_GAP, CELL_SIZE, coordinateToPosition, resolveCoordinate } from '@/lib/desktop'
+import { isServer } from '@/lib/env'
 
 const CASCADE_OFFSET = 28
 const YIELD_TRANSITION = 'left 220ms ease, top 220ms ease'
@@ -28,7 +29,7 @@ const ICON_VIS = {
 } as const
 
 function getCascadedPosition(stackIndex: number, width: number, height: number) {
-  if (typeof window === 'undefined') {
+  if (isServer) {
     return { x: 100 + stackIndex * CASCADE_OFFSET, y: 80 + stackIndex * CASCADE_OFFSET }
   }
   return {
@@ -169,10 +170,7 @@ export function WindowsDesktop() {
 
   return (
     <div className='min-h-screen flex flex-col select-none font-pixel text-on-desktop' style={desktopBgStyle}>
-      <div
-        className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem]'
-        onContextMenu={handleDesktopContextMenu}
-      >
+      <div className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem]' onContextMenu={handleDesktopContextMenu}>
         {/* grid 放在无 padding 的内层，absolute 让位时与 grid 原点一致，避免拖拽瞬间「内边距消失」 */}
         <div
           ref={desktopRef}

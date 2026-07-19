@@ -1,3 +1,4 @@
+import { isClient } from '@/lib/env'
 export type RepeatMode = 'off' | 'all' | 'one'
 
 export interface Track {
@@ -20,8 +21,8 @@ export function toPlayableSrc(url: string): string {
   if (url.startsWith('/')) return url
   if (url.includes('/api/music/proxy?')) return url
   try {
-    const u = new URL(url, typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
-    if (typeof window !== 'undefined' && u.origin === window.location.origin) {
+    const u = new URL(url, isClient ? window.location.origin : 'http://localhost')
+    if (isClient && u.origin === window.location.origin) {
       return u.pathname + u.search
     }
   } catch {

@@ -8,6 +8,7 @@ import {
   type WallpaperId,
 } from '@/config/wallpapers'
 import { writeWallpaperBoot } from '@/lib/wallpaper'
+import { isServer, isClient } from '@/lib/env'
 
 const SETTINGS_KEY = 'desktop-settings'
 const MAX_GALLERY = 40
@@ -28,7 +29,7 @@ let idbMigratePromise: Promise<void> | null = null
 
 /** 一次性：把旧版 IndexedDB 设置迁回 localStorage，并删除 IDB 中的该项 */
 function migrateSettingsFromIdbOnce(): Promise<void> {
-  if (typeof window === 'undefined' || typeof indexedDB === 'undefined') {
+  if (isServer || typeof indexedDB === 'undefined') {
     return Promise.resolve()
   }
   if (idbMigratePromise) return idbMigratePromise
@@ -151,9 +152,7 @@ function normalizeGallery(raw: unknown): WallpaperGalleryItem[] {
       id: typeof e.id === 'string' ? e.id : `wp-${items.length}`,
       url: e.url,
       thumbUrl:
-        isValidCustomWallpaperSrc(e.thumbUrl) && !String(e.thumbUrl).startsWith('data:')
-          ? e.thumbUrl
-          : undefined,
+        isValidCustomWallpaperSrc(e.thumbUrl) && !String(e.thumbUrl).startsWith('data:') ? e.thumbUrl : undefined,
       name: typeof e.name === 'string' ? e.name : undefined,
       createdAt: typeof e.createdAt === 'number' ? e.createdAt : Date.now(),
     })
@@ -161,10 +160,7 @@ function normalizeGallery(raw: unknown): WallpaperGalleryItem[] {
   return items.slice(0, MAX_GALLERY)
 }
 
-function ensureGalleryHasUrl(
-  gallery: WallpaperGalleryItem[],
-  url: string | null,
-): WallpaperGalleryItem[] {
+function ensureGalleryHasUrl(gallery: WallpaperGalleryItem[], url: string | null): WallpaperGalleryItem[] {
   if (!url || !isValidCustomWallpaperSrc(url) || url.startsWith('data:')) return gallery
   if (gallery.some((g) => g.url === url || g.thumbUrl === url)) return gallery
   return [
@@ -341,17 +337,14 @@ export const useSettingsStore = create<SettingsStore>()(
           clockFormat?: unknown
           showTrayDecor?: unknown
         }
-        let custom =
-          normalizeCustomSrc(raw.customWallpaperUrl) ??
-          normalizeCustomSrc(raw.customWallpaperDataUrl)
+        let custom = normalizeCustomSrc(raw.customWallpaperUrl) ?? normalizeCustomSrc(raw.customWallpaperDataUrl)
         if (custom?.startsWith('data:')) custom = null
         let wallpaperId = isWallpaperId(raw.wallpaperId) ? raw.wallpaperId : DEFAULT_WALLPAPER_ID
         if (wallpaperId === CUSTOM_WALLPAPER_ID && !custom) {
           wallpaperId = DEFAULT_WALLPAPER_ID
         }
         const gallery = ensureGalleryHasUrl(normalizeGallery(raw.wallpaperGallery), custom)
-        const iconSize =
-          raw.iconSize === 'sm' || raw.iconSize === 'md' || raw.iconSize === 'lg' ? raw.iconSize : 'md'
+        const iconSize = raw.iconSize === 'sm' || raw.iconSize === 'md' || raw.iconSize === 'lg' ? raw.iconSize : 'md'
         const clockFormat = raw.clockFormat === '12h' || raw.clockFormat === '24h' ? raw.clockFormat : '24h'
         return {
           wallpaperId,
@@ -366,35 +359,30 @@ export const useSettingsStore = create<SettingsStore>()(
         }
       },
       merge: (persisted, current) => {
-        const saved = persisted as {
-          wallpaperId?: unknown
-          customWallpaperUrl?: unknown
-          customWallpaperDataUrl?: unknown
-          wallpaperGallery?: unknown
-          showIconLabels?: unknown
-          iconSize?: unknown
-          hidePlaceholderIcons?: unknown
-          showTaskbarClock?: unknown
-          clockFormat?: unknown
-          showTrayDecor?: unknown
-        } | undefined
-        let custom =
-          normalizeCustomSrc(saved?.customWallpaperUrl) ??
-          normalizeCustomSrc(saved?.customWallpaperDataUrl)
+        const saved = persisted as
+          | {
+              wallpaperId?: unknown
+              customWallpaperUrl?: unknown
+              customWallpaperDataUrl?: unknown
+              wallpaperGallery?: unknown
+              showIconLabels?: unknown
+              iconSize?: unknown
+              hidePlaceholderIcons?: unknown
+              showTaskbarClock?: unknown
+              clockFormat?: unknown
+              showTrayDecor?: unknown
+            }
+          | undefined
+        let custom = normalizeCustomSrc(saved?.customWallpaperUrl) ?? normalizeCustomSrc(saved?.customWallpaperDataUrl)
         if (custom?.startsWith('data:')) custom = null
-        let wallpaperId = isWallpaperId(saved?.wallpaperId)
-          ? saved.wallpaperId
-          : DEFAULT_WALLPAPER_ID
+        let wallpaperId = isWallpaperId(saved?.wallpaperId) ? saved.wallpaperId : DEFAULT_WALLPAPER_ID
         if (wallpaperId === CUSTOM_WALLPAPER_ID && !custom) {
           wallpaperId = DEFAULT_WALLPAPER_ID
         }
         const gallery = ensureGalleryHasUrl(normalizeGallery(saved?.wallpaperGallery), custom)
         const iconSize =
-          saved?.iconSize === 'sm' || saved?.iconSize === 'md' || saved?.iconSize === 'lg'
-            ? saved.iconSize
-            : 'md'
-        const clockFormat =
-          saved?.clockFormat === '12h' || saved?.clockFormat === '24h' ? saved.clockFormat : '24h'
+          saved?.iconSize === 'sm' || saved?.iconSize === 'md' || saved?.iconSize === 'lg' ? saved.iconSize : 'md'
+        const clockFormat = saved?.clockFormat === '12h' || saved?.clockFormat === '24h' ? saved.clockFormat : '24h'
         return {
           ...current,
           wallpaperId,
@@ -421,7 +409,7 @@ export const useSettingsStore = create<SettingsStore>()(
   ),
 )
 
-if (typeof window !== 'undefined') {
+if (isClient) {
   const markHydrated = () => {
     const s = useSettingsStore.getState()
     if (!s._hasHydrated) {

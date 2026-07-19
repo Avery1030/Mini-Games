@@ -1,9 +1,5 @@
-import {
-  CUSTOM_WALLPAPER_ID,
-  isValidCustomWallpaperSrc,
-  isWallpaperId,
-  type WallpaperId,
-} from '@/config/wallpapers'
+import { CUSTOM_WALLPAPER_ID, isValidCustomWallpaperSrc, isWallpaperId, type WallpaperId } from '@/config/wallpapers'
+import { isServer } from '@/lib/env'
 
 const BOOT_KEY = 'desktop-wallpaper-boot'
 
@@ -18,11 +14,8 @@ function isBootableCustomUrl(src: string): boolean {
 }
 
 /** 同步写入轻量标记，首屏在 settings 水合前避免闪回默认壁纸 */
-export function writeWallpaperBoot(
-  wallpaperId: WallpaperId,
-  customUrl?: string | null,
-): void {
-  if (typeof window === 'undefined') return
+export function writeWallpaperBoot(wallpaperId: WallpaperId, customUrl?: string | null): void {
+  if (isServer) return
   try {
     const payload: WallpaperBootState = { wallpaperId }
     if (customUrl && isBootableCustomUrl(customUrl)) {
@@ -35,16 +28,14 @@ export function writeWallpaperBoot(
 }
 
 export function readWallpaperBoot(): WallpaperBootState | null {
-  if (typeof window === 'undefined') return null
+  if (isServer) return null
   try {
     const raw = localStorage.getItem(BOOT_KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw) as { wallpaperId?: unknown; customUrl?: unknown }
     if (!isWallpaperId(parsed.wallpaperId)) return null
     const customUrl =
-      typeof parsed.customUrl === 'string' && isBootableCustomUrl(parsed.customUrl)
-        ? parsed.customUrl
-        : undefined
+      typeof parsed.customUrl === 'string' && isBootableCustomUrl(parsed.customUrl) ? parsed.customUrl : undefined
     return { wallpaperId: parsed.wallpaperId, customUrl }
   } catch {
     return null

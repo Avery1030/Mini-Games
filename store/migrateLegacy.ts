@@ -1,5 +1,6 @@
 import type { DesktopAppId, DesktopWindowRuntime } from '@/config/desktop'
 import type { DesktopCoordinate } from '@/lib/desktop'
+import { isServer } from '@/lib/env'
 
 const LEGACY_KEY = 'desktop-app-windows'
 const WINDOWS_KEY = 'desktop-windows'
@@ -29,11 +30,10 @@ let migrated = false
  * 在任一新 store 读 storage 前调用；只执行一次。
  */
 export function migrateLegacyDesktopPersist(): void {
-  if (migrated || typeof window === 'undefined') return
+  if (migrated || isServer) return
   migrated = true
 
-  const hasNew =
-    localStorage.getItem(WINDOWS_KEY) != null || localStorage.getItem(COORDINATES_KEY) != null
+  const hasNew = localStorage.getItem(WINDOWS_KEY) != null || localStorage.getItem(COORDINATES_KEY) != null
   if (hasNew) {
     localStorage.removeItem(LEGACY_KEY)
     return
@@ -59,7 +59,7 @@ export function migrateLegacyDesktopPersist(): void {
         minimized: app.minimized ?? false,
         active: app.active ?? false,
         zIndex: app.zIndex ?? 0,
-        openOrder: app.isOpen ? app.zIndex ?? 0 : 0,
+        openOrder: app.isOpen ? (app.zIndex ?? 0) : 0,
       }
       if (app.coordinate) {
         coordinates[app.id] = app.coordinate

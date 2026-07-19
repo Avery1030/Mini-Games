@@ -17,7 +17,7 @@ import {
   type CellValue,
   type TetrominoType,
 } from './tetris-game'
-
+import { isServer } from '@/lib/env'
 export interface TetrisProps {
   embedded?: boolean
 }
@@ -83,8 +83,9 @@ const PREVIEW_SHAPES: Record<TetrominoType, number[][]> = {
 const TYPE_TO_CELL: Record<TetrominoType, CellValue> = TETROMINO_VALUE_MAP
 
 function playTone(freq: number, duration = 0.08, type: OscillatorType = 'square', volume = 0.04): void {
-  if (typeof window === 'undefined') return
-  const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+  if (isServer) return
+  const AudioCtx =
+    window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
   if (!AudioCtx) return
   const ctx = new AudioCtx()
   const osc = ctx.createOscillator()
@@ -97,9 +98,12 @@ function playTone(freq: number, duration = 0.08, type: OscillatorType = 'square'
   osc.start()
   gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration)
   osc.stop(ctx.currentTime + duration)
-  window.setTimeout(() => {
-    void ctx.close()
-  }, Math.ceil(duration * 1000) + 20)
+  window.setTimeout(
+    () => {
+      void ctx.close()
+    },
+    Math.ceil(duration * 1000) + 20,
+  )
 }
 
 export function Tetris({ embedded = false }: TetrisProps = {}) {

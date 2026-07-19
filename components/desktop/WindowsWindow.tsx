@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui'
+import { isServer, isClient } from '@/lib/env'
 
 const MIN_WIDTH = 200
 const MIN_HEIGHT = 150
@@ -48,7 +49,7 @@ export function WindowsWindow({
   const t = useTranslations('window')
   const [position, setPosition] = useState(() => {
     if (defaultPosition) return defaultPosition
-    if (typeof window === 'undefined') return { x: 100, y: 80 }
+    if (isServer) return { x: 100, y: 80 }
     return {
       x: Math.max(20, (window.innerWidth - initialWidth) / 2),
       y: Math.max(20, (window.innerHeight - initialHeight) / 2 - 40),
@@ -88,8 +89,8 @@ export function WindowsWindow({
       beforeMaximizeRef.current = { position: { ...position }, size: { ...size } }
       setPosition({ x: 0, y: 0 })
       setSize({
-        width: typeof window !== 'undefined' ? window.innerWidth : 800,
-        height: typeof window !== 'undefined' ? window.innerHeight : 600,
+        width: isClient ? window.innerWidth : 800,
+        height: isClient ? window.innerHeight : 600,
       })
       setMaximized(true)
     }
