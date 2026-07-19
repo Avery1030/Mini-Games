@@ -1,17 +1,36 @@
-export type UiScale = 'sm' | 'md' | 'lg' | 'xl'
+export type UiScale = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'
 
-/** 文字 / 图标字号倍率（不缩放整页布局） */
+/**
+ * 相对默认档（md）的倍率。
+ * 根字号基准见 globals.css（默认 18px，比浏览器 16px 更大）。
+ */
 export const UI_SCALE_FACTOR: Record<UiScale, number> = {
-  sm: 0.85,
+  xs: 0.8,
+  sm: 0.9,
   md: 1,
-  lg: 1.25,
-  xl: 1.5,
+  lg: 1.15,
+  xl: 1.3,
+  '2xl': 1.45,
+  '3xl': 1.6,
 }
 
-export const UI_SCALE_OPTIONS: UiScale[] = ['sm', 'md', 'lg', 'xl']
+export const UI_SCALE_OPTIONS: UiScale[] = ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl']
+
+/** 设置里展示用的约略百分比（相对 md） */
+export function uiScalePercent(scale: UiScale): number {
+  return Math.round(UI_SCALE_FACTOR[scale] * 100)
+}
 
 export function isUiScale(value: unknown): value is UiScale {
-  return value === 'sm' || value === 'md' || value === 'lg' || value === 'xl'
+  return (
+    value === 'xs' ||
+    value === 'sm' ||
+    value === 'md' ||
+    value === 'lg' ||
+    value === 'xl' ||
+    value === '2xl' ||
+    value === '3xl'
+  )
 }
 
 export function resolveUiScaleFactor(scale: UiScale): number {
@@ -32,7 +51,6 @@ export function applyUiScaleToDocument(scale: UiScale) {
   const root = document.documentElement
   root.style.setProperty('--ui-text-scale', String(factor))
   root.style.setProperty('--ui-icon-scale', String(factor))
-  // 兼容：此前错误地用过 zoom 放大整页
   root.style.removeProperty('zoom')
 }
 

@@ -6,7 +6,7 @@ import {
   type DesktopAppId,
   type DesktopWindowRuntime,
 } from '@/config/desktop'
-import { migrateLegacyDesktopPersist, WINDOWS_KEY } from '@/store/migrateLegacy'
+import { STORAGE_KEYS, appStorage, migrateLegacyDesktopPersist } from '@/lib/storage'
 
 const WINDOW_Z_BASE = 1000
 
@@ -217,12 +217,11 @@ export const useWindowStore = create<WindowStore>()(
       },
     }),
     {
-      name: WINDOWS_KEY,
+      name: STORAGE_KEYS.windows,
       version: 1,
-      storage: createJSONStorage(() => {
-        migrateLegacyDesktopPersist()
-        return localStorage
-      }),
+      storage: createJSONStorage(() =>
+        appStorage.createStateStorage({ before: () => migrateLegacyDesktopPersist() }),
+      ),
       partialize: (state) => ({
         windows: state.windows,
         topZIndex: state.topZIndex,

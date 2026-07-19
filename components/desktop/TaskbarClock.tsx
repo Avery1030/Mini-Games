@@ -177,9 +177,21 @@ export function TaskbarClock() {
               day: 'w-8 h-8 p-0 text-[11px]',
               day_button:
                 'w-8 h-8 m-0 p-0 text-[11px] border border-transparent bg-transparent text-on-chrome cursor-default',
-              selected:
-                '!bg-[var(--window-title-active)] !text-[var(--window-title-text)] border-[var(--window-title-active)]',
-              today: 'font-bold underline decoration-accent',
+              // selected/today 加在格子上，必须穿透到内部 button，否则蓝底仍是深色字
+              selected: cn(
+                '!bg-[var(--window-title-active)]',
+                '[&_button]:!bg-[var(--window-title-active)]',
+                '[&_button]:!text-[var(--window-title-text)]',
+                '[&_button]:!border-[var(--window-title-active)]',
+                '[&_button]:font-bold',
+              ),
+              today: cn(
+                '[&_button]:font-bold',
+                '[&_button]:underline',
+                '[&_button]:decoration-2',
+                '[&_button]:decoration-accent',
+                '[&_button]:underline-offset-2',
+              ),
               outside: 'opacity-40',
               disabled: 'opacity-30',
             }}

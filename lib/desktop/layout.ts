@@ -2,9 +2,9 @@ import type { DesktopAppId, DesktopCoordinate } from '@/config/desktop'
 
 export type { DesktopCoordinate }
 
-/** 与桌面 grid 一致：单元格边长 + 间距 */
-export const CELL_SIZE = 80
-export const CELL_GAP = 8
+/** 与桌面 grid 一致：单元格边长 + 间距（略加宽以容纳大字号中文标签） */
+export const CELL_SIZE = 96
+export const CELL_GAP = 10
 export const CELL_STEP = CELL_SIZE + CELL_GAP
 
 /** 超过该像素位移才视为拖拽（区分点击打开） */

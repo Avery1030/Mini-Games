@@ -1,7 +1,6 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-
-const PAINT_KEY = 'desktop-paint'
+import { createJSONStorage, persist } from 'zustand/middleware'
+import { STORAGE_KEYS, appStorage } from '@/lib/storage'
 
 export type PaintTool = 'brush' | 'eraser' | 'line' | 'rect' | 'ellipse'
 
@@ -29,7 +28,8 @@ export const usePaintStore = create<PaintState>()(
       setBrushSize: (brushSize) => set({ brushSize }),
     }),
     {
-      name: PAINT_KEY,
+      name: STORAGE_KEYS.paint,
+      storage: createJSONStorage(() => appStorage.createStateStorage()),
       partialize: (s) => ({
         lastDrawingId: s.lastDrawingId,
         tool: s.tool,

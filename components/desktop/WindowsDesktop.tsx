@@ -269,11 +269,7 @@ export function WindowsDesktop() {
             </div>
             <span className='text-sm font-bold ml-1 hidden sm:inline'>{t('index.home')}</span>
           </button>
-          <StartMenu
-            open={startMenuOpen}
-            onClose={() => setStartMenuOpen(false)}
-            onOpenApp={openWindow}
-          />
+          <StartMenu open={startMenuOpen} onClose={() => setStartMenuOpen(false)} onOpenApp={openWindow} />
         </div>
 
         <div className='flex items-center gap-1 min-w-0 ml-1 overflow-x-auto'>
@@ -419,13 +415,14 @@ function DesktopIcon({
       </div>
       {showLabel && (
         <span
+          title={label}
           className={cn(
             labelClass,
-            'text-center leading-snug max-w-[4.5rem] px-0.5 font-pixel pointer-events-none',
-            'text-on-desktop whitespace-normal break-words',
-            'group-hover:bg-icon-select group-hover:text-icon-select-fg group-hover:[text-shadow:none]',
-            'group-focus-visible:bg-icon-select group-focus-visible:text-icon-select-fg group-focus-visible:[text-shadow:none]',
-            'group-active:bg-icon-select group-active:text-icon-select-fg group-active:[text-shadow:none]',
+            'w-full min-w-0 px-0.5 text-center leading-tight font-pixel pointer-events-none',
+            'text-on-desktop whitespace-nowrap overflow-hidden text-ellipsis',
+            'group-hover:text-icon-select-fg group-hover:[text-shadow:none]',
+            'group-focus-visible:text-icon-select-fg group-focus-visible:[text-shadow:none]',
+            'group-active:text-icon-select-fg group-active:[text-shadow:none]',
           )}
           style={{ textShadow: ICON_LABEL_OUTLINE }}
         >

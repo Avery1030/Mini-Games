@@ -4,7 +4,7 @@ import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Checkbox, Panel, Select } from '@/components/ui'
-import { UI_SCALE_FACTOR, type UiScale } from '@/lib/uiScale'
+import { UI_SCALE_OPTIONS, uiScalePercent, type UiScale } from '@/lib/uiScale'
 import { useSettingsStore } from '@/store/settings'
 
 export function AppearanceSection() {
@@ -19,7 +19,17 @@ export function AppearanceSection() {
   const [themeMounted, setThemeMounted] = useState(false)
   useEffect(() => setThemeMounted(true), [])
   const themeValue = themeMounted ? theme ?? 'system' : 'system'
-  const scalePercent = Math.round(UI_SCALE_FACTOR[uiScale] * 100)
+  const scalePercent = uiScalePercent(uiScale)
+
+  const scaleLabelKey = {
+    xs: 'uiScaleXs',
+    sm: 'uiScaleSm',
+    md: 'uiScaleMd',
+    lg: 'uiScaleLg',
+    xl: 'uiScaleXl',
+    '2xl': 'uiScale2xl',
+    '3xl': 'uiScale3xl',
+  } as const satisfies Record<UiScale, string>
 
   return (
     <div className='flex-1 min-h-0 overflow-y-auto p-3 space-y-3'>
@@ -31,15 +41,13 @@ export function AppearanceSection() {
           <div className='text-xs font-bold mb-1.5'>{t('uiScale')}</div>
           <Select
             size='sm'
-            className='min-w-[160px]'
+            className='min-w-[180px]'
             value={uiScale}
             onValueChange={(v) => setUiScale(v as UiScale)}
-            options={[
-              { value: 'sm', label: t('uiScaleSm') },
-              { value: 'md', label: t('uiScaleMd') },
-              { value: 'lg', label: t('uiScaleLg') },
-              { value: 'xl', label: t('uiScaleXl') },
-            ]}
+            options={UI_SCALE_OPTIONS.map((value) => ({
+              value,
+              label: t(scaleLabelKey[value]),
+            }))}
           />
           <p className='mt-1 text-[10px] text-muted'>{t('uiScaleHint', { percent: scalePercent })}</p>
         </div>

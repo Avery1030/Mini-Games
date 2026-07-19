@@ -10,8 +10,8 @@ import {
 import { writeWallpaperBoot } from '@/lib/wallpaper'
 import { isServer, isClient } from '@/lib/env'
 import { isUiScale, type UiScale } from '@/lib/uiScale'
+import { STORAGE_KEYS, appStorage } from '@/lib/storage'
 
-const SETTINGS_KEY = 'desktop-settings'
 const MAX_GALLERY = 40
 const IDB_NAME = 'mini-app-storage'
 const IDB_STORE = 'kv'
@@ -41,7 +41,7 @@ function migrateSettingsFromIdbOnce(): Promise<void> {
       resolve()
     }
 
-    if (localStorage.getItem(SETTINGS_KEY) != null) {
+    if (appStorage.has(STORAGE_KEYS.settings)) {
       finish()
       return
     }
@@ -64,18 +64,18 @@ function migrateSettingsFromIdbOnce(): Promise<void> {
             return
           }
           const tx = db.transaction(IDB_STORE, 'readonly')
-          const getReq = tx.objectStore(IDB_STORE).get(SETTINGS_KEY)
+          const getReq = tx.objectStore(IDB_STORE).get(STORAGE_KEYS.settings)
           getReq.onerror = () => {
             db.close()
             resolve()
           }
           getReq.onsuccess = () => {
             const value = getReq.result
-            if (typeof value === 'string' && value && localStorage.getItem(SETTINGS_KEY) == null) {
+            if (typeof value === 'string' && value && !appStorage.has(STORAGE_KEYS.settings)) {
               try {
                 // 若仍是超大 data URL，跳过，避免撑爆 localStorage
                 if (value.length < 1_500_000) {
-                  localStorage.setItem(SETTINGS_KEY, value)
+                  appStorage.setRaw(STORAGE_KEYS.settings, value)
                 }
               } catch {
                 // quota
@@ -109,7 +109,7 @@ function deleteIdbSettingsKey(): void {
           return
         }
         const tx = db.transaction(IDB_STORE, 'readwrite')
-        tx.objectStore(IDB_STORE).delete(SETTINGS_KEY)
+        tx.objectStore(IDB_STORE).delete(STORAGE_KEYS.settings)
         tx.oncomplete = () => db.close()
         tx.onerror = () => db.close()
       } catch {
@@ -121,20 +121,9 @@ function deleteIdbSettingsKey(): void {
   }
 }
 
-const settingsStorage = {
-  getItem: async (name: string) => {
-    await migrateSettingsFromIdbOnce()
-    return localStorage.getItem(name)
-  },
-  setItem: async (name: string, value: string) => {
-    await migrateSettingsFromIdbOnce()
-    localStorage.setItem(name, value)
-  },
-  removeItem: async (name: string) => {
-    await migrateSettingsFromIdbOnce()
-    localStorage.removeItem(name)
-  },
-}
+const settingsStorage = appStorage.createStateStorage({
+  before: () => migrateSettingsFromIdbOnce(),
+})
 
 function normalizeCustomSrc(raw: unknown): string | null {
   return isValidCustomWallpaperSrc(raw) ? raw : null
@@ -318,7 +307,7 @@ export const useSettingsStore = create<SettingsStore>()(
       },
     }),
     {
-      name: SETTINGS_KEY,
+      name: STORAGE_KEYS.settings,
       version: 7,
       storage: createJSONStorage(() => settingsStorage),
       partialize: (state) => ({

@@ -2,7 +2,10 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getLocale } from 'next-intl/server'
 import { ThemeProvider } from 'next-themes'
 import { ModalHost } from '@/components/ui'
+import { STORAGE_KEYS } from '@/lib/storage'
 import './globals.css'
+
+const THEME_STORAGE_KEY = STORAGE_KEYS.theme
 
 export default async function RootLayout({
   children,
@@ -18,7 +21,7 @@ export default async function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
-                const key = 'app-theme';
+                const key = ${JSON.stringify(THEME_STORAGE_KEY)};
                 let theme;
                 try {
                   theme = localStorage.getItem(key);
@@ -37,7 +40,7 @@ export default async function RootLayout({
             defaultTheme='light'
             enableSystem={false}
             themes={['light', 'dark']}
-            storageKey='app-theme'
+            storageKey={THEME_STORAGE_KEY}
           >
             {children}
             <ModalHost />

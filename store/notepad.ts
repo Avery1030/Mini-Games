@@ -1,7 +1,6 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-
-const NOTEPAD_KEY = 'desktop-notepad'
+import { createJSONStorage, persist } from 'zustand/middleware'
+import { STORAGE_KEYS, appStorage } from '@/lib/storage'
 
 type NotepadState = {
   /** 上次打开的笔记 id（用于恢复） */
@@ -21,7 +20,8 @@ export const useNotepadStore = create<NotepadState>()(
       setWordWrap: (value) => set({ wordWrap: value }),
     }),
     {
-      name: NOTEPAD_KEY,
+      name: STORAGE_KEYS.notepad,
+      storage: createJSONStorage(() => appStorage.createStateStorage()),
       partialize: (s) => ({ lastNoteId: s.lastNoteId, wordWrap: s.wordWrap }),
     },
   ),

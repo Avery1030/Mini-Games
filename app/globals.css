@@ -137,35 +137,35 @@ body {
   --ui-icon-scale: 1;
 }
 
-/* rem 工具类（text-sm / text-xs 等）随根字号变化 */
+/* rem 工具类（text-sm / text-xs 等）随根字号变化；基准 18px（默认比常见 16px 更大） */
 html {
-  font-size: calc(16px * var(--ui-text-scale));
+  font-size: calc(18px * var(--ui-text-scale));
 }
 
 /*
  * 大量 text-[Npx] 为绝对像素，需单独按倍率改写字号。
- * 窗口宽高、任务栏高度等布局尺寸不受影响。
+ * 相对原设计再 ×1.125（与根字号 16→18 对齐），窗口布局不受影响。
  */
 .text-\[10px\] {
-  font-size: calc(10px * var(--ui-text-scale)) !important;
+  font-size: calc(11.25px * var(--ui-text-scale)) !important;
 }
 .text-\[11px\] {
-  font-size: calc(11px * var(--ui-text-scale)) !important;
+  font-size: calc(12.375px * var(--ui-text-scale)) !important;
 }
 .text-\[12px\] {
-  font-size: calc(12px * var(--ui-text-scale)) !important;
+  font-size: calc(13.5px * var(--ui-text-scale)) !important;
 }
 .text-\[13px\] {
-  font-size: calc(13px * var(--ui-text-scale)) !important;
+  font-size: calc(14.625px * var(--ui-text-scale)) !important;
 }
 .text-\[14px\] {
-  font-size: calc(14px * var(--ui-text-scale)) !important;
+  font-size: calc(15.75px * var(--ui-text-scale)) !important;
 }
 .text-\[15px\] {
-  font-size: calc(15px * var(--ui-text-scale)) !important;
+  font-size: calc(16.875px * var(--ui-text-scale)) !important;
 }
 .text-\[16px\] {
-  font-size: calc(16px * var(--ui-text-scale)) !important;
+  font-size: calc(18px * var(--ui-text-scale)) !important;
 }
 
 /*
@@ -211,6 +211,18 @@ svg.lucide[width='32'] {
 svg.lucide[width='36'] {
   width: calc(36px * var(--ui-icon-scale)) !important;
   height: calc(36px * var(--ui-icon-scale)) !important;
+}
+svg.lucide[width='40'] {
+  width: calc(40px * var(--ui-icon-scale)) !important;
+  height: calc(40px * var(--ui-icon-scale)) !important;
+}
+svg.lucide[width='48'] {
+  width: calc(48px * var(--ui-icon-scale)) !important;
+  height: calc(48px * var(--ui-icon-scale)) !important;
+}
+svg.lucide[width='56'] {
+  width: calc(56px * var(--ui-icon-scale)) !important;
+  height: calc(56px * var(--ui-icon-scale)) !important;
 }
 
 @theme inline {

@@ -7,7 +7,7 @@ import {
   type DesktopCoordinate,
 } from '@/config/desktop'
 import { resolveOverlaps } from '@/lib/desktop'
-import { COORDINATES_KEY, migrateLegacyDesktopPersist } from '@/store/migrateLegacy'
+import { STORAGE_KEYS, appStorage, migrateLegacyDesktopPersist } from '@/lib/storage'
 
 type CoordinatesMap = Record<DesktopAppId, DesktopCoordinate>
 
@@ -69,12 +69,11 @@ export const useDesktopStore = create<DesktopStore>()(
       },
     }),
     {
-      name: COORDINATES_KEY,
+      name: STORAGE_KEYS.coordinates,
       version: 1,
-      storage: createJSONStorage(() => {
-        migrateLegacyDesktopPersist()
-        return localStorage
-      }),
+      storage: createJSONStorage(() =>
+        appStorage.createStateStorage({ before: () => migrateLegacyDesktopPersist() }),
+      ),
       partialize: (state) => ({
         coordinates: state.coordinates,
       }),
