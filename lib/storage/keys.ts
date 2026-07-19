@@ -18,6 +18,8 @@ export const STORAGE_KEYS = {
   paint: 'desktop-paint',
   /** 锁屏状态（zustand persist） */
   lock: 'desktop-lock',
+  /** 日历按日备注（zustand persist） */
+  calendar: 'desktop-calendar',
 } as const
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS]

@@ -269,3 +269,20 @@ svg.lucide[width='56'] {
   --rdp-today-color: var(--accent);
   color: var(--text-on-chrome);
 }
+
+/* 有备注的日期：格子底部小圆点 */
+.rdp-win95 .rdp-day-noted button::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.rdp-win95 .rdp-selected.rdp-day-noted button::after,
+.rdp-win95 .rdp-day-noted.rdp-selected button::after {
+  background: var(--window-title-text);
+}

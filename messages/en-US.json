@@ -79,6 +79,13 @@
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
     "today": "Today: {date}",
+    "todayBtn": "Today",
+    "liveTime": "Current time",
+    "selected": "Selected: {date}",
+    "isToday": "today",
+    "note": "Note for this day",
+    "notePlaceholder": "Write something… (blur or Save)",
+    "save": "Save",
     "monthTitle": "{month} {year}",
     "dateFull": "{weekday}, {month} {day}, {year}"
   },

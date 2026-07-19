@@ -79,6 +79,13 @@
     "prevMonth": "上个月",
     "nextMonth": "下个月",
     "today": "今天：{date}",
+    "todayBtn": "今天",
+    "liveTime": "当前时间",
+    "selected": "选中：{date}",
+    "isToday": "今天",
+    "note": "当日备注",
+    "notePlaceholder": "写点什么…（失焦或点保存）",
+    "save": "保存",
     "monthTitle": "{year}年 {month}月",
     "dateFull": "{year}年{month}月{day}日 {weekday}"
   },

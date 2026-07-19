@@ -20,6 +20,7 @@ export type {
   WallpaperBootPersist,
   LegacyDesktopPersistState,
   LockPersistState,
+  CalendarPersistState,
 } from './schema'
 
 export { appStorage } from './local'
