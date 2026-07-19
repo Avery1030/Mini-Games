@@ -44,7 +44,7 @@
     "shutdownDone": "It is now safe to turn off your computer."
   },
   "boot": {
-    "title": "Avery",
+    "title": "Avery Mini OS",
     "starting": "Starting Windows...",
     "loading": "Loading your personal settings...",
     "ready": "Entering the desktop...",
@@ -128,6 +128,7 @@
     "themeResolvedDark": "Dark",
     "iconSize": "Desktop icon size",
     "iconSizeHint": "Desktop icons only. Use Display size above for the whole UI.",
+    "showIconLabelsHint": "When off, only icons are visible. Show labels when enabled.",
     "iconSm": "Small",
     "iconMd": "Medium (default)",
     "iconLg": "Large",
@@ -141,6 +142,8 @@
     "uiScale3xl": "Largest (160%)",
     "uiScaleHint": "About {percent}% — changes text and icon size only, not page/window layout.",
     "showIconLabels": "Show icon labels",
+    "openWindowsMaximized": "Open apps maximized",
+    "openWindowsMaximizedHint": "When off, new windows use their default size. Already open windows are unchanged.",
     "taskbarHint": "Changes apply immediately.",
     "showClock": "Show clock",
     "clockFormat": "Clock format",

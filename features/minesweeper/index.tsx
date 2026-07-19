@@ -233,124 +233,142 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
     }
   }, [state.board, state.explodedCell, boardRows, boardCols, highlightSet, hoveredCell, pressedCell])
 
+  const boardPixelW = boardCols * CELL_SIZE
+  const statusWidth = Math.max(boardPixelW + 8, 220)
+
   return (
     <div
-      className={`flex flex-col items-center text-[#000] bg-[#c0c0c0] p-4 ${
-        embedded ? 'h-full min-h-0 overflow-auto' : 'min-h-screen'
-      }`}
+      className={
+        embedded
+          ? 'flex h-full min-h-0 flex-col bg-[#c0c0c0] text-[#000]'
+          : 'flex min-h-screen flex-col items-center bg-[#c0c0c0] p-4 text-[#000]'
+      }
     >
-      <div className='flex gap-0 mb-2 border border-[#808080] border-b-0 rounded-t overflow-hidden'>
-        {(['basic', 'intermediate', 'expert', 'fullscreen', 'custom'] as const).map((d) => (
-          <button
-            key={d}
-            type='button'
-            onClick={() => applyPreset(d)}
-            className={`px-4 py-1.5 text-sm border-r border-[#808080] last:border-r-0 ${
-              difficulty === d ? 'bg-[#c0c0c0] font-medium' : 'bg-[#e0e0e0] hover:bg-[#d0d0d0]'
-            }`}
+      {/* 顶栏固定：难度 + 状态，避免被 flex 挤压裁切 */}
+      <div className='flex w-full shrink-0 flex-col items-center gap-2 px-3 pt-3 pb-1'>
+        <div className='max-w-full overflow-x-auto'>
+          <div className='flex w-max border border-[#808080]'>
+            {(['basic', 'intermediate', 'expert', 'fullscreen', 'custom'] as const).map((d) => (
+              <button
+                key={d}
+                type='button'
+                onClick={() => applyPreset(d)}
+                className={`shrink-0 px-3 py-1.5 text-sm border-r border-[#808080] last:border-r-0 ${
+                  difficulty === d ? 'bg-[#c0c0c0] font-medium' : 'bg-[#e0e0e0] hover:bg-[#d0d0d0]'
+                }`}
+              >
+                {d === 'basic' && '基础'}
+                {d === 'intermediate' && '中级'}
+                {d === 'expert' && '专家'}
+                {d === 'fullscreen' && '满屏'}
+                {d === 'custom' && '自定义'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {difficulty === 'custom' && (
+          <div className='flex flex-wrap items-center justify-center gap-2 px-3 py-2 border border-[#808080] bg-[#c0c0c0]'>
+            <label className='flex items-center gap-1 text-sm'>
+              横
+              <input
+                type='number'
+                value={customInputs.cols}
+                onChange={(e) => setCustomInputs((p) => ({ ...p, cols: Number(e.target.value) }))}
+                className='w-12 px-1 py-0.5 border border-[#808080] bg-white text-center text-sm'
+              />
+            </label>
+            <label className='flex items-center gap-1 text-sm'>
+              竖
+              <input
+                type='number'
+                value={customInputs.rows}
+                onChange={(e) => setCustomInputs((p) => ({ ...p, rows: Number(e.target.value) }))}
+                className='w-12 px-1 py-0.5 border border-[#808080] bg-white text-center text-sm'
+              />
+            </label>
+            <label className='flex items-center gap-1 text-sm'>
+              雷
+              <input
+                type='number'
+                value={customInputs.mines}
+                onChange={(e) => setCustomInputs((p) => ({ ...p, mines: Number(e.target.value) }))}
+                className='w-14 px-1 py-0.5 border border-[#808080] bg-white text-center text-sm'
+              />
+            </label>
+            <button
+              type='button'
+              onClick={applyCustom}
+              className='px-3 py-1 border border-[#808080] bg-[#e0e0e0] text-sm hover:bg-[#d0d0d0]'
+            >
+              确定
+            </button>
+          </div>
+        )}
+
+        <div
+          className='flex items-center justify-between px-2 py-1.5 bg-[#c0c0c0] border-2 border-t-[#fff] border-l-[#fff] border-r-[#808080] border-b-[#808080]'
+          style={{ width: statusWidth, maxWidth: '100%' }}
+        >
+          <div
+            className='inline-flex items-center justify-end min-w-[4rem] h-7 px-1.5 rounded-sm tabular-nums text-[1.1rem] leading-none'
+            style={{
+              fontFamily: "'Seven Segmentiments', sans-serif",
+              color: '#ff0a0a',
+              backgroundColor: '#0d0d0d',
+              border: '2px solid #9e9e9e',
+              boxShadow: 'inset 0 0 4px rgba(0,0,0,0.5)',
+            }}
           >
-            {d === 'basic' && '基础'}
-            {d === 'intermediate' && '中级'}
-            {d === 'expert' && '专家'}
-            {d === 'fullscreen' && '满屏'}
-            {d === 'custom' && '自定义'}
+            {String(state.remainingMines).padStart(3, '0')}
+          </div>
+          <button
+            type='button'
+            onClick={resetGame}
+            className='w-9 h-9 flex items-center justify-center text-2xl border-2 border-t-[#808080] border-l-[#808080] border-r-[#fff] border-b-[#fff] bg-[#c0c0c0] hover:bg-[#d0d0d0] active:border-t-[#fff] active:border-l-[#fff] active:border-r-[#808080] active:border-b-[#808080]'
+            title='重新开始'
+          >
+            {smileyIcon()}
           </button>
-        ))}
+          <div
+            className='inline-flex items-center justify-end min-w-[4rem] h-7 px-1.5 rounded-sm tabular-nums text-[1.1rem] leading-none'
+            style={{
+              fontFamily: "'Seven Segmentiments', sans-serif",
+              color: '#ff0a0a',
+              backgroundColor: '#0d0d0d',
+              border: '2px solid #9e9e9e',
+              boxShadow: 'inset 0 0 4px rgba(0,0,0,0.5)',
+            }}
+          >
+            {String(state.elapsed).padStart(3, '0')}
+          </div>
+        </div>
       </div>
 
-      {difficulty === 'custom' && (
-        <div className='flex items-center gap-2 mb-3 px-3 py-2 bg-[#c0c0c0] border border-[#808080] border-t-0 rounded-b'>
-          <label className='flex items-center gap-1 text-sm'>
-            横
-            <input
-              type='number'
-              value={customInputs.cols}
-              onChange={(e) => setCustomInputs((p) => ({ ...p, cols: Number(e.target.value) }))}
-              className='w-12 px-1 py-0.5 border border-[#808080] bg-white text-center text-sm'
-            />
-          </label>
-          <label className='flex items-center gap-1 text-sm'>
-            竖
-            <input
-              type='number'
-              value={customInputs.rows}
-              onChange={(e) => setCustomInputs((p) => ({ ...p, rows: Number(e.target.value) }))}
-              className='w-12 px-1 py-0.5 border border-[#808080] bg-white text-center text-sm'
-            />
-          </label>
-          <label className='flex items-center gap-1 text-sm'>
-            雷
-            <input
-              type='number'
-              // min={1}
-              value={customInputs.mines}
-              onChange={(e) => setCustomInputs((p) => ({ ...p, mines: Number(e.target.value) }))}
-              className='w-14 px-1 py-0.5 border border-[#808080] bg-white text-center text-sm'
-            />
-          </label>
-          <button
-            type='button'
-            onClick={applyCustom}
-            className='px-3 py-1 border border-[#808080] bg-[#e0e0e0] text-sm hover:bg-[#d0d0d0]'
-          >
-            确定
-          </button>
-        </div>
-      )}
-
-      <div className='flex items-center justify-between w-full max-w-[100%] px-2 py-1.5 bg-[#c0c0c0] border-2 border-t-[#fff] border-l-[#fff] border-r-[#808080] border-b-[#808080] mb-1'>
-        <div
-          className='inline-flex items-center justify-end min-w-[4rem] h-7 px-1.5 rounded-sm tabular-nums text-[1.1rem] leading-none'
-          style={{
-            fontFamily: "'Seven Segmentiments', sans-serif",
-            color: '#ff0a0a',
-            backgroundColor: '#0d0d0d',
-            border: '2px solid #9e9e9e',
-            boxShadow: 'inset 0 0 4px rgba(0,0,0,0.5)',
-          }}
-        >
-          {String(state.remainingMines).padStart(3, '0')}
-        </div>
-        <button
-          type='button'
-          onClick={resetGame}
-          className='w-9 h-9 flex items-center justify-center text-2xl border-2 border-t-[#808080] border-l-[#808080] border-r-[#fff] border-b-[#fff] bg-[#c0c0c0] hover:bg-[#d0d0d0] active:border-t-[#fff] active:border-l-[#fff] active:border-r-[#808080] active:border-b-[#808080]'
-          title='重新开始'
-        >
-          {smileyIcon()}
-        </button>
-        <div
-          className='inline-flex items-center justify-end min-w-[4rem] h-7 px-1.5 rounded-sm tabular-nums text-[1.1rem] leading-none'
-          style={{
-            fontFamily: "'Seven Segmentiments', sans-serif",
-            color: '#ff0a0a',
-            backgroundColor: '#0d0d0d',
-            border: '2px solid #9e9e9e',
-            boxShadow: 'inset 0 0 4px rgba(0,0,0,0.5)',
-          }}
-        >
-          {String(state.elapsed).padStart(3, '0')}
-        </div>
-      </div>
-
+      {/* 仅棋盘区域滚动，大图难度不再把顶栏顶出视口 */}
       <div
-        className='inline-block p-1 border-2 border-t-[#808080] border-l-[#808080] border-r-[#fff] border-b-[#fff] bg-[#c0c0c0] cursor-default'
-        style={{ maxWidth: '100%', overflow: 'auto' }}
+        className={
+          embedded
+            ? 'flex min-h-0 min-w-0 flex-1 justify-center overflow-auto px-3 py-1'
+            : 'flex justify-center overflow-auto'
+        }
       >
-        <canvas
-          ref={canvasRef}
-          width={boardCols * CELL_SIZE}
-          height={boardRows * CELL_SIZE}
-          className='block'
-          onMouseDown={handleCanvasMouseDown}
-          onMouseUp={handleCanvasMouseUp}
-          onMouseMove={handleCanvasMouseMove}
-          onMouseLeave={handleCanvasMouseLeave}
-          onContextMenu={handleCanvasContextMenu}
-        />
+        <div className='inline-block h-fit p-1 border-2 border-t-[#808080] border-l-[#808080] border-r-[#fff] border-b-[#fff] bg-[#c0c0c0] cursor-default'>
+          <canvas
+            ref={canvasRef}
+            width={boardPixelW}
+            height={boardRows * CELL_SIZE}
+            className='block'
+            onMouseDown={handleCanvasMouseDown}
+            onMouseUp={handleCanvasMouseUp}
+            onMouseMove={handleCanvasMouseMove}
+            onMouseLeave={handleCanvasMouseLeave}
+            onContextMenu={handleCanvasContextMenu}
+          />
+        </div>
       </div>
 
-      <div className='mt-3 flex flex-col items-center gap-1'>
+      <div className='flex shrink-0 flex-col items-center gap-1 px-3 pt-2 pb-3'>
         <button
           type='button'
           onClick={() => game?.applyLogicStep()}
@@ -364,6 +382,7 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
     </div>
   )
 }
+
 
 function drawMine(ctx: CanvasRenderingContext2D, x: number, y: number, isExploded: boolean): void {
   const cx = x + CELL_SIZE / 2

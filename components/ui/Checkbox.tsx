@@ -10,7 +10,8 @@ export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement
 
 /**
  * Win95 风格复选框：凹陷方框 + 勾选标记。
- * 勾选标记始终占位（invisible），避免勾选/取消时上下跳动。
+ * 勾选标记用 opacity 占位（勿用 visibility:visible），
+ * 否则在父级 visibility:hidden（如最小化窗口）时仍会穿透显示。
  */
 export function Checkbox({
   className,
@@ -48,7 +49,7 @@ export function Checkbox({
           <span
             className={cn(
               'block size-full text-center text-[11px] leading-[14px] font-bold text-on-chrome',
-              checked ? 'visible' : 'invisible',
+              checked ? 'opacity-100' : 'opacity-0',
             )}
           >
             ✓

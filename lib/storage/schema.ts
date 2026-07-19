@@ -32,6 +32,8 @@ export type SettingsPersistState = {
   showTaskbarClock: boolean
   clockFormat: '24h' | '12h'
   showTrayDecor: boolean
+  /** 应用窗口默认最大化打开 */
+  openWindowsMaximized: boolean
 }
 
 export type WindowsPersistState = {

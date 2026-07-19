@@ -4,7 +4,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui'
-import { isServer, isClient } from '@/lib/env'
+import {
+  WinCloseIcon,
+  WinMaximizeIcon,
+  WinMinimizeIcon,
+  WinRestoreIcon,
+} from '@/components/ui/WindowChromeIcons'
+import { isServer } from '@/lib/env'
 
 const MIN_WIDTH = 200
 const MIN_HEIGHT = 150
@@ -17,6 +23,8 @@ export interface WindowsWindowProps {
   onClose?: () => void
   onMinimize?: () => void
   minimized?: boolean
+  /** 首次打开时是否最大化（还原后仍可手动切换） */
+  defaultMaximized?: boolean
   children?: React.ReactNode
   defaultPosition?: { x: number; y: number }
   width?: number
@@ -28,6 +36,16 @@ export interface WindowsWindowProps {
   onFocus?: () => void
 }
 
+const TASKBAR_H = 48
+
+function maximizedSize() {
+  if (isServer) return { width: 800, height: 600 }
+  return {
+    width: window.innerWidth,
+    height: Math.max(240, window.innerHeight - TASKBAR_H),
+  }
+}
+
 /**
  * 老版 Windows 风格弹窗 - 深蓝标题栏、可拖拽、可最小化到任务栏、四边/四角可调整大小
  */
@@ -37,6 +55,7 @@ export function WindowsWindow({
   onClose,
   onMinimize,
   minimized = false,
+  defaultMaximized = false,
   children,
   defaultPosition,
   width: initialWidth = 400,
@@ -47,18 +66,23 @@ export function WindowsWindow({
   onFocus,
 }: WindowsWindowProps) {
   const t = useTranslations('window')
-  const [position, setPosition] = useState(() => {
+
+  const restoredPosition = (() => {
     if (defaultPosition) return defaultPosition
     if (isServer) return { x: 100, y: 80 }
     return {
       x: Math.max(20, (window.innerWidth - initialWidth) / 2),
       y: Math.max(20, (window.innerHeight - initialHeight) / 2 - 40),
     }
-  })
+  })()
+  const restoredSize = { width: initialWidth, height: initialHeight }
 
-  const [size, setSize] = useState({ width: initialWidth, height: initialHeight })
-  const [maximized, setMaximized] = useState(false)
-  const beforeMaximizeRef = useRef({ position: { x: 0, y: 0 }, size: { width: initialWidth, height: initialHeight } })
+  const [position, setPosition] = useState(() =>
+    defaultMaximized ? { x: 0, y: 0 } : restoredPosition,
+  )
+  const [size, setSize] = useState(() => (defaultMaximized ? maximizedSize() : restoredSize))
+  const [maximized, setMaximized] = useState(defaultMaximized)
+  const beforeMaximizeRef = useRef({ position: restoredPosition, size: restoredSize })
 
   const [isDragging, setIsDragging] = useState(false)
   const [resizing, setResizing] = useState<ResizeEdge | null>(null)
@@ -88,15 +112,20 @@ export function WindowsWindow({
     } else {
       beforeMaximizeRef.current = { position: { ...position }, size: { ...size } }
       setPosition({ x: 0, y: 0 })
-      // 避开底部任务栏（h-12 = 48px）
-      const taskbarH = 48
-      setSize({
-        width: isClient ? window.innerWidth : 800,
-        height: isClient ? Math.max(240, window.innerHeight - taskbarH) : 600,
-      })
+      setSize(maximizedSize())
       setMaximized(true)
     }
   }, [maximized, position, size])
+
+  // 客户端校正最大化尺寸（避免 SSR/首帧与视口不一致）
+  useEffect(() => {
+    if (!defaultMaximized) return
+    setPosition({ x: 0, y: 0 })
+    setSize(maximizedSize())
+    setMaximized(true)
+    // 仅挂载时校正一次
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleTitleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -251,14 +280,13 @@ export function WindowsWindow({
               <Button
                 variant='title'
                 size='icon-sm'
-                className='text-sm'
                 aria-label={t('minimize')}
                 onClick={(e) => {
                   e.stopPropagation()
                   onMinimize()
                 }}
               >
-                —
+                <WinMinimizeIcon />
               </Button>
             )}
             <Button
@@ -270,7 +298,7 @@ export function WindowsWindow({
               }}
               aria-label={maximized ? t('restore') : t('maximize')}
             >
-              {maximized ? '⧉' : '□'}
+              {maximized ? <WinRestoreIcon /> : <WinMaximizeIcon />}
             </Button>
             <Button
               variant='title'
@@ -281,7 +309,7 @@ export function WindowsWindow({
               }}
               aria-label={t('close')}
             >
-              ✕
+              <WinCloseIcon />
             </Button>
           </div>
         </div>

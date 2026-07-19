@@ -6,10 +6,7 @@ import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { winChrome } from '@/lib/winChrome'
 import { confirmModal, alertModal } from '@/components/ui'
-import {
-  DESKTOP_APP_DEFINITIONS,
-  type DesktopAppId,
-} from '@/config/desktop'
+import { DESKTOP_APP_DEFINITIONS, type DesktopAppId } from '@/config/desktop'
 import { useWindowStore } from '@/store/window'
 import { useLockStore } from '@/store/lock'
 import { promptSessionLockPassword } from './promptSessionLock'
@@ -32,15 +29,7 @@ type MenuItemProps = {
 
 const LAUNCHABLE = DESKTOP_APP_DEFINITIONS.filter((app) => app.app)
 
-function MenuItem({
-  icon: Icon,
-  label,
-  shortcut,
-  hasSubmenu,
-  active,
-  onClick,
-  onMouseEnter,
-}: MenuItemProps) {
+function MenuItem({ icon: Icon, label, shortcut, hasSubmenu, active, onClick, onMouseEnter }: MenuItemProps) {
   return (
     <button
       type='button'
@@ -65,9 +54,7 @@ function MenuItem({
 }
 
 function MenuSeparator() {
-  return (
-    <div role='separator' className='my-0.5 mx-1 h-[2px] bg-chrome-dark shadow-[0_1px_0_var(--chrome-light)]' />
-  )
+  return <div role='separator' className='my-0.5 mx-1 h-[2px] bg-chrome-dark shadow-[0_1px_0_var(--chrome-light)]' />
 }
 
 /**
@@ -155,7 +142,7 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
       aria-label={t('index.home')}
       className={cn(
         winChrome,
-        'absolute left-2 bottom-[calc(100%+2px)] z-[1200] flex min-w-[220px] shadow-[2px_2px_0_rgba(0,0,0,0.4)] font-pixel',
+        'absolute left-0 bottom-[calc(100%+2px)] z-[1200] flex min-w-[220px] shadow-[2px_2px_0_rgba(0,0,0,0.4)] font-pixel',
       )}
     >
       {/* 左侧品牌条 */}
@@ -196,11 +183,7 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
                 const Icon = app.icon
                 return (
                   <li key={app.id} role='none'>
-                    <MenuItem
-                      icon={Icon}
-                      label={t(`apps.${app.id}`)}
-                      onClick={() => launch(app.id)}
-                    />
+                    <MenuItem icon={Icon} label={t(`apps.${app.id}`)} onClick={() => launch(app.id)} />
                   </li>
                 )
               })}
@@ -208,8 +191,16 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
           )}
         </div>
 
-        <MenuItem label={ts('documents')} onClick={() => launch('document')} onMouseEnter={() => setProgramsOpen(false)} />
-        <MenuItem label={ts('settings')} onClick={() => launch('settings')} onMouseEnter={() => setProgramsOpen(false)} />
+        <MenuItem
+          label={ts('documents')}
+          onClick={() => launch('document')}
+          onMouseEnter={() => setProgramsOpen(false)}
+        />
+        <MenuItem
+          label={ts('settings')}
+          onClick={() => launch('settings')}
+          onMouseEnter={() => setProgramsOpen(false)}
+        />
         <MenuSeparator />
         <MenuItem label={ts('help')} onClick={() => launch('log')} onMouseEnter={() => setProgramsOpen(false)} />
         <MenuSeparator />

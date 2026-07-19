@@ -29,7 +29,6 @@ export interface DisplaySectionProps {
 }
 
 export function DisplaySection({
-  embedded,
   draft,
   draftLabel,
   dirty,
@@ -51,12 +50,14 @@ export function DisplaySection({
 
   return (
     <>
-      <div className={cn('flex-1 min-h-0 overflow-y-auto p-3', embedded && 'p-3')}>
-        <h2 className='text-base font-bold mb-1'>{t('sections.display')}</h2>
-        <p className='text-xs text-muted mb-3'>{t('displayHint')}</p>
+      <div className='flex flex-1 min-h-0 flex-col gap-3 overflow-hidden p-3'>
+        <div className='shrink-0'>
+          <h2 className='text-base font-bold mb-1'>{t('sections.display')}</h2>
+          <p className='text-xs text-muted'>{t('displayHint')}</p>
+        </div>
 
-        <Panel inset className='mb-3'>
-          <div className='flex items-center justify-between gap-2 mb-2'>
+        <Panel inset className='flex min-h-0 flex-1 flex-col overflow-hidden'>
+          <div className='flex shrink-0 items-center justify-between gap-2 mb-2'>
             <div className='text-xs font-bold'>{t('myImages')}</div>
             <Button size='sm' loading={uploading} disabled={uploading} onClick={() => inputRef.current?.click()}>
               {!uploading && <FolderOpen size={12} />}
@@ -72,7 +73,7 @@ export function DisplaySection({
           </div>
 
           {gallery.length > 0 ? (
-            <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[140px] overflow-y-auto pr-1 mb-2'>
+            <div className='grid min-h-0 flex-1 grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto content-start pr-1 mb-2'>
               {gallery.map((item) => {
                 const selected = draft.kind === 'custom' && draft.url === item.url
                 const preview = item.thumbUrl || item.url
@@ -119,10 +120,10 @@ export function DisplaySection({
               })}
             </div>
           ) : (
-            <p className='text-[11px] text-muted mb-2'>{t('noImages')}</p>
+            <p className='min-h-0 flex-1 text-[11px] text-muted mb-2'>{t('noImages')}</p>
           )}
 
-          <div className='flex gap-1 items-center'>
+          <div className='flex shrink-0 gap-1 items-center'>
             <Input
               value={importUrl}
               onChange={(e) => onImportUrlChange(e.target.value)}
@@ -143,13 +144,13 @@ export function DisplaySection({
               {t('import')}
             </Button>
           </div>
-          {uploadError && <p className='mt-1 text-[11px] text-[#c00]'>{uploadError}</p>}
-          {importError && <p className='mt-1 text-[11px] text-[#c00]'>{importError}</p>}
+          {uploadError && <p className='mt-1 shrink-0 text-[11px] text-[#c00]'>{uploadError}</p>}
+          {importError && <p className='mt-1 shrink-0 text-[11px] text-[#c00]'>{importError}</p>}
         </Panel>
 
-        <Panel inset>
-          <div className='text-xs font-bold mb-2'>{t('presets')}</div>
-          <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[160px] overflow-y-auto pr-1'>
+        <Panel inset className='flex min-h-0 flex-1 flex-col overflow-hidden'>
+          <div className='text-xs font-bold mb-2 shrink-0'>{t('presets')}</div>
+          <div className='grid min-h-0 flex-1 grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto content-start pr-1'>
             {WALLPAPERS.map((paper) => {
               const selected = draft.kind === 'preset' && draft.id === paper.id
               return (

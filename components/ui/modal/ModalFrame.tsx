@@ -3,6 +3,7 @@
 import { type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui/Button'
+import { WinCloseIcon } from '@/components/ui/WindowChromeIcons'
 import { winChrome } from '@/lib/winChrome'
 import type { ModalAction } from './types'
 
@@ -74,7 +75,7 @@ export function ModalFrame({
               aria-label='Close'
               onClick={onRequestClose}
             >
-              ✕
+              <WinCloseIcon />
             </Button>
           )}
         </div>

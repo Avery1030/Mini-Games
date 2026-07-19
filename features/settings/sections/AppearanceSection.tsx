@@ -15,10 +15,12 @@ export function AppearanceSection() {
   const setShowIconLabels = useSettingsStore((s) => s.setShowIconLabels)
   const setIconSize = useSettingsStore((s) => s.setIconSize)
   const setUiScale = useSettingsStore((s) => s.setUiScale)
+  const openWindowsMaximized = useSettingsStore((s) => s.openWindowsMaximized)
+  const setOpenWindowsMaximized = useSettingsStore((s) => s.setOpenWindowsMaximized)
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [themeMounted, setThemeMounted] = useState(false)
   useEffect(() => setThemeMounted(true), [])
-  const themeValue = themeMounted ? theme ?? 'system' : 'system'
+  const themeValue = themeMounted ? (theme ?? 'system') : 'system'
   const scalePercent = uiScalePercent(uiScale)
 
   const scaleLabelKey = {
@@ -67,11 +69,7 @@ export function AppearanceSection() {
           />
           <p className='mt-1 text-[10px] text-muted'>
             {t('themeResolved', {
-              theme: themeMounted
-                ? resolvedTheme === 'dark'
-                  ? t('themeResolvedDark')
-                  : t('themeResolvedLight')
-                : '…',
+              theme: themeMounted ? (resolvedTheme === 'dark' ? t('themeResolvedDark') : t('themeResolvedLight')) : '…',
             })}
           </p>
         </div>
@@ -97,6 +95,14 @@ export function AppearanceSection() {
           onChange={(e) => setShowIconLabels(e.target.checked)}
           label={t('showIconLabels')}
         />
+        <p className='-mt-1 text-[10px] text-muted'>{t('showIconLabelsHint')}</p>
+
+        <Checkbox
+          checked={openWindowsMaximized}
+          onChange={(e) => setOpenWindowsMaximized(e.target.checked)}
+          label={t('openWindowsMaximized')}
+        />
+        <p className='-mt-1 text-[10px] text-muted'>{t('openWindowsMaximizedHint')}</p>
       </Panel>
     </div>
   )

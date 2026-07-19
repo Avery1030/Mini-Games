@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { DesktopShell } from '@/components/desktop'
 
 export const metadata: Metadata = {
-  title: 'Avery',
+  title: 'Avery Mini OS',
   description: '老版 Windows 风格桌面界面',
 }
 

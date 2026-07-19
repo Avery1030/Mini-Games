@@ -82,8 +82,8 @@ export const DESKTOP_APP_DEFINITIONS: DesktopAppDefinition[] = [
     id: 'minesweeper',
     icon: Gamepad,
     defaultCoordinate: [1, 6],
-    width: 520,
-    height: 520,
+    width: 420,
+    height: 560,
     app: Minesweeper,
   },
   {

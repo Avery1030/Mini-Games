@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { WindowsWindow } from './WindowsWindow'
 import { useDesktopApps, useDesktopHydrated } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
+import { useSettingsStore } from '@/store/settings'
 import { getCascadedPosition } from '@/lib/desktop'
 
 /**
@@ -17,6 +18,7 @@ export function DesktopWindowsLayer() {
   const closeWindow = useWindowStore((s) => s.closeWindow)
   const minimizeWindow = useWindowStore((s) => s.minimizeWindow)
   const focusWindow = useWindowStore((s) => s.focusWindow)
+  const openWindowsMaximized = useSettingsStore((s) => s.openWindowsMaximized)
 
   const openApps = useMemo(
     () =>
@@ -53,6 +55,7 @@ export function DesktopWindowsLayer() {
             width={width}
             height={height}
             defaultPosition={getCascadedPosition(cascadeIndex, width, height)}
+            defaultMaximized={openWindowsMaximized}
             onClose={() => closeWindow(app.id)}
             onMinimize={() => minimizeWindow(app.id)}
             minimized={app.minimized}

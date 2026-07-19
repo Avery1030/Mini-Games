@@ -194,6 +194,8 @@ interface SettingsState {
   clockFormat: '24h' | '12h'
   /** 任务栏右侧装饰托盘图标 */
   showTrayDecor: boolean
+  /** 应用窗口默认最大化打开 */
+  openWindowsMaximized: boolean
   _hasHydrated: boolean
 }
 
@@ -210,6 +212,7 @@ interface SettingsActions {
   setShowTaskbarClock: (value: boolean) => void
   setClockFormat: (value: '24h' | '12h') => void
   setShowTrayDecor: (value: boolean) => void
+  setOpenWindowsMaximized: (value: boolean) => void
 }
 
 export type SettingsStore = SettingsState & SettingsActions
@@ -227,6 +230,7 @@ export const useSettingsStore = create<SettingsStore>()(
       showTaskbarClock: true,
       clockFormat: '24h',
       showTrayDecor: true,
+      openWindowsMaximized: true,
       _hasHydrated: false,
 
       setHasHydrated: (value) => set({ _hasHydrated: value }),
@@ -244,6 +248,7 @@ export const useSettingsStore = create<SettingsStore>()(
         if (value === '12h' || value === '24h') set({ clockFormat: value })
       },
       setShowTrayDecor: (value) => set({ showTrayDecor: value }),
+      setOpenWindowsMaximized: (value) => set({ openWindowsMaximized: value }),
 
       applyWallpaper: (id, customUrl) => {
         if (!isWallpaperId(id)) return
@@ -308,7 +313,7 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: STORAGE_KEYS.settings,
-      version: 9,
+      version: 10,
       storage: createJSONStorage(() => settingsStorage),
       partialize: (state) => ({
         wallpaperId: state.wallpaperId,
@@ -321,6 +326,7 @@ export const useSettingsStore = create<SettingsStore>()(
         showTaskbarClock: state.showTaskbarClock,
         clockFormat: state.clockFormat,
         showTrayDecor: state.showTrayDecor,
+        openWindowsMaximized: state.openWindowsMaximized,
       }),
       migrate: (persisted) => {
         const raw = (persisted ?? {}) as {
@@ -335,6 +341,7 @@ export const useSettingsStore = create<SettingsStore>()(
           showTaskbarClock?: unknown
           clockFormat?: unknown
           showTrayDecor?: unknown
+          openWindowsMaximized?: unknown
         }
         let custom = normalizeCustomSrc(raw.customWallpaperUrl) ?? normalizeCustomSrc(raw.customWallpaperDataUrl)
         if (custom?.startsWith('data:')) custom = null
@@ -357,6 +364,7 @@ export const useSettingsStore = create<SettingsStore>()(
           showTaskbarClock: raw.showTaskbarClock !== false,
           clockFormat,
           showTrayDecor: raw.showTrayDecor !== false,
+          openWindowsMaximized: raw.openWindowsMaximized !== false,
         }
       },
       merge: (persisted, current) => {
@@ -373,6 +381,7 @@ export const useSettingsStore = create<SettingsStore>()(
               showTaskbarClock?: unknown
               clockFormat?: unknown
               showTrayDecor?: unknown
+              openWindowsMaximized?: unknown
             }
           | undefined
         let custom = normalizeCustomSrc(saved?.customWallpaperUrl) ?? normalizeCustomSrc(saved?.customWallpaperDataUrl)
@@ -398,6 +407,7 @@ export const useSettingsStore = create<SettingsStore>()(
           showTaskbarClock: saved?.showTaskbarClock !== false,
           clockFormat,
           showTrayDecor: saved?.showTrayDecor !== false,
+          openWindowsMaximized: saved?.openWindowsMaximized !== false,
         }
       },
       onRehydrateStorage: () => (state) => {

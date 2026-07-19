@@ -5,6 +5,12 @@ export { Panel, type PanelProps } from './Panel'
 export { Tab, type TabProps } from './Tab'
 export { Checkbox, type CheckboxProps } from './Checkbox'
 export {
+  WinMinimizeIcon,
+  WinMaximizeIcon,
+  WinRestoreIcon,
+  WinCloseIcon,
+} from './WindowChromeIcons'
+export {
   ContextMenu,
   type ContextMenuProps,
   type ContextMenuItem,
