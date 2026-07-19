@@ -34,7 +34,12 @@ export type DesktopCoordinate = [number, number]
 /** 静态定义：图标、默认格点、窗口组件等（不进 persist） */
 export interface DesktopAppDefinition {
   id: DesktopAppId
-  icon: ComponentType<{ className?: string; size?: number }>
+  icon: ComponentType<{
+    className?: string
+    size?: number
+    strokeWidth?: number
+    absoluteStrokeWidth?: boolean
+  }>
   defaultCoordinate: DesktopCoordinate
   /** 有 app 组件的图标才能打开窗口 */
   app?: ComponentType<{ embedded?: boolean }>
