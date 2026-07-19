@@ -19,6 +19,7 @@ export type {
   PaintToolPersist,
   WallpaperBootPersist,
   LegacyDesktopPersistState,
+  LockPersistState,
 } from './schema'
 
 export { appStorage } from './local'

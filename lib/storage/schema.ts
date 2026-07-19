@@ -77,6 +77,11 @@ export type LegacyDesktopPersistState = {
   topZIndex?: number
 }
 
+export type LockPersistState = {
+  isLocked: boolean
+  sessionHash: string | null
+}
+
 /**
  * 每个 key 对应的「语义值」类型。
  * - theme：纯字符串
@@ -91,6 +96,7 @@ export type StorageSchema = {
   [STORAGE_KEYS.wallpaperBoot]: WallpaperBootPersist
   [STORAGE_KEYS.notepad]: ZustandPersistEnvelope<NotepadPersistState>
   [STORAGE_KEYS.paint]: ZustandPersistEnvelope<PaintPersistState>
+  [STORAGE_KEYS.lock]: ZustandPersistEnvelope<LockPersistState>
 }
 
 /** 以 JSON 读写的 key（不含 theme） */

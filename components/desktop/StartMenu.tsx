@@ -11,6 +11,8 @@ import {
   type DesktopAppId,
 } from '@/config/desktop'
 import { useWindowStore } from '@/store/window'
+import { useLockStore } from '@/store/lock'
+import { promptSessionLockPassword } from './promptSessionLock'
 
 type StartMenuProps = {
   open: boolean
@@ -75,6 +77,7 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
   const t = useTranslations()
   const ts = useTranslations('startMenu')
   const closeAllWindows = useWindowStore((s) => s.closeAllWindows)
+  const lockWithPassword = useLockStore((s) => s.lockWithPassword)
   const rootRef = useRef<HTMLDivElement>(null)
   const [programsOpen, setProgramsOpen] = useState(false)
 
@@ -108,6 +111,13 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
   const launch = (id: DesktopAppId) => {
     onOpenApp(id)
     onClose()
+  }
+
+  const handleLock = async () => {
+    onClose()
+    const password = await promptSessionLockPassword(ts('lockTitle'))
+    if (!password) return
+    await lockWithPassword(password)
   }
 
   const handleShutdown = async () => {
@@ -203,6 +213,7 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
         <MenuSeparator />
         <MenuItem label={ts('help')} onClick={() => launch('log')} onMouseEnter={() => setProgramsOpen(false)} />
         <MenuSeparator />
+        <MenuItem label={ts('lock')} onClick={() => void handleLock()} onMouseEnter={() => setProgramsOpen(false)} />
         <MenuItem label={ts('restart')} onClick={handleRestart} onMouseEnter={() => setProgramsOpen(false)} />
         <MenuItem label={ts('shutdown')} onClick={handleShutdown} onMouseEnter={() => setProgramsOpen(false)} />
       </div>

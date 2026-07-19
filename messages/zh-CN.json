@@ -35,6 +35,8 @@
     "help": "帮助",
     "restart": "重新启动...",
     "shutdown": "关闭系统...",
+    "lock": "锁定计算机...",
+    "lockTitle": "锁定计算机",
     "restartTitle": "重新启动",
     "restartConfirm": "确定要重新加载桌面吗？未保存的内容可能会丢失。",
     "shutdownTitle": "关闭系统",
@@ -148,6 +150,18 @@
     "desktopHint": "整理图标显示，改完立即生效。",
     "hidePlaceholders": "隐藏尚未开放的占位图标（邀请、市场等）",
     "hidePlaceholdersHelp": "开启后，桌面只保留已实现窗口的应用（扫雷、俄罗斯方块、音乐、设置、文档等），看起来更干净。"
+  },
+  "lock": {
+    "title": "计算机已锁定",
+    "hint": "请输入本次锁屏时设置的临时密码。",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "unlock": "解锁",
+    "wrongPassword": "密码不正确。",
+    "setupHint": "请设置本次锁屏的临时密码，解锁后即失效，下次锁屏需重新设置。",
+    "emptyPassword": "密码不能为空。",
+    "mismatch": "两次输入的密码不一致。",
+    "lockNow": "锁定"
   },
   "docs": {
     "toc": "目录",

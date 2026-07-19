@@ -308,7 +308,7 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: STORAGE_KEYS.settings,
-      version: 7,
+      version: 9,
       storage: createJSONStorage(() => settingsStorage),
       partialize: (state) => ({
         wallpaperId: state.wallpaperId,

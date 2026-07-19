@@ -3,13 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { WindowsDesktop } from './WindowsDesktop'
 import { BootScreen } from './BootScreen'
+import { LockScreen } from './LockScreen'
 import { useApplyUiScale } from '@/hooks/desktop'
 import { useDesktopStore } from '@/store/desktop'
 import { useWindowStore } from '@/store/window'
 import { useSettingsStore } from '@/store/settings'
+import { useLockStore } from '@/store/lock'
 
 /** 匀速开机总时长 */
-const BOOT_DURATION_MS = 20_000
+const BOOT_DURATION_MS = 10_000
 const BOOT_FADE_MS = 320
 
 /**
@@ -20,7 +22,8 @@ export function DesktopShell() {
   const windowsHydrated = useWindowStore((s) => s._hasHydrated)
   const desktopHydrated = useDesktopStore((s) => s._hasHydrated)
   const settingsHydrated = useSettingsStore((s) => s._hasHydrated)
-  const storesReady = windowsHydrated && desktopHydrated && settingsHydrated
+  const lockHydrated = useLockStore((s) => s._hasHydrated)
+  const storesReady = windowsHydrated && desktopHydrated && settingsHydrated && lockHydrated
 
   useApplyUiScale()
 
@@ -94,7 +97,12 @@ export function DesktopShell() {
 
   return (
     <>
-      {!booting && <WindowsDesktop />}
+      {!booting && (
+        <>
+          <WindowsDesktop />
+          <LockScreen />
+        </>
+      )}
       {booting && (
         <BootScreen
           progress={progress}

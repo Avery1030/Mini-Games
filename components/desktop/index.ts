@@ -1,6 +1,7 @@
 export { WindowsDesktop } from './WindowsDesktop'
 export { DesktopShell } from './DesktopShell'
 export { BootScreen } from './BootScreen'
+export { LockScreen } from './LockScreen'
 export { DesktopIcon, ICON_VIS } from './DesktopIcon'
 export { DesktopIconsLayer, useVisibleDesktopIcons } from './DesktopIconsLayer'
 export { DesktopWindowsLayer } from './DesktopWindowsLayer'

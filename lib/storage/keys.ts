@@ -16,6 +16,8 @@ export const STORAGE_KEYS = {
   notepad: 'desktop-notepad',
   /** 画图偏好（zustand persist） */
   paint: 'desktop-paint',
+  /** 锁屏状态（zustand persist） */
+  lock: 'desktop-lock',
 } as const
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS]

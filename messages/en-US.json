@@ -35,6 +35,8 @@
     "help": "Help",
     "restart": "Restart...",
     "shutdown": "Shut Down...",
+    "lock": "Lock Computer...",
+    "lockTitle": "Lock Computer",
     "restartTitle": "Restart",
     "restartConfirm": "Reload the desktop? Unsaved changes may be lost.",
     "shutdownTitle": "Shut Down",
@@ -148,6 +150,18 @@
     "desktopHint": "Organize desktop icons. Changes apply immediately.",
     "hidePlaceholders": "Hide placeholder icons (Referral, Market, etc.)",
     "hidePlaceholdersHelp": "When enabled, only apps with real windows remain (Minesweeper, Tetris, Music, Settings, Document, etc.)."
+  },
+  "lock": {
+    "title": "Computer locked",
+    "hint": "Enter the temporary password you set for this lock.",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "unlock": "Unlock",
+    "wrongPassword": "Incorrect password.",
+    "setupHint": "Set a temporary password for this lock only. It is cleared after unlock; the next lock needs a new password.",
+    "emptyPassword": "Password cannot be empty.",
+    "mismatch": "The two passwords do not match.",
+    "lockNow": "Lock"
   },
   "docs": {
     "toc": "Contents",
