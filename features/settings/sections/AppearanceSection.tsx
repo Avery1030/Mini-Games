@@ -5,22 +5,16 @@ import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Checkbox, Panel, Select } from '@/components/ui'
 import { UI_SCALE_OPTIONS, uiScalePercent, type UiScale } from '@/lib/uiScale'
-import { useSettingsStore } from '@/store/settings'
+import { useAppearanceSettings } from '@/hooks/settings'
+import { patchSettings } from '@/store/settings'
 
 export function AppearanceSection() {
   const t = useTranslations('settings')
-  const showIconLabels = useSettingsStore((s) => s.showIconLabels)
-  const iconSize = useSettingsStore((s) => s.iconSize)
-  const uiScale = useSettingsStore((s) => s.uiScale)
-  const setShowIconLabels = useSettingsStore((s) => s.setShowIconLabels)
-  const setIconSize = useSettingsStore((s) => s.setIconSize)
-  const setUiScale = useSettingsStore((s) => s.setUiScale)
-  const openWindowsMaximized = useSettingsStore((s) => s.openWindowsMaximized)
-  const setOpenWindowsMaximized = useSettingsStore((s) => s.setOpenWindowsMaximized)
+  const { showIconLabels, iconSize, uiScale, openWindowsMaximized } = useAppearanceSettings()
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [themeMounted, setThemeMounted] = useState(false)
   useEffect(() => setThemeMounted(true), [])
-  const themeValue = themeMounted ? (theme ?? 'system') : 'system'
+  const themeValue = themeMounted ? (theme ?? 'light') : 'light'
   const scalePercent = uiScalePercent(uiScale)
 
   const scaleLabelKey = {
@@ -45,7 +39,7 @@ export function AppearanceSection() {
             size='sm'
             className='min-w-[180px]'
             value={uiScale}
-            onValueChange={(v) => setUiScale(v as UiScale)}
+            onValueChange={(v) => patchSettings({ uiScale: v as UiScale })}
             options={UI_SCALE_OPTIONS.map((value) => ({
               value,
               label: t(scaleLabelKey[value]),
@@ -62,7 +56,6 @@ export function AppearanceSection() {
             value={themeValue}
             onValueChange={(v) => setTheme(v)}
             options={[
-              { value: 'system', label: t('themeSystem') },
               { value: 'light', label: t('themeLight') },
               { value: 'dark', label: t('themeDark') },
             ]}
@@ -80,7 +73,7 @@ export function AppearanceSection() {
             size='sm'
             className='min-w-[140px]'
             value={iconSize}
-            onValueChange={(v) => setIconSize(v as 'sm' | 'md' | 'lg')}
+            onValueChange={(v) => patchSettings({ iconSize: v as 'sm' | 'md' | 'lg' })}
             options={[
               { value: 'sm', label: t('iconSm') },
               { value: 'md', label: t('iconMd') },
@@ -92,14 +85,14 @@ export function AppearanceSection() {
 
         <Checkbox
           checked={showIconLabels}
-          onChange={(e) => setShowIconLabels(e.target.checked)}
+          onChange={(e) => patchSettings({ showIconLabels: e.target.checked })}
           label={t('showIconLabels')}
         />
         <p className='-mt-1 text-[10px] text-muted'>{t('showIconLabelsHint')}</p>
 
         <Checkbox
           checked={openWindowsMaximized}
-          onChange={(e) => setOpenWindowsMaximized(e.target.checked)}
+          onChange={(e) => patchSettings({ openWindowsMaximized: e.target.checked })}
           label={t('openWindowsMaximized')}
         />
         <p className='-mt-1 text-[10px] text-muted'>{t('openWindowsMaximizedHint')}</p>

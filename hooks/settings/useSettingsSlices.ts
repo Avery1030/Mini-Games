@@ -1,0 +1,45 @@
+import { useShallow } from 'zustand/react/shallow'
+import { useSettingsStore } from '@/store/settings'
+
+/** 外观页：一次浅比较订阅相关字段 */
+export function useAppearanceSettings() {
+  return useSettingsStore(
+    useShallow((s) => ({
+      showIconLabels: s.showIconLabels,
+      iconSize: s.iconSize,
+      uiScale: s.uiScale,
+      openWindowsMaximized: s.openWindowsMaximized,
+    })),
+  )
+}
+
+/** 任务栏设置页 */
+export function useTaskbarSettings() {
+  return useSettingsStore(
+    useShallow((s) => ({
+      showTaskbarClock: s.showTaskbarClock,
+      clockFormat: s.clockFormat,
+      showTrayDecor: s.showTrayDecor,
+    })),
+  )
+}
+
+/** 桌面图标设置页 */
+export function useDesktopIconSettings() {
+  return useSettingsStore(
+    useShallow((s) => ({
+      hidePlaceholderIcons: s.hidePlaceholderIcons,
+    })),
+  )
+}
+
+/** 显示页壁纸相关状态（不含 action） */
+export function useWallpaperSettings() {
+  return useSettingsStore(
+    useShallow((s) => ({
+      wallpaperId: s.wallpaperId,
+      customWallpaperUrl: s.customWallpaperUrl,
+      gallery: s.wallpaperGallery,
+    })),
+  )
+}

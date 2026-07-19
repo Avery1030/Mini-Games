@@ -120,7 +120,6 @@
     "apply": "Apply",
     "appearanceHint": "Changes apply immediately.",
     "colorTheme": "Color theme",
-    "themeSystem": "System",
     "themeLight": "Light",
     "themeDark": "Dark",
     "themeResolved": "Resolved as: {theme}",

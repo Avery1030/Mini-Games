@@ -120,7 +120,6 @@
     "apply": "应用",
     "appearanceHint": "改完立即生效，无需点应用。",
     "colorTheme": "颜色主题",
-    "themeSystem": "跟随系统",
     "themeLight": "浅色",
     "themeDark": "深色",
     "themeResolved": "当前解析为：{theme}",

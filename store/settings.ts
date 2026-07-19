@@ -201,18 +201,41 @@ interface SettingsState {
 
 interface SettingsActions {
   setHasHydrated: (value: boolean) => void
+  /** 批量/单字段更新可序列化设置（含枚举校验） */
+  patch: (partial: SettingsPatch) => void
   applyWallpaper: (wallpaperId: WallpaperId, customUrl?: string | null) => void
   addToWallpaperGallery: (item: Omit<WallpaperGalleryItem, 'id' | 'createdAt'> & { id?: string }) => void
   removeFromWallpaperGallery: (id: string) => void
   clearCustomWallpaper: () => void
-  setShowIconLabels: (value: boolean) => void
-  setIconSize: (value: 'sm' | 'md' | 'lg') => void
-  setUiScale: (value: UiScale) => void
-  setHidePlaceholderIcons: (value: boolean) => void
-  setShowTaskbarClock: (value: boolean) => void
-  setClockFormat: (value: '24h' | '12h') => void
-  setShowTrayDecor: (value: boolean) => void
-  setOpenWindowsMaximized: (value: boolean) => void
+}
+
+/** 允许通过 patch 写入的字段（不含壁纸事务与 hydration） */
+export type SettingsPatch = Partial<
+  Pick<
+    SettingsState,
+    | 'showIconLabels'
+    | 'iconSize'
+    | 'uiScale'
+    | 'hidePlaceholderIcons'
+    | 'showTaskbarClock'
+    | 'clockFormat'
+    | 'showTrayDecor'
+    | 'openWindowsMaximized'
+  >
+>
+
+function sanitizeSettingsPatch(partial: SettingsPatch): SettingsPatch {
+  const next: SettingsPatch = { ...partial }
+  if (next.iconSize != null && next.iconSize !== 'sm' && next.iconSize !== 'md' && next.iconSize !== 'lg') {
+    delete next.iconSize
+  }
+  if (next.uiScale != null && !isUiScale(next.uiScale)) {
+    delete next.uiScale
+  }
+  if (next.clockFormat != null && next.clockFormat !== '12h' && next.clockFormat !== '24h') {
+    delete next.clockFormat
+  }
+  return next
 }
 
 export type SettingsStore = SettingsState & SettingsActions
@@ -235,20 +258,11 @@ export const useSettingsStore = create<SettingsStore>()(
 
       setHasHydrated: (value) => set({ _hasHydrated: value }),
 
-      setShowIconLabels: (value) => set({ showIconLabels: value }),
-      setIconSize: (value) => {
-        if (value === 'sm' || value === 'md' || value === 'lg') set({ iconSize: value })
+      patch: (partial) => {
+        const next = sanitizeSettingsPatch(partial)
+        if (Object.keys(next).length === 0) return
+        set(next)
       },
-      setUiScale: (value) => {
-        if (isUiScale(value)) set({ uiScale: value })
-      },
-      setHidePlaceholderIcons: (value) => set({ hidePlaceholderIcons: value }),
-      setShowTaskbarClock: (value) => set({ showTaskbarClock: value }),
-      setClockFormat: (value) => {
-        if (value === '12h' || value === '24h') set({ clockFormat: value })
-      },
-      setShowTrayDecor: (value) => set({ showTrayDecor: value }),
-      setOpenWindowsMaximized: (value) => set({ openWindowsMaximized: value }),
 
       applyWallpaper: (id, customUrl) => {
         if (!isWallpaperId(id)) return
@@ -422,6 +436,11 @@ export const useSettingsStore = create<SettingsStore>()(
     },
   ),
 )
+
+/** 事件回调里改设置，无需在组件顶层订阅 action */
+export function patchSettings(partial: SettingsPatch) {
+  useSettingsStore.getState().patch(partial)
+}
 
 if (isClient) {
   const markHydrated = () => {

@@ -13,14 +13,7 @@ export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement
  * 勾选标记用 opacity 占位（勿用 visibility:visible），
  * 否则在父级 visibility:hidden（如最小化窗口）时仍会穿透显示。
  */
-export function Checkbox({
-  className,
-  label,
-  checked,
-  disabled,
-  id,
-  ...props
-}: CheckboxProps) {
+export function Checkbox({ className, label, checked, disabled, id, ...props }: CheckboxProps) {
   return (
     <label
       className={cn(
@@ -30,20 +23,13 @@ export function Checkbox({
       )}
     >
       <span className='relative shrink-0 size-3.5'>
-        <input
-          id={id}
-          type='checkbox'
-          checked={checked}
-          disabled={disabled}
-          className='peer sr-only'
-          {...props}
-        />
+        <input id={id} type='checkbox' checked={checked} disabled={disabled} className='peer sr-only' {...props} />
         <span
           aria-hidden
           className={cn(
             winChromeSunken,
             'absolute inset-0 flex items-center justify-center bg-field',
-            'peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-[var(--window-title-active)]',
+            'peer-focus-visible:outline peer-focus-visible:outline-[var(--window-title-active)]',
           )}
         >
           <span

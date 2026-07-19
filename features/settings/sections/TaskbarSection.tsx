@@ -3,16 +3,12 @@
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { Checkbox, Panel, Select } from '@/components/ui'
-import { useSettingsStore } from '@/store/settings'
+import { useTaskbarSettings } from '@/hooks/settings'
+import { patchSettings } from '@/store/settings'
 
 export function TaskbarSection() {
   const t = useTranslations('settings')
-  const showTaskbarClock = useSettingsStore((s) => s.showTaskbarClock)
-  const clockFormat = useSettingsStore((s) => s.clockFormat)
-  const showTrayDecor = useSettingsStore((s) => s.showTrayDecor)
-  const setShowTaskbarClock = useSettingsStore((s) => s.setShowTaskbarClock)
-  const setClockFormat = useSettingsStore((s) => s.setClockFormat)
-  const setShowTrayDecor = useSettingsStore((s) => s.setShowTrayDecor)
+  const { showTaskbarClock, clockFormat, showTrayDecor } = useTaskbarSettings()
 
   return (
     <div className='flex-1 min-h-0 overflow-y-auto p-3 space-y-3'>
@@ -22,7 +18,7 @@ export function TaskbarSection() {
       <Panel inset className='space-y-3'>
         <Checkbox
           checked={showTaskbarClock}
-          onChange={(e) => setShowTaskbarClock(e.target.checked)}
+          onChange={(e) => patchSettings({ showTaskbarClock: e.target.checked })}
           label={t('showClock')}
         />
         <div className={cn(!showTaskbarClock && 'opacity-50 pointer-events-none')}>
@@ -31,7 +27,7 @@ export function TaskbarSection() {
             size='sm'
             className='min-w-[140px]'
             value={clockFormat}
-            onValueChange={(v) => setClockFormat(v as '12h' | '24h')}
+            onValueChange={(v) => patchSettings({ clockFormat: v as '12h' | '24h' })}
             options={[
               { value: '24h', label: t('clock24') },
               { value: '12h', label: t('clock12') },
@@ -40,7 +36,7 @@ export function TaskbarSection() {
         </div>
         <Checkbox
           checked={showTrayDecor}
-          onChange={(e) => setShowTrayDecor(e.target.checked)}
+          onChange={(e) => patchSettings({ showTrayDecor: e.target.checked })}
           label={t('showTrayDecor')}
         />
       </Panel>

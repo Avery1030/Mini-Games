@@ -12,6 +12,7 @@ import {
   type WallpaperId,
 } from '@/config/wallpapers'
 import { useSettingsStore } from '@/store/settings'
+import { useWallpaperSettings } from '@/hooks/settings'
 import {
   AppearanceSection,
   DesktopIconsSection,
@@ -29,12 +30,7 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
   const tw = useTranslations('wallpapers')
   const [section, setSection] = useState<SectionId>('display')
 
-  const wallpaperId = useSettingsStore((s) => s.wallpaperId)
-  const customWallpaperUrl = useSettingsStore((s) => s.customWallpaperUrl)
-  const gallery = useSettingsStore((s) => s.wallpaperGallery)
-  const applyWallpaper = useSettingsStore((s) => s.applyWallpaper)
-  const addToWallpaperGallery = useSettingsStore((s) => s.addToWallpaperGallery)
-  const removeFromWallpaperGallery = useSettingsStore((s) => s.removeFromWallpaperGallery)
+  const { wallpaperId, customWallpaperUrl, gallery } = useWallpaperSettings()
 
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
@@ -80,7 +76,7 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
       if (!res.ok || !data.url || !isValidCustomWallpaperSrc(data.url)) {
         throw new Error(data.error || '上传失败')
       }
-      addToWallpaperGallery({
+      useSettingsStore.getState().addToWallpaperGallery({
         url: data.url,
         name: file.name.replace(/\.[^.]+$/, '') || '上传壁纸',
       })
@@ -111,7 +107,7 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
       if (!res.ok || !data.url || !isValidCustomWallpaperSrc(data.url)) {
         throw new Error(data.error || '导入失败')
       }
-      addToWallpaperGallery({ url: data.url, name: '导入链接' })
+      useSettingsStore.getState().addToWallpaperGallery({ url: data.url, name: '导入链接' })
       setDraft({ kind: 'custom', url: data.url })
       setImportUrl('')
     } catch (err) {
@@ -122,6 +118,7 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
   }
 
   const onApplyWallpaper = () => {
+    const { applyWallpaper } = useSettingsStore.getState()
     if (draft.kind === 'preset') {
       applyWallpaper(draft.id)
       return
@@ -181,7 +178,7 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
             onImportLink={onImportLink}
             onImportUrlChange={setImportUrl}
             onRemoveGalleryItem={(id, url) => {
-              removeFromWallpaperGallery(id)
+              useSettingsStore.getState().removeFromWallpaperGallery(id)
               if (draft.kind === 'custom' && draft.url === url) {
                 setDraft({ kind: 'preset', id: 'classic-teal' })
               }

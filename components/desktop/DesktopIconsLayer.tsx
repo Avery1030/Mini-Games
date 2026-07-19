@@ -2,6 +2,7 @@
 
 import { useMemo, useRef } from 'react'
 import { useTranslations } from 'next-intl'
+import { useShallow } from 'zustand/react/shallow'
 import { DesktopIcon, ICON_VIS } from './DesktopIcon'
 import { useDesktopApps, useDesktopHydrated, useDesktopIconDrag } from '@/hooks/desktop'
 import { useDesktopStore } from '@/store/desktop'
@@ -20,10 +21,14 @@ export function DesktopIconsLayer() {
   const hasHydrated = useDesktopHydrated()
   const openWindow = useWindowStore((s) => s.openWindow)
   const updateCoordinates = useDesktopStore((s) => s.updateCoordinates)
-  const showIconLabels = useSettingsStore((s) => s.showIconLabels)
-  const iconSize = useSettingsStore((s) => s.iconSize)
-  const uiScale = useSettingsStore((s) => s.uiScale)
-  const hidePlaceholderIcons = useSettingsStore((s) => s.hidePlaceholderIcons)
+  const { showIconLabels, iconSize, uiScale, hidePlaceholderIcons } = useSettingsStore(
+    useShallow((s) => ({
+      showIconLabels: s.showIconLabels,
+      iconSize: s.iconSize,
+      uiScale: s.uiScale,
+      hidePlaceholderIcons: s.hidePlaceholderIcons,
+    })),
+  )
 
   const desktopRef = useRef<HTMLDivElement>(null)
 

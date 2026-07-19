@@ -7,6 +7,7 @@ import { format } from 'date-fns'
 import { enUS as enUSDateFns, zhCN as zhCNDateFns } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
+import { useShallow } from 'zustand/react/shallow'
 import { useSettingsStore } from '@/store/settings'
 import { Button } from '@/components/ui'
 import { winChrome, winChromePressed, winChromeSunken } from '@/lib/winChrome'
@@ -46,15 +47,19 @@ function formatTitle(date: Date): string {
 export function TaskbarClock() {
   const t = useTranslations('clock')
   const locale = useLocale()
-  const show = useSettingsStore((s) => s.showTaskbarClock)
-  const clockFormat = useSettingsStore((s) => s.clockFormat)
+  const { show: showClock, clockFormat } = useSettingsStore(
+    useShallow((s) => ({
+      show: s.showTaskbarClock,
+      clockFormat: s.clockFormat,
+    })),
+  )
   const [now, setNow] = useState<Date | null>(null)
   const [open, setOpen] = useState(false)
   const [month, setMonth] = useState<Date>(() => new Date())
   const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!show) {
+    if (!showClock) {
       setNow(null)
       setOpen(false)
       return
@@ -63,7 +68,7 @@ export function TaskbarClock() {
     tick()
     const id = window.setInterval(tick, 1000)
     return () => window.clearInterval(id)
-  }, [show])
+  }, [showClock])
 
   useEffect(() => {
     if (!open) return
@@ -84,7 +89,7 @@ export function TaskbarClock() {
     }
   }, [open])
 
-  if (!show) return null
+  if (!showClock) return null
 
   const today = now ?? new Date()
   const isChinese = locale === 'zh-CN'
