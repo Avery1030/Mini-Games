@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
+import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import {
   DEMO_TRACKS,
   buildShuffleOrder,
@@ -427,8 +428,7 @@ export function Music({ embedded = false }: MusicProps = {}) {
   return (
     <div
       className={cn(
-        'min-h-0 flex flex-col text-sm text-[#e8e8e8] bg-[#1a1a1a] select-none',
-        embedded ? '-m-3 h-[calc(100%+1.5rem)] min-h-[520px]' : 'min-h-screen',
+        embeddedAppShell(embedded, 'flex flex-col text-sm text-[#e8e8e8] bg-[#1a1a1a] select-none'),
       )}
     >
       <audio ref={audioRef} preload='metadata' />

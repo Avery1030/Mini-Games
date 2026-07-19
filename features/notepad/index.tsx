@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
+import { embeddedAppShell } from '@/lib/embeddedAppShell'
+import { modal } from '@/components/ui'
 import { useNotepadStore } from '@/store/notepad'
 import {
   createNoteApi,
@@ -21,6 +23,7 @@ export interface NotepadProps {
 
 export function NotepadApp({ embedded = false }: NotepadProps = {}) {
   const t = useTranslations('notepad')
+  const tm = useTranslations('modal')
   const lastNoteId = useNotepadStore((s) => s.lastNoteId)
   const wordWrap = useNotepadStore((s) => s.wordWrap)
   const setLastNoteId = useNotepadStore((s) => s.setLastNoteId)
@@ -66,7 +69,10 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
     async (id: string) => {
       if (id === activeIdRef.current) return
       if (dirty) {
-        const ok = window.confirm(t('confirmDiscard'))
+        const ok = await modal.confirm({
+          title: tm('confirmTitle'),
+          message: t('confirmDiscard'),
+        })
         if (!ok) return
       }
       setBusy(true)
@@ -80,7 +86,7 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
         setBusy(false)
       }
     },
-    [applyNote, dirty, t],
+    [applyNote, dirty, t, tm],
   )
 
   useEffect(() => {
@@ -112,7 +118,10 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
 
   const onCreate = async () => {
     if (dirty) {
-      const ok = window.confirm(t('confirmDiscard'))
+      const ok = await modal.confirm({
+        title: tm('confirmTitle'),
+        message: t('confirmDiscard'),
+      })
       if (!ok) return
     }
     setBusy(true)
@@ -154,7 +163,10 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
 
   const onDelete = async (id: string) => {
     const target = notes.find((n) => n.id === id)
-    const ok = window.confirm(t('confirmDelete', { title: target?.title || t('untitled') }))
+    const ok = await modal.confirm({
+      title: tm('confirmTitle'),
+      message: t('confirmDelete', { title: target?.title || t('untitled') }),
+    })
     if (!ok) return
 
     setBusy(true)
@@ -199,9 +211,8 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
   return (
     <div
       className={cn(
-        'h-full min-h-0 flex flex-col text-sm text-on-chrome bg-window font-pixel',
-        !embedded && 'min-h-screen p-4',
-        embedded && '-m-3 h-[calc(100%+1.5rem)] min-h-[400px]',
+        embeddedAppShell(embedded, 'flex flex-col text-sm text-on-chrome bg-window font-pixel'),
+        !embedded && 'p-4',
       )}
     >
       <div className={cn('flex-1 min-h-0 flex gap-2 p-2', embedded && 'p-3')}>

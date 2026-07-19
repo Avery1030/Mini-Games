@@ -10,3 +10,19 @@ export {
   type ContextMenuItem,
   type ContextMenuState,
 } from './ContextMenu'
+export {
+  ModalHost,
+  ModalFrame,
+  modal,
+  openModal,
+  closeModal,
+  closeAllModals,
+  confirmModal,
+  alertModal,
+  useModalStore,
+  type ModalAction,
+  type ModalEntry,
+  type OpenModalOptions,
+  type ConfirmOptions,
+  type AlertOptions,
+} from './modal'

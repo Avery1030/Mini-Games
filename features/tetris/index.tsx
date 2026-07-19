@@ -231,8 +231,8 @@ export function Tetris({ embedded = false }: TetrisProps = {}) {
 
   return (
     <div
-      className={`w-full h-full text-white bg-[#0f172a] p-4 ${
-        embedded ? '-m-3 h-[calc(100%+1.5rem)] min-h-0' : 'min-h-screen'
+      className={`w-full text-white bg-[#0f172a] p-4 ${
+        embedded ? 'h-full min-h-0 overflow-auto' : 'min-h-screen'
       }`}
     >
       <div className='flex items-start gap-4 h-full'>

@@ -236,7 +236,7 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
   return (
     <div
       className={`flex flex-col items-center text-[#000] bg-[#c0c0c0] p-4 ${
-        embedded ? '-m-3 h-[calc(100%+1.5rem)] min-h-0' : 'min-h-screen'
+        embedded ? 'h-full min-h-0 overflow-auto' : 'min-h-screen'
       }`}
     >
       <div className='flex gap-0 mb-2 border border-[#808080] border-b-0 rounded-t overflow-hidden'>

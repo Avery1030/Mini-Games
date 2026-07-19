@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
+import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { Panel } from '@/components/ui'
 import {
   CUSTOM_WALLPAPER_ID,
@@ -133,9 +134,8 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
   return (
     <div
       className={cn(
-        'h-full min-h-0 flex text-sm text-on-chrome bg-window font-pixel',
-        !embedded && 'min-h-screen p-4',
-        embedded && '-m-3 h-[calc(100%+1.5rem)] min-h-[440px]',
+        embeddedAppShell(embedded, 'flex text-sm text-on-chrome bg-window font-pixel'),
+        !embedded && 'p-4',
       )}
     >
       <Panel padded={false} className='w-[108px] shrink-0 flex flex-col overflow-hidden m-2 mr-0'>

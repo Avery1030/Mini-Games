@@ -14,7 +14,7 @@ yarn dev
 
 ```
 app/                 Next.js 路由、布局与 API
-features/            桌面应用（设置 / 文档 / 记事本 / 音乐 / 游戏…）
+features/            桌面应用（设置 / 文档 / 记事本 / 画图 / 音乐 / 游戏…）
 components/
   desktop/           桌面壳（窗口、任务栏、主题/语言）
   ui/                通用 Win95 控件

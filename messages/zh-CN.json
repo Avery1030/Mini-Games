@@ -18,6 +18,7 @@
     "email": "邮箱",
     "log": "日志",
     "notepad": "记事本",
+    "paint": "画图",
     "settings": "设置",
     "music": "音乐"
   },
@@ -40,6 +41,12 @@
   },
   "lang": {
     "label": "语言"
+  },
+  "modal": {
+    "title": "提示",
+    "confirmTitle": "确认",
+    "ok": "确定",
+    "cancel": "取消"
   },
   "clock": {
     "openCalendar": "打开日历",
@@ -139,6 +146,7 @@
         "文档：就是你现在看到的这个窗口。内容不会联网，也不会保存你的批注。",
         "日志：按日期记录桌面与应用的更新，可双击「日志」图标打开。",
         "记事本：在本机 .data 中增删改查纯文本笔记，支持标题、自动换行与 Ctrl/⌘+S 保存。",
+        "画图：用画布涂鸦，带调色板、橡皮擦与形状工具；作品以 PNG 保存在 .data/drawings。",
         "其余图标（邀请、桥、市场……）还在装修中，双击暂时打不开——请当作未来的预告海报。"
       ]
     },
@@ -181,6 +189,42 @@
     "saveFail": "保存失败",
     "deleteFail": "删除失败"
   },
+  "paint": {
+    "drawings": "作品",
+    "new": "新建",
+    "delete": "删除",
+    "save": "保存",
+    "loading": "加载中…",
+    "empty": "还没有画作，点右上角新建。",
+    "untitled": "未命名画作",
+    "title": "标题",
+    "titlePlaceholder": "标题",
+    "selectOrCreate": "请选择左侧作品，或新建一幅。",
+    "confirmDiscard": "当前画作有未保存的修改，确定放弃吗？",
+    "confirmDelete": "确定删除「{title}」？此操作不可恢复。",
+    "confirmClear": "清空画布？未保存的笔迹将丢失。",
+    "footer": "画图 · {count} 幅 · {state}",
+    "shortcutSave": "Ctrl/⌘+S 保存 · Ctrl/⌘+Z 撤回",
+    "unsaved": "未保存",
+    "saved": "已保存",
+    "created": "已新建",
+    "savedOk": "已保存",
+    "deleted": "已删除",
+    "loadFail": "加载失败",
+    "createFail": "新建失败",
+    "saveFail": "保存失败",
+    "deleteFail": "删除失败",
+    "toolBrush": "画笔",
+    "toolEraser": "橡皮擦",
+    "toolLine": "直线",
+    "toolRect": "矩形",
+    "toolEllipse": "椭圆",
+    "size": "粗细",
+    "currentColor": "当前颜色",
+    "customColor": "自定义颜色",
+    "undo": "撤回",
+    "clear": "清空"
+  },
   "changelog": {
     "toc": "版本",
     "footer": "更新日志 · 共 {count} 条 · 当前：{title}",
@@ -193,7 +237,8 @@
         "整理项目目录：桌面应用迁至 features/，工具库迁至 lib/，桌面壳归入 components/desktop/。",
         "设置与音乐应用拆成更小的区块组件，方便后续维护。",
         "日志窗口上线：可在此查看按日期排列的更新说明。",
-        "记事本上线：文本保存在 .data/notes，支持列表、编辑、保存与删除。"
+        "记事本上线：文本保存在 .data/notes，支持列表、编辑、保存与删除。",
+        "画图上线：Canvas 画笔 / 橡皮 / 直线 / 矩形 / 椭圆，PNG 存于 .data/drawings。"
       ]
     },
     "2026-07-18": {

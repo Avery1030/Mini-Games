@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
+import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { Panel } from '@/components/ui'
 
 export interface LogProps {
@@ -23,9 +24,8 @@ export function LogApp({ embedded = false }: LogProps = {}) {
   return (
     <div
       className={cn(
-        'h-full min-h-0 flex flex-col text-sm text-on-chrome bg-window font-pixel',
-        !embedded && 'min-h-screen p-4',
-        embedded && '-m-3 h-[calc(100%+1.5rem)] min-h-[360px]',
+        embeddedAppShell(embedded, 'flex flex-col text-sm text-on-chrome bg-window font-pixel'),
+        !embedded && 'p-4',
       )}
     >
       <div className={cn('flex-1 min-h-0 flex gap-2 p-2', embedded && 'p-3')}>

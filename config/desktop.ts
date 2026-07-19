@@ -14,6 +14,7 @@ import {
   Mail,
   Notebook,
   FileText,
+  Palette,
   Settings,
   Music,
 } from 'lucide-react'
@@ -24,6 +25,7 @@ import { SettingsApp } from '@/features/settings'
 import { DocumentApp } from '@/features/document'
 import { LogApp } from '@/features/log'
 import { NotepadApp } from '@/features/notepad'
+import { PaintApp } from '@/features/paint'
 import { apps } from '@/messages/zh-CN.json'
 
 export type DesktopAppId = keyof typeof apps
@@ -114,6 +116,14 @@ export const DESKTOP_APP_DEFINITIONS: DesktopAppDefinition[] = [
     width: 560,
     height: 460,
     app: NotepadApp,
+  },
+  {
+    id: 'paint',
+    icon: Palette,
+    defaultCoordinate: [3, 2],
+    width: 720,
+    height: 560,
+    app: PaintApp,
   },
   {
     id: 'settings',

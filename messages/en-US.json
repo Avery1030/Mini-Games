@@ -18,6 +18,7 @@
     "email": "Email",
     "log": "Log",
     "notepad": "Notepad",
+    "paint": "Paint",
     "settings": "Settings",
     "music": "Music"
   },
@@ -40,6 +41,12 @@
   },
   "lang": {
     "label": "Language"
+  },
+  "modal": {
+    "title": "Notice",
+    "confirmTitle": "Confirm",
+    "ok": "OK",
+    "cancel": "Cancel"
   },
   "clock": {
     "openCalendar": "Open calendar",
@@ -139,6 +146,7 @@
         "Document: the window you are reading. Offline content, no annotations saved.",
         "Log: dated release notes for the desktop and apps — double-click the Log icon to open.",
         "Notepad: create, edit, and delete plain-text notes under .data on this machine. Supports titles, word wrap, and Ctrl/⌘+S.",
+        "Paint: canvas doodling with palette, eraser, and shapes; works saved as PNG under .data/drawings.",
         "Other icons (Referral, Bridge, Market…) are still under construction — treat them as coming-soon posters."
       ]
     },
@@ -181,6 +189,42 @@
     "saveFail": "Failed to save",
     "deleteFail": "Failed to delete"
   },
+  "paint": {
+    "drawings": "Drawings",
+    "new": "New",
+    "delete": "Delete",
+    "save": "Save",
+    "loading": "Loading…",
+    "empty": "No drawings yet. Create one with the button above.",
+    "untitled": "Untitled drawing",
+    "title": "Title",
+    "titlePlaceholder": "Title",
+    "selectOrCreate": "Select a drawing on the left, or create a new one.",
+    "confirmDiscard": "This drawing has unsaved changes. Discard them?",
+    "confirmDelete": "Delete “{title}”? This cannot be undone.",
+    "confirmClear": "Clear the canvas? Unsaved strokes will be lost.",
+    "footer": "Paint · {count} drawings · {state}",
+    "shortcutSave": "Ctrl/⌘+S save · Ctrl/⌘+Z undo",
+    "unsaved": "Unsaved",
+    "saved": "Saved",
+    "created": "Created",
+    "savedOk": "Saved",
+    "deleted": "Deleted",
+    "loadFail": "Failed to load",
+    "createFail": "Failed to create",
+    "saveFail": "Failed to save",
+    "deleteFail": "Failed to delete",
+    "toolBrush": "Brush",
+    "toolEraser": "Eraser",
+    "toolLine": "Line",
+    "toolRect": "Rectangle",
+    "toolEllipse": "Ellipse",
+    "size": "Size",
+    "currentColor": "Current color",
+    "customColor": "Custom color",
+    "undo": "Undo",
+    "clear": "Clear"
+  },
   "changelog": {
     "toc": "Versions",
     "footer": "Changelog · {count} entries · Current: {title}",
@@ -193,7 +237,8 @@
         "Reorganized the repo: desktop apps under features/, helpers under lib/, shell under components/desktop/.",
         "Split Settings and Music into smaller section components for easier maintenance.",
         "Shipped the Log window with dated release notes.",
-        "Notepad: plain-text notes stored in .data/notes with list, edit, save, and delete."
+        "Notepad: plain-text notes stored in .data/notes with list, edit, save, and delete.",
+        "Paint: Canvas brush / eraser / line / rect / ellipse; PNGs stored in .data/drawings."
       ]
     },
     "2026-07-18": {

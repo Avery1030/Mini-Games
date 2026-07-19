@@ -88,9 +88,11 @@ export function WindowsWindow({
     } else {
       beforeMaximizeRef.current = { position: { ...position }, size: { ...size } }
       setPosition({ x: 0, y: 0 })
+      // 避开底部任务栏（h-12 = 48px）
+      const taskbarH = 48
       setSize({
         width: isClient ? window.innerWidth : 800,
-        height: isClient ? window.innerHeight : 600,
+        height: isClient ? Math.max(240, window.innerHeight - taskbarH) : 600,
       })
       setMaximized(true)
     }
@@ -213,7 +215,8 @@ export function WindowsWindow({
         top: 0,
         transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
         width: size.width,
-        minHeight: size.height,
+        // 必须用 height（不能只用 minHeight），否则子应用 h-full / flex-1 无法在全屏时撑开
+        height: size.height,
         willChange: isDragging || resizing ? 'transform' : undefined,
         zIndex,
         visibility: minimized ? 'hidden' : 'visible',
@@ -232,7 +235,7 @@ export function WindowsWindow({
           />
         ))}
 
-      <div className='flex flex-col flex-1 min-h-0 relative'>
+      <div className='flex flex-col h-full min-h-0 relative'>
         {/* 标题栏：深蓝底 + 白字 + 最小化 + 最大化/还原 + 关闭 */}
         <div
           className={cn(
@@ -283,16 +286,16 @@ export function WindowsWindow({
           </div>
         </div>
 
-        {/* 内容区：最大化时去掉边框 */}
+        {/* 内容区：绝对铺满，保证子应用 h-full 在全屏/缩放时都能撑开 */}
         <div
           className={cn(
-            'flex-1 min-h-0 overflow-auto p-3 bg-window-body font-pixel',
+            'relative flex-1 min-h-0 bg-window-body font-pixel',
             maximized
               ? 'border-0'
               : 'border-2 border-t-chrome-dark border-l-chrome-dark border-r-chrome-light border-b-chrome-light',
           )}
         >
-          {children}
+          <div className='absolute inset-0 overflow-auto'>{children}</div>
         </div>
       </div>
 
