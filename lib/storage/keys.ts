@@ -20,8 +20,6 @@ export const STORAGE_KEYS = {
   lock: 'desktop-lock',
   /** 日历按日备注（zustand persist） */
   calendar: 'desktop-calendar',
-  /** 演示应用本地进度（zustand persist） */
-  demoApps: 'desktop-demo-apps',
   /** 动态桌面项（文件夹等） */
   desktopItems: 'desktop-items',
 } as const

@@ -118,7 +118,11 @@ function mergeWindows(
   saved?: Partial<Record<DesktopAppId, Partial<DesktopWindowRuntime>>>,
 ): WindowsMap {
   const defaults = createDefaultWindows()
-  const ids = new Set<string>([...Object.keys(defaults), ...Object.keys(saved ?? {})])
+  const known = new Set(Object.keys(defaults))
+  const ids = new Set<string>([...known])
+  for (const id of Object.keys(saved ?? {})) {
+    if (known.has(id) || id.startsWith('folder_')) ids.add(id)
+  }
   return Object.fromEntries(
     [...ids].map((id) => {
       const fallback = defaults[id] ?? { ...DEFAULT_WINDOW_RUNTIME }

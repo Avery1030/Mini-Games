@@ -41,12 +41,15 @@ function mergeCoordinates(
 ): CoordinatesMap {
   const defaults = createDefaultCoordinates()
   const defs = getDesktopAppDefinitionsSnapshot()
+  const known = new Set(defs.map((d) => d.id))
   const merged: CoordinatesMap = { ...defaults }
   for (const def of defs) {
     if (!merged[def.id]) merged[def.id] = [...def.defaultCoordinate] as DesktopCoordinate
   }
   if (saved) {
     for (const [id, coord] of Object.entries(saved)) {
+      // 保留当前内置应用 + 动态文件夹；丢弃已下线演示应用坐标
+      if (!known.has(id as DesktopAppId) && !id.startsWith('folder_')) continue
       if (Array.isArray(coord) && coord.length === 2) {
         merged[id] = coord as DesktopCoordinate
       }

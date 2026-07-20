@@ -7,23 +7,14 @@ import {
 } from '@/config/desktop'
 import { ensureWindowSlot, removeWindowSlot, type DesktopWindow } from './DesktopWindow'
 import {
-  BridgeWindow,
   CalculatorWindow,
-  ClaimWindow,
   DocumentWindow,
-  DonationWindow,
-  EmailWindow,
-  FoundryWindow,
-  GovernanceWindow,
   LogWindow,
-  MarketWindow,
   MinesweeperWindow,
   MusicWindow,
   NotepadWindow,
   PaintWindow,
-  ReferralWindow,
   SettingsWindow,
-  StakeWindow,
   TetrisWindow,
 } from './apps'
 
@@ -34,18 +25,9 @@ type RegistryListener = () => void
  * 新增内置应用：写子类 → 加入此数组 → messages 里加 apps.id。
  */
 const BUILTIN_WINDOWS: DesktopWindow[] = [
-  new ReferralWindow(),
-  new BridgeWindow(),
-  new ClaimWindow(),
-  new StakeWindow(),
-  new MarketWindow(),
   new MinesweeperWindow(),
   new TetrisWindow(),
-  new GovernanceWindow(),
-  new FoundryWindow(),
   new DocumentWindow(),
-  new DonationWindow(),
-  new EmailWindow(),
   new LogWindow(),
   new NotepadWindow(),
   new PaintWindow(),

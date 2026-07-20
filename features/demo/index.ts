@@ -1,7 +1,0 @@
-export { DemoAppShell } from './DemoAppShell'
-export { ReferralApp, ClaimApp, StakeApp, DonationApp } from './simpleApps'
-export { BridgeApp } from './BridgeApp'
-export { MarketApp } from './MarketApp'
-export { GovernanceApp } from './GovernanceApp'
-export { FoundryApp } from './FoundryApp'
-export { EmailApp } from './EmailApp'
