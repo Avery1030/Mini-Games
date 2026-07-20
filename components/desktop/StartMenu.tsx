@@ -142,7 +142,7 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
       aria-label={t('index.home')}
       className={cn(
         winChrome,
-        'absolute left-0 bottom-[calc(100%+2px)] z-[1200] flex min-w-[220px] shadow-[2px_2px_0_rgba(0,0,0,0.4)] font-pixel',
+        'absolute left-0 bottom-[calc(100%+2px)] z-[10000] flex min-w-[220px] overflow-visible shadow-[2px_2px_0_rgba(0,0,0,0.4)] font-pixel',
       )}
     >
       {/* 左侧品牌条 */}
@@ -158,9 +158,9 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
         </span>
       </div>
 
-      <div className='flex-1 py-0.5 relative min-w-[180px]'>
+      <div className='flex-1 py-1 relative min-w-[180px] overflow-visible'>
         <div
-          className='relative'
+          className='relative overflow-visible'
           onMouseEnter={() => setProgramsOpen(true)}
           onMouseLeave={() => setProgramsOpen(false)}
         >
@@ -176,7 +176,7 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
               role='menu'
               className={cn(
                 winChrome,
-                'absolute left-full top-0 z-[1] min-w-[180px] max-h-[min(360px,70vh)] overflow-y-auto py-0.5 shadow-[2px_2px_0_rgba(0,0,0,0.35)]',
+                'absolute left-full top-0 z-[1] min-w-[180px] max-h-[min(420px,calc(100vh-56px))] overflow-y-auto overflow-x-hidden py-1 shadow-[2px_2px_0_rgba(0,0,0,0.35)]',
               )}
             >
               {LAUNCHABLE.map((app) => {

@@ -46,8 +46,8 @@ export function DesktopTaskbar() {
   }, [apps, hasHydrated, t])
 
   return (
-    <footer className='relative z-[1100] h-12 min-h-[48px] flex items-center px-2 bg-taskbar text-on-chrome border-t-2 border-taskbar-edge shadow-[inset_1px_1px_0_var(--taskbar-shadow)]'>
-      <div className='relative h-4/5 flex items-center' data-start-menu-root>
+    <footer className='relative z-[9000] h-12 min-h-[48px] flex items-center px-2 bg-taskbar text-on-chrome border-t-2 border-taskbar-edge shadow-[inset_1px_1px_0_var(--taskbar-shadow)] overflow-visible'>
+      <div className='relative h-4/5 flex items-center overflow-visible' data-start-menu-root>
         <button
           type='button'
           aria-haspopup='menu'

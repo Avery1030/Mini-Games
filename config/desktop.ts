@@ -17,6 +17,7 @@ import {
   Palette,
   Settings,
   Music,
+  Calculator,
 } from 'lucide-react'
 import { Minesweeper } from '@/features/minesweeper'
 import { Tetris } from '@/features/tetris'
@@ -26,6 +27,7 @@ import { DocumentApp } from '@/features/document'
 import { LogApp } from '@/features/log'
 import { NotepadApp } from '@/features/notepad'
 import { PaintApp } from '@/features/paint'
+import { CalculatorApp } from '@/features/calculator'
 import {
   ReferralApp,
   BridgeApp,
@@ -232,6 +234,14 @@ export const DESKTOP_APP_DEFINITIONS: DesktopAppDefinition[] = [
     width: 420,
     height: 620,
     app: MusicApp,
+  },
+  {
+    id: 'calculator',
+    icon: Calculator,
+    defaultCoordinate: [3, 3],
+    width: 320,
+    height: 440,
+    app: CalculatorApp,
   },
 ]
 

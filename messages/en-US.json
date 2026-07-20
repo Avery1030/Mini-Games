@@ -20,7 +20,8 @@
     "notepad": "Notepad",
     "paint": "Paint",
     "settings": "Settings",
-    "music": "Music"
+    "music": "Music",
+    "calculator": "Calculator"
   },
   "desktop": {
     "open": "Open",
@@ -204,7 +205,8 @@
         "Log: dated release notes for the desktop and apps — double-click the Log icon to open.",
         "Notepad: create, edit, and delete plain-text notes under .data on this machine. Supports titles, word wrap, and Ctrl/⌘+S.",
         "Paint: canvas doodling with palette, eraser, and shapes; works saved as PNG under .data/drawings.",
-        "Demo apps: Referral, Bridge, Claim, Stake, Market, Governance, Foundry, Donation, and Email all open on double-click. They are local simulations only — no wallet, no real email — and progress is stored on this device."
+        "Demo apps: Referral, Bridge, Claim, Stake, Market, Governance, Foundry, Donation, and Email all open on double-click. They are local simulations only — no wallet, no real email — and progress is stored on this device.",
+        "Calculator: open from Start or the desktop. Supports arithmetic, parentheses, powers, square root, and simple memory keys."
       ]
     },
     "about": {
@@ -507,5 +509,9 @@
         "newsBody": "Placeholder icons now open basic windows. Real chain/SMTP is out of scope."
       }
     }
+  },
+  "calculator": {
+    "error": "Error",
+    "hint": "Keyboard supported · Use ( ) and xʸ for more complex math"
   }
 }
