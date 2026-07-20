@@ -75,6 +75,7 @@ export function WindowsWindow({
   const minimizable = onMinimize != null && chrome.minimizable
 
   const geometry = useWindowGeometry({
+    windowId: id,
     rememberedBounds,
     defaultPosition,
     defaultMaximized: maximizable ? defaultMaximized : false,
@@ -129,6 +130,7 @@ export function WindowsWindow({
   return (
     <div
       data-window-id={id}
+      data-window-snap={!geometry.maximized && !minimized ? '1' : undefined}
       className={cn(
         'fixed flex flex-col bg-window text-on-chrome font-pixel',
         geometry.maximized

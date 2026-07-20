@@ -7,6 +7,7 @@ import { winChrome } from '@/lib/winChrome'
 import { Button, Input } from '@/components/ui'
 import { useDesktopWallpaper } from '@/hooks/desktop'
 import { useLockStore } from '@/store/lock'
+import { toast } from '../ui'
 
 /**
  * 锁屏遮罩：仅显示壁纸 + 解锁对话框，挡住桌面其余交互。
@@ -18,14 +19,13 @@ export function LockScreen() {
   const wallpaperStyle = useDesktopWallpaper()
 
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!isLocked) {
       setPassword('')
-      setError(null)
+      toast.clear()
       return
     }
     const id = window.setTimeout(() => inputRef.current?.focus(), 50)
@@ -38,11 +38,11 @@ export function LockScreen() {
     e?.preventDefault()
     if (submitting) return
     setSubmitting(true)
-    setError(null)
+    toast.clear()
     try {
       const ok = await unlock(password)
       if (!ok) {
-        setError(t('wrongPassword'))
+        toast.error(t('wrongPassword'))
         setPassword('')
         inputRef.current?.focus()
       }
@@ -84,14 +84,13 @@ export function LockScreen() {
           value={password}
           onChange={(e) => {
             setPassword(e.target.value)
-            if (error) setError(null)
+            toast.clear()
           }}
           size='md'
           tone='field'
           disabled={submitting}
           className='mb-2'
         />
-        {error && <p className='text-[11px] text-[#c00] mb-2'>{error}</p>}
         <div className='flex justify-end gap-2 mt-2'>
           <Button type='submit' size='md' className='px-4' loading={submitting} disabled={submitting}>
             {t('unlock')}

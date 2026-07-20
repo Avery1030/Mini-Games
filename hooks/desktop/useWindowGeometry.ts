@@ -10,11 +10,13 @@ import {
   type ResizeEdge,
   type WindowSeed,
 } from '@/lib/desktop/windowGeometry'
+import { snapWindowPosition, createSnapSession, type SnapSession } from '@/lib/desktop/windowSnap'
 
 type Point = { x: number; y: number }
 type Size = { width: number; height: number }
 
 type UseWindowGeometryOptions = {
+  windowId?: string
   rememberedBounds?: WindowBounds | null
   defaultPosition?: Point
   defaultMaximized?: boolean
@@ -30,6 +32,7 @@ type UseWindowGeometryOptions = {
  * 窗口几何：位置/尺寸/最大化记忆，以及拖拽与缩放。
  */
 export function useWindowGeometry({
+  windowId,
   rememberedBounds = null,
   defaultPosition,
   defaultMaximized = false,
@@ -62,6 +65,7 @@ export function useWindowGeometry({
   const [isDragging, setIsDragging] = useState(false)
   const [resizing, setResizing] = useState<ResizeEdge | null>(null)
   const dragOffset = useRef({ x: 0, y: 0 })
+  const snapSession = useRef<SnapSession>(createSnapSession())
   const resizeStart = useRef({ x: 0, y: 0, left: 0, top: 0, width: 0, height: 0 })
 
   const onBoundsChangeRef = useRef(onBoundsChange)
@@ -125,6 +129,7 @@ export function useWindowGeometry({
         x: e.clientX - position.x,
         y: e.clientY - position.y,
       }
+      snapSession.current = createSnapSession()
       setIsDragging(true)
     },
     [draggable, maximized, position],
@@ -151,10 +156,18 @@ export function useWindowGeometry({
   useEffect(() => {
     if (!isDragging) return
     const onMove = (e: MouseEvent) => {
-      setPosition({
+      // 最大化不可拖；小窗才做边缘软吸附（可强行越过阈值）
+      const raw = {
         x: e.clientX - dragOffset.current.x,
         y: e.clientY - dragOffset.current.y,
-      })
+      }
+      if (maximizedRef.current) {
+        setPosition(raw)
+        return
+      }
+      setPosition(
+        snapWindowPosition(raw, sizeRef.current, snapSession.current, { excludeId: windowId }),
+      )
     }
     const onUp = () => {
       setIsDragging(false)
@@ -166,7 +179,7 @@ export function useWindowGeometry({
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
     }
-  }, [isDragging, emitBounds])
+  }, [isDragging, emitBounds, windowId])
 
   useEffect(() => {
     if (!resizing) return
