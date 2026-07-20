@@ -58,6 +58,16 @@ export interface DesktopAppDefinition {
   height?: number
 }
 
+/** 窗口上次正常态几何（最大化时仍记还原用坐标/宽高） */
+export type WindowBounds = {
+  x: number
+  y: number
+  width: number
+  height: number
+  /** 关闭/记忆时是否处于最大化 */
+  maximized: boolean
+}
+
 /** 窗口运行时状态（可序列化） */
 export interface DesktopWindowRuntime {
   isOpen: boolean
@@ -67,6 +77,8 @@ export interface DesktopWindowRuntime {
   zIndex: number
   /** 任务栏从左到右顺序：越大越靠右（越晚打开）；关闭为 0 */
   openOrder: number
+  /** 上次打开的位置与尺寸；关闭后保留，供下次恢复 */
+  bounds: WindowBounds | null
 }
 
 /** UI 合并视图：定义 + 坐标 + 窗口状态 */
@@ -81,6 +93,7 @@ export const DEFAULT_WINDOW_RUNTIME: DesktopWindowRuntime = {
   active: false,
   zIndex: 0,
   openOrder: 0,
+  bounds: null,
 }
 
 export const DESKTOP_APP_DEFINITIONS: DesktopAppDefinition[] = [

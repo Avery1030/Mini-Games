@@ -24,6 +24,7 @@ export function useDesktopApps(): DesktopAppView[] {
           active: false,
           zIndex: 0,
           openOrder: 0,
+          bounds: null,
         }),
         coordinate: coordinates[def.id] ?? def.defaultCoordinate,
       })),

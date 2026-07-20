@@ -5,6 +5,7 @@ import {
   getAppDefinition,
   type DesktopAppId,
   type DesktopWindowRuntime,
+  type WindowBounds,
 } from '@/config/desktop'
 import { STORAGE_KEYS, appStorage, migrateLegacyDesktopPersist } from '@/lib/storage'
 
@@ -28,6 +29,8 @@ interface WindowActions {
   minimizeWindow: (id: DesktopAppId) => void
   /** 最小化所有已打开且可见的窗口 */
   minimizeAllWindows: () => void
+  /** 记忆窗口位置/尺寸（关闭后仍保留） */
+  updateWindowBounds: (id: DesktopAppId, bounds: WindowBounds) => void
   focusWindow: (id: DesktopAppId) => void
   handleTaskbarClick: (id: DesktopAppId) => void
 }
@@ -87,6 +90,26 @@ function getNextZ(windows: WindowsMap, topZIndex: number): number {
   return Math.max(topZIndex, maxOpenZ) + 1
 }
 
+function normalizeBounds(raw: unknown): WindowBounds | null {
+  if (!raw || typeof raw !== 'object') return null
+  const b = raw as Partial<WindowBounds>
+  if (
+    typeof b.x !== 'number' ||
+    typeof b.y !== 'number' ||
+    typeof b.width !== 'number' ||
+    typeof b.height !== 'number'
+  ) {
+    return null
+  }
+  return {
+    x: b.x,
+    y: b.y,
+    width: Math.max(200, b.width),
+    height: Math.max(150, b.height),
+    maximized: b.maximized === true,
+  }
+}
+
 function mergeWindows(
   saved?: Partial<Record<DesktopAppId, Partial<DesktopWindowRuntime>>>,
 ): WindowsMap {
@@ -104,9 +127,24 @@ function mergeWindows(
           active: s.active ?? fallback.active,
           zIndex: s.zIndex ?? fallback.zIndex,
           openOrder: s.openOrder ?? (s.isOpen ? s.zIndex ?? fallback.openOrder : 0),
+          bounds: normalizeBounds(s.bounds) ?? fallback.bounds,
         },
       ]
     }),
+  ) as WindowsMap
+}
+
+/** 重置开关状态时保留各窗记忆几何 */
+function resetOpenStateKeepBounds(windows: WindowsMap): WindowsMap {
+  const defaults = createDefaultWindows()
+  return Object.fromEntries(
+    Object.entries(defaults).map(([id, fallback]) => [
+      id,
+      {
+        ...fallback,
+        bounds: windows[id as DesktopAppId]?.bounds ?? null,
+      },
+    ]),
   ) as WindowsMap
 }
 
@@ -150,6 +188,7 @@ export const useWindowStore = create<WindowStore>()(
         const target = windows[id]
         if (!target) return
 
+        // 关闭时保留 bounds，供下次打开恢复
         let next = patchWindow(windows, id, {
           isOpen: false,
           minimized: false,
@@ -164,11 +203,20 @@ export const useWindowStore = create<WindowStore>()(
       },
 
       closeAllWindows: () => {
+        const { windows } = get()
         set({
-          windows: createDefaultWindows(),
+          windows: resetOpenStateKeepBounds(windows),
           topZIndex: WINDOW_Z_BASE,
           nextOpenOrder: 1,
         })
+      },
+
+      updateWindowBounds: (id, bounds) => {
+        const { windows } = get()
+        if (!windows[id]) return
+        const next = normalizeBounds(bounds)
+        if (!next) return
+        set({ windows: patchWindow(windows, id, { bounds: next }) })
       },
 
       minimizeWindow: (id) => {
@@ -233,7 +281,7 @@ export const useWindowStore = create<WindowStore>()(
     }),
     {
       name: STORAGE_KEYS.windows,
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() =>
         appStorage.createStateStorage({ before: () => migrateLegacyDesktopPersist() }),
       ),

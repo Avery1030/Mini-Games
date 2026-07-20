@@ -18,6 +18,7 @@ export function DesktopWindowsLayer() {
   const closeWindow = useWindowStore((s) => s.closeWindow)
   const minimizeWindow = useWindowStore((s) => s.minimizeWindow)
   const focusWindow = useWindowStore((s) => s.focusWindow)
+  const updateWindowBounds = useWindowStore((s) => s.updateWindowBounds)
   const openWindowsMaximized = useSettingsStore((s) => s.openWindowsMaximized)
 
   const openApps = useMemo(
@@ -44,9 +45,16 @@ export function DesktopWindowsLayer() {
       {openApps.map((app) => {
         if (!app.app) return null
         const App = app.app
-        const width = app.width ?? 400
-        const height = app.height ?? 320
+        const remembered = app.bounds
+        // 有记忆则用记忆尺寸；否则才用定义里的默认宽高
+        const width = remembered?.width ?? app.width ?? 400
+        const height = remembered?.height ?? app.height ?? 320
         const cascadeIndex = openApps.filter((item) => item.zIndex < app.zIndex).length
+        const defaultPosition = remembered
+          ? { x: remembered.x, y: remembered.y }
+          : getCascadedPosition(cascadeIndex, width, height)
+        const defaultMaximized = remembered != null ? remembered.maximized : openWindowsMaximized
+
         return (
           <WindowsWindow
             key={app.id}
@@ -54,10 +62,12 @@ export function DesktopWindowsLayer() {
             title={t(`apps.${app.id}`)}
             width={width}
             height={height}
-            defaultPosition={getCascadedPosition(cascadeIndex, width, height)}
-            defaultMaximized={openWindowsMaximized}
+            defaultPosition={defaultPosition}
+            defaultMaximized={defaultMaximized}
+            rememberedBounds={remembered}
             onClose={() => closeWindow(app.id)}
             onMinimize={() => minimizeWindow(app.id)}
+            onBoundsChange={(bounds) => updateWindowBounds(app.id, bounds)}
             minimized={app.minimized}
             isActive={app.active}
             zIndex={app.zIndex}

@@ -72,7 +72,13 @@ export function TaskbarWindowButton({ id, title, icon: Icon, pressed, onClick }:
   }
 
   return (
-    <div ref={rootRef} className='relative shrink-0' onMouseEnter={scheduleShow} onMouseLeave={scheduleHide}>
+    <div
+      ref={rootRef}
+      data-taskbar-app-id={id}
+      className='relative shrink-0 data-[taskbar-animating]:brightness-110 data-[taskbar-animating]:ring-1 data-[taskbar-animating]:ring-accent'
+      onMouseEnter={scheduleShow}
+      onMouseLeave={scheduleHide}
+    >
       <Button
         size='md'
         variant={pressed ? 'pressed' : 'raised'}

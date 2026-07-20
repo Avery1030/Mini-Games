@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui'
@@ -10,12 +10,12 @@ import {
   WinMinimizeIcon,
   WinRestoreIcon,
 } from '@/components/ui/WindowChromeIcons'
-import { isServer } from '@/lib/env'
+import type { WindowBounds } from '@/config/desktop'
+import { RESIZE_HANDLES, maximizedSize, resolveDockPose, type ResizeEdge } from '@/lib/desktop/windowGeometry'
+import { useWindowGeometry } from '@/hooks/desktop/useWindowGeometry'
+import { useWindowDockAnim } from '@/hooks/desktop/useWindowDockAnim'
 
-const MIN_WIDTH = 200
-const MIN_HEIGHT = 150
-
-export type ResizeEdge = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
+export type { ResizeEdge }
 
 export interface WindowsWindowProps {
   id?: string
@@ -23,27 +23,20 @@ export interface WindowsWindowProps {
   onClose?: () => void
   onMinimize?: () => void
   minimized?: boolean
-  /** 首次打开时是否最大化（还原后仍可手动切换） */
+  /** 无记忆时：首次是否最大化 */
   defaultMaximized?: boolean
+  /** 有记忆时优先于 defaultPosition / width / height / defaultMaximized */
+  rememberedBounds?: WindowBounds | null
   children?: React.ReactNode
   defaultPosition?: { x: number; y: number }
   width?: number
   height?: number
   draggable?: boolean
   isActive?: boolean
-  /** 多窗口叠放层级 */
   zIndex?: number
   onFocus?: () => void
-}
-
-const TASKBAR_H = 48
-
-function maximizedSize() {
-  if (isServer) return { width: 800, height: 600 }
-  return {
-    width: window.innerWidth,
-    height: Math.max(240, window.innerHeight - TASKBAR_H),
-  }
+  /** 拖拽/缩放/最大化结束后写入 store */
+  onBoundsChange?: (bounds: WindowBounds) => void
 }
 
 /**
@@ -56,6 +49,7 @@ export function WindowsWindow({
   onMinimize,
   minimized = false,
   defaultMaximized = false,
+  rememberedBounds = null,
   children,
   defaultPosition,
   width: initialWidth = 400,
@@ -64,33 +58,49 @@ export function WindowsWindow({
   isActive = false,
   zIndex = 1000,
   onFocus,
+  onBoundsChange,
 }: WindowsWindowProps) {
   const t = useTranslations('window')
 
-  const restoredPosition = (() => {
-    if (defaultPosition) return defaultPosition
-    if (isServer) return { x: 100, y: 80 }
-    return {
-      x: Math.max(20, (window.innerWidth - initialWidth) / 2),
-      y: Math.max(20, (window.innerHeight - initialHeight) / 2 - 40),
-    }
-  })()
-  const restoredSize = { width: initialWidth, height: initialHeight }
+  const geometry = useWindowGeometry({
+    rememberedBounds,
+    defaultPosition,
+    defaultMaximized,
+    width: initialWidth,
+    height: initialHeight,
+    draggable,
+    onBoundsChange,
+    onClose,
+    onMinimize,
+  })
 
-  const [position, setPosition] = useState(() =>
-    defaultMaximized ? { x: 0, y: 0 } : restoredPosition,
-  )
-  const [size, setSize] = useState(() => (defaultMaximized ? maximizedSize() : restoredSize))
-  const [maximized, setMaximized] = useState(defaultMaximized)
-  const beforeMaximizeRef = useRef({ position: restoredPosition, size: restoredSize })
+  const initialDockPose =
+    minimized
+      ? resolveDockPose(
+          id,
+          geometry.seed.maximized ? maximizedSize().width : geometry.seed.size.width,
+          geometry.seed.maximized ? maximizedSize().height : geometry.seed.size.height,
+        )
+      : null
 
-  const [isDragging, setIsDragging] = useState(false)
-  const [resizing, setResizing] = useState<ResizeEdge | null>(null)
-  /** 非活跃窗口首次按下后，在 mouseup 前继续挡住事件，避免聚焦后同一次点击穿透 */
+  const { handleMaximize, chromeBusy, frameStyle } = useWindowDockAnim({
+    id,
+    minimized,
+    maximized: geometry.maximized,
+    position: geometry.position,
+    size: geometry.size,
+    positionRef: geometry.positionRef,
+    sizeRef: geometry.sizeRef,
+    beforeMaximizeRef: geometry.beforeMaximizeRef,
+    setPosition: geometry.setPosition,
+    setSize: geometry.setSize,
+    setMaximized: geometry.setMaximized,
+    emitBounds: geometry.emitBounds,
+    interactivelyMoving: geometry.interactivelyMoving,
+    initialDockPose,
+  })
+
   const [consumePointer, setConsumePointer] = useState(false)
-  const dragOffset = useRef({ x: 0, y: 0 })
-  const resizeStart = useRef({ x: 0, y: 0, left: 0, top: 0, width: 0, height: 0 })
-
   const showFocusShield = !isActive || consumePointer
 
   useEffect(() => {
@@ -104,174 +114,35 @@ export function WindowsWindow({
     }
   }, [consumePointer])
 
-  const handleMaximize = useCallback(() => {
-    if (maximized) {
-      setPosition(beforeMaximizeRef.current.position)
-      setSize(beforeMaximizeRef.current.size)
-      setMaximized(false)
-    } else {
-      beforeMaximizeRef.current = { position: { ...position }, size: { ...size } }
-      setPosition({ x: 0, y: 0 })
-      setSize(maximizedSize())
-      setMaximized(true)
-    }
-  }, [maximized, position, size])
-
-  // 客户端校正最大化尺寸（避免 SSR/首帧与视口不一致）
-  useEffect(() => {
-    if (!defaultMaximized) return
-    setPosition({ x: 0, y: 0 })
-    setSize(maximizedSize())
-    setMaximized(true)
-    // 仅挂载时校正一次
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const handleTitleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      if (!draggable || e.button !== 0 || maximized) return
-      e.preventDefault()
-      dragOffset.current = {
-        x: e.clientX - position.x,
-        y: e.clientY - position.y,
-      }
-      setIsDragging(true)
-    },
-    [draggable, maximized, position],
-  )
-
-  const handleResizeMouseDown = useCallback(
-    (e: React.MouseEvent, edge: ResizeEdge) => {
-      if (e.button !== 0) return
-      e.preventDefault()
-      e.stopPropagation()
-      resizeStart.current = {
-        x: e.clientX,
-        y: e.clientY,
-        left: position.x,
-        top: position.y,
-        width: size.width,
-        height: size.height,
-      }
-      setResizing(edge)
-    },
-    [position, size],
-  )
-
-  useEffect(() => {
-    if (!isDragging) return
-
-    const handleMouseMove = (e: MouseEvent) => {
-      setPosition({
-        x: e.clientX - dragOffset.current.x,
-        y: e.clientY - dragOffset.current.y,
-      })
-    }
-
-    const handleMouseUp = () => setIsDragging(false)
-
-    window.addEventListener('mousemove', handleMouseMove)
-    window.addEventListener('mouseup', handleMouseUp)
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('mouseup', handleMouseUp)
-    }
-  }, [isDragging])
-
-  useEffect(() => {
-    if (!resizing) return
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const { x, y, left, top, width, height } = resizeStart.current
-      const dx = e.clientX - x
-      const dy = e.clientY - y
-
-      let newLeft = left
-      let newTop = top
-      let newWidth = width
-      let newHeight = height
-
-      if (resizing.includes('e')) newWidth = Math.max(MIN_WIDTH, width + dx)
-      if (resizing.includes('w')) {
-        const w = Math.max(MIN_WIDTH, width - dx)
-        newLeft = left + (width - w)
-        newWidth = w
-      }
-      if (resizing.includes('s')) newHeight = Math.max(MIN_HEIGHT, height + dy)
-      if (resizing.includes('n')) {
-        const h = Math.max(MIN_HEIGHT, height - dy)
-        newTop = top + (height - h)
-        newHeight = h
-      }
-
-      setPosition({ x: newLeft, y: newTop })
-      setSize({ width: newWidth, height: newHeight })
-    }
-
-    const handleMouseUp = () => setResizing(null)
-
-    window.addEventListener('mousemove', handleMouseMove)
-    window.addEventListener('mouseup', handleMouseUp)
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('mouseup', handleMouseUp)
-    }
-  }, [resizing])
-
-  const resizeHandles: { edge: ResizeEdge; className: string; cursor: string }[] = [
-    { edge: 'n', className: 'left-0 right-0 top-0 h-[5px]', cursor: 'ns-resize' },
-    { edge: 's', className: 'left-0 right-0 bottom-0 h-[5px]', cursor: 's-resize' },
-    { edge: 'e', className: 'right-0 top-0 bottom-0 w-[5px]', cursor: 'ew-resize' },
-    { edge: 'w', className: 'left-0 top-0 bottom-0 w-[5px]', cursor: 'w-resize' },
-    { edge: 'ne', className: 'right-0 top-0 w-[5px] h-[5px]', cursor: 'nesw-resize' },
-    { edge: 'nw', className: 'left-0 top-0 w-[5px] h-[5px]', cursor: 'nwse-resize' },
-    { edge: 'se', className: 'right-0 bottom-0 w-[5px] h-[5px]', cursor: 'nwse-resize' },
-    { edge: 'sw', className: 'left-0 bottom-0 w-[5px] h-[5px]', cursor: 'nesw-resize' },
-  ]
-
   return (
     <div
       data-window-id={id}
       className={cn(
-        'fixed flex flex-col bg-window text-on-chrome font-pixel transition-colors duration-200',
-        maximized
+        'fixed flex flex-col bg-window text-on-chrome font-pixel',
+        geometry.maximized
           ? 'border-0 rounded-none'
           : 'border-2 border-t-chrome-light border-l-chrome-light border-r-chrome-dark border-b-chrome-dark',
       )}
-      style={{
-        // 用 transform 位移，拖拽时通常比 left/top 更平滑（走合成层）
-        left: 0,
-        top: 0,
-        transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
-        width: size.width,
-        // 必须用 height（不能只用 minHeight），否则子应用 h-full / flex-1 无法在全屏时撑开
-        height: size.height,
-        willChange: isDragging || resizing ? 'transform' : undefined,
-        zIndex,
-        visibility: minimized ? 'hidden' : 'visible',
-        pointerEvents: minimized ? 'none' : 'auto',
-      }}
+      style={{ ...frameStyle, zIndex }}
     >
-      {/* 非最大化时显示四边 + 四角调整大小手柄 */}
-      {!maximized &&
-        resizeHandles.map(({ edge, className, cursor }) => (
+      {!geometry.maximized &&
+        RESIZE_HANDLES.map(({ edge, className, cursor }) => (
           <div
             key={edge}
             className={cn('absolute z-10', className)}
             style={{ cursor }}
-            onMouseDown={(e) => handleResizeMouseDown(e, edge)}
+            onMouseDown={(e) => geometry.handleResizeMouseDown(e, edge)}
             aria-hidden
           />
         ))}
 
       <div className='flex flex-col h-full min-h-0 relative'>
-        {/* 标题栏：深蓝底 + 白字 + 最小化 + 最大化/还原 + 关闭 */}
         <div
           className={cn(
             'flex items-center justify-between shrink-0 h-8 px-1 pr-0 select-none font-pixel',
-            maximized ? 'cursor-default' : 'cursor-grab active:cursor-grabbing',
+            geometry.maximized ? 'cursor-default' : 'cursor-grab active:cursor-grabbing',
           )}
-          onMouseDown={handleTitleMouseDown}
+          onMouseDown={geometry.handleTitleMouseDown}
           style={{ background: isActive ? 'var(--window-title-active)' : 'var(--window-title-inactive)' }}
         >
           <span className='text-[var(--window-title-text)] text-sm font-bold pl-2 truncate'>{title}</span>
@@ -281,9 +152,10 @@ export function WindowsWindow({
                 variant='title'
                 size='icon-sm'
                 aria-label={t('minimize')}
+                disabled={chromeBusy}
                 onClick={(e) => {
                   e.stopPropagation()
-                  onMinimize()
+                  geometry.handleMinimizeClick()
                 }}
               >
                 <WinMinimizeIcon />
@@ -292,20 +164,21 @@ export function WindowsWindow({
             <Button
               variant='title'
               size='icon-sm'
+              disabled={chromeBusy}
               onClick={(e) => {
                 e.stopPropagation()
                 handleMaximize()
               }}
-              aria-label={maximized ? t('restore') : t('maximize')}
+              aria-label={geometry.maximized ? t('restore') : t('maximize')}
             >
-              {maximized ? <WinRestoreIcon /> : <WinMaximizeIcon />}
+              {geometry.maximized ? <WinRestoreIcon /> : <WinMaximizeIcon />}
             </Button>
             <Button
               variant='title'
               size='icon-sm'
               onClick={(e) => {
                 e.stopPropagation()
-                onClose?.()
+                geometry.handleClose()
               }}
               aria-label={t('close')}
             >
@@ -314,11 +187,10 @@ export function WindowsWindow({
           </div>
         </div>
 
-        {/* 内容区：绝对铺满，保证子应用 h-full 在全屏/缩放时都能撑开 */}
         <div
           className={cn(
             'relative flex-1 min-h-0 bg-window-body font-pixel',
-            maximized
+            geometry.maximized
               ? 'border-0'
               : 'border-2 border-t-chrome-dark border-l-chrome-dark border-r-chrome-light border-b-chrome-light',
           )}
@@ -327,7 +199,6 @@ export function WindowsWindow({
         </div>
       </div>
 
-      {/* 非活跃窗口：首次点击只聚焦，不穿透到内容/标题栏按钮 */}
       {showFocusShield && (
         <div
           className='absolute inset-0 z-[200]'
