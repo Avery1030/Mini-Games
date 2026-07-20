@@ -26,6 +26,17 @@ import { DocumentApp } from '@/features/document'
 import { LogApp } from '@/features/log'
 import { NotepadApp } from '@/features/notepad'
 import { PaintApp } from '@/features/paint'
+import {
+  ReferralApp,
+  BridgeApp,
+  ClaimApp,
+  StakeApp,
+  MarketApp,
+  GovernanceApp,
+  FoundryApp,
+  DonationApp,
+  EmailApp,
+} from '@/features/demo'
 import { apps } from '@/messages/zh-CN.json'
 
 export type DesktopAppId = keyof typeof apps
@@ -73,11 +84,46 @@ export const DEFAULT_WINDOW_RUNTIME: DesktopWindowRuntime = {
 }
 
 export const DESKTOP_APP_DEFINITIONS: DesktopAppDefinition[] = [
-  { id: 'referral', icon: UserPlus, defaultCoordinate: [1, 1] },
-  { id: 'bridge', icon: Castle, defaultCoordinate: [1, 2] },
-  { id: 'claim', icon: Gift, defaultCoordinate: [1, 3] },
-  { id: 'stake', icon: ChartColumnBig, defaultCoordinate: [1, 4] },
-  { id: 'market', icon: Store, defaultCoordinate: [1, 5] },
+  {
+    id: 'referral',
+    icon: UserPlus,
+    defaultCoordinate: [1, 1],
+    width: 440,
+    height: 360,
+    app: ReferralApp,
+  },
+  {
+    id: 'bridge',
+    icon: Castle,
+    defaultCoordinate: [1, 2],
+    width: 440,
+    height: 360,
+    app: BridgeApp,
+  },
+  {
+    id: 'claim',
+    icon: Gift,
+    defaultCoordinate: [1, 3],
+    width: 440,
+    height: 360,
+    app: ClaimApp,
+  },
+  {
+    id: 'stake',
+    icon: ChartColumnBig,
+    defaultCoordinate: [1, 4],
+    width: 440,
+    height: 360,
+    app: StakeApp,
+  },
+  {
+    id: 'market',
+    icon: Store,
+    defaultCoordinate: [1, 5],
+    width: 520,
+    height: 400,
+    app: MarketApp,
+  },
   {
     id: 'minesweeper',
     icon: Gamepad,
@@ -94,8 +140,22 @@ export const DESKTOP_APP_DEFINITIONS: DesktopAppDefinition[] = [
     height: 640,
     app: Tetris,
   },
-  { id: 'governance', icon: Building2, defaultCoordinate: [2, 1] },
-  { id: 'foundry', icon: Wrench, defaultCoordinate: [2, 2] },
+  {
+    id: 'governance',
+    icon: Building2,
+    defaultCoordinate: [2, 1],
+    width: 440,
+    height: 360,
+    app: GovernanceApp,
+  },
+  {
+    id: 'foundry',
+    icon: Wrench,
+    defaultCoordinate: [2, 2],
+    width: 440,
+    height: 360,
+    app: FoundryApp,
+  },
   {
     id: 'document',
     icon: BookOpenText,
@@ -104,8 +164,22 @@ export const DESKTOP_APP_DEFINITIONS: DesktopAppDefinition[] = [
     height: 420,
     app: DocumentApp,
   },
-  { id: 'donation', icon: Rose, defaultCoordinate: [2, 4] },
-  { id: 'email', icon: Mail, defaultCoordinate: [2, 5] },
+  {
+    id: 'donation',
+    icon: Rose,
+    defaultCoordinate: [2, 4],
+    width: 440,
+    height: 360,
+    app: DonationApp,
+  },
+  {
+    id: 'email',
+    icon: Mail,
+    defaultCoordinate: [2, 5],
+    width: 520,
+    height: 420,
+    app: EmailApp,
+  },
   {
     id: 'log',
     icon: Notebook,

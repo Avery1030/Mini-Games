@@ -20,6 +20,8 @@ export const STORAGE_KEYS = {
   lock: 'desktop-lock',
   /** 日历按日备注（zustand persist） */
   calendar: 'desktop-calendar',
+  /** 演示应用本地进度（zustand persist） */
+  demoApps: 'desktop-demo-apps',
 } as const
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS]

@@ -26,6 +26,8 @@ interface WindowActions {
   closeWindow: (id: DesktopAppId) => void
   closeAllWindows: () => void
   minimizeWindow: (id: DesktopAppId) => void
+  /** 最小化所有已打开且可见的窗口 */
+  minimizeAllWindows: () => void
   focusWindow: (id: DesktopAppId) => void
   handleTaskbarClick: (id: DesktopAppId) => void
 }
@@ -179,6 +181,19 @@ export const useWindowStore = create<WindowStore>()(
           next = activateNext(next, id)
         }
         set({ windows: next })
+      },
+
+      minimizeAllWindows: () => {
+        const { windows } = get()
+        let changed = false
+        const next = { ...windows }
+        for (const id of Object.keys(next) as DesktopAppId[]) {
+          const w = next[id]
+          if (!w?.isOpen || w.minimized) continue
+          next[id] = { ...w, minimized: true, active: false }
+          changed = true
+        }
+        if (changed) set({ windows: next })
       },
 
       focusWindow: (id) => {

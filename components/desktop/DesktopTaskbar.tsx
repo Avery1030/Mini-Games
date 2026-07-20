@@ -26,6 +26,7 @@ export function DesktopTaskbar() {
   const hasHydrated = useDesktopHydrated()
   const openWindow = useWindowStore((s) => s.openWindow)
   const handleTaskbarClick = useWindowStore((s) => s.handleTaskbarClick)
+  const minimizeAllWindows = useWindowStore((s) => s.minimizeAllWindows)
   const showTrayDecor = useSettingsStore((s) => s.showTrayDecor)
   const [startMenuOpen, setStartMenuOpen] = useState(false)
 
@@ -63,7 +64,7 @@ export function DesktopTaskbar() {
         <StartMenu open={startMenuOpen} onClose={() => setStartMenuOpen(false)} onOpenApp={openWindow} />
       </div>
 
-      <div className='flex items-center gap-1 min-w-0 ml-1 overflow-x-auto'>
+      <div className='flex items-center gap-1 min-w-0 ml-1 overflow-x-auto shrink'>
         {taskbarWindows.map((w) => (
           <TaskbarWindowButton
             key={w.id}
@@ -76,7 +77,18 @@ export function DesktopTaskbar() {
         ))}
       </div>
 
-      <div className='flex items-center gap-2 ml-auto pl-2 shrink-0'>
+      {/* 空白区双击 → 全部最小化（不抢窗口按钮 / 托盘点击） */}
+      <div
+        className='flex-1 self-stretch min-w-2 cursor-default'
+        role='presentation'
+        aria-label={t('window.minimizeAllHint')}
+        onDoubleClick={(e) => {
+          e.preventDefault()
+          minimizeAllWindows()
+        }}
+      />
+
+      <div className='flex items-center gap-2 pl-2 shrink-0'>
         <div className='flex items-center gap-1.5 mr-1'>
           <ThemeSwitch />
           <LangSwitch />

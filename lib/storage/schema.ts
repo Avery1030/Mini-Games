@@ -89,6 +89,47 @@ export type CalendarPersistState = {
   notes: Record<string, string>
 }
 
+export type DemoBridgeRecord = {
+  id: string
+  from: string
+  to: string
+  amount: number
+  at: number
+}
+
+export type DemoFoundryItem = {
+  id: string
+  name: string
+  rarity: string
+  at: number
+}
+
+export type DemoEmailDraft = {
+  id: string
+  to: string
+  subject: string
+  body: string
+  at: number
+}
+
+/** 演示应用本地进度 */
+export type DemoAppsPersistState = {
+  fakeBalance: number
+  claimLastAt: number | null
+  claimPoints: number
+  staked: number
+  referralCode: string
+  referralInvites: number
+  referralPoints: number
+  bridgeHistory: DemoBridgeRecord[]
+  votes: Record<string, 'for' | 'against'>
+  proposalFor: Record<string, number>
+  proposalAgainst: Record<string, number>
+  foundryItems: DemoFoundryItem[]
+  donationTotal: number
+  emailDrafts: DemoEmailDraft[]
+}
+
 /**
  * 每个 key 对应的「语义值」类型。
  * - theme：纯字符串
@@ -105,6 +146,7 @@ export type StorageSchema = {
   [STORAGE_KEYS.paint]: ZustandPersistEnvelope<PaintPersistState>
   [STORAGE_KEYS.lock]: ZustandPersistEnvelope<LockPersistState>
   [STORAGE_KEYS.calendar]: ZustandPersistEnvelope<CalendarPersistState>
+  [STORAGE_KEYS.demoApps]: ZustandPersistEnvelope<DemoAppsPersistState>
 }
 
 /** 以 JSON 读写的 key（不含 theme） */

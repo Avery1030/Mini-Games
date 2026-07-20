@@ -56,7 +56,8 @@
     "minimize": "Minimize",
     "maximize": "Maximize",
     "restore": "Restore",
-    "close": "Close"
+    "close": "Close",
+    "minimizeAllHint": "Double-click empty area to minimize all windows"
   },
   "theme": {
     "toLight": "Switch to light theme",
@@ -203,7 +204,7 @@
         "Log: dated release notes for the desktop and apps — double-click the Log icon to open.",
         "Notepad: create, edit, and delete plain-text notes under .data on this machine. Supports titles, word wrap, and Ctrl/⌘+S.",
         "Paint: canvas doodling with palette, eraser, and shapes; works saved as PNG under .data/drawings.",
-        "Other icons (Referral, Bridge, Market…) are still under construction — treat them as coming-soon posters."
+        "Demo apps: Referral, Bridge, Claim, Stake, Market, Governance, Foundry, Donation, and Email all open on double-click. They are local simulations only — no wallet, no real email — and progress is stored on this device."
       ]
     },
     "about": {
@@ -360,5 +361,151 @@
     "repeatAll": "Repeat all",
     "repeatOne": "Repeat one",
     "shuffleOn": "Shuffle"
+  },
+  "demo": {
+    "referral": {
+      "title": "Referral",
+      "hint": "Local demo: generate and copy a code. No real referral backend.",
+      "idle": "Ready",
+      "codeLabel": "Your invite code",
+      "copy": "Copy",
+      "copied": "Copied to clipboard",
+      "copyFail": "Copy failed — select manually",
+      "refresh": "Refresh code",
+      "refreshed": "New code generated",
+      "invites": "Fake invites",
+      "points": "Fake points"
+    },
+    "bridge": {
+      "title": "Bridge",
+      "hint": "Local demo: pick chains and amount; a progress bar then logs history.",
+      "idle": "Balance {balance}",
+      "from": "From",
+      "to": "To",
+      "amount": "Amount",
+      "start": "Start bridge",
+      "bridging": "Bridging…",
+      "done": "Bridge complete (local record)",
+      "fail": "Cannot bridge: check amount, balance, or chains",
+      "history": "Recent"
+    },
+    "claim": {
+      "title": "Claim",
+      "hint": "Local demo: +50 fake points per claim, 24h cooldown.",
+      "idle": "Claim fake points",
+      "earned": "Total claimed",
+      "balance": "Fake balance",
+      "claim": "Claim",
+      "success": "Claimed +{points}",
+      "cooldown": "On cooldown — about {hours}h left"
+    },
+    "stake": {
+      "title": "Stake",
+      "hint": "Local demo: stake fake balance; APY and yield are estimates only.",
+      "idle": "Enter an amount to stake or unstake",
+      "balance": "Available",
+      "staked": "Staked",
+      "apy": "Fake APY",
+      "estimate": "Yearly estimate",
+      "amount": "Amount",
+      "stake": "Stake",
+      "unstake": "Unstake",
+      "stakedOk": "Staked",
+      "unstakedOk": "Unstaked",
+      "fail": "Failed: check amount and balance"
+    },
+    "market": {
+      "title": "Market",
+      "hint": "Local demo: buy fake goods with fake balance.",
+      "idle": "Balance {balance}",
+      "price": "{price} fake coins",
+      "buy": "Buy",
+      "bought": "Bought “{name}” for {price}",
+      "fail": "Insufficient balance",
+      "items": {
+        "hat": "Pixel hat",
+        "mug": "Coffee mug",
+        "poster": "Poster",
+        "sticker": "Sticker pack"
+      }
+    },
+    "governance": {
+      "title": "Governance",
+      "hint": "Local demo: vote once on fake proposals; tallies persist.",
+      "idle": "Pick a proposal to vote",
+      "for": "For",
+      "against": "Against",
+      "tally": "For {for} · Against {against}",
+      "voted": "You voted: {side}",
+      "voteOk": "Vote recorded",
+      "already": "You already voted",
+      "proposals": {
+        "p1": {
+          "title": "Proposal: larger taskbar previews",
+          "desc": "Should hover window previews be a bit bigger?"
+        },
+        "p2": {
+          "title": "Proposal: more wallpaper presets",
+          "desc": "Add more public-domain wallpapers in Settings?"
+        },
+        "p3": {
+          "title": "Proposal: Start menu groups",
+          "desc": "Group programs as Games / Tools / Demos?"
+        }
+      }
+    },
+    "foundry": {
+      "title": "Foundry",
+      "hint": "Local demo: mint a random fake collectible; list stored locally.",
+      "idle": "Mint a fake collectible",
+      "mint": "Mint",
+      "minted": "Minted: {name} ({rarity})",
+      "empty": "No items yet.",
+      "rarity": {
+        "common": "Common",
+        "rare": "Rare",
+        "epic": "Epic",
+        "legendary": "Legendary"
+      }
+    },
+    "donation": {
+      "title": "Donation",
+      "hint": "Local demo: deduct fake balance and track total donated.",
+      "idle": "Pick or enter an amount",
+      "balance": "Fake balance",
+      "total": "Total donated",
+      "amount": "Amount",
+      "donate": "Donate",
+      "thanks": "Thanks for the demo donation!",
+      "fail": "Insufficient balance"
+    },
+    "email": {
+      "title": "Mail",
+      "hint": "Local demo: fake inbox and drafts — nothing is sent.",
+      "idle": "Read a message or write a draft",
+      "inbox": "Inbox",
+      "compose": "Compose",
+      "drafts": "Drafts",
+      "back": "Back",
+      "from": "From",
+      "to": "To",
+      "subject": "Subject",
+      "body": "Body",
+      "saveDraft": "Save draft",
+      "savedDraft": "Saved to drafts (not sent)",
+      "noSend": "Note: this app never connects to SMTP or sends mail.",
+      "needTo": "Please enter a recipient",
+      "noDrafts": "No drafts",
+      "delete": "Delete",
+      "deleted": "Draft deleted",
+      "mail": {
+        "welcome": "Welcome to demo mail",
+        "welcomeBody": "This is a fake welcome message. Use Compose to save drafts — they stay on this device only.",
+        "tips": "Desktop tip",
+        "tipsBody": "Try other demo icons: Bridge, Stake, and Market are local simulations; progress survives refresh.",
+        "news": "This week’s notes",
+        "newsBody": "Placeholder icons now open basic windows. Real chain/SMTP is out of scope."
+      }
+    }
   }
 }

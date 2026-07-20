@@ -21,6 +21,10 @@ export type {
   LegacyDesktopPersistState,
   LockPersistState,
   CalendarPersistState,
+  DemoAppsPersistState,
+  DemoBridgeRecord,
+  DemoFoundryItem,
+  DemoEmailDraft,
 } from './schema'
 
 export { appStorage } from './local'
