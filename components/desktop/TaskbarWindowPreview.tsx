@@ -1,9 +1,12 @@
 'use client'
 
 import { useLayoutEffect, useRef, useState, type ComponentType } from 'react'
+import { mountWindowPreviewClone, queryWindowEl } from '@/lib/windowPreview'
+import { WinCloseIcon } from '@/components/ui/WindowChromeIcons'
+import { type DesktopAppId } from '@/config/desktop'
+import { useWindowStore } from '@/store/window'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/cn'
-import { mountWindowPreviewClone, queryWindowEl } from '@/lib/windowPreview'
 
 type AppIcon = ComponentType<{
   className?: string
@@ -11,7 +14,7 @@ type AppIcon = ComponentType<{
 }>
 
 type Props = {
-  windowId: string
+  windowId: DesktopAppId
   title: string
   icon: AppIcon
   /** 任务栏按钮锚点，用于定位预览 */
@@ -44,6 +47,7 @@ export function TaskbarWindowPreview({
   const hostRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState(() => (anchorEl ? previewPos(anchorEl) : null))
   const [hasThumb, setHasThumb] = useState(false)
+  const { closeWindow } = useWindowStore()
 
   useLayoutEffect(() => {
     if (!anchorEl) return
@@ -86,30 +90,38 @@ export function TaskbarWindowPreview({
       aria-label={title}
       className={cn(
         'fixed z-[1200] flex flex-col gap-1 p-1 min-w-[120px] max-w-[240px]',
-        'bg-chrome text-on-chrome font-pixel cursor-pointer',
+        'bg-chrome text-on-chrome font-pixel',
         'border-2 border-t-chrome-light border-l-chrome-light border-r-chrome-dark border-b-chrome-dark',
         'shadow-[2px_2px_0_rgba(0,0,0,0.35)]',
       )}
       style={{ left: pos.left, bottom: pos.bottom }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      onClick={(e) => {
-        e.stopPropagation()
-        onActivate()
-      }}
     >
-      <div
-        className='flex items-center gap-1.5 h-6 px-1.5 shrink-0'
-        style={{ background: 'var(--window-title-active)' }}
-      >
-        <Icon size={12} className='shrink-0 text-[var(--window-title-text)]' aria-hidden />
-        <span className='truncate text-xs font-bold text-[var(--window-title-text)]'>{title}</span>
+      <div className='flex items-center justify-between h-6 px-1.5 shrink-0 bg-[var(--window-title-active)]'>
+        <div className='flex items-center gap-1.5'>
+          <Icon size={12} className='shrink-0 text-[var(--window-title-text)]' aria-hidden />
+          <span className='truncate text-xs font-bold text-[var(--window-title-text)]'>{title}</span>
+        </div>
+        <div
+          className='cursor-pointer'
+          onClick={(e) => {
+            e.stopPropagation()
+            closeWindow(windowId)
+          }}
+        >
+          <WinCloseIcon size={12} className='shrink-0 text-[var(--window-title-text)]' aria-hidden />
+        </div>
       </div>
       <div
         className={cn(
           'flex items-center justify-center bg-window-body overflow-hidden',
           'border-2 border-t-chrome-dark border-l-chrome-dark border-r-chrome-light border-b-chrome-light',
         )}
+        onClick={(e) => {
+          e.stopPropagation()
+          onActivate()
+        }}
       >
         {/* className 勿随 hasThumb 变化，否则 reconcile 会清掉 clone 节点 */}
         <div ref={hostRef} className='[&:empty]:hidden' />

@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState, type ComponentType } from 'react'
-import { Button } from '@/components/ui'
 import { TaskbarWindowPreview } from './TaskbarWindowPreview'
+import { type DesktopAppId } from '@/config/desktop'
+import { Button } from '@/components/ui'
 
 const SHOW_DELAY_MS = 380
 const HIDE_DELAY_MS = 160
@@ -13,7 +14,7 @@ type AppIcon = ComponentType<{
 }>
 
 type Props = {
-  id: string
+  id: DesktopAppId
   title: string
   icon: AppIcon
   pressed: boolean
@@ -71,12 +72,7 @@ export function TaskbarWindowButton({ id, title, icon: Icon, pressed, onClick }:
   }
 
   return (
-    <div
-      ref={rootRef}
-      className='relative shrink-0'
-      onMouseEnter={scheduleShow}
-      onMouseLeave={scheduleHide}
-    >
+    <div ref={rootRef} className='relative shrink-0' onMouseEnter={scheduleShow} onMouseLeave={scheduleHide}>
       <Button
         size='md'
         variant={pressed ? 'pressed' : 'raised'}
