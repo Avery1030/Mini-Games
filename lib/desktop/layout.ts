@@ -139,10 +139,11 @@ export function previewPlacement(
   return resolveOverlaps(next, dragId)
 }
 
-/** 仅取出相对原始坐标有变化的项，用于写入 store */
+/** 仅取出相对原始坐标有变化的项，用于写入 store；priorityId 会排在最前供占格优先 */
 export function diffCoordinates(
   apps: CoordApp[],
   next: Map<DesktopAppId, DesktopCoordinate>,
+  priorityId?: DesktopAppId,
 ): Array<{ id: DesktopAppId; coordinate: DesktopCoordinate }> {
   const updates: Array<{ id: DesktopAppId; coordinate: DesktopCoordinate }> = []
   for (const app of apps) {
@@ -151,6 +152,9 @@ export function diffCoordinates(
     if (app.coordinate[0] !== coord[0] || app.coordinate[1] !== coord[1]) {
       updates.push({ id: app.id, coordinate: coord })
     }
+  }
+  if (priorityId) {
+    updates.sort((a, b) => (a.id === priorityId ? -1 : b.id === priorityId ? 1 : 0))
   }
   return updates
 }

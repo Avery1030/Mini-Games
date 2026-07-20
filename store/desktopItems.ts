@@ -58,7 +58,8 @@ export const useDesktopItemsStore = create<DesktopItemsStore>()(
 
       createFolder: (opts = {}) => {
         const occupied = Object.values(useDesktopStore.getState().coordinates)
-        const coordinate = opts.coordinate ?? allocateDesktopCoordinate(occupied)
+        // 优先落在右键格点；若被占用则就近找空位
+        const coordinate = allocateDesktopCoordinate(occupied, opts.coordinate ?? [4, 1])
         const win = createDesktopFolderWindow({
           title: opts.title,
           coordinate,

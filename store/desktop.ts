@@ -25,8 +25,14 @@ interface DesktopActions {
 
 export type DesktopStore = DesktopState & DesktopActions
 
-function withUniqueCoordinates(coordinates: CoordinatesMap): CoordinatesMap {
-  const unique = resolveOverlaps(new Map(Object.entries(coordinates) as [DesktopAppId, DesktopCoordinate][]))
+function withUniqueCoordinates(
+  coordinates: CoordinatesMap,
+  priorityId?: DesktopAppId,
+): CoordinatesMap {
+  const unique = resolveOverlaps(
+    new Map(Object.entries(coordinates) as [DesktopAppId, DesktopCoordinate][]),
+    priorityId,
+  )
   return Object.fromEntries([...unique.entries()]) as CoordinatesMap
 }
 
@@ -59,35 +65,27 @@ export const useDesktopStore = create<DesktopStore>()(
 
       updateCoordinates: (updates) => {
         if (updates.length === 0) return
-        const map = new Map(updates.map((item) => [item.id, item.coordinate]))
-        set((state) =>
-          ({
-            coordinates: withUniqueCoordinates(
-              Object.fromEntries(
-                Object.entries(state.coordinates).map(([id, coord]) => [
-                  id,
-                  map.get(id as DesktopAppId) ?? coord,
-                ]),
-              ) as CoordinatesMap,
-            ),
-          }),
-        )
+        set((state) => {
+          const next = { ...state.coordinates } as CoordinatesMap
+          for (const { id, coordinate } of updates) {
+            next[id] = coordinate
+          }
+          // 拖拽项优先占目标格，其它图标让位（否则新文件夹等会被挤回「到不了的位置」）
+          const priorityId = updates[0]?.id
+          return { coordinates: withUniqueCoordinates(next, priorityId) }
+        })
       },
 
       ensureCoordinate: (id, coordinate) => {
         set((state) => {
           if (state.coordinates[id]) {
-            return {
-              coordinates: withUniqueCoordinates({
-                ...state.coordinates,
-              }),
-            }
+            return { coordinates: withUniqueCoordinates(state.coordinates) }
           }
           return {
-            coordinates: withUniqueCoordinates({
-              ...state.coordinates,
-              [id]: coordinate,
-            }),
+            coordinates: withUniqueCoordinates(
+              { ...state.coordinates, [id]: coordinate } as CoordinatesMap,
+              id,
+            ),
           }
         })
       },

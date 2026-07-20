@@ -108,7 +108,7 @@ export function useDesktopIconDrag({ apps, desktopRef, onOpen, onCommit }: UseDe
         const local = desktopLocalFromViewport(viewportLeft, viewportTop)
         const target = positionToCoordinate(local.left, local.top)
         const next = previewPlacement(appsRef.current, session.id, target)
-        const updates = diffCoordinates(appsRef.current, next)
+        const updates = diffCoordinates(appsRef.current, next, session.id)
         if (updates.length > 0) {
           onCommitRef.current(updates)
         }

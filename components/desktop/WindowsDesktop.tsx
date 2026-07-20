@@ -11,6 +11,7 @@ import { useDesktopWallpaper } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
 import { useDesktopItemsStore } from '@/store/desktopItems'
 import { resolveDesktopItemTitle } from '@/lib/desktop/window'
+import { pointerToCoordinate } from '@/lib/desktop'
 import { promptRenameFolder } from './promptRenameFolder'
 
 /**
@@ -50,6 +51,10 @@ export function WindowsDesktop() {
     const canOpen = Boolean(app?.app)
     const onBlank = !iconId
     const isFolder = app?.kind === 'folder'
+    // 在事件回调内立刻换算，避免 onSelect 时 currentTarget 失效
+    const clickCoordinate = onBlank
+      ? pointerToCoordinate(e.clientX, e.clientY, e.currentTarget as HTMLElement)
+      : null
 
     setContextMenu({
       x: e.clientX,
@@ -80,7 +85,10 @@ export function WindowsDesktop() {
                 id: 'newFolder',
                 label: td('newFolder'),
                 onSelect: () => {
-                  createFolder({ title: td('newFolderName') })
+                  createFolder({
+                    title: td('newFolderName'),
+                    coordinate: clickCoordinate ?? undefined,
+                  })
                 },
               },
             ]
