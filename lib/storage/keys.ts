@@ -22,6 +22,8 @@ export const STORAGE_KEYS = {
   calendar: 'desktop-calendar',
   /** 演示应用本地进度（zustand persist） */
   demoApps: 'desktop-demo-apps',
+  /** 动态桌面项（文件夹等） */
+  desktopItems: 'desktop-items',
 } as const
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS]

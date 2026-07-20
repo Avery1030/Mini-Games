@@ -14,6 +14,7 @@ import { winChrome, winChromePressed } from '@/lib/winChrome'
 import { useDesktopApps, useDesktopHydrated } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
 import { useSettingsStore } from '@/store/settings'
+import { resolveDesktopItemTitle } from '@/lib/desktop/window'
 
 const TRAY_DECOR_ICONS = ['✉️', '📤', '🐦', '▶️', '📰', '🔗'] as const
 
@@ -22,6 +23,7 @@ const TRAY_DECOR_ICONS = ['✉️', '📤', '🐦', '▶️', '📰', '🔗'] as
  */
 export function DesktopTaskbar() {
   const t = useTranslations()
+  const tApps = useTranslations('apps')
   const apps = useDesktopApps()
   const hasHydrated = useDesktopHydrated()
   const openWindow = useWindowStore((s) => s.openWindow)
@@ -38,12 +40,12 @@ export function DesktopTaskbar() {
       .sort((a, b) => a.openOrder - b.openOrder || a.zIndex - b.zIndex)
       .map((app) => ({
         id: app.id,
-        title: t(`apps.${app.id}`),
+        title: resolveDesktopItemTitle(app, tApps),
         icon: app.icon,
         minimized: app.minimized,
         isActive: app.active,
       }))
-  }, [apps, hasHydrated, t])
+  }, [apps, hasHydrated, tApps])
 
   return (
     <footer className='relative z-[9000] h-12 min-h-[48px] flex items-center px-2 bg-taskbar text-on-chrome border-t-2 border-taskbar-edge shadow-[inset_1px_1px_0_var(--taskbar-shadow)] overflow-visible'>

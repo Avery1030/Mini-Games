@@ -26,7 +26,15 @@
   "desktop": {
     "open": "Open",
     "refresh": "Refresh",
-    "settings": "Settings"
+    "settings": "Settings",
+    "newFolder": "New Folder",
+    "newFolderName": "New Folder",
+    "rename": "Rename",
+    "renameTitle": "Rename",
+    "renameHint": "Type a new name for this folder.",
+    "renameLabel": "Name",
+    "renameEmpty": "Name cannot be empty",
+    "renameDuplicate": "A folder with this name already exists"
   },
   "startMenu": {
     "brand": "Avery Mini App",
@@ -59,6 +67,12 @@
     "restore": "Restore",
     "close": "Close",
     "minimizeAllHint": "Double-click empty area to minimize all windows"
+  },
+  "folder": {
+    "untitled": "Folder",
+    "hint": "Folder window (placing items inside will come later).",
+    "empty": "This folder is empty",
+    "status": "{name}"
   },
   "theme": {
     "toLight": "Switch to light theme",

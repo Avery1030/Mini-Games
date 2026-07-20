@@ -9,6 +9,7 @@ import { useDesktopStore } from '@/store/desktop'
 import { useWindowStore } from '@/store/window'
 import { useSettingsStore } from '@/store/settings'
 import { CELL_GAP, CELL_SIZE, coordinateToPosition, resolveCoordinate } from '@/lib/desktop'
+import { resolveDesktopItemTitle } from '@/lib/desktop/window'
 import { scalePx } from '@/lib/uiScale'
 import type { DesktopAppView } from '@/config/desktop'
 
@@ -16,7 +17,7 @@ import type { DesktopAppView } from '@/config/desktop'
  * 桌面图标网格 + 拖拽。自行订阅 store，不依赖 Taskbar / Windows 层。
  */
 export function DesktopIconsLayer() {
-  const t = useTranslations()
+  const tApps = useTranslations('apps')
   const apps = useDesktopApps()
   const hasHydrated = useDesktopHydrated()
   const openWindow = useWindowStore((s) => s.openWindow)
@@ -71,7 +72,7 @@ export function DesktopIconsLayer() {
             <DesktopIcon
               key={app.id}
               appId={app.id}
-              label={t(`apps.${app.id}`)}
+              label={resolveDesktopItemTitle(app, tApps)}
               showLabel={showIconLabels}
               iconBoxPx={iconBoxPx}
               labelClass={iconVis.label}

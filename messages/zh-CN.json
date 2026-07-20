@@ -26,7 +26,15 @@
   "desktop": {
     "open": "打开",
     "refresh": "刷新",
-    "settings": "设置"
+    "settings": "设置",
+    "newFolder": "新建文件夹",
+    "newFolderName": "新建文件夹",
+    "rename": "重命名",
+    "renameTitle": "重命名",
+    "renameHint": "请输入新的文件夹名称。",
+    "renameLabel": "名称",
+    "renameEmpty": "名称不能为空",
+    "renameDuplicate": "已存在同名文件夹"
   },
   "startMenu": {
     "brand": "Avery Mini App",
@@ -59,6 +67,12 @@
     "restore": "还原",
     "close": "关闭",
     "minimizeAllHint": "双击空白处最小化全部窗口"
+  },
+  "folder": {
+    "untitled": "文件夹",
+    "hint": "文件夹窗口（内容放置功能稍后支持）。",
+    "empty": "此文件夹为空",
+    "status": "{name}"
   },
   "theme": {
     "toLight": "切换到浅色主题",

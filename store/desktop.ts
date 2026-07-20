@@ -1,11 +1,11 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
+import { type DesktopAppId, type DesktopCoordinate } from '@/config/desktop'
 import {
   createDefaultCoordinates,
-  DESKTOP_APP_DEFINITIONS,
-  type DesktopAppId,
-  type DesktopCoordinate,
-} from '@/config/desktop'
+  getDesktopAppDefinitionsSnapshot,
+  registerDesktopCoordController,
+} from '@/lib/desktop/window'
 import { resolveOverlaps } from '@/lib/desktop'
 import { STORAGE_KEYS, appStorage, migrateLegacyDesktopPersist } from '@/lib/storage'
 
@@ -19,28 +19,34 @@ interface DesktopState {
 interface DesktopActions {
   setHasHydrated: (value: boolean) => void
   updateCoordinates: (updates: Array<{ id: DesktopAppId; coordinate: DesktopCoordinate }>) => void
+  ensureCoordinate: (id: DesktopAppId, coordinate: DesktopCoordinate) => void
+  removeCoordinate: (id: DesktopAppId) => void
 }
 
 export type DesktopStore = DesktopState & DesktopActions
 
 function withUniqueCoordinates(coordinates: CoordinatesMap): CoordinatesMap {
   const unique = resolveOverlaps(new Map(Object.entries(coordinates) as [DesktopAppId, DesktopCoordinate][]))
-  return Object.fromEntries(
-    DESKTOP_APP_DEFINITIONS.map((app) => [app.id, unique.get(app.id) ?? coordinates[app.id] ?? app.defaultCoordinate]),
-  ) as CoordinatesMap
+  return Object.fromEntries([...unique.entries()]) as CoordinatesMap
 }
 
 function mergeCoordinates(
   saved?: Partial<Record<DesktopAppId, DesktopCoordinate>>,
 ): CoordinatesMap {
   const defaults = createDefaultCoordinates()
-  if (!saved) return withUniqueCoordinates(defaults)
-  return withUniqueCoordinates({
-    ...defaults,
-    ...Object.fromEntries(
-      Object.entries(saved).filter(([, coord]) => Array.isArray(coord) && coord.length === 2),
-    ),
-  } as CoordinatesMap)
+  const defs = getDesktopAppDefinitionsSnapshot()
+  const merged: CoordinatesMap = { ...defaults }
+  for (const def of defs) {
+    if (!merged[def.id]) merged[def.id] = [...def.defaultCoordinate] as DesktopCoordinate
+  }
+  if (saved) {
+    for (const [id, coord] of Object.entries(saved)) {
+      if (Array.isArray(coord) && coord.length === 2) {
+        merged[id] = coord as DesktopCoordinate
+      }
+    }
+  }
+  return withUniqueCoordinates(merged)
 }
 
 export const useDesktopStore = create<DesktopStore>()(
@@ -67,6 +73,32 @@ export const useDesktopStore = create<DesktopStore>()(
           }),
         )
       },
+
+      ensureCoordinate: (id, coordinate) => {
+        set((state) => {
+          if (state.coordinates[id]) {
+            return {
+              coordinates: withUniqueCoordinates({
+                ...state.coordinates,
+              }),
+            }
+          }
+          return {
+            coordinates: withUniqueCoordinates({
+              ...state.coordinates,
+              [id]: coordinate,
+            }),
+          }
+        })
+      },
+
+      removeCoordinate: (id) => {
+        set((state) => {
+          if (!state.coordinates[id]) return state
+          const { [id]: _removed, ...rest } = state.coordinates
+          return { coordinates: withUniqueCoordinates(rest as CoordinatesMap) }
+        })
+      },
     }),
     {
       name: STORAGE_KEYS.coordinates,
@@ -90,3 +122,8 @@ export const useDesktopStore = create<DesktopStore>()(
     },
   ),
 )
+
+registerDesktopCoordController({
+  ensureCoordinate: (id, coordinate) => useDesktopStore.getState().ensureCoordinate(id, coordinate),
+  removeCoordinate: (id) => useDesktopStore.getState().removeCoordinate(id),
+})

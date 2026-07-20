@@ -1,12 +1,12 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
+import type { DesktopAppId, DesktopWindowRuntime, WindowBounds } from '@/config/desktop'
+import { DEFAULT_WINDOW_RUNTIME } from '@/config/desktop'
 import {
   createDefaultWindows,
-  getAppDefinition,
-  type DesktopAppId,
-  type DesktopWindowRuntime,
-  type WindowBounds,
-} from '@/config/desktop'
+  getDesktopWindow,
+  registerWindowController,
+} from '@/lib/desktop/window'
 import { STORAGE_KEYS, appStorage, migrateLegacyDesktopPersist } from '@/lib/storage'
 
 const WINDOW_Z_BASE = 1000
@@ -33,6 +33,10 @@ interface WindowActions {
   updateWindowBounds: (id: DesktopAppId, bounds: WindowBounds) => void
   focusWindow: (id: DesktopAppId) => void
   handleTaskbarClick: (id: DesktopAppId) => void
+  /** 动态注册时确保有运行时槽位 */
+  ensureWindow: (id: DesktopAppId) => void
+  /** 动态注销时移除运行时槽位 */
+  removeWindow: (id: DesktopAppId) => void
 }
 
 export type WindowStore = WindowState & WindowActions
@@ -114,10 +118,11 @@ function mergeWindows(
   saved?: Partial<Record<DesktopAppId, Partial<DesktopWindowRuntime>>>,
 ): WindowsMap {
   const defaults = createDefaultWindows()
-  if (!saved) return defaults
+  const ids = new Set<string>([...Object.keys(defaults), ...Object.keys(saved ?? {})])
   return Object.fromEntries(
-    Object.entries(defaults).map(([id, fallback]) => {
-      const s = saved[id as DesktopAppId]
+    [...ids].map((id) => {
+      const fallback = defaults[id] ?? { ...DEFAULT_WINDOW_RUNTIME }
+      const s = saved?.[id]
       if (!s) return [id, fallback]
       return [
         id,
@@ -134,15 +139,14 @@ function mergeWindows(
   ) as WindowsMap
 }
 
-/** 重置开关状态时保留各窗记忆几何 */
+/** 重置开关状态时保留各窗记忆几何（含动态窗口） */
 function resetOpenStateKeepBounds(windows: WindowsMap): WindowsMap {
-  const defaults = createDefaultWindows()
   return Object.fromEntries(
-    Object.entries(defaults).map(([id, fallback]) => [
+    Object.entries(windows).map(([id, w]) => [
       id,
       {
-        ...fallback,
-        bounds: windows[id as DesktopAppId]?.bounds ?? null,
+        ...DEFAULT_WINDOW_RUNTIME,
+        bounds: w.bounds ?? null,
       },
     ]),
   ) as WindowsMap
@@ -167,7 +171,9 @@ export const useWindowStore = create<WindowStore>()(
       setHasHydrated: (value) => set({ _hasHydrated: value }),
 
       openWindow: (id) => {
-        if (!getAppDefinition(id)?.app) return
+        const deskWin = getDesktopWindow(id)
+        if (!deskWin?.app) return
+        if (!deskWin.onBeforeOpen()) return
         const { windows, topZIndex, nextOpenOrder } = get()
         const nextZ = getNextZ(windows, topZIndex)
         const wasClosed = !windows[id]?.isOpen
@@ -181,12 +187,15 @@ export const useWindowStore = create<WindowStore>()(
             ...(wasClosed ? { openOrder } : {}),
           }),
         })
+        deskWin.onAfterOpen()
       },
 
       closeWindow: (id) => {
         const { windows } = get()
         const target = windows[id]
         if (!target) return
+        const deskWin = getDesktopWindow(id)
+        if (deskWin && !deskWin.onBeforeClose()) return
 
         // 关闭时保留 bounds，供下次打开恢复
         let next = patchWindow(windows, id, {
@@ -200,6 +209,7 @@ export const useWindowStore = create<WindowStore>()(
           next = activateNext(next, id)
         }
         set({ windows: next })
+        deskWin?.onAfterClose()
       },
 
       closeAllWindows: () => {
@@ -223,12 +233,15 @@ export const useWindowStore = create<WindowStore>()(
         const { windows } = get()
         const target = windows[id]
         if (!target?.isOpen) return
+        const deskWin = getDesktopWindow(id)
+        if (deskWin && !deskWin.onBeforeMinimize()) return
 
         let next = patchWindow(windows, id, { minimized: true, active: false })
         if (target.active) {
           next = activateNext(next, id)
         }
         set({ windows: next })
+        deskWin?.onAfterMinimize()
       },
 
       minimizeAllWindows: () => {
@@ -278,6 +291,19 @@ export const useWindowStore = create<WindowStore>()(
         }
         focusWindow(id)
       },
+
+      ensureWindow: (id) => {
+        const { windows } = get()
+        if (windows[id]) return
+        set({ windows: { ...windows, [id]: { ...DEFAULT_WINDOW_RUNTIME } } })
+      },
+
+      removeWindow: (id) => {
+        const { windows } = get()
+        if (!windows[id]) return
+        const { [id]: _removed, ...rest } = windows
+        set({ windows: rest as WindowsMap })
+      },
     }),
     {
       name: STORAGE_KEYS.windows,
@@ -316,3 +342,14 @@ export const useWindowStore = create<WindowStore>()(
     },
   ),
 )
+
+registerWindowController({
+  openWindow: (id) => useWindowStore.getState().openWindow(id),
+  closeWindow: (id) => useWindowStore.getState().closeWindow(id),
+  minimizeWindow: (id) => useWindowStore.getState().minimizeWindow(id),
+  focusWindow: (id) => useWindowStore.getState().focusWindow(id),
+  getRuntime: (id) => useWindowStore.getState().windows[id],
+  ensureWindow: (id) => useWindowStore.getState().ensureWindow(id),
+  removeWindow: (id) => useWindowStore.getState().removeWindow(id),
+})
+

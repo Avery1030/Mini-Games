@@ -1,48 +1,26 @@
 import type { ComponentType } from 'react'
-import {
-  UserPlus,
-  Castle,
-  Gift,
-  ChartColumnBig,
-  Store,
-  Gamepad,
-  Gamepad2,
-  Building2,
-  Wrench,
-  BookOpenText,
-  Rose,
-  Mail,
-  Notebook,
-  FileText,
-  Palette,
-  Settings,
-  Music,
-  Calculator,
-} from 'lucide-react'
-import { Minesweeper } from '@/features/minesweeper'
-import { Tetris } from '@/features/tetris'
-import { Music as MusicApp } from '@/features/music'
-import { SettingsApp } from '@/features/settings'
-import { DocumentApp } from '@/features/document'
-import { LogApp } from '@/features/log'
-import { NotepadApp } from '@/features/notepad'
-import { PaintApp } from '@/features/paint'
-import { CalculatorApp } from '@/features/calculator'
-import {
-  ReferralApp,
-  BridgeApp,
-  ClaimApp,
-  StakeApp,
-  MarketApp,
-  GovernanceApp,
-  FoundryApp,
-  DonationApp,
-  EmailApp,
-} from '@/features/demo'
 import { apps } from '@/messages/zh-CN.json'
 
-export type DesktopAppId = keyof typeof apps
+/** 内置应用 id（与 messages.apps 对齐） */
+export type BuiltinAppId = keyof typeof apps
+
+/**
+ * 桌面图标 / 窗口 id。
+ * 内置为 BuiltinAppId；动态项（如文件夹）为运行时字符串（folder_xxx）。
+ */
+export type DesktopAppId = BuiltinAppId | (string & {})
+
 export type DesktopCoordinate = [number, number]
+
+export type DesktopItemKind = 'app' | 'folder'
+
+/** 窗口铬行为：子类可通过 DesktopWindow.chrome 覆盖 */
+export type WindowChromeOptions = {
+  draggable: boolean
+  resizable: boolean
+  minimizable: boolean
+  maximizable: boolean
+}
 
 /** 静态定义：图标、默认格点、窗口组件等（不进 persist） */
 export interface DesktopAppDefinition {
@@ -58,6 +36,12 @@ export interface DesktopAppDefinition {
   app?: ComponentType<{ embedded?: boolean }>
   width?: number
   height?: number
+  chrome?: WindowChromeOptions
+  /** 运行时标题；有则优先于 i18n `apps.*` */
+  title?: string
+  kind?: DesktopItemKind
+  /** 是否出现在开始菜单「程序」里；文件夹默认 false */
+  showInStartMenu?: boolean
 }
 
 /** 窗口上次正常态几何（最大化时仍记还原用坐标/宽高） */
@@ -98,168 +82,15 @@ export const DEFAULT_WINDOW_RUNTIME: DesktopWindowRuntime = {
   bounds: null,
 }
 
-export const DESKTOP_APP_DEFINITIONS: DesktopAppDefinition[] = [
-  {
-    id: 'referral',
-    icon: UserPlus,
-    defaultCoordinate: [1, 1],
-    width: 440,
-    height: 360,
-    app: ReferralApp,
-  },
-  {
-    id: 'bridge',
-    icon: Castle,
-    defaultCoordinate: [1, 2],
-    width: 440,
-    height: 360,
-    app: BridgeApp,
-  },
-  {
-    id: 'claim',
-    icon: Gift,
-    defaultCoordinate: [1, 3],
-    width: 440,
-    height: 360,
-    app: ClaimApp,
-  },
-  {
-    id: 'stake',
-    icon: ChartColumnBig,
-    defaultCoordinate: [1, 4],
-    width: 440,
-    height: 360,
-    app: StakeApp,
-  },
-  {
-    id: 'market',
-    icon: Store,
-    defaultCoordinate: [1, 5],
-    width: 520,
-    height: 400,
-    app: MarketApp,
-  },
-  {
-    id: 'minesweeper',
-    icon: Gamepad,
-    defaultCoordinate: [1, 6],
-    width: 420,
-    height: 560,
-    app: Minesweeper,
-  },
-  {
-    id: 'tetris',
-    icon: Gamepad2,
-    defaultCoordinate: [1, 7],
-    width: 560,
-    height: 640,
-    app: Tetris,
-  },
-  {
-    id: 'governance',
-    icon: Building2,
-    defaultCoordinate: [2, 1],
-    width: 440,
-    height: 360,
-    app: GovernanceApp,
-  },
-  {
-    id: 'foundry',
-    icon: Wrench,
-    defaultCoordinate: [2, 2],
-    width: 440,
-    height: 360,
-    app: FoundryApp,
-  },
-  {
-    id: 'document',
-    icon: BookOpenText,
-    defaultCoordinate: [2, 3],
-    width: 520,
-    height: 420,
-    app: DocumentApp,
-  },
-  {
-    id: 'donation',
-    icon: Rose,
-    defaultCoordinate: [2, 4],
-    width: 440,
-    height: 360,
-    app: DonationApp,
-  },
-  {
-    id: 'email',
-    icon: Mail,
-    defaultCoordinate: [2, 5],
-    width: 520,
-    height: 420,
-    app: EmailApp,
-  },
-  {
-    id: 'log',
-    icon: Notebook,
-    defaultCoordinate: [2, 6],
-    width: 520,
-    height: 420,
-    app: LogApp,
-  },
-  {
-    id: 'notepad',
-    icon: FileText,
-    defaultCoordinate: [3, 1],
-    width: 560,
-    height: 460,
-    app: NotepadApp,
-  },
-  {
-    id: 'paint',
-    icon: Palette,
-    defaultCoordinate: [3, 2],
-    width: 720,
-    height: 560,
-    app: PaintApp,
-  },
-  {
-    id: 'settings',
-    icon: Settings,
-    defaultCoordinate: [2, 7],
-    width: 560,
-    height: 520,
-    app: SettingsApp,
-  },
-  {
-    id: 'music',
-    icon: Music,
-    defaultCoordinate: [2, 8],
-    width: 420,
-    height: 620,
-    app: MusicApp,
-  },
-  {
-    id: 'calculator',
-    icon: Calculator,
-    defaultCoordinate: [3, 3],
-    width: 320,
-    height: 440,
-    app: CalculatorApp,
-  },
-]
-
-const definitionMap = new Map(DESKTOP_APP_DEFINITIONS.map((app) => [app.id, app]))
-
-export function getAppDefinition(id: DesktopAppId): DesktopAppDefinition | undefined {
-  return definitionMap.get(id)
+export const DEFAULT_WINDOW_CHROME: WindowChromeOptions = {
+  draggable: true,
+  resizable: true,
+  minimizable: true,
+  maximizable: true,
 }
 
-export function createDefaultWindows(): Record<DesktopAppId, DesktopWindowRuntime> {
-  return Object.fromEntries(DESKTOP_APP_DEFINITIONS.map((app) => [app.id, { ...DEFAULT_WINDOW_RUNTIME }])) as Record<
-    DesktopAppId,
-    DesktopWindowRuntime
-  >
-}
+const BUILTIN_APP_IDS = new Set(Object.keys(apps))
 
-export function createDefaultCoordinates(): Record<DesktopAppId, DesktopCoordinate> {
-  return Object.fromEntries(
-    DESKTOP_APP_DEFINITIONS.map((app) => [app.id, [...app.defaultCoordinate] as DesktopCoordinate]),
-  ) as Record<DesktopAppId, DesktopCoordinate>
+export function isBuiltinAppId(id: string): id is BuiltinAppId {
+  return BUILTIN_APP_IDS.has(id)
 }

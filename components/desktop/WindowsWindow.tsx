@@ -10,7 +10,8 @@ import {
   WinMinimizeIcon,
   WinRestoreIcon,
 } from '@/components/ui/WindowChromeIcons'
-import type { WindowBounds } from '@/config/desktop'
+import type { WindowBounds, WindowChromeOptions } from '@/config/desktop'
+import { DEFAULT_WINDOW_CHROME } from '@/config/desktop'
 import { RESIZE_HANDLES, maximizedSize, resolveDockPose, type ResizeEdge } from '@/lib/desktop/windowGeometry'
 import { useWindowGeometry } from '@/hooks/desktop/useWindowGeometry'
 import { useWindowDockAnim } from '@/hooks/desktop/useWindowDockAnim'
@@ -32,11 +33,14 @@ export interface WindowsWindowProps {
   width?: number
   height?: number
   draggable?: boolean
+  resizable?: boolean
+  maximizable?: boolean
   isActive?: boolean
   zIndex?: number
   onFocus?: () => void
   /** 拖拽/缩放/最大化结束后写入 store */
   onBoundsChange?: (bounds: WindowBounds) => void
+  chrome?: Partial<WindowChromeOptions>
 }
 
 /**
@@ -54,24 +58,32 @@ export function WindowsWindow({
   defaultPosition,
   width: initialWidth = 400,
   height: initialHeight = 320,
-  draggable = true,
+  draggable: draggableProp,
+  resizable: resizableProp,
+  maximizable: maximizableProp,
   isActive = false,
   zIndex = 1000,
   onFocus,
   onBoundsChange,
+  chrome: chromeProp,
 }: WindowsWindowProps) {
   const t = useTranslations('window')
+  const chrome = { ...DEFAULT_WINDOW_CHROME, ...chromeProp }
+  const draggable = draggableProp ?? chrome.draggable
+  const resizable = resizableProp ?? chrome.resizable
+  const maximizable = maximizableProp ?? chrome.maximizable
+  const minimizable = onMinimize != null && chrome.minimizable
 
   const geometry = useWindowGeometry({
     rememberedBounds,
     defaultPosition,
-    defaultMaximized,
+    defaultMaximized: maximizable ? defaultMaximized : false,
     width: initialWidth,
     height: initialHeight,
     draggable,
     onBoundsChange,
     onClose,
-    onMinimize,
+    onMinimize: minimizable ? onMinimize : undefined,
   })
 
   const initialDockPose =
@@ -126,6 +138,7 @@ export function WindowsWindow({
       style={{ ...frameStyle, zIndex }}
     >
       {!geometry.maximized &&
+        resizable &&
         RESIZE_HANDLES.map(({ edge, className, cursor }) => (
           <div
             key={edge}
@@ -147,7 +160,7 @@ export function WindowsWindow({
         >
           <span className='text-[var(--window-title-text)] text-sm font-bold pl-2 truncate'>{title}</span>
           <div className='flex items-stretch shrink-0'>
-            {onMinimize != null && (
+            {minimizable && (
               <Button
                 variant='title'
                 size='icon-sm'
@@ -161,18 +174,20 @@ export function WindowsWindow({
                 <WinMinimizeIcon />
               </Button>
             )}
-            <Button
-              variant='title'
-              size='icon-sm'
-              disabled={chromeBusy}
-              onClick={(e) => {
-                e.stopPropagation()
-                handleMaximize()
-              }}
-              aria-label={geometry.maximized ? t('restore') : t('maximize')}
-            >
-              {geometry.maximized ? <WinRestoreIcon /> : <WinMaximizeIcon />}
-            </Button>
+            {maximizable && (
+              <Button
+                variant='title'
+                size='icon-sm'
+                disabled={chromeBusy}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleMaximize()
+                }}
+                aria-label={geometry.maximized ? t('restore') : t('maximize')}
+              >
+                {geometry.maximized ? <WinRestoreIcon /> : <WinMaximizeIcon />}
+              </Button>
+            )}
             <Button
               variant='title'
               size='icon-sm'

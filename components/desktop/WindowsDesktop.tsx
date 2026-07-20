@@ -9,6 +9,9 @@ import { ContextMenu, type ContextMenuState } from '@/components/ui'
 import type { DesktopAppId } from '@/config/desktop'
 import { useDesktopWallpaper } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
+import { useDesktopItemsStore } from '@/store/desktopItems'
+import { resolveDesktopItemTitle } from '@/lib/desktop/window'
+import { promptRenameFolder } from './promptRenameFolder'
 
 /**
  * 桌面编排：壁纸 + 图标层 + 窗口层 + 任务栏 + 右键菜单。
@@ -16,12 +19,25 @@ import { useWindowStore } from '@/store/window'
  */
 export function WindowsDesktop() {
   const td = useTranslations('desktop')
+  const tApps = useTranslations('apps')
   const desktopBgStyle = useDesktopWallpaper()
   const openWindow = useWindowStore((s) => s.openWindow)
+  const createFolder = useDesktopItemsStore((s) => s.createFolder)
+  const renameFolder = useDesktopItemsStore((s) => s.renameFolder)
   const desktopIcons = useVisibleDesktopIcons()
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
 
   const closeContextMenu = () => setContextMenu(null)
+
+  const handleRenameFolder = async (folderId: DesktopAppId, currentTitle: string) => {
+    const next = await promptRenameFolder({
+      currentName: currentTitle,
+      title: td('renameTitle'),
+      folderId,
+    })
+    if (next == null || next === currentTitle.trim()) return
+    renameFolder(folderId, next)
+  }
 
   const handleDesktopContextMenu = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -32,6 +48,8 @@ export function WindowsDesktop() {
     const iconId = (iconEl?.dataset.desktopIcon ?? null) as DesktopAppId | null
     const app = iconId ? desktopIcons.find((a) => a.id === iconId) : undefined
     const canOpen = Boolean(app?.app)
+    const onBlank = !iconId
+    const isFolder = app?.kind === 'folder'
 
     setContextMenu({
       x: e.clientX,
@@ -45,6 +63,28 @@ export function WindowsDesktop() {
             if (iconId && canOpen) openWindow(iconId)
           },
         },
+        ...(isFolder && iconId && app
+          ? [
+              {
+                id: 'rename',
+                label: td('rename'),
+                onSelect: () => {
+                  void handleRenameFolder(iconId, resolveDesktopItemTitle(app, tApps))
+                },
+              },
+            ]
+          : []),
+        ...(onBlank
+          ? [
+              {
+                id: 'newFolder',
+                label: td('newFolder'),
+                onSelect: () => {
+                  createFolder({ title: td('newFolderName') })
+                },
+              },
+            ]
+          : []),
         {
           id: 'refresh',
           label: td('refresh'),

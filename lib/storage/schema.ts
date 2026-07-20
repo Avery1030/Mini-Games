@@ -130,6 +130,16 @@ export type DemoAppsPersistState = {
   emailDrafts: DemoEmailDraft[]
 }
 
+export type DesktopFolderPersist = {
+  id: string
+  title: string
+  createdAt: number
+}
+
+export type DesktopItemsPersistState = {
+  folders: DesktopFolderPersist[]
+}
+
 /**
  * 每个 key 对应的「语义值」类型。
  * - theme：纯字符串
@@ -147,6 +157,7 @@ export type StorageSchema = {
   [STORAGE_KEYS.lock]: ZustandPersistEnvelope<LockPersistState>
   [STORAGE_KEYS.calendar]: ZustandPersistEnvelope<CalendarPersistState>
   [STORAGE_KEYS.demoApps]: ZustandPersistEnvelope<DemoAppsPersistState>
+  [STORAGE_KEYS.desktopItems]: ZustandPersistEnvelope<DesktopItemsPersistState>
 }
 
 /** 以 JSON 读写的 key（不含 theme） */

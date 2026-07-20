@@ -1,12 +1,17 @@
 'use client'
 
-import { useEffect, useRef, useState, type ComponentType } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ComponentType } from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { winChrome } from '@/lib/winChrome'
 import { confirmModal, alertModal } from '@/components/ui'
-import { DESKTOP_APP_DEFINITIONS, type DesktopAppId } from '@/config/desktop'
+import { type DesktopAppId } from '@/config/desktop'
+import {
+  getDesktopAppDefinitionsSnapshot,
+  resolveDesktopItemTitle,
+  subscribeDesktopRegistry,
+} from '@/lib/desktop/window'
 import { useWindowStore } from '@/store/window'
 import { useLockStore } from '@/store/lock'
 import { promptSessionLockPassword } from './promptSessionLock'
@@ -26,8 +31,6 @@ type MenuItemProps = {
   onClick?: () => void
   onMouseEnter?: () => void
 }
-
-const LAUNCHABLE = DESKTOP_APP_DEFINITIONS.filter((app) => app.app)
 
 function MenuItem({ icon: Icon, label, shortcut, hasSubmenu, active, onClick, onMouseEnter }: MenuItemProps) {
   return (
@@ -62,11 +65,22 @@ function MenuSeparator() {
  */
 export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
   const t = useTranslations()
+  const tApps = useTranslations('apps')
   const ts = useTranslations('startMenu')
   const closeAllWindows = useWindowStore((s) => s.closeAllWindows)
   const lockWithPassword = useLockStore((s) => s.lockWithPassword)
   const rootRef = useRef<HTMLDivElement>(null)
   const [programsOpen, setProgramsOpen] = useState(false)
+
+  const definitions = useSyncExternalStore(
+    subscribeDesktopRegistry,
+    getDesktopAppDefinitionsSnapshot,
+    getDesktopAppDefinitionsSnapshot,
+  )
+  const launchable = useMemo(
+    () => definitions.filter((app) => app.app && app.showInStartMenu !== false),
+    [definitions],
+  )
 
   useEffect(() => {
     if (!open) {
@@ -179,11 +193,15 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
                 'absolute left-full top-0 z-[1] min-w-[180px] max-h-[min(420px,calc(100vh-56px))] overflow-y-auto overflow-x-hidden py-1 shadow-[2px_2px_0_rgba(0,0,0,0.35)]',
               )}
             >
-              {LAUNCHABLE.map((app) => {
+              {launchable.map((app) => {
                 const Icon = app.icon
                 return (
                   <li key={app.id} role='none'>
-                    <MenuItem icon={Icon} label={t(`apps.${app.id}`)} onClick={() => launch(app.id)} />
+                    <MenuItem
+                      icon={Icon}
+                      label={resolveDesktopItemTitle(app, tApps)}
+                      onClick={() => launch(app.id)}
+                    />
                   </li>
                 )
               })}

@@ -1,5 +1,6 @@
 export { useDesktopStore } from './desktop'
 export { useWindowStore } from './window'
+export { useDesktopItemsStore } from './desktopItems'
 export { useSettingsStore, patchSettings, type SettingsPatch } from './settings'
 export { useNotepadStore } from './notepad'
 export { usePaintStore } from './paint'
