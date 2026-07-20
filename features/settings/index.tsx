@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
-import { Panel } from '@/components/ui'
+import { Panel, SplitPane } from '@/components/ui'
 import {
   CUSTOM_WALLPAPER_ID,
   getWallpaperLabel,
@@ -135,60 +135,64 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
         !embedded && 'p-4',
       )}
     >
-      <Panel padded={false} className='w-[108px] shrink-0 flex flex-col overflow-hidden m-2 mr-0'>
-        <div className='px-2 py-1.5 text-[11px] font-bold border-b border-chrome-dark'>{t('title')}</div>
-        <ul className='flex-1 overflow-y-auto p-1'>
-          {SETTINGS_SECTIONS.map((id) => {
-            const selected = id === section
-            return (
-              <li key={id}>
-                <button
-                  type='button'
-                  className={cn(
-                    'w-full text-left px-2 py-1.5 text-[11px]',
-                    selected
-                      ? 'bg-[var(--window-title-active)] text-[var(--window-title-text)]'
-                      : 'hover:bg-chrome-hover',
-                  )}
-                  onClick={() => setSection(id)}
-                >
-                  {t(`sections.${id}`)}
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      </Panel>
+      <div className='flex-1 min-h-0 flex m-2'>
+        <SplitPane defaultSize={108} minSize={88} maxSize={200} storageKey='split:settings'>
+          <Panel padded={false} className='h-full min-h-0 flex flex-col overflow-hidden'>
+            <div className='px-2 py-1.5 text-[11px] font-bold border-b border-chrome-dark'>{t('title')}</div>
+            <ul className='flex-1 overflow-y-auto p-1'>
+              {SETTINGS_SECTIONS.map((id) => {
+                const selected = id === section
+                return (
+                  <li key={id}>
+                    <button
+                      type='button'
+                      className={cn(
+                        'w-full text-left px-2 py-1.5 text-[11px]',
+                        selected
+                          ? 'bg-[var(--window-title-active)] text-[var(--window-title-text)]'
+                          : 'hover:bg-chrome-hover',
+                      )}
+                      onClick={() => setSection(id)}
+                    >
+                      {t(`sections.${id}`)}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          </Panel>
 
-      <div className='flex-1 min-w-0 min-h-0 flex flex-col'>
-        {section === 'display' && (
-          <DisplaySection
-            embedded={embedded}
-            draft={draft}
-            draftLabel={draftLabel}
-            dirty={dirty}
-            gallery={gallery}
-            uploading={uploading}
-            uploadError={uploadError}
-            importUrl={importUrl}
-            importError={importError}
-            inputRef={inputRef}
-            onDraftChange={setDraft}
-            onPickFile={onPickFile}
-            onImportLink={onImportLink}
-            onImportUrlChange={setImportUrl}
-            onRemoveGalleryItem={(id, url) => {
-              useSettingsStore.getState().removeFromWallpaperGallery(id)
-              if (draft.kind === 'custom' && draft.url === url) {
-                setDraft({ kind: 'preset', id: 'classic-teal' })
-              }
-            }}
-            onApply={onApplyWallpaper}
-          />
-        )}
-        {section === 'appearance' && <AppearanceSection />}
-        {section === 'taskbar' && <TaskbarSection />}
-        {section === 'desktop' && <DesktopIconsSection />}
+          <div className='h-full min-h-0 min-w-0 flex flex-col overflow-hidden'>
+            {section === 'display' && (
+              <DisplaySection
+                embedded={embedded}
+                draft={draft}
+                draftLabel={draftLabel}
+                dirty={dirty}
+                gallery={gallery}
+                uploading={uploading}
+                uploadError={uploadError}
+                importUrl={importUrl}
+                importError={importError}
+                inputRef={inputRef}
+                onDraftChange={setDraft}
+                onPickFile={onPickFile}
+                onImportLink={onImportLink}
+                onImportUrlChange={setImportUrl}
+                onRemoveGalleryItem={(id, url) => {
+                  useSettingsStore.getState().removeFromWallpaperGallery(id)
+                  if (draft.kind === 'custom' && draft.url === url) {
+                    setDraft({ kind: 'preset', id: 'classic-teal' })
+                  }
+                }}
+                onApply={onApplyWallpaper}
+              />
+            )}
+            {section === 'appearance' && <AppearanceSection />}
+            {section === 'taskbar' && <TaskbarSection />}
+            {section === 'desktop' && <DesktopIconsSection />}
+          </div>
+        </SplitPane>
       </div>
     </div>
   )

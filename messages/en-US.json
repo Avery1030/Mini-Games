@@ -210,11 +210,19 @@
         "Music: demo tracks plus Audius search; for popular copyrighted songs, import local files.",
         "Settings: display, appearance, taskbar, and desktop options.",
         "Document: the window you are reading. Offline content, no annotations saved.",
-        "Log: dated release notes for the desktop and apps — double-click the Log icon to open.",
+        "Log: dated release notes — open the Log icon; Document also shows a short recent summary.",
         "Notepad: create, edit, and delete plain-text notes under .data on this machine. Supports titles, word wrap, and Ctrl/⌘+S.",
         "Paint: canvas doodling with palette, eraser, and shapes; works saved as PNG under .data/drawings.",
         "Calculator: open from Start or the desktop. Supports arithmetic, parentheses, powers, square root, and simple memory keys."
       ]
+    },
+    "changelog": {
+      "title": "What's new",
+      "intro": [
+        "Here are the latest updates. Open the Log app on the desktop for the full history.",
+        "Dates are formatted with Intl from ISO keys (YYYY-MM-DD) — no hard-coded locale date strings."
+      ],
+      "more": "For older entries, double-click the Log icon on the desktop."
     },
     "about": {
       "title": "About",
@@ -223,7 +231,7 @@
         "Vibe: Win95 nostalgia shell + a bit of modern web",
         "Fonts: aiming for that classic dialog sans-serif feel",
         "Notice: wallpapers, music, and copy here are for demo and personal fun. Respect copyright.",
-        "Version note: open the Log window for release history; Document stays a read-only booklet."
+        "Version note: see What's new and the Log window; source of truth is content/changelog.ts."
       ]
     }
   },
@@ -294,9 +302,19 @@
   "changelog": {
     "toc": "Versions",
     "footer": "Changelog · {count} entries · Current: {title}",
+    "2026-07-21": {
+      "title": "Toast, snap & desktop polish",
+      "items": [
+        "Global toasts for success / error / warning, slide in from the top-right, up to 10 at once.",
+        "Notepad CRUD feedback now uses toasts.",
+        "Desktop context menu: Arrange Icons — pack left or right, column-first.",
+        "Soft window edge snap (screen and other windows) for restored windows; drag farther to leave the edge; maximized windows ignored.",
+        "Folders (create/rename) and window OOP cleanup; removed the wallpaper-dimming overlay when apps are open.",
+        "Changelog dates are ISO + Intl formatting — no hard-coded display dates in copy."
+      ]
+    },
     "2026-07-19": {
       "title": "Theme, structure & Notepad",
-      "date": "July 19, 2026",
       "items": [
         "Fixed light/dark theme glitches in Settings panels, Document body, and status bars.",
         "Theme colors now use CSS variables; Tailwind dark: variants follow next-themes class strategy.",
@@ -309,7 +327,6 @@
     },
     "2026-07-18": {
       "title": "Settings, clock & i18n",
-      "date": "July 18, 2026",
       "items": [
         "Settings expanded into Display, Appearance, Taskbar, and Desktop sections.",
         "Added icon size, label visibility, placeholder icons, taskbar clock, and tray decor options.",
@@ -320,7 +337,6 @@
     },
     "2026-07-16": {
       "title": "Music & UI kit",
-      "date": "July 16, 2026",
       "items": [
         "Music app gained playlist, seek bar, repeat, and shuffle.",
         "Audius open-catalog search; import local files for popular copyrighted tracks.",
@@ -330,7 +346,6 @@
     },
     "2026-07-12": {
       "title": "Desktop v1",
-      "date": "July 12, 2026",
       "items": [
         "Win95-style desktop: draggable icons, stacked windows, and a taskbar.",
         "Built-in Minesweeper and Tetris.",

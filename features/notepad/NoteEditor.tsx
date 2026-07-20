@@ -34,14 +34,14 @@ export function NoteEditor({
 
   if (disabled) {
     return (
-      <Panel inset className='flex-1 min-w-0 min-h-0 flex items-center justify-center'>
+      <Panel inset className='h-full min-h-0 flex items-center justify-center'>
         <p className='text-[12px] text-muted px-4 text-center'>{t('selectOrCreate')}</p>
       </Panel>
     )
   }
 
   return (
-    <Panel inset className='flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden !p-2'>
+    <Panel inset className='h-full min-h-0 flex flex-col overflow-hidden !p-2'>
       <div className='shrink-0 flex items-center gap-2 mb-2'>
         <Input
           value={title}

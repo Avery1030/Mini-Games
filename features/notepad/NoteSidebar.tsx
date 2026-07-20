@@ -42,7 +42,7 @@ export function NoteSidebar({
   const locale = useLocale()
 
   return (
-    <Panel padded={false} className='w-[168px] shrink-0 flex flex-col overflow-hidden'>
+    <Panel padded={false} className='h-full min-h-0 flex flex-col overflow-hidden'>
       <div className='px-2 py-1.5 flex items-center justify-between gap-1 border-b border-chrome-dark bg-chrome-hover/40'>
         <span className='text-[11px] font-bold truncate'>{t('notes')}</span>
         <Button

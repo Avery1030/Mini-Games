@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
-import { Button, Input, Panel, modal } from '@/components/ui'
+import { Button, Input, Panel, SplitPane, modal } from '@/components/ui'
 import { usePaintStore } from '@/store/paint'
 import {
   createDrawingApi,
@@ -256,76 +256,78 @@ export function PaintApp({ embedded = false }: PaintProps = {}) {
         !embedded && 'p-4',
       )}
     >
-      <div className={cn('flex-1 min-h-0 flex gap-2 p-2', embedded && 'p-3')}>
-        <DrawingSidebar
-          drawings={drawings}
-          activeId={activeId}
-          loading={listLoading}
-          busy={busy || saving}
-          onSelect={(id) => void openDrawing(id)}
-          onCreate={() => void onCreate()}
-          onDelete={(id) => void onDelete(id)}
-        />
+      <div className={cn('flex-1 min-h-0 flex p-2', embedded && 'p-3')}>
+        <SplitPane defaultSize={156} minSize={120} maxSize={300} storageKey='split:paint'>
+          <DrawingSidebar
+            drawings={drawings}
+            activeId={activeId}
+            loading={listLoading}
+            busy={busy || saving}
+            onSelect={(id) => void openDrawing(id)}
+            onCreate={() => void onCreate()}
+            onDelete={(id) => void onDelete(id)}
+          />
 
-        <Panel padded={false} className='flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden'>
-          {!activeId ? (
-            <div className='flex-1 flex items-center justify-center text-[12px] text-muted px-4 text-center'>
-              {t('selectOrCreate')}
-            </div>
-          ) : (
-            <>
-              <div className='shrink-0 flex items-center gap-2 px-2 py-1.5 border-b border-chrome-dark'>
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder={t('titlePlaceholder')}
-                  size='md'
-                  tone='field'
-                  className='flex-1 font-bold'
-                  aria-label={t('title')}
-                />
-                <Button
-                  size='md'
-                  className='px-3 font-bold'
-                  loading={saving}
-                  disabled={!isDirty || saving}
-                  onClick={() => void onSave()}
-                >
-                  {t('save')}
-                </Button>
+          <Panel padded={false} className='h-full min-h-0 flex flex-col overflow-hidden'>
+            {!activeId ? (
+              <div className='flex-1 flex items-center justify-center text-[12px] text-muted px-4 text-center'>
+                {t('selectOrCreate')}
               </div>
-
-              <PaintToolbar
-                tool={tool}
-                color={color}
-                brushSize={brushSize}
-                disabled={editorDisabled}
-                onToolChange={setTool}
-                onColorChange={setColor}
-                onBrushSizeChange={setBrushSize}
-                onUndo={onUndo}
-                canUndo={canUndo}
-                onClear={() => void onClear()}
-              />
-
-              <div className='relative flex-1 min-h-0 min-w-0 bg-panel-inset'>
-                {/* absolute 铺满，避免 h-full 塌缩导致画布无法按容器放大 */}
-                <div className='absolute inset-2'>
-                  <DrawingCanvas
-                    ref={canvasRef}
-                    tool={tool}
-                    color={color}
-                    brushSize={brushSize}
-                    disabled={editorDisabled}
-                    onDirty={markDirty}
-                    onCanUndoChange={setCanUndo}
-                    onBaselineRestored={() => setDirty(false)}
+            ) : (
+              <>
+                <div className='shrink-0 flex items-center gap-2 px-2 py-1.5 border-b border-chrome-dark'>
+                  <Input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder={t('titlePlaceholder')}
+                    size='md'
+                    tone='field'
+                    className='flex-1 font-bold'
+                    aria-label={t('title')}
                   />
+                  <Button
+                    size='md'
+                    className='px-3 font-bold'
+                    loading={saving}
+                    disabled={!isDirty || saving}
+                    onClick={() => void onSave()}
+                  >
+                    {t('save')}
+                  </Button>
                 </div>
-              </div>
-            </>
-          )}
-        </Panel>
+
+                <PaintToolbar
+                  tool={tool}
+                  color={color}
+                  brushSize={brushSize}
+                  disabled={editorDisabled}
+                  onToolChange={setTool}
+                  onColorChange={setColor}
+                  onBrushSizeChange={setBrushSize}
+                  onUndo={onUndo}
+                  canUndo={canUndo}
+                  onClear={() => void onClear()}
+                />
+
+                <div className='relative flex-1 min-h-0 min-w-0 bg-panel-inset'>
+                  {/* absolute 铺满，避免 h-full 塌缩导致画布无法按容器放大 */}
+                  <div className='absolute inset-2'>
+                    <DrawingCanvas
+                      ref={canvasRef}
+                      tool={tool}
+                      color={color}
+                      brushSize={brushSize}
+                      disabled={editorDisabled}
+                      onDirty={markDirty}
+                      onCanUndoChange={setCanUndo}
+                      onBaselineRestored={() => setDirty(false)}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+          </Panel>
+        </SplitPane>
       </div>
 
       <div className='shrink-0 px-3 py-1.5 border-t border-chrome-dark bg-status-bar text-[10px] text-status-bar-fg flex justify-between gap-2'>

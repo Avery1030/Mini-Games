@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
-import { modal, toast } from '@/components/ui'
+import { SplitPane, modal, toast } from '@/components/ui'
 import { useNotepadStore } from '@/store/notepad'
 import {
   createNoteApi,
@@ -204,28 +204,30 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
         !embedded && 'p-4',
       )}
     >
-      <div className={cn('flex-1 min-h-0 flex gap-2 p-2', embedded && 'p-3')}>
-        <NoteSidebar
-          notes={notes}
-          activeId={activeId}
-          loading={listLoading}
-          busy={busy || saving}
-          onSelect={(id) => void openNote(id)}
-          onCreate={() => void onCreate()}
-          onDelete={(id) => void onDelete(id)}
-        />
-        <NoteEditor
-          title={title}
-          content={content}
-          wordWrap={wordWrap}
-          dirty={dirty}
-          saving={saving}
-          disabled={!activeId}
-          onTitleChange={setTitle}
-          onContentChange={setContent}
-          onWordWrapChange={setWordWrap}
-          onSave={() => void onSave()}
-        />
+      <div className={cn('flex-1 min-h-0 flex p-2', embedded && 'p-3')}>
+        <SplitPane defaultSize={168} minSize={120} maxSize={320} storageKey='split:notepad'>
+          <NoteSidebar
+            notes={notes}
+            activeId={activeId}
+            loading={listLoading}
+            busy={busy || saving}
+            onSelect={(id) => void openNote(id)}
+            onCreate={() => void onCreate()}
+            onDelete={(id) => void onDelete(id)}
+          />
+          <NoteEditor
+            title={title}
+            content={content}
+            wordWrap={wordWrap}
+            dirty={dirty}
+            saving={saving}
+            disabled={!activeId}
+            onTitleChange={setTitle}
+            onContentChange={setContent}
+            onWordWrapChange={setWordWrap}
+            onSave={() => void onSave()}
+          />
+        </SplitPane>
       </div>
 
       <div className='shrink-0 px-3 py-1.5 border-t border-chrome-dark bg-status-bar text-[10px] text-status-bar-fg flex justify-between gap-2'>

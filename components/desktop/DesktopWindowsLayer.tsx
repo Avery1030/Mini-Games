@@ -34,16 +34,8 @@ export function DesktopWindowsLayer() {
     [hasHydrated, apps],
   )
 
-  const hasVisibleWindow = useMemo(
-    () => hasHydrated && apps.some((app) => app.isOpen && !app.minimized),
-    [hasHydrated, apps],
-  )
-
   return (
     <>
-      {hasVisibleWindow && (
-        <div className='absolute inset-0 z-[100] bg-desktop-overlay pointer-events-none' aria-hidden />
-      )}
       {openApps.map((app) => {
         if (!app.app) return null
         const App = app.app
