@@ -25,7 +25,10 @@
     "renameHint": "请输入新的文件夹名称。",
     "renameLabel": "名称",
     "renameEmpty": "名称不能为空",
-    "renameDuplicate": "已存在同名文件夹"
+    "renameDuplicate": "已存在同名文件夹",
+    "arrangeIcons": "排列图标",
+    "arrangeLeft": "靠左",
+    "arrangeRight": "靠右"
   },
   "startMenu": {
     "brand": "Avery Mini App",

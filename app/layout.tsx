@@ -1,7 +1,7 @@
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getLocale } from 'next-intl/server'
 import { ThemeProvider } from 'next-themes'
-import { ModalHost } from '@/components/ui'
+import { ModalHost, ToastHost } from '@/components/ui'
 import { STORAGE_KEYS } from '@/lib/storage'
 import './globals.css'
 
@@ -44,6 +44,7 @@ export default async function RootLayout({
           >
             {children}
             <ModalHost />
+            <ToastHost />
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>

@@ -25,7 +25,10 @@
     "renameHint": "Type a new name for this folder.",
     "renameLabel": "Name",
     "renameEmpty": "Name cannot be empty",
-    "renameDuplicate": "A folder with this name already exists"
+    "renameDuplicate": "A folder with this name already exists",
+    "arrangeIcons": "Arrange Icons",
+    "arrangeLeft": "Align Left",
+    "arrangeRight": "Align Right"
   },
   "startMenu": {
     "brand": "Avery Mini App",

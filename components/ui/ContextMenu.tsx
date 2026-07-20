@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
+import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { winChrome } from '@/lib/winChrome'
 
@@ -9,6 +10,8 @@ export type ContextMenuItem = {
   label: ReactNode
   disabled?: boolean
   onSelect?: () => void
+  /** 有子项时展示为带子菜单的项（Win95 风格向右展开） */
+  children?: ContextMenuItem[]
 }
 
 export type ContextMenuState = {
@@ -24,8 +27,88 @@ export interface ContextMenuProps {
 
 const MENU_MIN_WIDTH = 140
 
+function MenuList({
+  items,
+  onClose,
+  className,
+  style,
+  listRef,
+}: {
+  items: ContextMenuItem[]
+  onClose: () => void
+  className?: string
+  style?: CSSProperties
+  listRef?: RefObject<HTMLUListElement | null>
+}) {
+  const [openChildId, setOpenChildId] = useState<string | null>(null)
+
+  return (
+    <ul
+      ref={listRef}
+      role='menu'
+      className={cn(
+        winChrome,
+        'min-w-[140px] p-0.5 shadow-[2px_2px_0_rgba(0,0,0,0.35)] font-pixel',
+        className,
+      )}
+      style={style}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      {items.map((item) => {
+        const hasChildren = Boolean(item.children?.length)
+        const open = openChildId === item.id
+
+        return (
+          <li
+            key={item.id}
+            role='none'
+            className='relative'
+            onMouseEnter={() => {
+              if (hasChildren && !item.disabled) setOpenChildId(item.id)
+              else setOpenChildId(null)
+            }}
+          >
+            <button
+              type='button'
+              role='menuitem'
+              aria-haspopup={hasChildren || undefined}
+              aria-expanded={hasChildren ? open : undefined}
+              disabled={item.disabled}
+              className={cn(
+                'w-full flex items-center gap-2 text-left px-3 py-1 text-[12px] outline-none',
+                item.disabled
+                  ? 'text-muted cursor-default'
+                  : 'text-on-chrome hover:bg-[var(--window-title-active)] hover:text-[var(--window-title-text)] cursor-default',
+                open && !item.disabled && 'bg-[var(--window-title-active)] text-[var(--window-title-text)]',
+              )}
+              onClick={() => {
+                if (item.disabled || hasChildren) return
+                item.onSelect?.()
+                onClose()
+              }}
+            >
+              <span className='flex-1 min-w-0'>{item.label}</span>
+              {hasChildren ? (
+                <ChevronRight size={14} className='shrink-0 opacity-80' aria-hidden />
+              ) : null}
+            </button>
+
+            {hasChildren && open && item.children ? (
+              <MenuList
+                items={item.children}
+                onClose={onClose}
+                className='absolute left-full top-0 z-[1] ml-[-2px]'
+              />
+            ) : null}
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
 /**
- * Win95 风格右键菜单：凸起面板，禁用项变灰不可点。
+ * Win95 风格右键菜单：凸起面板，禁用项变灰不可点；支持一级子菜单。
  */
 export function ContextMenu({ menu, onClose }: ContextMenuProps) {
   const ref = useRef<HTMLUListElement>(null)
@@ -65,38 +148,12 @@ export function ContextMenu({ menu, onClose }: ContextMenuProps) {
   if (!menu) return null
 
   return (
-    <ul
-      ref={ref}
-      role='menu'
-      className={cn(
-        winChrome,
-        'fixed z-[2000] min-w-[140px] p-0.5 shadow-[2px_2px_0_rgba(0,0,0,0.35)] font-pixel',
-      )}
+    <MenuList
+      listRef={ref}
+      items={menu.items}
+      onClose={onClose}
+      className='fixed z-[2000]'
       style={{ left: pos.left, top: pos.top }}
-      onContextMenu={(e) => e.preventDefault()}
-    >
-      {menu.items.map((item) => (
-        <li key={item.id} role='none'>
-          <button
-            type='button'
-            role='menuitem'
-            disabled={item.disabled}
-            className={cn(
-              'w-full text-left px-3 py-1 text-[12px] outline-none',
-              item.disabled
-                ? 'text-muted cursor-default'
-                : 'text-on-chrome hover:bg-[var(--window-title-active)] hover:text-[var(--window-title-text)] cursor-default',
-            )}
-            onClick={() => {
-              if (item.disabled) return
-              item.onSelect?.()
-              onClose()
-            }}
-          >
-            {item.label}
-          </button>
-        </li>
-      ))}
-    </ul>
+    />
   )
 }

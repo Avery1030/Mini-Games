@@ -6,7 +6,7 @@ import {
   getDesktopAppDefinitionsSnapshot,
   registerDesktopCoordController,
 } from '@/lib/desktop/window'
-import { resolveOverlaps } from '@/lib/desktop'
+import { resolveOverlaps, arrangeIcons, type ArrangeAlign } from '@/lib/desktop'
 import { STORAGE_KEYS, appStorage, migrateLegacyDesktopPersist } from '@/lib/storage'
 
 type CoordinatesMap = Record<DesktopAppId, DesktopCoordinate>
@@ -21,6 +21,11 @@ interface DesktopActions {
   updateCoordinates: (updates: Array<{ id: DesktopAppId; coordinate: DesktopCoordinate }>) => void
   ensureCoordinate: (id: DesktopAppId, coordinate: DesktopCoordinate) => void
   removeCoordinate: (id: DesktopAppId) => void
+  /** 依次重排桌面图标（列优先向下；可靠左或靠右） */
+  rearrangeIcons: (
+    ids: DesktopAppId[],
+    options?: { maxRows?: number; align?: ArrangeAlign; maxCols?: number },
+  ) => void
 }
 
 export type DesktopStore = DesktopState & DesktopActions
@@ -98,6 +103,18 @@ export const useDesktopStore = create<DesktopStore>()(
           if (!state.coordinates[id]) return state
           const { [id]: _removed, ...rest } = state.coordinates
           return { coordinates: withUniqueCoordinates(rest as CoordinatesMap) }
+        })
+      },
+
+      rearrangeIcons: (ids, options) => {
+        if (ids.length === 0) return
+        const updates = arrangeIcons(ids, options)
+        set((state) => {
+          const next = { ...state.coordinates } as CoordinatesMap
+          for (const { id, coordinate } of updates) {
+            next[id] = coordinate
+          }
+          return { coordinates: withUniqueCoordinates(next) }
         })
       },
     }),

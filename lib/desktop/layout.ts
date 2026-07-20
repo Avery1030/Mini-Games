@@ -165,3 +165,38 @@ export function resolveCoordinate(
 ): DesktopCoordinate {
   return preview?.get(app.id) ?? app.coordinate
 }
+
+export type ArrangeAlign = 'left' | 'right'
+
+/**
+ * 重新排列桌面图标：先沿列向下填满，再开下一列。
+ * - left：从左上角向右铺
+ * - right：从右上角向左铺（需 maxCols）
+ * ids 顺序即排列顺序；maxRows 为每列最多行数（至少 1）。
+ */
+export function arrangeIcons(
+  ids: DesktopAppId[],
+  options: { maxRows?: number; align?: ArrangeAlign; maxCols?: number } = {},
+): Array<{ id: DesktopAppId; coordinate: DesktopCoordinate }> {
+  const rows = Math.max(1, Math.floor(options.maxRows ?? 8))
+  const align = options.align ?? 'left'
+  const maxCols = Math.max(1, Math.floor(options.maxCols ?? 1))
+
+  return ids.map((id, index) => {
+    const colOffset = Math.floor(index / rows)
+    const col =
+      align === 'right' ? Math.max(1, maxCols - colOffset) : colOffset + 1
+    const row = (index % rows) + 1
+    return { id, coordinate: [col, row] as DesktopCoordinate }
+  })
+}
+
+/** 按当前坐标排序（先列后行），用于重排时保持相对先后 */
+export function sortIdsByCoordinate(
+  apps: Array<{ id: DesktopAppId; coordinate: DesktopCoordinate }>,
+): DesktopAppId[] {
+  return apps
+    .slice()
+    .sort((a, b) => a.coordinate[0] - b.coordinate[0] || a.coordinate[1] - b.coordinate[1])
+    .map((a) => a.id)
+}

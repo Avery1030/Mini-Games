@@ -1,3 +1,5 @@
+import { toast } from '../ui'
+
 /**
  * Avery 品牌标：简洁字母 A（无背景）。
  */
@@ -11,6 +13,10 @@ export function AveryMark({ className, title = 'Avery' }: { className?: string; 
       role='img'
       aria-label={title}
       color='var(--window-title-active)'
+      onClick={(e) => {
+        // e.preventDefault()
+        // toast.warning('Avery')
+      }}
     >
       <title>{title}</title>
       <path fill='currentColor' d='M12 2.2 3.6 21h3.35l1.55-4.1h7l1.55 4.1H20.4L12 2.2zm0 5.4 2.55 6.7h-5.1L12 7.6z' />

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
-import { modal } from '@/components/ui'
+import { modal, toast } from '@/components/ui'
 import { useNotepadStore } from '@/store/notepad'
 import {
   createNoteApi,
@@ -38,8 +38,6 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
   const [listLoading, setListLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [status, setStatus] = useState<string | null>(null)
 
   const activeIdRef = useRef<string | null>(null)
   activeIdRef.current = activeId
@@ -54,7 +52,6 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
       setSavedTitle(note.title)
       setSavedContent(note.content)
       setLastNoteId(note.id)
-      setError(null)
     },
     [setLastNoteId],
   )
@@ -76,12 +73,11 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
         if (!ok) return
       }
       setBusy(true)
-      setError(null)
       try {
         const note = await fetchNote(id)
         applyNote(note)
       } catch (err) {
-        setError(err instanceof Error ? err.message : t('loadFail'))
+        toast.error(err instanceof Error ? err.message : t('loadFail'))
       } finally {
         setBusy(false)
       }
@@ -93,7 +89,6 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
     let cancelled = false
     ;(async () => {
       setListLoading(true)
-      setError(null)
       try {
         const list = await refreshList()
         if (cancelled) return
@@ -104,7 +99,7 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
           if (!cancelled) applyNote(note)
         }
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : t('loadFail'))
+        if (!cancelled) toast.error(err instanceof Error ? err.message : t('loadFail'))
       } finally {
         if (!cancelled) setListLoading(false)
       }
@@ -125,15 +120,13 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
       if (!ok) return
     }
     setBusy(true)
-    setError(null)
-    setStatus(null)
     try {
       const note = await createNoteApi({ title: t('untitled'), content: '' })
       await refreshList()
       applyNote(note)
-      setStatus(t('created'))
+      toast.success(t('created'))
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('createFail'))
+      toast.error(err instanceof Error ? err.message : t('createFail'))
     } finally {
       setBusy(false)
     }
@@ -142,8 +135,6 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
   const onSave = async () => {
     if (!activeId || !dirty) return
     setSaving(true)
-    setError(null)
-    setStatus(null)
     try {
       const note = await updateNoteApi(activeId, {
         title: title.trim() || t('untitled'),
@@ -153,9 +144,9 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
       setSavedContent(note.content)
       setTitle(note.title)
       await refreshList()
-      setStatus(t('savedOk'))
+      toast.success(t('savedOk'))
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('saveFail'))
+      toast.error(err instanceof Error ? err.message : t('saveFail'))
     } finally {
       setSaving(false)
     }
@@ -170,8 +161,6 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
     if (!ok) return
 
     setBusy(true)
-    setError(null)
-    setStatus(null)
     try {
       await deleteNoteApi(id)
       const list = await refreshList()
@@ -189,9 +178,9 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
           setLastNoteId(null)
         }
       }
-      setStatus(t('deleted'))
+      toast.success(t('deleted'))
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('deleteFail'))
+      toast.error(err instanceof Error ? err.message : t('deleteFail'))
     } finally {
       setBusy(false)
     }
@@ -240,13 +229,7 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
       </div>
 
       <div className='shrink-0 px-3 py-1.5 border-t border-chrome-dark bg-status-bar text-[10px] text-status-bar-fg flex justify-between gap-2'>
-        <span className='truncate min-w-0'>
-          {error ? (
-            <span className='text-[#c00]'>{error}</span>
-          ) : (
-            status || t('footer', { count: notes.length })
-          )}
-        </span>
+        <span className='truncate min-w-0'>{t('footer', { count: notes.length })}</span>
         <span className='shrink-0 opacity-80'>{t('shortcutSave')}</span>
       </div>
     </div>

@@ -9,9 +9,15 @@ import { ContextMenu, type ContextMenuState } from '@/components/ui'
 import type { DesktopAppId } from '@/config/desktop'
 import { useDesktopWallpaper } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
+import { useDesktopStore } from '@/store/desktop'
 import { useDesktopItemsStore } from '@/store/desktopItems'
 import { resolveDesktopItemTitle } from '@/lib/desktop/window'
-import { pointerToCoordinate } from '@/lib/desktop'
+import {
+  CELL_STEP,
+  pointerToCoordinate,
+  sortIdsByCoordinate,
+  type ArrangeAlign,
+} from '@/lib/desktop'
 import { promptRenameFolder } from './promptRenameFolder'
 
 /**
@@ -25,10 +31,19 @@ export function WindowsDesktop() {
   const openWindow = useWindowStore((s) => s.openWindow)
   const createFolder = useDesktopItemsStore((s) => s.createFolder)
   const renameFolder = useDesktopItemsStore((s) => s.renameFolder)
+  const rearrangeIcons = useDesktopStore((s) => s.rearrangeIcons)
   const desktopIcons = useVisibleDesktopIcons()
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
 
   const closeContextMenu = () => setContextMenu(null)
+
+  const handleArrangeIcons = (container: HTMLElement, align: ArrangeAlign) => {
+    if (desktopIcons.length === 0) return
+    const maxRows = Math.max(4, Math.floor(container.clientHeight / CELL_STEP))
+    const maxCols = Math.max(1, Math.floor(container.clientWidth / CELL_STEP))
+    const ids = sortIdsByCoordinate(desktopIcons)
+    rearrangeIcons(ids, { maxRows, maxCols, align })
+  }
 
   const handleRenameFolder = async (folderId: DesktopAppId, currentTitle: string) => {
     const next = await promptRenameFolder({
@@ -52,8 +67,9 @@ export function WindowsDesktop() {
     const onBlank = !iconId
     const isFolder = app?.kind === 'folder'
     // 在事件回调内立刻换算，避免 onSelect 时 currentTarget 失效
+    const desktopEl = e.currentTarget as HTMLElement
     const clickCoordinate = onBlank
-      ? pointerToCoordinate(e.clientX, e.clientY, e.currentTarget as HTMLElement)
+      ? pointerToCoordinate(e.clientX, e.clientY, desktopEl)
       : null
 
     setContextMenu({
@@ -90,6 +106,26 @@ export function WindowsDesktop() {
                     coordinate: clickCoordinate ?? undefined,
                   })
                 },
+              },
+              {
+                id: 'arrangeIcons',
+                label: td('arrangeIcons'),
+                children: [
+                  {
+                    id: 'arrangeLeft',
+                    label: td('arrangeLeft'),
+                    onSelect: () => {
+                      handleArrangeIcons(desktopEl, 'left')
+                    },
+                  },
+                  {
+                    id: 'arrangeRight',
+                    label: td('arrangeRight'),
+                    onSelect: () => {
+                      handleArrangeIcons(desktopEl, 'right')
+                    },
+                  },
+                ],
               },
             ]
           : []),
