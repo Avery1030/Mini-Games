@@ -13,7 +13,8 @@
     "settings": "设置",
     "music": "音乐",
     "calculator": "计算器",
-    "recycleBin": "回收站"
+    "recycleBin": "回收站",
+    "cmd": "命令提示符"
   },
   "desktop": {
     "open": "打开",
@@ -91,6 +92,36 @@
     "missing": "找不到对应的文本文件，可能已被永久删除。",
     "status": "{name}",
     "statusDirty": "未保存的更改"
+  },
+  "cmd": {
+    "desktop": "Desktop",
+    "inputLabel": "命令输入",
+    "boot1": "Microsoft(R) Windows DOS",
+    "boot2": "(C) Copyright Avery Mini OS 1985-2026.",
+    "dirHeader": " Directory of current folder",
+    "dirEmpty": " (empty)",
+    "dirSummary": "               {count} file(s)",
+    "cdNotFound": "系统找不到指定的路径: {name}",
+    "timeNow": "当前时间: {time}",
+    "dateNow": "当前日期: {date}",
+    "launchedNotepad": "正在启动 NOTEPAD.EXE...",
+    "launchedTetris": "正在启动 TETRIS.EXE...",
+    "wallpaperChanged": "壁纸已切换为: {name}",
+    "syncStart": "正在同步桌面布局到云端...",
+    "syncDone": "同步完成（已写入本地存储）。",
+    "unknown": "''{cmd}'' 不是内部或外部命令，也不是可运行的程序。",
+    "bye": "退出命令提示符...",
+    "helpTitle": "支持的命令:",
+    "helpDir": "列出当前文件夹内容",
+    "helpCd": "显示或切换当前目录（支持 .. 与 \\）",
+    "helpCls": "清屏",
+    "helpTime": "显示系统时间",
+    "helpNotepad": "启动记事本",
+    "helpTetris": "启动俄罗斯方块",
+    "helpWallpaper": "快速切换下一张壁纸",
+    "helpSync": "手动同步桌面布局",
+    "helpHelp": "显示帮助",
+    "helpExit": "退出命令提示符"
   },
   "recycleBin": {
     "title": "回收站",

@@ -77,6 +77,9 @@ export abstract class DesktopWindow {
   /** 是否出现在开始菜单 */
   readonly showInStartMenu: boolean = true
 
+  /** 是否出现在桌面图标层 */
+  readonly showOnDesktop: boolean = true
+
   /** 子类覆盖以定制拖拽 / 缩放 / 最小化 / 最大化 */
   get chrome(): WindowChromeOptions {
     return DEFAULT_WINDOW_CHROME
@@ -155,6 +158,7 @@ export abstract class DesktopWindow {
       title: this.title,
       kind: this.kind,
       showInStartMenu: this.showInStartMenu,
+      showOnDesktop: this.showOnDesktop,
     }
   }
 }

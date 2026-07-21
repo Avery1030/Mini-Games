@@ -42,6 +42,8 @@ export interface DesktopAppDefinition {
   kind?: DesktopItemKind
   /** 是否出现在开始菜单「程序」里；文件夹默认 false */
   showInStartMenu?: boolean
+  /** 是否出现在桌面图标层；默认 true（命令提示符等可设为 false） */
+  showOnDesktop?: boolean
 }
 
 /** 窗口上次正常态几何（最大化时仍记还原用坐标/宽高） */

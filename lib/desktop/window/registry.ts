@@ -8,6 +8,7 @@ import {
 import { ensureWindowSlot, removeWindowSlot, type DesktopWindow } from './DesktopWindow'
 import {
   CalculatorWindow,
+  CmdWindow,
   DocumentWindow,
   LogWindow,
   MinesweeperWindow,
@@ -36,6 +37,7 @@ const BUILTIN_WINDOWS: DesktopWindow[] = [
   new MusicWindow(),
   new CalculatorWindow(),
   new RecycleBinWindow(),
+  new CmdWindow(),
 ]
 
 const dynamicWindows = new Map<DesktopAppId, DesktopWindow>()

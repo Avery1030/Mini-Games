@@ -1,6 +1,14 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ComponentType } from 'react'
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ComponentType,
+} from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/cn'
@@ -60,6 +68,9 @@ function MenuSeparator() {
   return <div role='separator' className='my-0.5 mx-1 h-[2px] bg-chrome-dark shadow-[0_1px_0_var(--chrome-light)]' />
 }
 
+/** 预留任务栏高度，避免子菜单被挡住 */
+const TASKBAR_SAFE = 48
+
 /**
  * Win95 风格开始菜单：程序列表、文档/设置/帮助、关闭与重启。
  */
@@ -70,7 +81,11 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
   const closeAllWindows = useWindowStore((s) => s.closeAllWindows)
   const lockWithPassword = useLockStore((s) => s.lockWithPassword)
   const rootRef = useRef<HTMLDivElement>(null)
+  const programsWrapRef = useRef<HTMLDivElement>(null)
+  const submenuRef = useRef<HTMLUListElement>(null)
   const [programsOpen, setProgramsOpen] = useState(false)
+  const [submenuOffsetTop, setSubmenuOffsetTop] = useState(0)
+  const [submenuMaxHeight, setSubmenuMaxHeight] = useState<number | undefined>(undefined)
 
   const definitions = useSyncExternalStore(
     subscribeDesktopRegistry,
@@ -81,6 +96,30 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
     () => definitions.filter((app) => app.app && app.showInStartMenu !== false),
     [definitions],
   )
+
+  useLayoutEffect(() => {
+    if (!programsOpen) {
+      setSubmenuOffsetTop(0)
+      setSubmenuMaxHeight(undefined)
+      return
+    }
+    const submenu = submenuRef.current
+    const wrap = programsWrapRef.current
+    if (!submenu || !wrap) return
+
+    // 先解除限制以便测真实高度，再按视口上移/限高
+    submenu.style.top = '0px'
+    submenu.style.maxHeight = 'none'
+    const wrapTop = wrap.getBoundingClientRect().top
+    const maxBottom = window.innerHeight - TASKBAR_SAFE
+    const contentH = submenu.scrollHeight
+    const height = Math.min(contentH, Math.max(120, maxBottom - 4))
+    let top = wrapTop
+    if (top + height > maxBottom) top = maxBottom - height
+    if (top < 4) top = 4
+    setSubmenuOffsetTop(top - wrapTop)
+    setSubmenuMaxHeight(maxBottom - top)
+  }, [programsOpen, launchable.length])
 
   useEffect(() => {
     if (!open) {
@@ -174,6 +213,7 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
 
       <div className='flex-1 py-1 relative min-w-[180px] overflow-visible'>
         <div
+          ref={programsWrapRef}
           className='relative overflow-visible'
           onMouseEnter={() => setProgramsOpen(true)}
           onMouseLeave={() => setProgramsOpen(false)}
@@ -187,11 +227,17 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
           />
           {programsOpen && (
             <ul
+              ref={submenuRef}
               role='menu'
               className={cn(
                 winChrome,
-                'absolute left-full top-0 z-[1] min-w-[180px] max-h-[min(420px,calc(100vh-56px))] overflow-y-auto overflow-x-hidden py-1 shadow-[2px_2px_0_rgba(0,0,0,0.35)]',
+                'absolute left-full z-[1] min-w-[180px] overflow-y-auto overflow-x-hidden py-1',
+                'shadow-[2px_2px_0_rgba(0,0,0,0.35)]',
               )}
+              style={{
+                top: submenuOffsetTop,
+                maxHeight: submenuMaxHeight,
+              }}
             >
               {launchable.map((app) => {
                 const Icon = app.icon

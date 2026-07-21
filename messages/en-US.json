@@ -13,7 +13,8 @@
     "settings": "Settings",
     "music": "Music",
     "calculator": "Calculator",
-    "recycleBin": "Recycle Bin"
+    "recycleBin": "Recycle Bin",
+    "cmd": "Command Prompt"
   },
   "desktop": {
     "open": "Open",
@@ -91,6 +92,36 @@
     "missing": "The text file could not be found. It may have been permanently deleted.",
     "status": "{name}",
     "statusDirty": "Unsaved changes"
+  },
+  "cmd": {
+    "desktop": "Desktop",
+    "inputLabel": "Command input",
+    "boot1": "Microsoft(R) Windows DOS",
+    "boot2": "(C) Copyright Avery Mini OS 1985-2026.",
+    "dirHeader": " Directory of current folder",
+    "dirEmpty": " (empty)",
+    "dirSummary": "               {count} file(s)",
+    "cdNotFound": "The system cannot find the path specified: {name}",
+    "timeNow": "Current time: {time}",
+    "dateNow": "Current date: {date}",
+    "launchedNotepad": "Starting NOTEPAD.EXE...",
+    "launchedTetris": "Starting TETRIS.EXE...",
+    "wallpaperChanged": "Wallpaper changed to: {name}",
+    "syncStart": "Syncing desktop layout to the cloud...",
+    "syncDone": "Sync complete (saved to local storage).",
+    "unknown": "''{cmd}'' is not recognized as an internal or external command.",
+    "bye": "Exiting Command Prompt...",
+    "helpTitle": "Supported commands:",
+    "helpDir": "List contents of the current folder",
+    "helpCd": "Show or change directory (supports .. and \\)",
+    "helpCls": "Clear the screen",
+    "helpTime": "Show system time",
+    "helpNotepad": "Launch Notepad",
+    "helpTetris": "Launch Tetris",
+    "helpWallpaper": "Cycle to the next wallpaper",
+    "helpSync": "Manually sync desktop layout",
+    "helpHelp": "Show help",
+    "helpExit": "Exit Command Prompt"
   },
   "recycleBin": {
     "title": "Recycle Bin",

@@ -26,6 +26,7 @@ function useRootDesktopIcons(): DesktopAppView[] {
     if (!hasHydrated) return []
     const byId = new Map(items.map((i) => [i.id, i]))
     let list = apps.filter((app) => {
+      if (app.showOnDesktop === false) return false
       const item = byId.get(app.id)
       if (!item) return true // 内置应用
       return isDesktopRootItem(item)

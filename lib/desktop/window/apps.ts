@@ -10,6 +10,7 @@ import {
   Calculator,
   Folder,
   Trash2,
+  Terminal,
 } from 'lucide-react'
 import { Minesweeper } from '@/features/minesweeper'
 import { Tetris } from '@/features/tetris'
@@ -122,6 +123,32 @@ export class CalculatorWindow extends DesktopWindow {
       ...DEFAULT_WINDOW_CHROME,
       resizable: false,
     }
+  }
+}
+
+/**
+ * 命令提示符：简易 DOS 风格终端。
+ * CmdApp 延迟加载，避免循环依赖。
+ */
+export class CmdWindow extends DesktopWindow {
+  readonly id = 'cmd' as const
+  readonly icon = Terminal
+  readonly defaultCoordinate: DesktopCoordinate = [3, 1]
+  readonly width = 640
+  readonly height = 400
+  /** 不占桌面图标，仅从开始菜单启动 */
+  readonly showOnDesktop = false
+  private appComponent: ComponentType<{ embedded?: boolean }> | null = null
+
+  get app(): ComponentType<{ embedded?: boolean }> {
+    if (!this.appComponent) {
+      this.appComponent = (props: { embedded?: boolean }) => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { CmdApp } = require('@/features/cmd') as typeof import('@/features/cmd')
+        return createElement(CmdApp, { embedded: props.embedded })
+      }
+    }
+    return this.appComponent
   }
 }
 
