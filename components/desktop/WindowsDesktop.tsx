@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { DesktopIconsLayer, useVisibleDesktopIcons } from './DesktopIconsLayer'
 import { DesktopWindowsLayer } from './DesktopWindowsLayer'
 import { DesktopTaskbar } from './DesktopTaskbar'
-import { ContextMenu, type ContextMenuState } from '@/components/ui'
+import { ContextMenu, modal, toast, type ContextMenuState } from '@/components/ui'
 import type { DesktopAppId } from '@/config/desktop'
 import { useDesktopWallpaper } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
@@ -18,7 +18,7 @@ import {
   sortIdsByCoordinate,
   type ArrangeAlign,
 } from '@/lib/desktop'
-import { promptRenameFolder } from './promptRenameFolder'
+import { promptRenameDesktopItem } from './promptRenameDesktopItem'
 
 /**
  * 桌面编排：壁纸 + 图标层 + 窗口层 + 任务栏 + 右键菜单。
@@ -27,10 +27,16 @@ import { promptRenameFolder } from './promptRenameFolder'
 export function WindowsDesktop() {
   const td = useTranslations('desktop')
   const tApps = useTranslations('apps')
+  const tRecycle = useTranslations('recycleBin')
+  const tm = useTranslations('modal')
   const desktopBgStyle = useDesktopWallpaper()
   const openWindow = useWindowStore((s) => s.openWindow)
   const createFolder = useDesktopItemsStore((s) => s.createFolder)
-  const renameFolder = useDesktopItemsStore((s) => s.renameFolder)
+  const createTextDocument = useDesktopItemsStore((s) => s.createTextDocument)
+  const renameItem = useDesktopItemsStore((s) => s.renameItem)
+  const moveToRecycleBin = useDesktopItemsStore((s) => s.moveToRecycleBin)
+  const emptyRecycleBin = useDesktopItemsStore((s) => s.emptyRecycleBin)
+  const deletedCount = useDesktopItemsStore((s) => s.items.filter((f) => f.isDeleted).length)
   const rearrangeIcons = useDesktopStore((s) => s.rearrangeIcons)
   const desktopIcons = useVisibleDesktopIcons()
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
@@ -45,14 +51,42 @@ export function WindowsDesktop() {
     rearrangeIcons(ids, { maxRows, maxCols, align })
   }
 
-  const handleRenameFolder = async (folderId: DesktopAppId, currentTitle: string) => {
-    const next = await promptRenameFolder({
+  const handleRenameItem = async (
+    itemId: DesktopAppId,
+    kind: 'folder' | 'textDocument',
+    currentTitle: string,
+  ) => {
+    const item = useDesktopItemsStore.getState().items.find((i) => i.id === itemId)
+    const next = await promptRenameDesktopItem({
       currentName: currentTitle,
       title: td('renameTitle'),
-      folderId,
+      itemId,
+      kind,
+      parentId: item?.parentId ?? null,
     })
     if (next == null || next === currentTitle.trim()) return
-    renameFolder(folderId, next)
+    await renameItem(itemId, next)
+  }
+
+  const handleEmptyRecycleBin = async () => {
+    if (deletedCount === 0) return
+    const ok = await modal.confirm({
+      title: tm('confirmTitle'),
+      message: tRecycle('confirmEmpty', { count: deletedCount }),
+    })
+    if (!ok) return
+    const n = await emptyRecycleBin()
+    toast.success(tRecycle('emptied', { count: n }))
+  }
+
+  const handleCreateTextDocument = async (coordinate: ReturnType<typeof pointerToCoordinate> | null) => {
+    const record = await createTextDocument({
+      title: td('newTextDocumentName'),
+      coordinate: coordinate ?? undefined,
+    })
+    if (!record) {
+      toast.error(td('createTextDocumentFail'))
+    }
   }
 
   const handleDesktopContextMenu = (e: React.MouseEvent) => {
@@ -65,8 +99,8 @@ export function WindowsDesktop() {
     const app = iconId ? desktopIcons.find((a) => a.id === iconId) : undefined
     const canOpen = Boolean(app?.app)
     const onBlank = !iconId
-    const isFolder = app?.kind === 'folder'
-    // 在事件回调内立刻换算，避免 onSelect 时 currentTarget 失效
+    const isUserItem = app?.kind === 'folder' || app?.kind === 'textDocument'
+    const isRecycleBin = iconId === 'recycleBin'
     const desktopEl = e.currentTarget as HTMLElement
     const clickCoordinate = onBlank
       ? pointerToCoordinate(e.clientX, e.clientY, desktopEl)
@@ -84,13 +118,34 @@ export function WindowsDesktop() {
             if (iconId && canOpen) openWindow(iconId)
           },
         },
-        ...(isFolder && iconId && app
+        ...(isUserItem && iconId && app && (app.kind === 'folder' || app.kind === 'textDocument')
           ? [
               {
                 id: 'rename',
                 label: td('rename'),
                 onSelect: () => {
-                  void handleRenameFolder(iconId, resolveDesktopItemTitle(app, tApps))
+                  const kind = app.kind
+                  if (kind !== 'folder' && kind !== 'textDocument') return
+                  void handleRenameItem(iconId, kind, resolveDesktopItemTitle(app, tApps))
+                },
+              },
+              {
+                id: 'delete',
+                label: td('delete'),
+                onSelect: () => {
+                  moveToRecycleBin(iconId)
+                },
+              },
+            ]
+          : []),
+        ...(isRecycleBin
+          ? [
+              {
+                id: 'emptyRecycleBin',
+                label: td('emptyRecycleBin'),
+                disabled: deletedCount === 0,
+                onSelect: () => {
+                  void handleEmptyRecycleBin()
                 },
               },
             ]
@@ -98,14 +153,27 @@ export function WindowsDesktop() {
         ...(onBlank
           ? [
               {
-                id: 'newFolder',
-                label: td('newFolder'),
-                onSelect: () => {
-                  createFolder({
-                    title: td('newFolderName'),
-                    coordinate: clickCoordinate ?? undefined,
-                  })
-                },
+                id: 'new',
+                label: td('new'),
+                children: [
+                  {
+                    id: 'newFolder',
+                    label: td('newFolder'),
+                    onSelect: () => {
+                      createFolder({
+                        title: td('newFolderName'),
+                        coordinate: clickCoordinate ?? undefined,
+                      })
+                    },
+                  },
+                  {
+                    id: 'newTextDocument',
+                    label: td('newTextDocument'),
+                    onSelect: () => {
+                      void handleCreateTextDocument(clickCoordinate)
+                    },
+                  },
+                ],
               },
               {
                 id: 'arrangeIcons',
@@ -143,7 +211,6 @@ export function WindowsDesktop() {
   return (
     <div className='min-h-screen flex flex-col select-none font-pixel text-on-desktop' style={desktopBgStyle}>
       <div className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem]' onContextMenu={handleDesktopContextMenu}>
-        {/* grid 放在无 padding 的内层，absolute 让位时与 grid 原点一致 */}
         <DesktopIconsLayer />
         <DesktopWindowsLayer />
       </div>

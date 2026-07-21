@@ -88,7 +88,9 @@ export abstract class DesktopWindow {
     return true
   }
 
-  onAfterOpen(): void {}
+  onAfterOpen(): void {
+    // console.log('onAfterOpen', this.id)
+  }
 
   onBeforeClose(): boolean {
     return true

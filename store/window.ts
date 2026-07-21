@@ -2,11 +2,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import type { DesktopAppId, DesktopWindowRuntime, WindowBounds } from '@/config/desktop'
 import { DEFAULT_WINDOW_RUNTIME } from '@/config/desktop'
-import {
-  createDefaultWindows,
-  getDesktopWindow,
-  registerWindowController,
-} from '@/lib/desktop/window'
+import { createDefaultWindows, getDesktopWindow, registerWindowController } from '@/lib/desktop/window'
 import { STORAGE_KEYS, appStorage, migrateLegacyDesktopPersist } from '@/lib/storage'
 
 const WINDOW_Z_BASE = 1000
@@ -41,11 +37,7 @@ interface WindowActions {
 
 export type WindowStore = WindowState & WindowActions
 
-function patchWindow(
-  windows: WindowsMap,
-  id: DesktopAppId,
-  patch: Partial<DesktopWindowRuntime>,
-): WindowsMap {
+function patchWindow(windows: WindowsMap, id: DesktopAppId, patch: Partial<DesktopWindowRuntime>): WindowsMap {
   return {
     ...windows,
     [id]: { ...windows[id], ...patch },
@@ -56,14 +48,10 @@ function activateNext(windows: WindowsMap, excludeId: DesktopAppId): WindowsMap 
   const candidates = (Object.entries(windows) as [DesktopAppId, DesktopWindowRuntime][]).filter(
     ([id, w]) => id !== excludeId && w.isOpen,
   )
-  const visible = candidates
-    .filter(([, w]) => !w.minimized)
-    .sort(([, a], [, b]) => b.zIndex - a.zIndex)
+  const visible = candidates.filter(([, w]) => !w.minimized).sort(([, a], [, b]) => b.zIndex - a.zIndex)
   const next = visible[0] ?? candidates.sort(([, a], [, b]) => b.zIndex - a.zIndex)[0]
   if (!next) {
-    return Object.fromEntries(
-      Object.entries(windows).map(([id, w]) => [id, { ...w, active: false }]),
-    ) as WindowsMap
+    return Object.fromEntries(Object.entries(windows).map(([id, w]) => [id, { ...w, active: false }])) as WindowsMap
   }
 
   const nextId = next[0]
@@ -114,14 +102,12 @@ function normalizeBounds(raw: unknown): WindowBounds | null {
   }
 }
 
-function mergeWindows(
-  saved?: Partial<Record<DesktopAppId, Partial<DesktopWindowRuntime>>>,
-): WindowsMap {
+function mergeWindows(saved?: Partial<Record<DesktopAppId, Partial<DesktopWindowRuntime>>>): WindowsMap {
   const defaults = createDefaultWindows()
   const known = new Set(Object.keys(defaults))
   const ids = new Set<string>([...known])
   for (const id of Object.keys(saved ?? {})) {
-    if (known.has(id) || id.startsWith('folder_')) ids.add(id)
+    if (known.has(id) || id.startsWith('folder_') || id.startsWith('text_')) ids.add(id)
   }
   return Object.fromEntries(
     [...ids].map((id) => {
@@ -135,7 +121,7 @@ function mergeWindows(
           minimized: s.minimized ?? fallback.minimized,
           active: s.active ?? fallback.active,
           zIndex: s.zIndex ?? fallback.zIndex,
-          openOrder: s.openOrder ?? (s.isOpen ? s.zIndex ?? fallback.openOrder : 0),
+          openOrder: s.openOrder ?? (s.isOpen ? (s.zIndex ?? fallback.openOrder) : 0),
           bounds: normalizeBounds(s.bounds) ?? fallback.bounds,
         },
       ]
@@ -305,6 +291,7 @@ export const useWindowStore = create<WindowStore>()(
       removeWindow: (id) => {
         const { windows } = get()
         if (!windows[id]) return
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { [id]: _removed, ...rest } = windows
         set({ windows: rest as WindowsMap })
       },
@@ -312,9 +299,7 @@ export const useWindowStore = create<WindowStore>()(
     {
       name: STORAGE_KEYS.windows,
       version: 2,
-      storage: createJSONStorage(() =>
-        appStorage.createStateStorage({ before: () => migrateLegacyDesktopPersist() }),
-      ),
+      storage: createJSONStorage(() => appStorage.createStateStorage({ before: () => migrateLegacyDesktopPersist() })),
       partialize: (state) => ({
         windows: state.windows,
         topZIndex: state.topZIndex,
@@ -356,4 +341,3 @@ registerWindowController({
   ensureWindow: (id) => useWindowStore.getState().ensureWindow(id),
   removeWindow: (id) => useWindowStore.getState().removeWindow(id),
 })
-

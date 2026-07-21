@@ -1,14 +1,6 @@
 'use client'
 
-import {
-  Children,
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react'
+import { Children, useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 import { isClient } from '@/lib/env'
 
@@ -67,19 +59,14 @@ export function SplitPane({
   const containerRef = useRef<HTMLDivElement>(null)
   const draggingRef = useRef(false)
   const sizeRef = useRef(defaultSize)
-  const [size, setSize] = useState(() =>
-    Math.min(maxSize, Math.max(minSize, readStored(storageKey, defaultSize))),
-  )
+  const [size, setSize] = useState(() => Math.min(maxSize, Math.max(minSize, readStored(storageKey, defaultSize))))
   const [dragging, setDragging] = useState(false)
   const handleId = useId()
   sizeRef.current = size
 
-  const clamp = useCallback(
-    (next: number) => Math.min(maxSize, Math.max(minSize, next)),
-    [minSize, maxSize],
-  )
+  const clamp = useCallback((next: number) => Math.min(maxSize, Math.max(minSize, next)), [minSize, maxSize])
 
-  const onPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return
     e.preventDefault()
     draggingRef.current = true
@@ -87,13 +74,13 @@ export function SplitPane({
     e.currentTarget.setPointerCapture(e.pointerId)
   }
 
-  const onPointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!draggingRef.current || !containerRef.current) return
     const rect = containerRef.current.getBoundingClientRect()
     setSize(clamp(e.clientX - rect.left))
   }
 
-  const endDrag = (e: React.PointerEvent<HTMLButtonElement>) => {
+  const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!draggingRef.current) return
     draggingRef.current = false
     setDragging(false)
@@ -123,11 +110,15 @@ export function SplitPane({
         {primary}
       </div>
 
-      <button
-        type='button'
+      <div
+        role='separator'
         id={handleId}
+        tabIndex={0}
         aria-label={handleLabel}
         aria-orientation='vertical'
+        aria-valuenow={Math.round(size)}
+        aria-valuemin={minSize}
+        aria-valuemax={maxSize}
         className={cn(
           'group relative w-2.5 shrink-0 cursor-col-resize touch-none outline-none',
           'border-0 p-0',
@@ -148,16 +139,17 @@ export function SplitPane({
       >
         {/* 凹槽竖线 */}
         <span
+          aria-hidden
           className={cn(
             'pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2',
             'bg-chrome-dark shadow-[1px_0_0_var(--chrome-light)]',
             'opacity-70 group-hover:opacity-100',
             dragging && 'opacity-100',
           )}
-          aria-hidden
         />
         {/* 中部抓手：几道横纹，提示可拖 */}
         <span
+          aria-hidden
           className={cn(
             'pointer-events-none relative z-[1] flex flex-col gap-[3px] py-1 px-0.5',
             'rounded-[1px]',
@@ -165,16 +157,12 @@ export function SplitPane({
             'shadow-[inset_1px_0_0_var(--chrome-light),inset_-1px_0_0_var(--chrome-dark)]',
             dragging && 'bg-chrome-active',
           )}
-          aria-hidden
         >
           {[0, 1, 2, 3, 4].map((i) => (
-            <span
-              key={i}
-              className='block h-px w-[7px] bg-chrome-dark shadow-[0_1px_0_var(--chrome-light)]'
-            />
+            <span key={i} className='block h-px w-[7px] bg-chrome-dark shadow-[0_1px_0_var(--chrome-light)]' />
           ))}
         </span>
-      </button>
+      </div>
 
       <div className='flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden'>{secondary}</div>
     </div>

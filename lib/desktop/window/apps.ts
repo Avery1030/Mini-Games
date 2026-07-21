@@ -9,6 +9,7 @@ import {
   Music,
   Calculator,
   Folder,
+  Trash2,
 } from 'lucide-react'
 import { Minesweeper } from '@/features/minesweeper'
 import { Tetris } from '@/features/tetris'
@@ -121,6 +122,85 @@ export class CalculatorWindow extends DesktopWindow {
       ...DEFAULT_WINDOW_CHROME,
       resizable: false,
     }
+  }
+}
+
+/**
+ * 回收站：内置桌面应用，列出软删除的桌面资源。
+ * RecycleBinApp 延迟加载，避免 apps → feature → store → registry 循环依赖。
+ */
+export class RecycleBinWindow extends DesktopWindow {
+  readonly id = 'recycleBin' as const
+  readonly icon = Trash2
+  readonly defaultCoordinate: DesktopCoordinate = [1, 5]
+  readonly width = 520
+  readonly height = 400
+  readonly showInStartMenu = false
+  private appComponent: ComponentType<{ embedded?: boolean }> | null = null
+
+  get app(): ComponentType<{ embedded?: boolean }> {
+    if (!this.appComponent) {
+      this.appComponent = (props: { embedded?: boolean }) => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { RecycleBinApp } = require('@/features/recycle-bin') as typeof import('@/features/recycle-bin')
+        return createElement(RecycleBinApp, { embedded: props.embedded })
+      }
+    }
+    return this.appComponent
+  }
+}
+
+/**
+ * 桌面文本文档窗口：运行时由 createDesktopTextDocumentWindow 实例化。
+ * TextDocumentApp 延迟加载，避免循环依赖。
+ */
+export class TextDocumentWindow extends DesktopWindow {
+  readonly id: DesktopAppId
+  readonly icon = FileText
+  readonly defaultCoordinate: DesktopCoordinate
+  readonly width = 560
+  readonly height = 460
+  readonly kind: DesktopItemKind = 'textDocument'
+  readonly showInStartMenu = false
+  readonly noteId: string
+  title: string
+  private appComponent: ComponentType<{ embedded?: boolean }> | null = null
+
+  constructor(opts: {
+    id: DesktopAppId
+    title: string
+    noteId: string
+    coordinate?: DesktopCoordinate
+  }) {
+    super()
+    this.id = opts.id
+    this.title = opts.title
+    this.noteId = opts.noteId
+    this.defaultCoordinate = opts.coordinate ?? [1, 1]
+  }
+
+  get app(): ComponentType<{ embedded?: boolean }> {
+    if (!this.appComponent) {
+      const itemId = this.id
+      const noteId = this.noteId
+      this.appComponent = (props: { embedded?: boolean }) => {
+        // 运行时再取，打断模块初始化环
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { TextDocumentApp } = require('@/features/text-document') as typeof import('@/features/text-document')
+        return createElement(TextDocumentApp, {
+          embedded: props.embedded,
+          itemId,
+          noteId,
+        })
+      }
+    }
+    return this.appComponent
+  }
+
+  rename(nextTitle: string) {
+    const trimmed = nextTitle.trim()
+    if (!trimmed) return
+    this.title = trimmed
   }
 }
 

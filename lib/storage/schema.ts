@@ -89,14 +89,28 @@ export type CalendarPersistState = {
   notes: Record<string, string>
 }
 
-export type DesktopFolderPersist = {
+export type DesktopItemPersist = {
   id: string
+  kind: 'folder' | 'textDocument'
   title: string
   createdAt: number
+  noteId?: string
+  /** null = 桌面根；否则为父文件夹 id */
+  parentId?: string | null
+  /** 软删除：进入回收站后为 true，不从持久化中移除 */
+  isDeleted?: boolean
+  deletedAt?: number
+  /** 删除前桌面坐标，还原时优先尝试 */
+  deletedFromCoordinate?: DesktopCoordinate
 }
 
+/** @deprecated 使用 DesktopItemPersist */
+export type DesktopFolderPersist = DesktopItemPersist
+
 export type DesktopItemsPersistState = {
-  folders: DesktopFolderPersist[]
+  items: DesktopItemPersist[]
+  /** @deprecated v3 及更早；merge 时迁移到 items */
+  folders?: DesktopFolderPersist[]
 }
 
 /**

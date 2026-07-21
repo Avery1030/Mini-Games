@@ -14,6 +14,7 @@ import {
   MusicWindow,
   NotepadWindow,
   PaintWindow,
+  RecycleBinWindow,
   SettingsWindow,
   TetrisWindow,
 } from './apps'
@@ -34,6 +35,7 @@ const BUILTIN_WINDOWS: DesktopWindow[] = [
   new SettingsWindow(),
   new MusicWindow(),
   new CalculatorWindow(),
+  new RecycleBinWindow(),
 ]
 
 const dynamicWindows = new Map<DesktopAppId, DesktopWindow>()
@@ -114,6 +116,11 @@ export type RegisterDesktopWindowOptions = {
    * ensure 幂等，水合恢复时也可为 true。
    */
   syncStores?: boolean
+  /**
+   * 是否写入桌面坐标。嵌套在文件夹内的项应为 false。
+   * 仅在 syncStores !== false 时生效，默认 true。
+   */
+  placeOnDesktop?: boolean
 }
 
 /**
@@ -131,8 +138,10 @@ export function registerDesktopWindow(
 
   if (options.syncStores !== false) {
     ensureWindowSlot(win.id)
-    const coord = options.coordinate ?? win.defaultCoordinate
-    coordController?.ensureCoordinate(win.id, coord)
+    if (options.placeOnDesktop !== false) {
+      const coord = options.coordinate ?? win.defaultCoordinate
+      coordController?.ensureCoordinate(win.id, coord)
+    }
   }
   return true
 }

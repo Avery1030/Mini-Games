@@ -28,11 +28,16 @@ export {
 } from './registry'
 export {
   createDesktopFolderWindow,
+  createDesktopTextDocumentWindow,
   removeDesktopFolderWindow,
+  removeDesktopItemWindow,
   renameDesktopFolderWindow,
+  renameDesktopItemWindow,
   resolveDesktopItemTitle,
   allocateDesktopCoordinate,
   isFolderTitleTaken,
+  isDesktopItemTitleTaken,
   type CreateDesktopFolderOptions,
+  type CreateDesktopTextDocumentOptions,
 } from './createFolder'
 export * from './apps'

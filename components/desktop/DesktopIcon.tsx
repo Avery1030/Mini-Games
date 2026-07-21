@@ -33,6 +33,8 @@ export type DesktopIconProps = {
   isDragging: boolean
   yielding: boolean
   animateYield: boolean
+  /** 拖拽投放高亮（如回收站） */
+  isDropTarget?: boolean
   dragLeft?: number
   dragTop?: number
   onPointerDown: (e: React.PointerEvent<HTMLElement>) => void
@@ -52,6 +54,7 @@ export function DesktopIcon({
   isDragging,
   yielding,
   animateYield,
+  isDropTarget = false,
   dragLeft,
   dragTop,
   onPointerDown,
@@ -85,8 +88,9 @@ export function DesktopIcon({
       data-desktop-icon={appId}
       className={cn(
         'group flex flex-col items-center gap-1 px-0.5 py-1 self-start outline-none',
-        isDragging ? 'z-[200] opacity-85 cursor-grabbing' : 'z-[101] cursor-pointer',
+        isDragging ? 'z-[200] opacity-85 cursor-grabbing pointer-events-none' : 'z-[101] cursor-pointer',
         !isDragging && !yielding && 'relative',
+        isDropTarget && 'ring-2 ring-[var(--icon-focus-ring)] ring-offset-1 bg-icon-select/25',
       )}
       style={{
         width: CELL_SIZE,

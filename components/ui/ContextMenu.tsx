@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { winChrome } from '@/lib/winChrome'
@@ -109,10 +110,16 @@ function MenuList({
 
 /**
  * Win95 风格右键菜单：凸起面板，禁用项变灰不可点；支持一级子菜单。
+ * 通过 portal 挂到 body，避免落在带 transform 的窗口内导致 fixed 定位偏移。
  */
 export function ContextMenu({ menu, onClose }: ContextMenuProps) {
   const ref = useRef<HTMLUListElement>(null)
   const [pos, setPos] = useState({ left: 0, top: 0 })
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useLayoutEffect(() => {
     if (!menu) return
@@ -145,15 +152,16 @@ export function ContextMenu({ menu, onClose }: ContextMenuProps) {
     }
   }, [menu, onClose])
 
-  if (!menu) return null
+  if (!menu || !mounted) return null
 
-  return (
+  return createPortal(
     <MenuList
       listRef={ref}
       items={menu.items}
       onClose={onClose}
       className='fixed z-[2000]'
       style={{ left: pos.left, top: pos.top }}
-    />
+    />,
+    document.body,
   )
 }

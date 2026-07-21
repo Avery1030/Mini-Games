@@ -35,9 +35,41 @@ type UseDesktopIconDragOptions = {
   desktopRef: RefObject<HTMLDivElement | null>
   onOpen: (id: DesktopAppId) => void
   onCommit: (updates: Array<{ id: DesktopAppId; coordinate: DesktopCoordinate }>) => void
+  /**
+   * 拖放到某点时优先处理（如丢进回收站 / 文件夹）。
+   * 返回 true 表示已消费，不再提交格点坐标。
+   */
+  onDropAtPoint?: (draggedId: DesktopAppId, clientX: number, clientY: number) => boolean
+  /** 指针下的命中目标是否可作为投放区（高亮 + 取消格点预览） */
+  isDropTarget?: (id: DesktopAppId) => boolean
 }
 
-export function useDesktopIconDrag({ apps, desktopRef, onOpen, onCommit }: UseDesktopIconDragOptions) {
+/** 指针下命中的桌面图标 id（跳过正在拖拽的自身） */
+export function hitDesktopIconAtPoint(
+  clientX: number,
+  clientY: number,
+  ignoreId?: DesktopAppId,
+): DesktopAppId | null {
+  if (typeof document === 'undefined') return null
+  const els = document.elementsFromPoint(clientX, clientY)
+  for (const el of els) {
+    const host = (el as Element).closest?.('[data-desktop-icon]') as HTMLElement | null
+    if (!host) continue
+    const id = host.dataset.desktopIcon as DesktopAppId | undefined
+    if (!id || id === ignoreId) continue
+    return id
+  }
+  return null
+}
+
+export function useDesktopIconDrag({
+  apps,
+  desktopRef,
+  onOpen,
+  onCommit,
+  onDropAtPoint,
+  isDropTarget,
+}: UseDesktopIconDragOptions) {
   const appsRef = useRef(apps)
   appsRef.current = apps
   const sessionRef = useRef<DragSession | null>(null)
@@ -45,6 +77,10 @@ export function useDesktopIconDrag({ apps, desktopRef, onOpen, onCommit }: UseDe
   onOpenRef.current = onOpen
   const onCommitRef = useRef(onCommit)
   onCommitRef.current = onCommit
+  const onDropAtPointRef = useRef(onDropAtPoint)
+  onDropAtPointRef.current = onDropAtPoint
+  const isDropTargetRef = useRef(isDropTarget)
+  isDropTargetRef.current = isDropTarget
 
   const [draggingId, setDraggingId] = useState<DesktopAppId | null>(null)
   /** fixed 定位时的 viewport 坐标 */
@@ -52,6 +88,8 @@ export function useDesktopIconDrag({ apps, desktopRef, onOpen, onCommit }: UseDe
   const [previewCoords, setPreviewCoords] = useState<Map<DesktopAppId, DesktopCoordinate> | null>(
     null,
   )
+  /** 拖拽悬停的投放目标（回收站 / 文件夹） */
+  const [dropTargetId, setDropTargetId] = useState<DesktopAppId | null>(null)
   /** 用于双击打开：记录上一次未拖拽的点击 */
   const lastClickRef = useRef<{ id: DesktopAppId; time: number } | null>(null)
 
@@ -72,7 +110,17 @@ export function useDesktopIconDrag({ apps, desktopRef, onOpen, onCommit }: UseDe
   )
 
   const updatePreviewFromIconViewport = useCallback(
-    (id: DesktopAppId, viewportLeft: number, viewportTop: number) => {
+    (id: DesktopAppId, viewportLeft: number, viewportTop: number, clientX: number, clientY: number) => {
+      const hit = hitDesktopIconAtPoint(clientX, clientY, id)
+      const canDrop = hit != null && isDropTargetRef.current?.(hit) === true
+      setDropTargetId(canDrop ? hit : null)
+
+      // 悬停投放目标时不预览格点让位
+      if (canDrop) {
+        setPreviewCoords(null)
+        return
+      }
+
       const local = desktopLocalFromViewport(viewportLeft, viewportTop)
       const target = positionToCoordinate(local.left, local.top)
       setPreviewCoords(previewPlacement(appsRef.current, id, target))
@@ -81,7 +129,7 @@ export function useDesktopIconDrag({ apps, desktopRef, onOpen, onCommit }: UseDe
   )
 
   const endDrag = useCallback(
-    (viewportLeft: number, viewportTop: number, commit: boolean) => {
+    (viewportLeft: number, viewportTop: number, clientX: number, clientY: number, commit: boolean) => {
       const session = sessionRef.current
       sessionRef.current = null
       if (!session) return
@@ -99,24 +147,29 @@ export function useDesktopIconDrag({ apps, desktopRef, onOpen, onCommit }: UseDe
         setDraggingId(null)
         setDragPixel(null)
         setPreviewCoords(null)
+        setDropTargetId(null)
         return
       }
 
       lastClickRef.current = null
 
       if (commit) {
-        const local = desktopLocalFromViewport(viewportLeft, viewportTop)
-        const target = positionToCoordinate(local.left, local.top)
-        const next = previewPlacement(appsRef.current, session.id, target)
-        const updates = diffCoordinates(appsRef.current, next, session.id)
-        if (updates.length > 0) {
-          onCommitRef.current(updates)
+        const handled = onDropAtPointRef.current?.(session.id, clientX, clientY) === true
+        if (!handled) {
+          const local = desktopLocalFromViewport(viewportLeft, viewportTop)
+          const target = positionToCoordinate(local.left, local.top)
+          const next = previewPlacement(appsRef.current, session.id, target)
+          const updates = diffCoordinates(appsRef.current, next, session.id)
+          if (updates.length > 0) {
+            onCommitRef.current(updates)
+          }
         }
       }
 
       setDraggingId(null)
       setDragPixel(null)
       setPreviewCoords(null)
+      setDropTargetId(null)
     },
     [desktopLocalFromViewport],
   )
@@ -138,7 +191,7 @@ export function useDesktopIconDrag({ apps, desktopRef, onOpen, onCommit }: UseDe
       const left = e.clientX - session.offsetX
       const top = e.clientY - session.offsetY
       setDragPixel({ left, top })
-      updatePreviewFromIconViewport(session.id, left, top)
+      updatePreviewFromIconViewport(session.id, left, top, e.clientX, e.clientY)
     }
 
     const onUp = (e: globalThis.PointerEvent) => {
@@ -146,13 +199,13 @@ export function useDesktopIconDrag({ apps, desktopRef, onOpen, onCommit }: UseDe
       if (!session || e.pointerId !== session.pointerId) return
       const left = e.clientX - session.offsetX
       const top = e.clientY - session.offsetY
-      endDrag(left, top, true)
+      endDrag(left, top, e.clientX, e.clientY, true)
     }
 
     const onCancel = () => {
       const session = sessionRef.current
       if (!session) return
-      endDrag(0, 0, false)
+      endDrag(0, 0, 0, 0, false)
     }
 
     window.addEventListener('pointermove', onMove)
@@ -185,6 +238,7 @@ export function useDesktopIconDrag({ apps, desktopRef, onOpen, onCommit }: UseDe
     draggingId,
     dragPixel,
     previewCoords,
+    dropTargetId,
     handleIconPointerDown,
   }
 }

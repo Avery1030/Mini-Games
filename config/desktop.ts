@@ -12,7 +12,7 @@ export type DesktopAppId = BuiltinAppId | (string & {})
 
 export type DesktopCoordinate = [number, number]
 
-export type DesktopItemKind = 'app' | 'folder'
+export type DesktopItemKind = 'app' | 'folder' | 'textDocument'
 
 /** 窗口铬行为：子类可通过 DesktopWindow.chrome 覆盖 */
 export type WindowChromeOptions = {

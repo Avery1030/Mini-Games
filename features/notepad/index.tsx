@@ -6,13 +6,7 @@ import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { SplitPane, modal, toast } from '@/components/ui'
 import { useNotepadStore } from '@/store/notepad'
-import {
-  createNoteApi,
-  deleteNoteApi,
-  fetchNote,
-  fetchNoteList,
-  updateNoteApi,
-} from './api'
+import { createNoteApi, deleteNoteApi, fetchNote, fetchNoteList, updateNoteApi } from './api'
 import { NoteEditor } from './NoteEditor'
 import { NoteSidebar } from './NoteSidebar'
 import type { NoteMeta } from './types'
@@ -92,8 +86,7 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
       try {
         const list = await refreshList()
         if (cancelled) return
-        const prefer =
-          (lastNoteId && list.find((n) => n.id === lastNoteId)?.id) || list[0]?.id || null
+        const prefer = (lastNoteId && list.find((n) => n.id === lastNoteId)?.id) || list[0]?.id || null
         if (prefer) {
           const note = await fetchNote(prefer)
           if (!cancelled) applyNote(note)

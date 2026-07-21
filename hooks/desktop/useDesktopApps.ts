@@ -20,8 +20,8 @@ export function useDesktopApps(): DesktopAppView[] {
   )
   const windows = useWindowStore((s) => s.windows)
   const coordinates = useDesktopStore((s) => s.coordinates)
-  // 订阅文件夹元数据，rename 后 definition 刷新时一并重算
-  const folders = useDesktopItemsStore((s) => s.folders)
+  // 订阅桌面项目元数据，rename 后 definition 刷新时一并重算
+  const items = useDesktopItemsStore((s) => s.items)
 
   return useMemo(
     () =>
@@ -37,7 +37,7 @@ export function useDesktopApps(): DesktopAppView[] {
         }),
         coordinate: coordinates[def.id] ?? def.defaultCoordinate,
       })),
-    [definitions, windows, coordinates, folders],
+    [definitions, windows, coordinates, items],
   )
 }
 
