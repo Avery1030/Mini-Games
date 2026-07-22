@@ -20,7 +20,7 @@ import {
   Unlock,
 } from 'lucide-react'
 
-/** 可绘制的 overlay 名称（与 klinecharts 内置一致） */
+/** 可绘制的 overlay 名称（与 klinecharts 内置 / 自定义注册一致） */
 export type DrawingOverlayName =
   | 'segment'
   | 'straightLine'
@@ -57,9 +57,16 @@ export type DrawingToolGroup = {
   id: string
   labelKey: string
   icon: LucideIcon
-  /** 组内默认工具（按钮上显示） */
   defaultTool: DrawingToolId
   tools: DrawingToolDef[]
+}
+
+function overlayTool(
+  id: DrawingOverlayName,
+  labelKey: string,
+  icon: LucideIcon,
+): DrawingToolDef {
+  return { id, labelKey, icon, overlay: id }
 }
 
 export const CURSOR_TOOL: DrawingToolDef = {
@@ -75,34 +82,14 @@ export const LINE_GROUP: DrawingToolGroup = {
   icon: Slash,
   defaultTool: 'segment',
   tools: [
-    { id: 'segment', labelKey: 'segment', icon: Minus, overlay: 'segment' },
-    { id: 'straightLine', labelKey: 'straightLine', icon: Slash, overlay: 'straightLine' },
-    { id: 'rayLine', labelKey: 'rayLine', icon: TrendingUp, overlay: 'rayLine' },
-    {
-      id: 'horizontalStraightLine',
-      labelKey: 'horizontalLine',
-      icon: MoveHorizontal,
-      overlay: 'horizontalStraightLine',
-    },
-    {
-      id: 'horizontalRayLine',
-      labelKey: 'horizontalRay',
-      icon: MoveHorizontal,
-      overlay: 'horizontalRayLine',
-    },
-    {
-      id: 'verticalStraightLine',
-      labelKey: 'verticalLine',
-      icon: MoveVertical,
-      overlay: 'verticalStraightLine',
-    },
-    {
-      id: 'verticalRayLine',
-      labelKey: 'verticalRay',
-      icon: MoveVertical,
-      overlay: 'verticalRayLine',
-    },
-    { id: 'priceLine', labelKey: 'priceLine', icon: Minus, overlay: 'priceLine' },
+    overlayTool('segment', 'segment', Minus),
+    overlayTool('straightLine', 'straightLine', Slash),
+    overlayTool('rayLine', 'rayLine', TrendingUp),
+    overlayTool('horizontalStraightLine', 'horizontalLine', MoveHorizontal),
+    overlayTool('horizontalRayLine', 'horizontalRay', MoveHorizontal),
+    overlayTool('verticalStraightLine', 'verticalLine', MoveVertical),
+    overlayTool('verticalRayLine', 'verticalRay', MoveVertical),
+    overlayTool('priceLine', 'priceLine', Minus),
   ],
 }
 
@@ -112,19 +99,9 @@ export const FIB_GROUP: DrawingToolGroup = {
   icon: Percent,
   defaultTool: 'fibonacciLine',
   tools: [
-    { id: 'fibonacciLine', labelKey: 'fibonacci', icon: Percent, overlay: 'fibonacciLine' },
-    {
-      id: 'parallelStraightLine',
-      labelKey: 'parallel',
-      icon: Slash,
-      overlay: 'parallelStraightLine',
-    },
-    {
-      id: 'priceChannelLine',
-      labelKey: 'priceChannel',
-      icon: TrendingUp,
-      overlay: 'priceChannelLine',
-    },
+    overlayTool('fibonacciLine', 'fibonacci', Percent),
+    overlayTool('parallelStraightLine', 'parallel', Slash),
+    overlayTool('priceChannelLine', 'priceChannel', TrendingUp),
   ],
 }
 
@@ -134,10 +111,10 @@ export const SHAPE_GROUP: DrawingToolGroup = {
   icon: Square,
   defaultTool: 'rect',
   tools: [
-    { id: 'rect', labelKey: 'rect', icon: Square, overlay: 'rect' },
-    { id: 'circle', labelKey: 'circle', icon: Circle, overlay: 'circle' },
-    { id: 'polygon', labelKey: 'polygon', icon: Square, overlay: 'polygon' },
-    { id: 'brush', labelKey: 'brush', icon: Pencil, overlay: 'brush' },
+    overlayTool('rect', 'rect', Square),
+    overlayTool('circle', 'circle', Circle),
+    overlayTool('polygon', 'polygon', Square),
+    overlayTool('brush', 'brush', Pencil),
   ],
 }
 
@@ -147,12 +124,21 @@ export const TEXT_GROUP: DrawingToolGroup = {
   icon: Type,
   defaultTool: 'simpleAnnotation',
   tools: [
-    { id: 'simpleAnnotation', labelKey: 'annotation', icon: Type, overlay: 'simpleAnnotation' },
-    { id: 'simpleTag', labelKey: 'tag', icon: Type, overlay: 'simpleTag' },
+    overlayTool('simpleAnnotation', 'annotation', Type),
+    overlayTool('simpleTag', 'tag', Type),
   ],
 }
 
 export const DRAWING_GROUPS: DrawingToolGroup[] = [LINE_GROUP, FIB_GROUP, SHAPE_GROUP, TEXT_GROUP]
+
+const TOOL_BY_ID: Map<DrawingToolId, DrawingToolDef> = new Map([
+  [CURSOR_TOOL.id, CURSOR_TOOL],
+  ...DRAWING_GROUPS.flatMap((g) => g.tools.map((t) => [t.id, t] as const)),
+])
+
+const GROUP_BY_TOOL_ID: Map<DrawingToolId, DrawingToolGroup> = new Map(
+  DRAWING_GROUPS.flatMap((g) => g.tools.map((t) => [t.id, g] as const)),
+)
 
 export type MagnetMode = OverlayMode
 
@@ -163,17 +149,19 @@ export function nextMagnetMode(current: MagnetMode): MagnetMode {
   return MAGNET_CYCLE[(i + 1) % MAGNET_CYCLE.length]!
 }
 
+/** magnetMode → i18n key under klineChart.draw.* */
+export function magnetLabelKey(mode: MagnetMode): 'magnetOff' | 'magnetWeak' | 'magnetStrong' {
+  if (mode === 'strong_magnet') return 'magnetStrong'
+  if (mode === 'weak_magnet') return 'magnetWeak'
+  return 'magnetOff'
+}
+
 export function findTool(id: DrawingToolId): DrawingToolDef {
-  if (id === 'cursor') return CURSOR_TOOL
-  for (const group of DRAWING_GROUPS) {
-    const found = group.tools.find((t) => t.id === id)
-    if (found) return found
-  }
-  return CURSOR_TOOL
+  return TOOL_BY_ID.get(id) ?? CURSOR_TOOL
 }
 
 export function findGroupForTool(id: DrawingToolId): DrawingToolGroup | null {
-  return DRAWING_GROUPS.find((g) => g.tools.some((t) => t.id === id)) ?? null
+  return GROUP_BY_TOOL_ID.get(id) ?? null
 }
 
 export const DRAW_ACTION_ICONS = {

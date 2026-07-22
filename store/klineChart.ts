@@ -34,6 +34,10 @@ function normalizeList(value: unknown, allowed: Set<string>, fallback: string[])
   return [...new Set(next)]
 }
 
+function toggleInList(list: string[], name: string): string[] {
+  return list.includes(name) ? list.filter((n) => n !== name) : [...list, name]
+}
+
 type KlineChartState = {
   symbol: string
   interval: BinanceInterval
@@ -65,20 +69,12 @@ export const useKlineChartStore = create<KlineChartState>()(
 
       toggleOverlay: (name) => {
         if (!OVERLAY_SET.has(name)) return
-        set((state) => ({
-          overlays: state.overlays.includes(name)
-            ? state.overlays.filter((n) => n !== name)
-            : [...state.overlays, name],
-        }))
+        set((state) => ({ overlays: toggleInList(state.overlays, name) }))
       },
 
       togglePane: (name) => {
         if (!PANE_SET.has(name)) return
-        set((state) => ({
-          panes: state.panes.includes(name)
-            ? state.panes.filter((n) => n !== name)
-            : [...state.panes, name],
-        }))
+        set((state) => ({ panes: toggleInList(state.panes, name) }))
       },
 
       setOverlays: (overlays) =>

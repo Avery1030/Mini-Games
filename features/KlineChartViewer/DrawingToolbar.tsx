@@ -12,6 +12,7 @@ import {
   DRAWING_GROUPS,
   findGroupForTool,
   findTool,
+  magnetLabelKey,
   type DrawingToolGroup,
   type DrawingToolId,
   type MagnetMode,
@@ -76,9 +77,7 @@ export function DrawingToolbar({
   const LockIcon = locked ? DRAW_ACTION_ICONS.lock : DRAW_ACTION_ICONS.unlock
   const VisibleIcon = visible ? DRAW_ACTION_ICONS.visible : DRAW_ACTION_ICONS.hidden
   const ClearIcon = DRAW_ACTION_ICONS.clear
-
-  const magnetLabel =
-    magnetMode === 'strong_magnet' ? t('magnetStrong') : magnetMode === 'weak_magnet' ? t('magnetWeak') : t('magnetOff')
+  const magnetLabel = t(magnetLabelKey(magnetMode))
 
   if (collapsed) {
     return (
