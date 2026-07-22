@@ -39,12 +39,15 @@ type KlineChartState = {
   interval: BinanceInterval
   overlays: string[]
   panes: string[]
+  drawingToolbarCollapsed: boolean
   setSymbol: (symbol: string) => void
   setInterval: (interval: BinanceInterval) => void
   toggleOverlay: (name: string) => void
   togglePane: (name: string) => void
   setOverlays: (overlays: string[]) => void
   setPanes: (panes: string[]) => void
+  setDrawingToolbarCollapsed: (collapsed: boolean) => void
+  toggleDrawingToolbarCollapsed: () => void
 }
 
 export const useKlineChartStore = create<KlineChartState>()(
@@ -54,6 +57,7 @@ export const useKlineChartStore = create<KlineChartState>()(
       interval: DEFAULT_INTERVAL.value,
       overlays: [...DEFAULT_OVERLAYS],
       panes: [...DEFAULT_PANES],
+      drawingToolbarCollapsed: false,
 
       setSymbol: (symbol) => set({ symbol: normalizeSymbol(symbol) }),
 
@@ -81,16 +85,22 @@ export const useKlineChartStore = create<KlineChartState>()(
         set({ overlays: normalizeList(overlays, OVERLAY_SET, [...DEFAULT_OVERLAYS]) }),
 
       setPanes: (panes) => set({ panes: normalizeList(panes, PANE_SET, [...DEFAULT_PANES]) }),
+
+      setDrawingToolbarCollapsed: (collapsed) => set({ drawingToolbarCollapsed: collapsed }),
+
+      toggleDrawingToolbarCollapsed: () =>
+        set((state) => ({ drawingToolbarCollapsed: !state.drawingToolbarCollapsed })),
     }),
     {
       name: STORAGE_KEYS.klineChart,
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => appStorage.createStateStorage()),
       partialize: (s) => ({
         symbol: s.symbol,
         interval: s.interval,
         overlays: s.overlays,
         panes: s.panes,
+        drawingToolbarCollapsed: s.drawingToolbarCollapsed,
       }),
       merge: (persisted, current) => {
         const saved = persisted as Partial<KlineChartState> | undefined
@@ -100,6 +110,7 @@ export const useKlineChartStore = create<KlineChartState>()(
           interval: normalizeInterval(saved?.interval),
           overlays: normalizeList(saved?.overlays, OVERLAY_SET, [...DEFAULT_OVERLAYS]),
           panes: normalizeList(saved?.panes, PANE_SET, [...DEFAULT_PANES]),
+          drawingToolbarCollapsed: saved?.drawingToolbarCollapsed === true,
         }
       },
     },

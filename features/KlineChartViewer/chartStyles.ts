@@ -22,6 +22,18 @@ export async function ensureKlineLocales() {
   } as never)
 }
 
+let overlaysReady: Promise<void> | null = null
+
+/** 注册自定义划线 overlay（幂等） */
+export function ensureDrawingOverlaysReady() {
+  if (!overlaysReady) {
+    overlaysReady = import('./registerOverlays').then(({ ensureDrawingOverlays }) =>
+      ensureDrawingOverlays(),
+    )
+  }
+  return overlaysReady
+}
+
 function pct(n: number): string {
   return `${n.toFixed(2)}%`
 }

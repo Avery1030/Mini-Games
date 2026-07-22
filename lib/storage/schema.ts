@@ -65,6 +65,7 @@ export type KlineChartPersistState = {
   interval: string
   overlays: string[]
   panes: string[]
+  drawingToolbarCollapsed: boolean
 }
 
 /** 壁纸首屏 boot 标记 */
