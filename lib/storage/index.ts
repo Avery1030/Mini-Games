@@ -33,3 +33,13 @@ export {
   WINDOWS_KEY,
   COORDINATES_KEY,
 } from './migrateLegacy'
+
+export {
+  BACKUP_FORMAT,
+  BACKUP_VERSION,
+  BACKUP_STORAGE_KEYS,
+  exportAppBackup,
+  parseAppBackup,
+  type AppBackupSnapshot,
+  type ImportAppBackupResult,
+} from './backup'

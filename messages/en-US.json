@@ -192,7 +192,8 @@
       "display": "Display",
       "appearance": "Appearance",
       "taskbar": "Taskbar",
-      "desktop": "Desktop"
+      "desktop": "Desktop",
+      "data": "Data"
     },
     "displayHint": "Select a wallpaper, then click Apply to change the desktop.",
     "myImages": "My images",
@@ -241,7 +242,18 @@
     "showTrayDecor": "Show decorative tray icons",
     "desktopHint": "Organize desktop icons. Changes apply immediately.",
     "hidePlaceholders": "Hide placeholder icons (Referral, Market, etc.)",
-    "hidePlaceholdersHelp": "When enabled, only apps with real windows remain (Minesweeper, Tetris, Music, Settings, Document, etc.)."
+    "hidePlaceholdersHelp": "When enabled, only apps with real windows remain (Minesweeper, Tetris, Music, Settings, Document, etc.).",
+    "backupHint": "Export all local preferences and desktop state as JSON so you can restore them on another device. Import overwrites matching settings and applies immediately.",
+    "backupExport": "Export",
+    "backupExportHint": "Includes theme, wallpaper, windows, desktop icons, notepad/paint/kline preferences (lock session excluded).",
+    "backupExportAction": "Export JSON…",
+    "backupExportOk": "Backup file downloaded",
+    "backupExportFail": "Export failed",
+    "backupImport": "Import",
+    "backupImportHint": "Pick a previously exported JSON. Imported values take priority over current settings and apply immediately.",
+    "backupImportAction": "Import from JSON…",
+    "backupImportOk": "Imported and applied {count} setting(s)",
+    "backupImportFail": "Import failed"
   },
   "lock": {
     "title": "Computer locked",
