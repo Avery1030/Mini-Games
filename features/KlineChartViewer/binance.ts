@@ -35,6 +35,11 @@ export type FetchKlinesParams = {
   signal?: AbortSignal
 }
 
+const BINANCE_CONTINUOUS_KLINES_URLS = [
+  'https://www.binance.com/fapi/v1/continuousKlines',
+  'https://fapi.binance.com/fapi/v1/continuousKlines',
+] as const
+
 export function normalizeBinanceKline(row: BinanceKlineRaw): KLineBar {
   return {
     timestamp: row[0],
@@ -51,27 +56,49 @@ export function normalizeBinanceKlines(rows: BinanceKlineRaw[]): KLineBar[] {
   return rows.map(normalizeBinanceKline).sort((a, b) => a.timestamp - b.timestamp)
 }
 
-/** 经同源代理拉取币安 U 本位合约 K 线，避免浏览器 CORS / 直连失败 */
-export async function fetchBinanceKlines(params: FetchKlinesParams): Promise<KLineBar[]> {
+function buildContinuousQuery(params: FetchKlinesParams): string {
   const search = new URLSearchParams({
-    symbol: params.symbol.toUpperCase(),
+    pair: params.symbol.toUpperCase(),
+    contractType: 'PERPETUAL',
     interval: params.interval,
     limit: String(params.limit ?? KLINES_LIMIT),
   })
   if (params.startTime != null) search.set('startTime', String(params.startTime))
   if (params.endTime != null) search.set('endTime', String(params.endTime))
+  return search.toString()
+}
 
-  const res = await fetch(`/api/binance/klines?${search.toString()}`, {
-    signal: params.signal,
-    cache: 'no-store',
-  })
-  if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as { error?: string } | null
-    throw new Error(body?.error || `K线请求失败 (${res.status})`)
+/**
+ * 浏览器直连币安 continuousKlines（与官网同一接口）。
+ */
+export async function fetchBinanceKlines(params: FetchKlinesParams): Promise<KLineBar[]> {
+  const qs = buildContinuousQuery(params)
+  const errors: string[] = []
+
+  for (const base of BINANCE_CONTINUOUS_KLINES_URLS) {
+    try {
+      const res = await fetch(`${base}?${qs}`, {
+        signal: params.signal,
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
+      })
+      if (!res.ok) {
+        errors.push(`${base} → HTTP ${res.status}`)
+        continue
+      }
+      const rows = (await res.json()) as BinanceKlineRaw[]
+      if (!Array.isArray(rows) || rows.length === 0) {
+        errors.push(`${base} → empty`)
+        continue
+      }
+      return normalizeBinanceKlines(rows)
+    } catch (err) {
+      if (params.signal?.aborted) throw err
+      errors.push(`${base} → ${err instanceof Error ? err.message : String(err)}`)
+    }
   }
-  const rows = (await res.json()) as BinanceKlineRaw[]
-  if (!Array.isArray(rows)) return []
-  return normalizeBinanceKlines(rows)
+
+  throw new Error(`拉取合约 K 线失败：${errors[0] || '上游无响应'}`)
 }
 
 export async function fetchBarsForLoader(opts: {
@@ -116,9 +143,7 @@ export function subscribeBinanceKline(
   interval: BinanceInterval,
   handlers: KlineSocketHandlers,
 ): () => void {
-  // 与 continuousKlines REST 对齐：pair_perpetual@continuousKline_<interval>
   const stream = `${symbol.toLowerCase()}_perpetual@continuousKline_${interval}`
-  // 新分层路径：kline / continuousKline 属于 market 层（非 public/private）
   const wsUrls = [
     `wss://fstream.binance.com/market/ws/${stream}`,
     `wss://fstream.binancefuture.com/market/ws/${stream}`,
@@ -157,7 +182,6 @@ export function subscribeBinanceKline(
 
   const parseKlinePayload = (raw: string) => {
     const payload = JSON.parse(raw) as {
-      stream?: string
       data?: {
         k?: {
           t: number
@@ -178,9 +202,7 @@ export function subscribeBinanceKline(
         v: string
         q: string
       }
-      e?: string
     }
-    // combined stream: { stream, data: { e, k } }；单流：{ e, k }
     const k = payload.data?.k ?? payload.k
     if (!k) return null
     return {
