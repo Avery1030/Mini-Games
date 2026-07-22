@@ -17,6 +17,7 @@ export type {
   NotepadPersistState,
   PaintPersistState,
   PaintToolPersist,
+  KlineChartPersistState,
   WallpaperBootPersist,
   LegacyDesktopPersistState,
   LockPersistState,

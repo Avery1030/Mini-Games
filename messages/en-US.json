@@ -462,5 +462,13 @@
   "calculator": {
     "error": "Error",
     "hint": "Keyboard supported · Use ( ) and xʸ for more complex math"
+  },
+  "klineChart": {
+    "symbol": "Symbol",
+    "mainChart": "Main",
+    "subChart": "Pane",
+    "loading": "Loading…",
+    "perpetual": "USDT Perp",
+    "loadFailed": "Failed to load"
   }
 }

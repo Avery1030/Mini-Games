@@ -462,5 +462,13 @@
   "calculator": {
     "error": "错误",
     "hint": "支持键盘输入 · 括号与 xʸ 可做稍复杂运算"
+  },
+  "klineChart": {
+    "symbol": "交易对",
+    "mainChart": "主图",
+    "subChart": "副图",
+    "loading": "加载中…",
+    "perpetual": "USDT永续",
+    "loadFailed": "加载失败"
   }
 }

@@ -16,6 +16,8 @@ export const STORAGE_KEYS = {
   notepad: 'desktop-notepad',
   /** 画图偏好（zustand persist） */
   paint: 'desktop-paint',
+  /** K 线图表偏好（zustand persist） */
+  klineChart: 'desktop-kline-chart',
   /** 锁屏状态（zustand persist） */
   lock: 'desktop-lock',
   /** 日历按日备注（zustand persist） */

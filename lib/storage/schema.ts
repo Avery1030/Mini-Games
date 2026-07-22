@@ -60,6 +60,13 @@ export type PaintPersistState = {
   brushSize: number
 }
 
+export type KlineChartPersistState = {
+  symbol: string
+  interval: string
+  overlays: string[]
+  panes: string[]
+}
+
 /** 壁纸首屏 boot 标记 */
 export type WallpaperBootPersist = {
   wallpaperId: WallpaperId
@@ -127,6 +134,7 @@ export type StorageSchema = {
   [STORAGE_KEYS.wallpaperBoot]: WallpaperBootPersist
   [STORAGE_KEYS.notepad]: ZustandPersistEnvelope<NotepadPersistState>
   [STORAGE_KEYS.paint]: ZustandPersistEnvelope<PaintPersistState>
+  [STORAGE_KEYS.klineChart]: ZustandPersistEnvelope<KlineChartPersistState>
   [STORAGE_KEYS.lock]: ZustandPersistEnvelope<LockPersistState>
   [STORAGE_KEYS.calendar]: ZustandPersistEnvelope<CalendarPersistState>
   [STORAGE_KEYS.desktopItems]: ZustandPersistEnvelope<DesktopItemsPersistState>
