@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
+import { useTheme } from 'next-themes'
 import type { Chart, DataLoader } from 'klinecharts'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { cn } from '@/lib/cn'
 import { useKlineChartStore } from '@/store'
 import { fetchBarsForLoader, subscribeBinanceKline } from './binance'
-import { buildCandleStyles, ensureKlineLocales } from './chartStyles'
+import { applyChartStyles, ensureKlineLocales } from './chartStyles'
 import {
   CANDLE_PANE_ID,
   findInterval,
@@ -33,6 +34,8 @@ export function KlineChartViewer({ embedded = false }: KlineChartViewerProps) {
 
   const locale = useLocale()
   const t = useTranslations('klineChart')
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
 
   const symbol = useKlineChartStore((s) => s.symbol)
   const interval = useKlineChartStore((s) => s.interval)
@@ -83,7 +86,7 @@ export function KlineChartViewer({ embedded = false }: KlineChartViewerProps) {
       if (!chart) return
 
       chartRef.current = chart
-      chart.setStyles(buildCandleStyles())
+      applyChartStyles(chart, document.documentElement.classList.contains('dark'))
 
       const dataLoader: DataLoader = {
         getBars: async ({ type, timestamp, symbol: sym, period, callback }) => {
@@ -152,9 +155,9 @@ export function KlineChartViewer({ embedded = false }: KlineChartViewerProps) {
     if (!chart || !ready) return
     void ensureKlineLocales().then(() => {
       chart.setLocale(locale)
-      chart.setStyles(buildCandleStyles())
+      applyChartStyles(chart, isDark)
     })
-  }, [locale, ready])
+  }, [locale, isDark, ready])
 
   useEffect(() => {
     const chart = chartRef.current
