@@ -26,6 +26,9 @@ function pct(n: number): string {
   return `${n.toFixed(2)}%`
 }
 
+const UP_COLOR = '#2DBD85'
+const DOWN_COLOR = '#F6475D'
+
 /** 主图坐标网格：暗黑模式下低对比、更细，避免抢视线 */
 function buildGridStyles(isDark: boolean): DeepPartial<Styles>['grid'] {
   return {
@@ -55,17 +58,17 @@ export function buildCandleStyles(isDark = false): DeepPartial<Styles> {
     grid: buildGridStyles(isDark),
     candle: {
       bar: {
-        upColor: '#2DBD85',
-        upBorderColor: '#2DBD85',
-        upWickColor: '#2DBD85',
-        downColor: '#F6475D',
-        downBorderColor: '#F6475D',
-        downWickColor: '#F6475D',
+        upColor: UP_COLOR,
+        upBorderColor: UP_COLOR,
+        upWickColor: UP_COLOR,
+        downColor: DOWN_COLOR,
+        downBorderColor: DOWN_COLOR,
+        downWickColor: DOWN_COLOR,
       },
       priceMark: {
         last: {
-          upColor: '#2DBD85',
-          downColor: '#F6475D',
+          upColor: UP_COLOR,
+          downColor: DOWN_COLOR,
         },
       },
       tooltip: {
@@ -103,6 +106,15 @@ export function buildCandleStyles(isDark = false): DeepPartial<Styles> {
           },
         },
       },
+    },
+    // VOL / MACD 等柱状指标与主图涨跌色一致
+    indicator: {
+      bars: [
+        {
+          upColor: UP_COLOR,
+          downColor: DOWN_COLOR,
+        },
+      ],
     },
   }
 }
