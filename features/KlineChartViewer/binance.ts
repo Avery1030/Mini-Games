@@ -1,9 +1,4 @@
-import {
-  KLINES_LIMIT,
-  periodToInterval,
-  type BinanceInterval,
-  type Period,
-} from './constants'
+import { KLINES_LIMIT, periodToInterval, type BinanceInterval, type Period } from './constants'
 
 export type KLineBar = {
   timestamp: number
@@ -94,8 +89,7 @@ export async function fetchBarsForLoader(opts: {
   }
 
   const limit = KLINES_LIMIT
-  const endTime =
-    opts.type === 'forward' && opts.timestamp != null ? opts.timestamp - 1 : undefined
+  const endTime = opts.type === 'forward' && opts.timestamp != null ? opts.timestamp - 1 : undefined
 
   const bars = await fetchBinanceKlines({
     symbol: opts.symbol,
@@ -116,19 +110,21 @@ export type KlineSocketHandlers = {
   onError?: (error: Event | Error) => void
 }
 
-/** 订阅 U 本位合约实时 K 线：优先 WebSocket，失败则轮询 */
+/** 订阅 U 本位永续实时 K 线（币安 /market 分层；失败则轮询） */
 export function subscribeBinanceKline(
   symbol: string,
   interval: BinanceInterval,
   handlers: KlineSocketHandlers,
 ): () => void {
-  const stream = `${symbol.toLowerCase()}@kline_${interval}`
-  // 部分网络 fstream.binance.com 不通，binancefuture.com 镜像可用
-  const wsBases = [
-    process.env.NEXT_PUBLIC_BINANCE_FUTURES_WS_URL,
-    'wss://fstream.binancefuture.com',
-    'wss://fstream.binance.com',
-  ].filter(Boolean) as string[]
+  // 与 continuousKlines REST 对齐：pair_perpetual@continuousKline_<interval>
+  const stream = `${symbol.toLowerCase()}_perpetual@continuousKline_${interval}`
+  // 新分层路径：kline / continuousKline 属于 market 层（非 public/private）
+  const wsUrls = [
+    `wss://fstream.binance.com/market/ws/${stream}`,
+    `wss://fstream.binancefuture.com/market/ws/${stream}`,
+    `wss://fstream.binance.com/market/stream?streams=${stream}`,
+    `wss://fstream.binancefuture.com/market/stream?streams=${stream}`,
+  ]
 
   let closed = false
   let ws: WebSocket | null = null
@@ -159,15 +155,54 @@ export function subscribeBinanceKline(
     pollTimer = setInterval(() => void tick(), 5_000)
   }
 
+  const parseKlinePayload = (raw: string) => {
+    const payload = JSON.parse(raw) as {
+      stream?: string
+      data?: {
+        k?: {
+          t: number
+          o: string
+          h: string
+          l: string
+          c: string
+          v: string
+          q: string
+        }
+      }
+      k?: {
+        t: number
+        o: string
+        h: string
+        l: string
+        c: string
+        v: string
+        q: string
+      }
+      e?: string
+    }
+    // combined stream: { stream, data: { e, k } }；单流：{ e, k }
+    const k = payload.data?.k ?? payload.k
+    if (!k) return null
+    return {
+      timestamp: k.t,
+      open: Number(k.o),
+      high: Number(k.h),
+      low: Number(k.l),
+      close: Number(k.c),
+      volume: Number(k.v),
+      turnover: Number(k.q),
+    } satisfies KLineBar
+  }
+
   const connectWs = () => {
     if (closed) return
-    if (wsIndex >= wsBases.length) {
+    if (wsIndex >= wsUrls.length) {
       startPoll()
       return
     }
-    const base = wsBases[wsIndex]!
+    const url = wsUrls[wsIndex]!
     try {
-      ws = new WebSocket(`${base}/ws/${stream}`)
+      ws = new WebSocket(url)
     } catch {
       wsIndex += 1
       connectWs()
@@ -176,28 +211,8 @@ export function subscribeBinanceKline(
 
     ws.onmessage = (event) => {
       try {
-        const payload = JSON.parse(String(event.data)) as {
-          k?: {
-            t: number
-            o: string
-            h: string
-            l: string
-            c: string
-            v: string
-            q: string
-          }
-        }
-        const k = payload.k
-        if (!k) return
-        handlers.onBar({
-          timestamp: k.t,
-          open: Number(k.o),
-          high: Number(k.h),
-          low: Number(k.l),
-          close: Number(k.c),
-          volume: Number(k.v),
-          turnover: Number(k.q),
-        })
+        const bar = parseKlinePayload(String(event.data))
+        if (bar) handlers.onBar(bar)
       } catch (err) {
         handlers.onError?.(err instanceof Error ? err : new Error(String(err)))
       }
