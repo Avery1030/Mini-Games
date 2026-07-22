@@ -2298,10 +2298,10 @@ keyv@^4.5.4:
   dependencies:
     json-buffer "3.0.1"
 
-klinecharts@^10.0.0-beta1:
-  version "10.0.0-beta1"
-  resolved "https://registry.yarnpkg.com/klinecharts/-/klinecharts-10.0.0-beta1.tgz#43e9bab3e364783b004436a61a9b9d32517d853d"
-  integrity sha512-5ZxFGjJeZqt9+q45lZDhApC3kdgrk51i27uSpIELgXJLNgfSc0anlb8XkU+52LVrBYnTv9dFr8/Q7lG81vIV1w==
+klinecharts@^10.0.0:
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/klinecharts/-/klinecharts-10.0.0.tgz#0c40e7eeafd72b31c2e49f851cb5ad5f353da27a"
+  integrity sha512-njopc5Wwff83l9R750Yrj+EcmQUe7JUwN4xgmmwhUPX30jd7ZLabBQT5s2+yTaAk98MMqglCE6vqrSnek/ppbg==
 
 language-subtag-registry@^0.3.20:
   version "0.3.23"

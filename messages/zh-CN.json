@@ -14,7 +14,8 @@
     "music": "音乐",
     "calculator": "计算器",
     "recycleBin": "回收站",
-    "cmd": "命令提示符"
+    "cmd": "命令提示符",
+    "klineChartViewer": "K线图表"
   },
   "desktop": {
     "open": "打开",

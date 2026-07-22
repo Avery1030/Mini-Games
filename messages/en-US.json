@@ -14,7 +14,8 @@
     "music": "Music",
     "calculator": "Calculator",
     "recycleBin": "Recycle Bin",
-    "cmd": "Command Prompt"
+    "cmd": "Command Prompt",
+    "klineChartViewer": "K-Line Chart"
   },
   "desktop": {
     "open": "Open",

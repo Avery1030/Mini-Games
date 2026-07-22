@@ -11,6 +11,7 @@ import {
   Folder,
   Trash2,
   Terminal,
+  ChartCandlestick,
 } from 'lucide-react'
 import { Minesweeper } from '@/features/minesweeper'
 import { Tetris } from '@/features/tetris'
@@ -193,12 +194,7 @@ export class TextDocumentWindow extends DesktopWindow {
   title: string
   private appComponent: ComponentType<{ embedded?: boolean }> | null = null
 
-  constructor(opts: {
-    id: DesktopAppId
-    title: string
-    noteId: string
-    coordinate?: DesktopCoordinate
-  }) {
+  constructor(opts: { id: DesktopAppId; title: string; noteId: string; coordinate?: DesktopCoordinate }) {
     super()
     this.id = opts.id
     this.title = opts.title
@@ -273,5 +269,28 @@ export class FolderWindow extends DesktopWindow {
     const trimmed = nextTitle.trim()
     if (!trimmed) return
     this.title = trimmed
+  }
+}
+
+/**
+ * K 线图表：延迟加载 feature，避免 klinecharts 在 SSR 顶层访问 window。
+ */
+export class KlineChartViewerWindow extends DesktopWindow {
+  readonly id = 'klineChartViewer' as const
+  readonly icon = ChartCandlestick
+  readonly defaultCoordinate: DesktopCoordinate = [3, 2]
+  readonly width = 1024
+  readonly height = 768
+  private appComponent: ComponentType<{ embedded?: boolean }> | null = null
+
+  get app(): ComponentType<{ embedded?: boolean }> {
+    if (!this.appComponent) {
+      this.appComponent = (props: { embedded?: boolean }) => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { KlineChartViewer } = require('@/features/KlineChartViewer') as typeof import('@/features/KlineChartViewer')
+        return createElement(KlineChartViewer, { embedded: props.embedded })
+      }
+    }
+    return this.appComponent
   }
 }
