@@ -75,7 +75,7 @@
     "maximize": "最大化",
     "restore": "还原",
     "close": "关闭",
-    "minimizeAllHint": "双击空白处最小化全部窗口"
+    "minimizeAllHint": "双击空白处：最小化全部窗口；再次双击还原"
   },
   "folder": {
     "untitled": "文件夹",

@@ -75,7 +75,7 @@
     "maximize": "Maximize",
     "restore": "Restore",
     "close": "Close",
-    "minimizeAllHint": "Double-click empty area to minimize all windows"
+    "minimizeAllHint": "Double-click empty area to minimize all; double-click again to restore"
   },
   "folder": {
     "untitled": "Folder",

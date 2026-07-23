@@ -9,11 +9,22 @@ const WINDOW_Z_BASE = 1000
 
 type WindowsMap = Record<DesktopAppId, DesktopWindowRuntime>
 
+/** 批量最小化前的可见窗口快照（内存态） */
+type ShowDesktopSnapshot = {
+  visibleIds: DesktopAppId[]
+  activeId: DesktopAppId | null
+}
+
 interface WindowState {
   windows: WindowsMap
   topZIndex: number
   /** 下一个新打开窗口的任务栏序号 */
   nextOpenOrder: number
+  /**
+   * 任务栏「显示桌面」快照：记录批量最小化前仍可见的窗口。
+   * 不入 persist；有快照且当前无可见窗时，再次 toggle 会还原。
+   */
+  showDesktopSnapshot: ShowDesktopSnapshot | null
   _hasHydrated: boolean
 }
 
@@ -23,8 +34,11 @@ interface WindowActions {
   closeWindow: (id: DesktopAppId) => void
   closeAllWindows: () => void
   minimizeWindow: (id: DesktopAppId) => void
-  /** 最小化所有已打开且可见的窗口 */
-  minimizeAllWindows: () => void
+  /**
+   * 任务栏空白双击：有可见窗 → 记下状态并全部最小化；
+   * 已全部最小化且有快照 → 还原之前可见窗。
+   */
+  toggleMinimizeAllWindows: () => void
   /** 记忆窗口位置/尺寸（关闭后仍保留） */
   updateWindowBounds: (id: DesktopAppId, bounds: WindowBounds) => void
   focusWindow: (id: DesktopAppId) => void
@@ -156,6 +170,7 @@ export const useWindowStore = create<WindowStore>()(
       windows: createDefaultWindows(),
       topZIndex: WINDOW_Z_BASE,
       nextOpenOrder: 1,
+      showDesktopSnapshot: null,
       _hasHydrated: false,
 
       setHasHydrated: (value) => set({ _hasHydrated: value }),
@@ -234,17 +249,56 @@ export const useWindowStore = create<WindowStore>()(
         deskWin?.onAfterMinimize()
       },
 
-      minimizeAllWindows: () => {
-        const { windows } = get()
-        let changed = false
-        const next = { ...windows }
-        for (const id of Object.keys(next) as DesktopAppId[]) {
-          const w = next[id]
-          if (!w?.isOpen || w.minimized) continue
-          next[id] = { ...w, minimized: true, active: false }
-          changed = true
+      toggleMinimizeAllWindows: () => {
+        const { windows, showDesktopSnapshot, topZIndex } = get()
+        const openEntries = (Object.entries(windows) as [DesktopAppId, DesktopWindowRuntime][]).filter(
+          ([, w]) => w.isOpen,
+        )
+        const visibleIds = openEntries.filter(([, w]) => !w.minimized).map(([id]) => id)
+
+        // 无可见窗 + 有快照 → 还原
+        if (visibleIds.length === 0) {
+          if (!showDesktopSnapshot?.visibleIds.length) return
+
+          let next = { ...windows }
+          let nextZ = topZIndex
+          const restoreIds = showDesktopSnapshot.visibleIds.filter((id) => next[id]?.isOpen)
+          for (const id of restoreIds) {
+            next[id] = { ...next[id], minimized: false, active: false }
+          }
+
+          const preferred =
+            showDesktopSnapshot.activeId && restoreIds.includes(showDesktopSnapshot.activeId)
+              ? showDesktopSnapshot.activeId
+              : restoreIds[restoreIds.length - 1]
+
+          if (preferred) {
+            nextZ = getNextZ(next, topZIndex)
+            next = bringToFront(next, preferred, nextZ, { minimized: false })
+          }
+
+          set({
+            windows: next,
+            topZIndex: nextZ,
+            showDesktopSnapshot: null,
+          })
+          return
         }
-        if (changed) set({ windows: next })
+
+        // 有可见窗 → 记下并全部最小化
+        const activeId =
+          openEntries.find(([, w]) => w.active && !w.minimized)?.[0] ??
+          visibleIds.slice().sort((a, b) => windows[b].zIndex - windows[a].zIndex)[0] ??
+          null
+
+        const next = { ...windows }
+        for (const id of visibleIds) {
+          next[id] = { ...next[id], minimized: true, active: false }
+        }
+        set({
+          windows: next,
+          showDesktopSnapshot: { visibleIds, activeId },
+        })
       },
 
       focusWindow: (id) => {

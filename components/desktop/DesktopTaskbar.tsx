@@ -28,7 +28,7 @@ export function DesktopTaskbar() {
   const hasHydrated = useDesktopHydrated()
   const openWindow = useWindowStore((s) => s.openWindow)
   const handleTaskbarClick = useWindowStore((s) => s.handleTaskbarClick)
-  const minimizeAllWindows = useWindowStore((s) => s.minimizeAllWindows)
+  const toggleMinimizeAllWindows = useWindowStore((s) => s.toggleMinimizeAllWindows)
   const showTrayDecor = useSettingsStore((s) => s.showTrayDecor)
   const [startMenuOpen, setStartMenuOpen] = useState(false)
 
@@ -79,14 +79,14 @@ export function DesktopTaskbar() {
         ))}
       </div>
 
-      {/* 空白区双击 → 全部最小化（不抢窗口按钮 / 托盘点击） */}
+      {/* 空白区双击 → 显示桌面 / 还原（不抢窗口按钮 / 托盘点击） */}
       <div
         className='flex-1 self-stretch min-w-2 cursor-default'
         role='presentation'
         aria-label={t('window.minimizeAllHint')}
         onDoubleClick={(e) => {
           e.preventDefault()
-          minimizeAllWindows()
+          toggleMinimizeAllWindows()
         }}
       />
 
