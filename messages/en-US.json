@@ -281,6 +281,7 @@
         "Icons can be dragged. Move them to a comfortable grid; positions persist after refresh.",
         "Change wallpapers in Settings: presets or your own uploads, stored locally. Prefer originals for a sharp fullscreen look.",
         "Drag the title bar to move a window, drag edges to resize, use — to minimize, □ to maximize, and ✕ to close.",
+        "The address bar follows the focused window (e.g. /window/settings) via soft URL updates — no page reload. Refresh or share that URL to reopen the app; Back/Forward also retarget focus.",
         "The taskbar has Start on the left, open windows in the middle, and theme, language, and decorative buttons on the right — the last ones are placeholders for now."
       ]
     },
@@ -289,12 +290,14 @@
       "body": [
         "Minesweeper and Tetris: classic games for zoning out.",
         "Music: demo tracks plus Audius search; for popular copyrighted songs, import local files.",
-        "Settings: display, appearance, taskbar, and desktop options.",
+        "Settings: Display, Appearance, Taskbar, and Data. Data lets you export/import a JSON backup of local preferences and desktop state.",
         "Document: the window you are reading. Offline content, no annotations saved.",
         "Log: dated release notes — open the Log icon; Document also shows a short recent summary.",
         "Notepad: create, edit, and delete plain-text notes under .data on this machine. Supports titles, word wrap, and Ctrl/⌘+S.",
         "Paint: canvas doodling with palette, eraser, and shapes; works saved as PNG under .data/drawings.",
-        "Calculator: open from Start or the desktop. Supports arithmetic, parentheses, powers, square root, and simple memory keys."
+        "Calculator: open from Start or the desktop. Supports arithmetic, parentheses, powers, square root, and simple memory keys.",
+        "K-Line Chart: USDT perpetual candles with period and main/sub indicators; market data from Binance public APIs.",
+        "Command Prompt: a simple DOS-style terminal to browse desktop/folder paths and open some apps."
       ]
     },
     "changelog": {
@@ -383,6 +386,15 @@
   "changelog": {
     "toc": "Versions",
     "footer": "Changelog · {count} entries · Current: {title}",
+    "2026-07-23": {
+      "title": "Window routes, backup & charts",
+      "items": [
+        "Window routes: the focused app syncs to /window/{id} without reloading; refresh deep-links reopen it, and Back/Forward retarget focus.",
+        "Settings gains a Data section to export/import a JSON backup of local preferences and desktop state.",
+        "Settings sidebar is now Display, Appearance, Taskbar, and Data; the unused Desktop section was removed.",
+        "K-Line Chart for USDT perpetuals with periods and indicators; Notepad / Paint / K-line share a typed http client."
+      ]
+    },
     "2026-07-21": {
       "title": "Toast, snap & desktop polish",
       "items": [

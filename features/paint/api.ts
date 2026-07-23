@@ -1,34 +1,22 @@
+import { http } from '@/lib/http'
 import type { DrawingDetail, DrawingMeta } from './types'
 
-async function parseJson<T>(res: Response): Promise<T> {
-  const data = (await res.json()) as T & { error?: string }
-  if (!res.ok) {
-    throw new Error((data as { error?: string }).error || `HTTP ${res.status}`)
-  }
-  return data
-}
+type DrawingListResponse = { drawings: DrawingMeta[] }
+type DrawingResponse = { drawing: DrawingDetail }
+type DrawingWriteBody = { title?: string; imageBase64?: string }
 
 export async function fetchDrawingList(): Promise<DrawingMeta[]> {
-  const data = await parseJson<{ drawings: DrawingMeta[] }>(await fetch('/api/paint'))
+  const data = await http.get<DrawingListResponse>('/api/paint')
   return data.drawings
 }
 
 export async function fetchDrawing(id: string): Promise<DrawingDetail> {
-  const data = await parseJson<{ drawing: DrawingDetail }>(await fetch(`/api/paint/${id}`))
+  const data = await http.get<DrawingResponse>(`/api/paint/${id}`)
   return data.drawing
 }
 
-export async function createDrawingApi(input?: {
-  title?: string
-  imageBase64?: string
-}): Promise<DrawingDetail> {
-  const data = await parseJson<{ drawing: DrawingDetail }>(
-    await fetch('/api/paint', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input ?? {}),
-    }),
-  )
+export async function createDrawingApi(input?: DrawingWriteBody): Promise<DrawingDetail> {
+  const data = await http.post<DrawingResponse, DrawingWriteBody>('/api/paint', input ?? {})
   return {
     ...data.drawing,
     imageUrl: data.drawing.hasImage ? `/api/paint/file/${data.drawing.id}.png` : null,
@@ -37,18 +25,12 @@ export async function createDrawingApi(input?: {
 
 export async function updateDrawingApi(
   id: string,
-  patch: { title?: string; imageBase64?: string },
+  patch: DrawingWriteBody,
 ): Promise<DrawingDetail> {
-  const data = await parseJson<{ drawing: DrawingDetail }>(
-    await fetch(`/api/paint/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(patch),
-    }),
-  )
+  const data = await http.put<DrawingResponse, DrawingWriteBody>(`/api/paint/${id}`, patch)
   return data.drawing
 }
 
 export async function deleteDrawingApi(id: string): Promise<void> {
-  await parseJson<{ ok: boolean }>(await fetch(`/api/paint/${id}`, { method: 'DELETE' }))
+  await http.delete<{ ok: boolean }>(`/api/paint/${id}`)
 }

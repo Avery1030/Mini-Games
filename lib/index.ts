@@ -9,3 +9,15 @@ export {
   type StorageSchema,
   type ThemeStorageValue,
 } from './storage'
+export {
+  http,
+  createHttp,
+  HttpError,
+  type HttpClient,
+  type HttpRequestConfig,
+  type HttpMethod,
+  type HttpResponseType,
+  type HttpQuery,
+  type HttpBody,
+  type HttpInstanceConfig,
+} from './http'

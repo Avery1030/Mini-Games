@@ -1,53 +1,30 @@
+import { http } from '@/lib/http'
 import type { NoteDetail, NoteMeta } from './types'
 
-async function parseJson<T>(res: Response): Promise<T> {
-  const data = (await res.json()) as T & { error?: string }
-  if (!res.ok) {
-    throw new Error((data as { error?: string }).error || `HTTP ${res.status}`)
-  }
-  return data
-}
+type NoteListResponse = { notes: NoteMeta[] }
+type NoteResponse = { note: NoteDetail }
+type NoteWriteBody = { title?: string; content?: string }
 
 export async function fetchNoteList(): Promise<NoteMeta[]> {
-  const data = await parseJson<{ notes: NoteMeta[] }>(await fetch('/api/notepad'))
+  const data = await http.get<NoteListResponse>('/api/notepad')
   return data.notes
 }
 
 export async function fetchNote(id: string): Promise<NoteDetail> {
-  const data = await parseJson<{ note: NoteDetail }>(await fetch(`/api/notepad/${id}`))
+  const data = await http.get<NoteResponse>(`/api/notepad/${id}`)
   return data.note
 }
 
-export async function createNoteApi(input?: {
-  title?: string
-  content?: string
-}): Promise<NoteDetail> {
-  const data = await parseJson<{ note: NoteDetail }>(
-    await fetch('/api/notepad', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input ?? {}),
-    }),
-  )
+export async function createNoteApi(input?: NoteWriteBody): Promise<NoteDetail> {
+  const data = await http.post<NoteResponse, NoteWriteBody>('/api/notepad', input ?? {})
   return data.note
 }
 
-export async function updateNoteApi(
-  id: string,
-  patch: { title?: string; content?: string },
-): Promise<NoteDetail> {
-  const data = await parseJson<{ note: NoteDetail }>(
-    await fetch(`/api/notepad/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(patch),
-    }),
-  )
+export async function updateNoteApi(id: string, patch: NoteWriteBody): Promise<NoteDetail> {
+  const data = await http.put<NoteResponse, NoteWriteBody>(`/api/notepad/${id}`, patch)
   return data.note
 }
 
 export async function deleteNoteApi(id: string): Promise<void> {
-  await parseJson<{ ok: boolean }>(
-    await fetch(`/api/notepad/${id}`, { method: 'DELETE' }),
-  )
+  await http.delete<{ ok: boolean }>(`/api/notepad/${id}`)
 }

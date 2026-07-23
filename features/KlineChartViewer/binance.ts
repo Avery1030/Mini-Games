@@ -1,3 +1,4 @@
+import { http } from '@/lib/http'
 import { KLINES_LIMIT, periodToInterval, type BinanceInterval, type Period } from './constants'
 
 export type KLineBar = {
@@ -56,37 +57,37 @@ export function normalizeBinanceKlines(rows: BinanceKlineRaw[]): KLineBar[] {
   return rows.map(normalizeBinanceKline).sort((a, b) => a.timestamp - b.timestamp)
 }
 
-function buildContinuousQuery(params: FetchKlinesParams): string {
-  const search = new URLSearchParams({
-    pair: params.symbol.toUpperCase(),
-    contractType: 'PERPETUAL',
-    interval: params.interval,
-    limit: String(params.limit ?? KLINES_LIMIT),
-  })
-  if (params.startTime != null) search.set('startTime', String(params.startTime))
-  if (params.endTime != null) search.set('endTime', String(params.endTime))
-  return search.toString()
+type ContinuousKlineQuery = {
+  pair: string
+  contractType: 'PERPETUAL'
+  interval: BinanceInterval
+  limit: number
+  startTime?: number
+  endTime?: number
 }
 
 /**
  * 浏览器直连币安 continuousKlines（与官网同一接口）。
  */
 export async function fetchBinanceKlines(params: FetchKlinesParams): Promise<KLineBar[]> {
-  const qs = buildContinuousQuery(params)
+  const query: ContinuousKlineQuery = {
+    pair: params.symbol.toUpperCase(),
+    contractType: 'PERPETUAL',
+    interval: params.interval,
+    limit: params.limit ?? KLINES_LIMIT,
+    startTime: params.startTime,
+    endTime: params.endTime,
+  }
   const errors: string[] = []
 
   for (const base of BINANCE_CONTINUOUS_KLINES_URLS) {
     try {
-      const res = await fetch(`${base}?${qs}`, {
+      const rows = await http.get<BinanceKlineRaw[], ContinuousKlineQuery>(base, {
+        params: query,
         signal: params.signal,
         cache: 'no-store',
         headers: { Accept: 'application/json' },
       })
-      if (!res.ok) {
-        errors.push(`${base} → HTTP ${res.status}`)
-        continue
-      }
-      const rows = (await res.json()) as BinanceKlineRaw[]
       if (!Array.isArray(rows) || rows.length === 0) {
         errors.push(`${base} → empty`)
         continue
