@@ -5,6 +5,8 @@ export type StreamChatOptions = {
   /** 与乐观 UI 一致，便于随后按 id 删除 */
   userMessageId: string
   assistantMessageId: string
+  /** 硅基流动 API Key（来自本地 store） */
+  apiKey: string
   signal?: AbortSignal
   onDelta: (text: string) => void
 }
@@ -16,7 +18,7 @@ type ChatRequestBody = {
 }
 
 /**
- * 经全局 http 调用 /api/chat（只传本轮 content + 消息 id），解析 OpenAI 兼容 SSE。
+ * 经全局 http 调用 /api/chat（本轮 content + 消息 id），解析 OpenAI 兼容 SSE。
  */
 export async function streamChatCompletion(options: StreamChatOptions): Promise<void> {
   let res: Response
@@ -29,7 +31,10 @@ export async function streamChatCompletion(options: StreamChatOptions): Promise<
         assistantMessageId: options.assistantMessageId,
       },
       {
-        headers: { Accept: 'text/event-stream' },
+        headers: {
+          Accept: 'text/event-stream',
+          Authorization: `Bearer ${options.apiKey}`,
+        },
         responseType: 'stream',
         signal: options.signal,
       },

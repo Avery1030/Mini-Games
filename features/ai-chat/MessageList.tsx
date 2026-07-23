@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { Bot, Check, Copy, Trash2 } from 'lucide-react'
+import { Bot, Check, Copy, KeyRound, Trash2 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { Button, Panel, toast } from '@/components/ui'
@@ -27,6 +27,8 @@ export type MessageListProps = {
   onDeleteMessage: (id: string) => void
   onLoadOlder: () => Promise<void>
   onQuickPrompt: (text: string) => void
+  onChangeApiKey?: () => void
+  changeApiKeyLabel?: string
 }
 
 /**
@@ -42,6 +44,8 @@ export function MessageList({
   onDeleteMessage,
   onLoadOlder,
   onQuickPrompt,
+  onChangeApiKey,
+  changeApiKeyLabel,
 }: MessageListProps) {
   const t = useTranslations('aiChat')
   const locale = useLocale()
@@ -126,16 +130,29 @@ export function MessageList({
           <Bot className='w-3.5 h-3.5 shrink-0 text-muted' aria-hidden />
           <p className='text-[11px] text-muted truncate'>{t('hint')}</p>
         </div>
-        <Button
-          type='button'
-          size='sm'
-          disabled={historyLoading || (messages.length === 0 && !streaming)}
-          onClick={onClear}
-          title={t('clear')}
-        >
-          <Trash2 size={12} aria-hidden />
-          <span>{t('clear')}</span>
-        </Button>
+        <div className='flex items-center gap-1.5 shrink-0'>
+          {onChangeApiKey ? (
+            <Button
+              type='button'
+              size='sm'
+              onClick={onChangeApiKey}
+              title={changeApiKeyLabel ?? t('apiKeyChange')}
+            >
+              <KeyRound size={12} aria-hidden />
+              <span>{changeApiKeyLabel ?? t('apiKeyChange')}</span>
+            </Button>
+          ) : null}
+          <Button
+            type='button'
+            size='sm'
+            disabled={historyLoading || (messages.length === 0 && !streaming)}
+            onClick={onClear}
+            title={t('clear')}
+          >
+            <Trash2 size={12} aria-hidden />
+            <span>{t('clear')}</span>
+          </Button>
+        </div>
       </div>
 
       <Panel inset padded={false} className='flex-1 min-h-0 overflow-hidden flex flex-col'>

@@ -8,19 +8,22 @@ import {
 export const runtime = 'nodejs'
 
 const SILICONFLOW_URL = 'https://api.siliconflow.cn/v1/chat/completions'
+const DEFAULT_MODEL = 'Qwen/Qwen2.5-7B-Instruct'
 const MAX_CONTENT_CHARS = 16_000
 
 type LlmMessage = { role: 'system' | 'user' | 'assistant'; content: string }
 
 /**
  * 客户端只传本轮用户内容；服务端读会话、拼上下文、流式代理并落盘。
+ * API Key 来自请求 Authorization: Bearer（智聊本地 store）。
  */
 export async function POST(req: Request) {
-  const apiKey = process.env.SILICONFLOW_API_KEY?.trim()
+  const auth = req.headers.get('authorization')?.trim() ?? ''
+  const apiKey = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : ''
   if (!apiKey) {
     return NextResponse.json(
-      { error: 'Missing SILICONFLOW_API_KEY. Copy .env.example to .env.local.' },
-      { status: 500 },
+      { error: 'Missing API key. Enter SiliconFlow API Key in Zhi Chat.' },
+      { status: 401 },
     )
   }
 
@@ -69,8 +72,7 @@ export async function POST(req: Request) {
   const model =
     (typeof (body as { model?: unknown }).model === 'string' &&
       (body as { model: string }).model.trim()) ||
-    process.env.SILICONFLOW_MODEL?.trim() ||
-    'Qwen/Qwen2.5-7B-Instruct'
+    DEFAULT_MODEL
 
   let upstream: Response
   try {
@@ -122,8 +124,7 @@ export async function POST(req: Request) {
       lower.includes('balance') ||
       lower.includes('余额')
     if (balanceRelated) {
-      detail =
-        '硅基流动账户余额不足，请到控制台充值，或在 .env.local 更换仍可用的 SILICONFLOW_MODEL / API Key。'
+      detail = '硅基流动账户余额不足，请到控制台充值，或在智聊中更换可用的 API Key。'
     }
 
     return NextResponse.json({ error: detail }, { status: upstream.status || 502 })
