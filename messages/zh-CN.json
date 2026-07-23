@@ -192,7 +192,6 @@
       "display": "显示",
       "appearance": "外观",
       "taskbar": "任务栏",
-      "desktop": "桌面",
       "data": "数据"
     },
     "displayHint": "先点选壁纸，再点下方「应用」才会切换桌面。",
@@ -240,9 +239,6 @@
     "clock24": "24 小时制",
     "clock12": "12 小时制",
     "showTrayDecor": "显示右侧装饰托盘图标",
-    "desktopHint": "整理图标显示，改完立即生效。",
-    "hidePlaceholders": "隐藏尚未开放的占位图标（邀请、市场等）",
-    "hidePlaceholdersHelp": "开启后，桌面只保留已实现窗口的应用（扫雷、俄罗斯方块、音乐、设置、文档等），看起来更干净。",
     "backupHint": "导出本机全部偏好与桌面状态为 JSON，换设备时可导入还原。导入会覆盖同名配置并立即生效。",
     "backupExport": "导出",
     "backupExportHint": "包含主题、壁纸、窗口、桌面图标、记事本/画图/K线等偏好（不含锁屏会话）。",

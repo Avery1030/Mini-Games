@@ -24,15 +24,6 @@ export function useTaskbarSettings() {
   )
 }
 
-/** 桌面图标设置页 */
-export function useDesktopIconSettings() {
-  return useSettingsStore(
-    useShallow((s) => ({
-      hidePlaceholderIcons: s.hidePlaceholderIcons,
-    })),
-  )
-}
-
 /** 显示页壁纸相关状态（不含 action） */
 export function useWallpaperSettings() {
   return useSettingsStore(

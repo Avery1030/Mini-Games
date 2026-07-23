@@ -12,13 +12,9 @@ const OPS: Record<string, { prec: number; assoc: 'L' | 'R'; fn: (a: number, b: n
   '^': { prec: 3, assoc: 'R', fn: (a, b) => a ** b },
 }
 
-type Tok =
-  | { t: 'num'; v: number }
-  | { t: 'op'; v: string }
-  | { t: 'lparen' }
-  | { t: 'rparen' }
-  | { t: 'u-'; v: '-' }
+type Tok = { t: 'num'; v: number } | { t: 'op'; v: string } | { t: 'lparen' } | { t: 'rparen' } | { t: 'u-'; v: '-' }
 
+// 将中缀表达式转换为 token 列表
 function tokenize(input: string): Tok[] {
   const s = input.replace(/\s+/g, '')
   const out: Tok[] = []
@@ -49,9 +45,7 @@ function tokenize(input: string): Tok[] {
     if (c in OPS || c === '×' || c === '÷' || c === '−') {
       const op = c === '×' ? '*' : c === '÷' ? '/' : c === '−' ? '-' : c
       const prev = out[out.length - 1]
-      const unary =
-        op === '-' &&
-        (out.length === 0 || prev?.t === 'op' || prev?.t === 'lparen' || prev?.t === 'u-')
+      const unary = op === '-' && (out.length === 0 || prev?.t === 'op' || prev?.t === 'lparen' || prev?.t === 'u-')
       if (unary) out.push({ t: 'u-', v: '-' })
       else out.push({ t: 'op', v: op })
       i++
@@ -62,6 +56,7 @@ function tokenize(input: string): Tok[] {
   return out
 }
 
+/** 将中缀表达式转换为后缀表达式 */
 function toRpn(tokens: Tok[]): Tok[] {
   const out: Tok[] = []
   const stack: Tok[] = []
@@ -112,6 +107,7 @@ function toRpn(tokens: Tok[]): Tok[] {
   return out
 }
 
+// 计算后缀表达式的值
 function evalRpn(rpn: Tok[]): number {
   const st: number[] = []
   for (const tok of rpn) {
@@ -137,23 +133,29 @@ function evalRpn(rpn: Tok[]): number {
   return st[0]!
 }
 
+// 格式化计算结果
 export function formatCalcNumber(n: number): string {
   if (!Number.isFinite(n)) return 'Error'
   if (Object.is(n, -0)) return '0'
   const abs = Math.abs(n)
   if (abs !== 0 && (abs >= 1e12 || abs < 1e-8)) {
-    return n.toExponential(8).replace(/\.?0+e/, 'e').replace(/e\+/, 'e')
+    return n
+      .toExponential(8)
+      .replace(/\.?0+e/, 'e')
+      .replace(/e\+/, 'e')
   }
   const s = String(Number(n.toPrecision(12)))
   return s
 }
 
+// 计算表达式的值
 export function evaluateExpression(expr: string): number {
   const trimmed = expr.trim()
   if (!trimmed) throw new Error('empty')
   return evalRpn(toRpn(tokenize(trimmed)))
 }
 
+// 应用一元运算符
 export function applyUnary(op: 'sqrt' | 'square' | 'reciprocal' | 'negate' | 'percent', value: number): number {
   let r: number
   switch (op) {

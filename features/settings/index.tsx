@@ -16,7 +16,6 @@ import { useWallpaperSettings } from '@/hooks/settings'
 import {
   AppearanceSection,
   DataSection,
-  DesktopIconsSection,
   DisplaySection,
   TaskbarSection,
 } from './sections'
@@ -191,7 +190,6 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
             )}
             {section === 'appearance' && <AppearanceSection />}
             {section === 'taskbar' && <TaskbarSection />}
-            {section === 'desktop' && <DesktopIconsSection />}
             {section === 'data' && <DataSection />}
           </div>
         </SplitPane>
