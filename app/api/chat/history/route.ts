@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { clearAiChatSession, readAiChatSession, writeAiChatSession } from '@/lib/ai-chat'
+import { clearAiChatSession, deleteAiChatMessage, readAiChatSession } from '@/lib/ai-chat'
 
 export const runtime = 'nodejs'
 
@@ -14,28 +14,24 @@ export async function GET() {
   }
 }
 
-/** PUT 覆盖保存会话历史 */
-export async function PUT(req: Request) {
-  let body: { messages?: unknown } = {}
-  try {
-    body = (await req.json()) as { messages?: unknown }
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+/**
+ * DELETE 清空会话；带 `?id=` 时删除单条。
+ */
+export async function DELETE(req: Request) {
+  const id = new URL(req.url).searchParams.get('id')?.trim()
+  if (id) {
+    try {
+      const removed = await deleteAiChatMessage(id)
+      if (!removed) {
+        return NextResponse.json({ error: 'Message not found' }, { status: 404 })
+      }
+      return NextResponse.json({ ok: true })
+    } catch (err) {
+      console.error('[ai-chat] delete message', err)
+      return NextResponse.json({ error: 'Failed to delete message' }, { status: 500 })
+    }
   }
 
-  try {
-    const session = await writeAiChatSession(body.messages)
-    return NextResponse.json({ session })
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Failed to save chat history'
-    const status = /large/i.test(message) ? 400 : 500
-    console.error('[ai-chat] write', err)
-    return NextResponse.json({ error: message }, { status })
-  }
-}
-
-/** DELETE 清空会话 */
-export async function DELETE() {
   try {
     await clearAiChatSession()
     return NextResponse.json({ ok: true })

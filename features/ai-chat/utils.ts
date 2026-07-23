@@ -1,17 +1,5 @@
-import { SYSTEM_PROMPT } from './constants'
-import type { UiMessage } from './types'
-import type { ChatMessage } from './stream'
-
 export function nextId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-}
-
-export function buildRequestMessages(history: UiMessage[], nextUserText: string): ChatMessage[] {
-  const prior = history
-    .filter((m) => m.content.trim().length > 0)
-    .map(({ role, content }) => ({ role, content }) satisfies ChatMessage)
-
-  return [{ role: 'system', content: SYSTEM_PROMPT }, ...prior, { role: 'user', content: nextUserText }]
 }
 
 export function formatTime(ts: number, locale: string): string {

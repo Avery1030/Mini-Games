@@ -18,13 +18,15 @@ const MAX_MESSAGES = 200
 const MAX_CONTENT_BYTES = 64 * 1024
 const MAX_SESSION_BYTES = 2 * 1024 * 1024
 
+function isMessageId(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0 && value.length <= 80
+}
+
 function isStoredMessage(value: unknown): value is AiChatStoredMessage {
   if (!value || typeof value !== 'object') return false
   const m = value as Partial<AiChatStoredMessage>
   return (
-    typeof m.id === 'string' &&
-    m.id.length > 0 &&
-    m.id.length <= 80 &&
+    isMessageId(m.id) &&
     (m.role === 'user' || m.role === 'assistant') &&
     typeof m.content === 'string' &&
     typeof m.createdAt === 'number' &&
@@ -89,6 +91,34 @@ export async function writeAiChatSession(messages: unknown): Promise<AiChatSessi
   await writeFile(tmp, body, 'utf8')
   await rename(tmp, AI_CHAT_SESSION_FILE)
   return session
+}
+
+/** 追加消息并写盘（超过上限时保留最近若干条）。可传入客户端 id 以保持前后端一致。 */
+export async function appendAiChatMessages(
+  additions: Array<{ id?: string; role: 'user' | 'assistant'; content: string }>,
+): Promise<AiChatSession> {
+  const session = await readAiChatSession()
+  const now = Date.now()
+  const next: AiChatStoredMessage[] = [
+    ...session.messages,
+    ...additions.map((m) => ({
+      id: isMessageId(m.id) ? m.id : randomUUID(),
+      role: m.role,
+      content: m.content,
+      createdAt: now,
+    })),
+  ]
+  return writeAiChatSession(next.slice(-MAX_MESSAGES))
+}
+
+/** 按 id 删除单条消息；不存在时返回 false。 */
+export async function deleteAiChatMessage(id: string): Promise<boolean> {
+  if (!isMessageId(id)) return false
+  const session = await readAiChatSession()
+  const next = session.messages.filter((m) => m.id !== id)
+  if (next.length === session.messages.length) return false
+  await writeAiChatSession(next)
+  return true
 }
 
 export async function clearAiChatSession(): Promise<void> {

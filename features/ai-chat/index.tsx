@@ -22,8 +22,8 @@ export function AiChatApp({ embedded = false }: AiChatProps = {}) {
     inputRef,
     stop,
     clearChat,
+    deleteMessage,
     sendText,
-    copyMessage,
   } = useAiChat()
 
   return (
@@ -40,7 +40,7 @@ export function AiChatApp({ embedded = false }: AiChatProps = {}) {
           streaming={streaming}
           listRef={listRef}
           onClear={() => void clearChat()}
-          onCopy={(content) => void copyMessage(content)}
+          onDeleteMessage={(id) => void deleteMessage(id)}
           onQuickPrompt={(text) => void sendText(text)}
         />
         <ChatComposer

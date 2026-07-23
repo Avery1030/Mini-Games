@@ -1,6 +1,6 @@
 import { DesktopShell } from './DesktopShell'
 
-/** `/` 与 `/window/[slug]` 共用的桌面入口，保证硬刷新深链仍进同一浮层壳。 */
+/** 桌面入口（挂在 `(desktop)` layout）：硬刷新深链与语言切换均不 remount 壳层。 */
 export function DesktopPage() {
   return (
     <main className='min-h-screen w-screen overflow-hidden'>

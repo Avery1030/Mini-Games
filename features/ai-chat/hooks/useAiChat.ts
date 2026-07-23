@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { useTranslations } from 'next-intl'
 import { modal, toast } from '@/components/ui'
-import { clearChatHistory, fetchChatHistory, saveChatHistory } from '../api'
+import { clearChatHistory, deleteChatMessage, fetchChatHistory } from '../api'
 import { streamChatCompletion } from '../stream'
 import type { UiMessage } from '../types'
-import { buildRequestMessages, mapStreamErrorMessage, nextId } from '../utils'
+import { mapStreamErrorMessage, nextId } from '../utils'
 
 export type UseAiChatResult = {
   messages: UiMessage[]
@@ -18,12 +18,12 @@ export type UseAiChatResult = {
   inputRef: RefObject<HTMLTextAreaElement | null>
   stop: () => void
   clearChat: () => Promise<void>
+  deleteMessage: (id: string) => Promise<void>
   sendText: (rawText: string) => Promise<void>
-  copyMessage: (content: string) => Promise<void>
 }
 
 /**
- * 智聊会话：历史加载/自动保存、流式发送与中止。
+ * 智聊会话：加载历史、流式发送；落盘由服务端 /api/chat 负责。
  */
 export function useAiChat(): UseAiChatResult {
   const t = useTranslations('aiChat')
@@ -35,7 +35,6 @@ export function useAiChat(): UseAiChatResult {
   const abortRef = useRef<AbortController | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesRef = useRef(messages)
-  const skipSaveRef = useRef(true)
   messagesRef.current = messages
 
   useEffect(() => {
@@ -58,41 +57,20 @@ export function useAiChat(): UseAiChatResult {
           toast.error(err instanceof Error ? err.message : t('historyLoadFail'))
         }
       } finally {
-        if (!cancelled) {
-          setHistoryLoading(false)
-          // 跳过载入后的第一次自动保存
-          skipSaveRef.current = true
-        }
+        if (!cancelled) setHistoryLoading(false)
       }
     })()
     return () => {
       cancelled = true
     }
-  }, [t])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only
+  }, [])
 
   useEffect(() => {
     const el = listRef.current
     if (!el) return
     el.scrollTop = el.scrollHeight
   }, [messages, streaming])
-
-  useEffect(() => {
-    if (historyLoading) return
-    if (skipSaveRef.current) {
-      skipSaveRef.current = false
-      return
-    }
-    // 流式过程中不写盘，结束后再落盘
-    if (streaming) return
-
-    const toSave = messages.filter((m) => m.content.trim().length > 0)
-    const timer = window.setTimeout(() => {
-      void saveChatHistory(toSave).catch((err) => {
-        toast.error(err instanceof Error ? err.message : t('historySaveFail'))
-      })
-    }, 400)
-    return () => window.clearTimeout(timer)
-  }, [messages, streaming, historyLoading, t])
 
   useEffect(() => {
     return () => {
@@ -118,7 +96,6 @@ export function useAiChat(): UseAiChatResult {
     if (streaming) stop()
     try {
       await clearChatHistory()
-      skipSaveRef.current = true
       setMessages([])
       setSessionEpoch((n) => n + 1)
       toast.success(t('historyCleared'))
@@ -128,16 +105,34 @@ export function useAiChat(): UseAiChatResult {
     requestAnimationFrame(() => inputRef.current?.focus())
   }, [messages.length, streaming, stop, t])
 
-  const copyMessage = useCallback(
-    async (content: string) => {
+  const deleteMessage = useCallback(
+    async (id: string) => {
+      const list = messagesRef.current
+      const target = list.find((m) => m.id === id)
+      if (!target) return
+      if (streaming) {
+        const last = list[list.length - 1]
+        const prev = list[list.length - 2]
+        if (id === last?.id || id === prev?.id) return
+      }
+
+      const ok = await modal.confirm({
+        title: t('deleteConfirmTitle'),
+        message: t('deleteConfirm'),
+        confirmText: t('delete'),
+        cancelText: t('cancel'),
+      })
+      if (!ok) return
+
       try {
-        await navigator.clipboard.writeText(content)
-        toast.success(t('copied'))
-      } catch {
-        toast.error(t('copyFail'))
+        await deleteChatMessage(id)
+        setMessages((prev) => prev.filter((m) => m.id !== id))
+        toast.success(t('messageDeleted'))
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : t('messageDeleteFail'))
       }
     },
-    [t],
+    [streaming, t],
   )
 
   const sendText = useCallback(
@@ -146,7 +141,6 @@ export function useAiChat(): UseAiChatResult {
       if (!text || streaming) return
 
       const prior = messagesRef.current
-      const requestMessages = buildRequestMessages(prior, text)
       const now = Date.now()
 
       const userMsg: UiMessage = { id: nextId('u'), role: 'user', content: text, createdAt: now }
@@ -166,12 +160,12 @@ export function useAiChat(): UseAiChatResult {
 
       try {
         await streamChatCompletion({
-          messages: requestMessages,
+          content: text,
+          userMessageId: userMsg.id,
+          assistantMessageId: assistantId,
           signal: controller.signal,
           onDelta: (piece) => {
-            setMessages((prev) =>
-              prev.map((m) => (m.id === assistantId ? { ...m, content: m.content + piece } : m)),
-            )
+            setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, content: m.content + piece } : m)))
           },
         })
       } catch (err) {
@@ -207,7 +201,7 @@ export function useAiChat(): UseAiChatResult {
     inputRef,
     stop,
     clearChat,
+    deleteMessage,
     sendText,
-    copyMessage,
   }
 }

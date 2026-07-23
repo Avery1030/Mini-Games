@@ -1,31 +1,33 @@
 import { http, HttpError } from '@/lib/http'
 
-export type ChatRole = 'system' | 'user' | 'assistant'
-
-export type ChatMessage = {
-  role: ChatRole
-  content: string
-}
-
 export type StreamChatOptions = {
-  messages: ChatMessage[]
+  content: string
+  /** 与乐观 UI 一致，便于随后按 id 删除 */
+  userMessageId: string
+  assistantMessageId: string
   signal?: AbortSignal
   onDelta: (text: string) => void
 }
 
 type ChatRequestBody = {
-  messages: ChatMessage[]
+  content: string
+  userMessageId: string
+  assistantMessageId: string
 }
 
 /**
- * 经全局 http 调用 /api/chat，解析 OpenAI 兼容 SSE。
+ * 经全局 http 调用 /api/chat（只传本轮 content + 消息 id），解析 OpenAI 兼容 SSE。
  */
 export async function streamChatCompletion(options: StreamChatOptions): Promise<void> {
   let res: Response
   try {
     res = await http.post<Response, ChatRequestBody>(
       '/api/chat',
-      { messages: options.messages },
+      {
+        content: options.content,
+        userMessageId: options.userMessageId,
+        assistantMessageId: options.assistantMessageId,
+      },
       {
         headers: { Accept: 'text/event-stream' },
         responseType: 'stream',

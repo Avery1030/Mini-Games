@@ -1,24 +1,19 @@
 import { NextResponse } from 'next/server'
+import {
+  AI_CHAT_SYSTEM_PROMPT,
+  appendAiChatMessages,
+  proxyChatSseStream,
+} from '@/lib/ai-chat'
 
 export const runtime = 'nodejs'
 
 const SILICONFLOW_URL = 'https://api.siliconflow.cn/v1/chat/completions'
+const MAX_CONTENT_CHARS = 16_000
 
-type ChatRole = 'system' | 'user' | 'assistant'
-type ChatMessage = { role: ChatRole; content: string }
-
-function isChatMessage(value: unknown): value is ChatMessage {
-  if (!value || typeof value !== 'object') return false
-  const m = value as { role?: unknown; content?: unknown }
-  return (
-    (m.role === 'system' || m.role === 'user' || m.role === 'assistant') &&
-    typeof m.content === 'string'
-  )
-}
+type LlmMessage = { role: 'system' | 'user' | 'assistant'; content: string }
 
 /**
- * 代理硅基流动 Chat Completions，流式 SSE 透传给浏览器。
- * Key 仅存在于服务端环境变量。
+ * 客户端只传本轮用户内容；服务端读会话、拼上下文、流式代理并落盘。
  */
 export async function POST(req: Request) {
   const apiKey = process.env.SILICONFLOW_API_KEY?.trim()
@@ -36,10 +31,40 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
-  const messages = (body as { messages?: unknown })?.messages
-  if (!Array.isArray(messages) || messages.length === 0 || !messages.every(isChatMessage)) {
-    return NextResponse.json({ error: 'messages must be a non-empty ChatMessage[]' }, { status: 400 })
+  const rawContent = (body as { content?: unknown })?.content
+  if (typeof rawContent !== 'string') {
+    return NextResponse.json({ error: 'content must be a string' }, { status: 400 })
   }
+  const content = rawContent.trim()
+  if (!content) {
+    return NextResponse.json({ error: 'content must be non-empty' }, { status: 400 })
+  }
+  if ([...content].length > MAX_CONTENT_CHARS) {
+    return NextResponse.json({ error: 'content too long' }, { status: 400 })
+  }
+
+  const bodyObj = body as {
+    userMessageId?: unknown
+    assistantMessageId?: unknown
+  }
+  const userMessageId =
+    typeof bodyObj.userMessageId === 'string' ? bodyObj.userMessageId.trim() : undefined
+  const assistantMessageId =
+    typeof bodyObj.assistantMessageId === 'string' ? bodyObj.assistantMessageId.trim() : undefined
+
+  let session
+  try {
+    session = await appendAiChatMessages([{ id: userMessageId, role: 'user', content }])
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to save user message'
+    console.error('[ai-chat] append user', err)
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+
+  const messages: LlmMessage[] = [
+    { role: 'system', content: AI_CHAT_SYSTEM_PROMPT },
+    ...session.messages.map(({ role, content: c }) => ({ role, content: c })),
+  ]
 
   const model =
     (typeof (body as { model?: unknown }).model === 'string' &&
@@ -104,7 +129,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: detail }, { status: upstream.status || 502 })
   }
 
-  return new Response(upstream.body, {
+  const stream = proxyChatSseStream(upstream.body, async (assistantText) => {
+    const text = assistantText.trim()
+    if (!text) return
+    await appendAiChatMessages([
+      { id: assistantMessageId, role: 'assistant', content: assistantText },
+    ])
+  })
+
+  return new Response(stream, {
     status: 200,
     headers: {
       'Content-Type': 'text/event-stream; charset=utf-8',

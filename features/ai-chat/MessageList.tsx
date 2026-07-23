@@ -1,11 +1,12 @@
 'use client'
 
 import type { RefObject } from 'react'
-import { Bot, Copy, Trash2 } from 'lucide-react'
+import { Bot, Check, Copy, Trash2 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
-import { Button, Panel } from '@/components/ui'
+import { Button, Panel, toast } from '@/components/ui'
 import { winChromeSunken } from '@/lib/winChrome'
+import { useCopyClipboard } from '@/hooks/useCopyClipboard'
 import { QUICK_PROMPTS } from './constants'
 import type { UiMessage } from './types'
 import { formatTime } from './utils'
@@ -16,7 +17,7 @@ export type MessageListProps = {
   streaming: boolean
   listRef: RefObject<HTMLDivElement | null>
   onClear: () => void
-  onCopy: (content: string) => void
+  onDeleteMessage: (id: string) => void
   onQuickPrompt: (text: string) => void
 }
 
@@ -29,7 +30,7 @@ export function MessageList({
   streaming,
   listRef,
   onClear,
-  onCopy,
+  onDeleteMessage,
   onQuickPrompt,
 }: MessageListProps) {
   const t = useTranslations('aiChat')
@@ -82,13 +83,17 @@ export function MessageList({
             messages.map((m) => {
               const isLastAssistant =
                 streaming && m.role === 'assistant' && m.id === messages[messages.length - 1]?.id
+              const last = messages[messages.length - 1]
+              const prev = messages[messages.length - 2]
+              const isActiveTurn = streaming && (m.id === last?.id || m.id === prev?.id)
               return (
                 <MessageBubble
                   key={m.id}
                   message={m}
                   locale={locale}
                   isStreaming={isLastAssistant}
-                  onCopy={onCopy}
+                  canDelete={!isActiveTurn}
+                  onDelete={() => onDeleteMessage(m.id)}
                 />
               )
             })
@@ -103,11 +108,18 @@ type MessageBubbleProps = {
   message: UiMessage
   locale: string
   isStreaming: boolean
-  onCopy: (content: string) => void
+  canDelete: boolean
+  onDelete: () => void
 }
 
-function MessageBubble({ message: m, locale, isStreaming, onCopy }: MessageBubbleProps) {
+function MessageBubble({ message: m, locale, isStreaming, canDelete, onDelete }: MessageBubbleProps) {
   const t = useTranslations('aiChat')
+  const { isCopied, copy } = useCopyClipboard()
+
+  const handleCopy = async () => {
+    const ok = await copy(m.content)
+    if (!ok) toast.error(t('copyFail'))
+  }
 
   return (
     <div
@@ -129,27 +141,44 @@ function MessageBubble({ message: m, locale, isStreaming, onCopy }: MessageBubbl
           <span className='ml-1.5 font-normal opacity-70'>{formatTime(m.createdAt, locale)}</span>
         </div>
         {m.content ? (
-          <button
-            type='button'
-            className={cn(
-              'opacity-0 group-hover:opacity-100 focus:opacity-100 p-0.5 cursor-pointer',
-              m.role === 'user'
-                ? 'text-[var(--window-title-text)]/80 hover:text-[var(--window-title-text)]'
-                : 'text-muted hover:text-on-chrome',
-            )}
-            title={t('copy')}
-            aria-label={t('copy')}
-            onClick={() => onCopy(m.content)}
-          >
-            <Copy size={12} aria-hidden />
-          </button>
+          <div className='flex items-center gap-0.5 shrink-0'>
+            <button
+              type='button'
+              className={cn(
+                'opacity-0 group-hover:opacity-100 focus:opacity-100 p-0.5 cursor-pointer',
+                isCopied && 'opacity-100',
+                m.role === 'user'
+                  ? 'text-[var(--window-title-text)]/80 hover:text-[var(--window-title-text)]'
+                  : 'text-muted hover:text-on-chrome',
+              )}
+              title={isCopied ? t('copied') : t('copy')}
+              aria-label={isCopied ? t('copied') : t('copy')}
+              onClick={() => void handleCopy()}
+            >
+              {isCopied ? <Check size={12} aria-hidden /> : <Copy size={12} aria-hidden />}
+            </button>
+            {canDelete ? (
+              <button
+                type='button'
+                className={cn(
+                  'opacity-0 group-hover:opacity-100 focus:opacity-100 p-0.5 cursor-pointer',
+                  m.role === 'user'
+                    ? 'text-[var(--window-title-text)]/80 hover:text-[var(--window-title-text)]'
+                    : 'text-muted hover:text-on-chrome',
+                )}
+                title={t('delete')}
+                aria-label={t('delete')}
+                onClick={onDelete}
+              >
+                <Trash2 size={12} aria-hidden />
+              </button>
+            ) : null}
+          </div>
         ) : null}
       </div>
       <div className='whitespace-pre-wrap break-words'>
         {m.content || (isStreaming ? t('thinking') : '')}
-        {isStreaming ? (
-          <span className='inline-block w-1.5 h-3 ml-0.5 align-middle bg-current animate-pulse' />
-        ) : null}
+        {isStreaming ? <span className='inline-block w-1.5 h-3 ml-0.5 align-middle bg-current animate-pulse' /> : null}
       </div>
     </div>
   )
