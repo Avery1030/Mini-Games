@@ -1,11 +1,7 @@
 import { http } from '@/lib/http'
+import type { UiMessage } from './types'
 
-export type AiChatHistoryMessage = {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  createdAt: number
-}
+export type AiChatHistoryMessage = UiMessage
 
 export type AiChatHistorySession = {
   updatedAt: number
