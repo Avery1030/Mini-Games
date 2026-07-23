@@ -5,8 +5,9 @@ import { NextRequest, NextResponse } from 'next/server'
 const intlMiddleware = createMiddleware(routing)
 
 export default function middleware(request: NextRequest) {
-  // 单独处理根路径 /，防止404
-  if (request.nextUrl.pathname === '/') {
+  const { pathname } = request.nextUrl
+  // 桌面壳路由绕过 intl，避免未知 path 被判 404
+  if (pathname === '/' || pathname.startsWith('/window/') || pathname === '/window') {
     return NextResponse.next()
   }
   return intlMiddleware(request)

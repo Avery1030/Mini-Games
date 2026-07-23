@@ -1,4 +1,5 @@
 export { WindowsDesktop } from './WindowsDesktop'
+export { DesktopPage } from './DesktopPage'
 export { DesktopShell } from './DesktopShell'
 export { BootScreen } from './BootScreen'
 export { LockScreen } from './LockScreen'

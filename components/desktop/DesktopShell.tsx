@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { WindowsDesktop } from './WindowsDesktop'
 import { BootScreen } from './BootScreen'
 import { LockScreen } from './LockScreen'
-import { useApplyUiScale } from '@/hooks/desktop'
+import { useApplyUiScale, useWindowRouteSync } from '@/hooks/desktop'
 import { useDesktopStore } from '@/store/desktop'
 import { useWindowStore } from '@/store/window'
 import { useSettingsStore } from '@/store/settings'
@@ -25,12 +25,13 @@ export function DesktopShell() {
   const lockHydrated = useLockStore((s) => s._hasHydrated)
   const storesReady = windowsHydrated && desktopHydrated && settingsHydrated && lockHydrated
 
-  useApplyUiScale()
-
   const [booting, setBooting] = useState(true)
   const [fading, setFading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [skipPending, setSkipPending] = useState(false)
+
+  useApplyUiScale()
+  useWindowRouteSync(!booting && storesReady)
 
   const finishedRef = useRef(false)
   const storesReadyRef = useRef(storesReady)
