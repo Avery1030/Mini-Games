@@ -193,7 +193,16 @@ export function Tetris({ embedded = false }: TetrisProps = {}) {
   }, [renderBoard, flashUntil, shakeUntil, animNow])
 
   useEffect(() => {
+    const isTypingTarget = (target: EventTarget | null) => {
+      const el = target as HTMLElement | null
+      const tag = el?.tagName
+      return tag === 'INPUT' || tag === 'TEXTAREA' || !!el?.isContentEditable
+    }
+
     const onKeyDown = (e: KeyboardEvent) => {
+      // 输入框内不抢键（避免命令提示符等无法输入 r/p）
+      if (isTypingTarget(e.target)) return
+
       if (state.status === 'gameover') {
         if (e.key === 'Enter') setState(createInitialState())
         return
