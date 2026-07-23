@@ -12,6 +12,7 @@ import {
   Trash2,
   Terminal,
   ChartCandlestick,
+  Bot,
 } from 'lucide-react'
 import { Minesweeper } from '@/features/minesweeper'
 import { Tetris } from '@/features/tetris'
@@ -22,6 +23,7 @@ import { LogApp } from '@/features/log'
 import { NotepadApp } from '@/features/notepad'
 import { PaintApp } from '@/features/paint'
 import { CalculatorApp } from '@/features/calculator'
+import { AiChatApp } from '@/features/ai-chat'
 import {
   DEFAULT_WINDOW_CHROME,
   type DesktopAppId,
@@ -293,4 +295,16 @@ export class KlineChartViewerWindow extends DesktopWindow {
     }
     return this.appComponent
   }
+}
+
+/**
+ * 智聊：SiliconFlow 文字对话（流式）。
+ */
+export class AiChatWindow extends DesktopWindow {
+  readonly id = 'aiChat' as const
+  readonly icon = Bot
+  readonly defaultCoordinate: DesktopCoordinate = [3, 3]
+  readonly width = 560
+  readonly height = 520
+  readonly app = AiChatApp
 }

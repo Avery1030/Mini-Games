@@ -15,7 +15,8 @@
     "calculator": "Calculator",
     "recycleBin": "Recycle Bin",
     "cmd": "Command Prompt",
-    "klineChartViewer": "K-Line Chart"
+    "klineChartViewer": "K-Line Chart",
+    "aiChat": "Zhi Chat"
   },
   "desktop": {
     "open": "Open",
@@ -524,6 +525,48 @@
       "clear": "Remove all",
       "collapse": "Collapse toolbar",
       "expand": "Expand toolbar"
+    }
+  },
+  "aiChat": {
+    "hint": "Powered by SiliconFlow · History in .data · Emoji supported",
+    "empty": "Say hello to start, or tap a quick prompt below.",
+    "placeholder": "Type a message, or click 🙂 to insert emoji…",
+    "send": "Send",
+    "stop": "Stop",
+    "clear": "Clear",
+    "cancel": "Cancel",
+    "clearConfirmTitle": "Clear chat",
+    "clearConfirm": "Clear the entire conversation? This cannot be undone.",
+    "you": "You",
+    "assistant": "Zhi",
+    "thinking": "Thinking…",
+    "streaming": "Replying…",
+    "shortcut": "Enter send · Shift+Enter newline",
+    "chars": "{count} chars",
+    "stopped": "(stopped)",
+    "error": "Request failed",
+    "errorPrefix": "Error: {message}",
+    "balanceInsufficient": "SiliconFlow balance is insufficient. Please top up and try again.",
+    "historyLoading": "Loading history…",
+    "historyLoadFail": "Failed to load history",
+    "historySaveFail": "Failed to save history",
+    "historyCleared": "History cleared",
+    "historyClearFail": "Failed to clear history",
+    "emoji": "Emoji",
+    "emojiTitle": "Insert emoji",
+    "emojiGroup": {
+      "face": "Faces",
+      "gesture": "Gestures",
+      "object": "Symbols"
+    },
+    "copy": "Copy",
+    "copied": "Copied to clipboard",
+    "copyFail": "Copy failed",
+    "quick": {
+      "hello": "Hi, introduce yourself 👋",
+      "summary": "Summarize today's priorities in 3 lines 📝",
+      "joke": "Tell a programmer joke 😄",
+      "code": "Show a JS array dedupe example 💻"
     }
   }
 }

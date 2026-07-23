@@ -5,8 +5,8 @@
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD'
 
-/** 响应解析方式；默认 json */
-export type HttpResponseType = 'json' | 'text' | 'blob' | 'arrayBuffer' | 'void'
+/** 响应解析方式；默认 json。stream 返回原始 Response（不消费 body） */
+export type HttpResponseType = 'json' | 'text' | 'blob' | 'arrayBuffer' | 'void' | 'stream'
 
 export type HttpQuery = Record<string, string | number | boolean | null | undefined>
 
@@ -124,6 +124,10 @@ async function parseResponse<T>(
   res: Response,
   responseType: HttpResponseType,
 ): Promise<T> {
+  if (responseType === 'stream') {
+    return res as T
+  }
+
   if (responseType === 'void' || res.status === 204) {
     return undefined as T
   }
@@ -145,6 +149,19 @@ async function parseResponse<T>(
     return JSON.parse(text) as T
   } catch {
     throw new HttpError('Invalid JSON response', res.status, text, res)
+  }
+}
+
+async function readErrorPayload(res: Response): Promise<unknown> {
+  const clone = res.clone()
+  try {
+    return await clone.json()
+  } catch {
+    try {
+      return await res.text()
+    } catch {
+      return null
+    }
   }
 }
 
@@ -242,14 +259,32 @@ export function createHttp(defaults: HttpInstanceConfig = {}): HttpClient {
         keepalive: config.keepalive,
       })
 
+      if (responseType === 'stream') {
+        if (!res.ok) {
+          const errData = await readErrorPayload(res)
+          let message = `HTTP ${res.status}`
+          if (errData && typeof errData === 'object') {
+            const payload = errData as { error?: unknown; message?: unknown }
+            const raw = payload.error ?? payload.message
+            if (typeof raw === 'string' && raw.trim()) message = raw
+          } else if (typeof errData === 'string' && errData.trim()) {
+            message = errData
+          }
+          throw new HttpError(message, res.status, errData, res)
+        }
+        return res as TResponse
+      }
+
       const data = await parseResponse<TResponse>(res, responseType)
 
       if (!res.ok) {
-        const errData = data as { error?: string; message?: string } | null
-        const message =
-          (errData && typeof errData === 'object' && (errData.error || errData.message)) ||
-          `HTTP ${res.status}`
-        throw new HttpError(String(message), res.status, data, res)
+        const errData = data as { error?: unknown; message?: unknown } | null
+        let message = `HTTP ${res.status}`
+        if (errData && typeof errData === 'object') {
+          const raw = errData.error ?? errData.message
+          if (typeof raw === 'string' && raw.trim()) message = raw
+        }
+        throw new HttpError(message, res.status, data, res)
       }
 
       return data
