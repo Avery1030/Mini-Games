@@ -1,6 +1,7 @@
 'use client'
 
-import type { RefObject } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { Bot, Check, Copy, Trash2 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
@@ -11,30 +12,112 @@ import { QUICK_PROMPTS } from './constants'
 import type { UiMessage } from './types'
 import { formatTime } from './utils'
 
+/** 距底部小于该值时视为「贴底」，新消息/流式增量继续自动滚到底 */
+const STICK_BOTTOM_PX = 96
+/** 距顶部小于该值时触发加载更旧一页 */
+const LOAD_OLDER_PX = 48
+
 export type MessageListProps = {
   messages: UiMessage[]
   historyLoading: boolean
+  historyLoadingMore: boolean
+  hasMoreHistory: boolean
   streaming: boolean
-  listRef: RefObject<HTMLDivElement | null>
   onClear: () => void
   onDeleteMessage: (id: string) => void
+  onLoadOlder: () => Promise<void>
   onQuickPrompt: (text: string) => void
 }
 
 /**
- * 消息列表：工具栏、空态快捷提问、气泡与流式光标。
+ * 消息列表：工具栏、空态快捷提问、虚拟滚动 + 上拉分页。
  */
 export function MessageList({
   messages,
   historyLoading,
+  historyLoadingMore,
+  hasMoreHistory,
   streaming,
-  listRef,
   onClear,
   onDeleteMessage,
+  onLoadOlder,
   onQuickPrompt,
 }: MessageListProps) {
   const t = useTranslations('aiChat')
   const locale = useLocale()
+  const parentRef = useRef<HTMLDivElement>(null)
+  const stickToBottomRef = useRef(true)
+  const prevCountRef = useRef(0)
+  const prevFirstIdRef = useRef<string | undefined>(undefined)
+  const pendingRestoreRef = useRef<{ scrollTop: number; scrollHeight: number } | null>(null)
+  const loadOlderLockRef = useRef(false)
+
+  const firstId = messages[0]?.id
+  const lastId = messages[messages.length - 1]?.id
+  const lastContent = messages[messages.length - 1]?.content
+  const prevId = messages[messages.length - 2]?.id
+
+  const virtualizer = useVirtualizer({
+    count: messages.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 72,
+    overscan: 8,
+    gap: 8,
+    getItemKey: (index) => messages[index]?.id ?? index,
+  })
+
+  useLayoutEffect(() => {
+    const pending = pendingRestoreRef.current
+    const el = parentRef.current
+    if (!pending || !el) return
+    el.scrollTop = pending.scrollTop + (el.scrollHeight - pending.scrollHeight)
+    pendingRestoreRef.current = null
+  }, [messages.length, firstId])
+
+  useEffect(() => {
+    const prevCount = prevCountRef.current
+    const prevFirst = prevFirstIdRef.current
+    const countIncreased = messages.length > prevCount
+    const prepended =
+      countIncreased && prevFirst != null && firstId != null && firstId !== prevFirst
+    const appended = countIncreased && (prevFirst == null || firstId === prevFirst)
+
+    prevCountRef.current = messages.length
+    prevFirstIdRef.current = firstId
+
+    if (prepended) return
+    if (appended) stickToBottomRef.current = true
+    if (!stickToBottomRef.current || messages.length === 0) return
+    virtualizer.scrollToIndex(messages.length - 1, { align: 'end' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stick-to-bottom drivers only
+  }, [messages.length, firstId, lastId, lastContent, streaming])
+
+  const requestLoadOlder = async () => {
+    if (!hasMoreHistory || historyLoadingMore || loadOlderLockRef.current) return
+    loadOlderLockRef.current = true
+    const el = parentRef.current
+    if (el) {
+      pendingRestoreRef.current = {
+        scrollTop: el.scrollTop,
+        scrollHeight: el.scrollHeight,
+      }
+    }
+    try {
+      await onLoadOlder()
+    } finally {
+      loadOlderLockRef.current = false
+    }
+  }
+
+  const onScroll = () => {
+    const el = parentRef.current
+    if (!el) return
+    const distance = el.scrollHeight - el.scrollTop - el.clientHeight
+    stickToBottomRef.current = distance <= STICK_BOTTOM_PX
+    if (el.scrollTop <= LOAD_OLDER_PX) {
+      void requestLoadOlder()
+    }
+  }
 
   return (
     <>
@@ -56,48 +139,67 @@ export function MessageList({
       </div>
 
       <Panel inset padded={false} className='flex-1 min-h-0 overflow-hidden flex flex-col'>
-        <div ref={listRef} className='flex-1 min-h-0 overflow-y-auto p-2 space-y-2'>
-          {historyLoading ? (
-            <p className='text-[11px] text-muted leading-relaxed px-1 py-2'>{t('historyLoading')}</p>
-          ) : messages.length === 0 ? (
-            <div className='px-1 py-2 space-y-2'>
-              <p className='text-[11px] text-muted leading-relaxed'>{t('empty')}</p>
-              <div className='flex flex-wrap gap-1'>
-                {QUICK_PROMPTS.map((key) => (
-                  <button
-                    key={key}
-                    type='button'
-                    disabled={streaming || historyLoading}
-                    className={cn(
-                      winChromeSunken,
-                      'px-2 py-1 text-[11px] text-on-chrome hover:bg-chrome-hover disabled:opacity-50',
-                    )}
-                    onClick={() => onQuickPrompt(t(`quick.${key}`))}
-                  >
-                    {t(`quick.${key}`)}
-                  </button>
-                ))}
-              </div>
+        <div className='relative flex-1 min-h-0'>
+          {historyLoadingMore ? (
+            <div className='absolute top-0 inset-x-0 z-10 pointer-events-none px-2 py-1 text-center text-[10px] text-muted bg-panel-inset/80'>
+              {t('historyLoadingMore')}
             </div>
-          ) : (
-            messages.map((m) => {
-              const isLastAssistant =
-                streaming && m.role === 'assistant' && m.id === messages[messages.length - 1]?.id
-              const last = messages[messages.length - 1]
-              const prev = messages[messages.length - 2]
-              const isActiveTurn = streaming && (m.id === last?.id || m.id === prev?.id)
-              return (
-                <MessageBubble
-                  key={m.id}
-                  message={m}
-                  locale={locale}
-                  isStreaming={isLastAssistant}
-                  canDelete={!isActiveTurn}
-                  onDelete={() => onDeleteMessage(m.id)}
-                />
-              )
-            })
-          )}
+          ) : null}
+          <div
+            ref={parentRef}
+            onScroll={onScroll}
+            className='h-full overflow-y-auto p-2'
+          >
+            {historyLoading ? (
+              <p className='text-[11px] text-muted leading-relaxed px-1 py-2'>{t('historyLoading')}</p>
+            ) : messages.length === 0 ? (
+              <div className='px-1 py-2 space-y-2'>
+                <p className='text-[11px] text-muted leading-relaxed'>{t('empty')}</p>
+                <div className='flex flex-wrap gap-1'>
+                  {QUICK_PROMPTS.map((key) => (
+                    <button
+                      key={key}
+                      type='button'
+                      disabled={streaming || historyLoading}
+                      className={cn(
+                        winChromeSunken,
+                        'px-2 py-1 text-[11px] text-on-chrome hover:bg-chrome-hover disabled:opacity-50',
+                      )}
+                      onClick={() => onQuickPrompt(t(`quick.${key}`))}
+                    >
+                      {t(`quick.${key}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className='relative w-full' style={{ height: virtualizer.getTotalSize() }}>
+                {virtualizer.getVirtualItems().map((row) => {
+                  const m = messages[row.index]
+                  if (!m) return null
+                  const isLastAssistant = streaming && m.role === 'assistant' && m.id === lastId
+                  const isActiveTurn = streaming && (m.id === lastId || m.id === prevId)
+                  return (
+                    <div
+                      key={row.key}
+                      data-index={row.index}
+                      ref={virtualizer.measureElement}
+                      className='absolute top-0 left-0 w-full'
+                      style={{ transform: `translateY(${row.start}px)` }}
+                    >
+                      <MessageBubble
+                        message={m}
+                        locale={locale}
+                        isStreaming={isLastAssistant}
+                        canDelete={!isActiveTurn}
+                        onDelete={() => onDeleteMessage(m.id)}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </Panel>
     </>

@@ -16,13 +16,15 @@ export function AiChatApp({ embedded = false }: AiChatProps = {}) {
   const {
     messages,
     historyLoading,
+    historyLoadingMore,
+    hasMoreHistory,
     streaming,
     sessionEpoch,
-    listRef,
     inputRef,
     stop,
     clearChat,
     deleteMessage,
+    loadOlderMessages,
     sendText,
   } = useAiChat()
 
@@ -37,10 +39,12 @@ export function AiChatApp({ embedded = false }: AiChatProps = {}) {
         <MessageList
           messages={messages}
           historyLoading={historyLoading}
+          historyLoadingMore={historyLoadingMore}
+          hasMoreHistory={hasMoreHistory}
           streaming={streaming}
-          listRef={listRef}
           onClear={() => void clearChat()}
           onDeleteMessage={(id) => void deleteMessage(id)}
+          onLoadOlder={loadOlderMessages}
           onQuickPrompt={(text) => void sendText(text)}
         />
         <ChatComposer

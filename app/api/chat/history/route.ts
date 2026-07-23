@@ -1,15 +1,37 @@
 import { NextResponse } from 'next/server'
-import { clearAiChatSession, deleteAiChatMessage, readAiChatSession } from '@/lib/ai-chat'
+import {
+  AI_CHAT_HISTORY_PAGE_SIZE,
+  clearAiChatSession,
+  deleteAiChatMessage,
+  readAiChatHistoryPage,
+} from '@/lib/ai-chat'
 
 export const runtime = 'nodejs'
 
-/** GET 当前会话历史 */
-export async function GET() {
+/**
+ * GET 分页历史。
+ * - `limit` 每页条数（默认 30，最大 100）
+ * - `before` 游标：某条消息 id，取其之前更旧的一页；省略则取最新一页
+ */
+export async function GET(req: Request) {
   try {
-    const session = await readAiChatSession()
-    return NextResponse.json({ session })
+    const url = new URL(req.url)
+    const limitRaw = url.searchParams.get('limit')
+    const before = url.searchParams.get('before')?.trim() || null
+    const limit = limitRaw ? Number(limitRaw) : AI_CHAT_HISTORY_PAGE_SIZE
+
+    const page = await readAiChatHistoryPage({
+      limit: Number.isFinite(limit) ? limit : AI_CHAT_HISTORY_PAGE_SIZE,
+      before,
+    })
+
+    return NextResponse.json({
+      messages: page.messages,
+      hasMore: page.hasMore,
+      updatedAt: page.updatedAt,
+    })
   } catch (err) {
-    console.error('[ai-chat] read', err)
+    console.error('[ai-chat] read page', err)
     return NextResponse.json({ error: 'Failed to load chat history' }, { status: 500 })
   }
 }

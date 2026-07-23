@@ -3,17 +3,31 @@ import type { UiMessage } from './types'
 
 export type AiChatHistoryMessage = UiMessage
 
-export type AiChatHistorySession = {
-  updatedAt: number
+export type ChatHistoryPage = {
   messages: AiChatHistoryMessage[]
+  hasMore: boolean
+  updatedAt: number
 }
 
-type HistoryResponse = { session: AiChatHistorySession }
 type ClearResponse = { ok: boolean }
 
-export async function fetchChatHistory(): Promise<AiChatHistoryMessage[]> {
-  const data = await http.get<HistoryResponse>('/api/chat/history')
-  return Array.isArray(data.session?.messages) ? data.session.messages : []
+const DEFAULT_PAGE_SIZE = 30
+
+export async function fetchChatHistoryPage(options?: {
+  limit?: number
+  before?: string
+}): Promise<ChatHistoryPage> {
+  const data = await http.get<ChatHistoryPage>('/api/chat/history', {
+    params: {
+      limit: options?.limit ?? DEFAULT_PAGE_SIZE,
+      before: options?.before,
+    },
+  })
+  return {
+    messages: Array.isArray(data.messages) ? data.messages : [],
+    hasMore: Boolean(data.hasMore),
+    updatedAt: typeof data.updatedAt === 'number' ? data.updatedAt : 0,
+  }
 }
 
 export async function clearChatHistory(): Promise<void> {

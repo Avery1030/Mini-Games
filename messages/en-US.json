@@ -553,6 +553,7 @@
     "errorPrefix": "Error: {message}",
     "balanceInsufficient": "SiliconFlow balance is insufficient. Please top up and try again.",
     "historyLoading": "Loading history…",
+    "historyLoadingMore": "Loading earlier messages…",
     "historyLoadFail": "Failed to load history",
     "historyCleared": "History cleared",
     "historyClearFail": "Failed to clear history",

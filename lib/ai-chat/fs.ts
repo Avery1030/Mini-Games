@@ -17,6 +17,8 @@ export type AiChatSession = {
 const MAX_MESSAGES = 200
 const MAX_CONTENT_BYTES = 64 * 1024
 const MAX_SESSION_BYTES = 2 * 1024 * 1024
+export const AI_CHAT_HISTORY_PAGE_SIZE = 30
+const AI_CHAT_HISTORY_PAGE_MAX = 100
 
 function isMessageId(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0 && value.length <= 80
@@ -73,6 +75,46 @@ export async function readAiChatSession(): Promise<AiChatSession> {
     }
   } catch {
     return { updatedAt: 0, messages: [] }
+  }
+}
+
+export type AiChatHistoryPage = {
+  messages: AiChatStoredMessage[]
+  hasMore: boolean
+  updatedAt: number
+}
+
+/**
+ * 分页读取历史：默认取最新一页；传 `before`（某条消息 id）则取其之前更旧的一页。
+ */
+export async function readAiChatHistoryPage(options: {
+  limit?: number
+  before?: string | null
+} = {}): Promise<AiChatHistoryPage> {
+  const limit = Math.min(
+    Math.max(options.limit ?? AI_CHAT_HISTORY_PAGE_SIZE, 1),
+    AI_CHAT_HISTORY_PAGE_MAX,
+  )
+  const session = await readAiChatSession()
+  const all = session.messages
+
+  let endExclusive = all.length
+  if (options.before) {
+    if (!isMessageId(options.before)) {
+      return { messages: [], hasMore: false, updatedAt: session.updatedAt }
+    }
+    const idx = all.findIndex((m) => m.id === options.before)
+    if (idx <= 0) {
+      return { messages: [], hasMore: false, updatedAt: session.updatedAt }
+    }
+    endExclusive = idx
+  }
+
+  const start = Math.max(0, endExclusive - limit)
+  return {
+    messages: all.slice(start, endExclusive),
+    hasMore: start > 0,
+    updatedAt: session.updatedAt,
   }
 }
 

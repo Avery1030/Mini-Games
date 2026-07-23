@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@tanstack/react-virtual": "^3.14.8",
     "ahooks": "^3.9.7",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",

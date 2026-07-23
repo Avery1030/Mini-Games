@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { useTranslations } from 'next-intl'
 import { modal, toast } from '@/components/ui'
-import { clearChatHistory, deleteChatMessage, fetchChatHistory } from '../api'
+import { clearChatHistory, deleteChatMessage, fetchChatHistoryPage } from '../api'
 import { streamChatCompletion } from '../stream'
 import type { UiMessage } from '../types'
 import { mapStreamErrorMessage, nextId } from '../utils'
@@ -11,30 +11,45 @@ import { mapStreamErrorMessage, nextId } from '../utils'
 export type UseAiChatResult = {
   messages: UiMessage[]
   historyLoading: boolean
+  historyLoadingMore: boolean
+  hasMoreHistory: boolean
   streaming: boolean
   /** 清空会话时递增，供输入区重置 */
   sessionEpoch: number
-  listRef: RefObject<HTMLDivElement | null>
   inputRef: RefObject<HTMLTextAreaElement | null>
   stop: () => void
   clearChat: () => Promise<void>
   deleteMessage: (id: string) => Promise<void>
+  loadOlderMessages: () => Promise<void>
   sendText: (rawText: string) => Promise<void>
 }
 
+function toUiMessages(
+  list: Array<{ id: string; role: 'user' | 'assistant'; content: string; createdAt: number }>,
+): UiMessage[] {
+  return list.map((m) => ({
+    id: m.id,
+    role: m.role,
+    content: m.content,
+    createdAt: m.createdAt,
+  }))
+}
+
 /**
- * 智聊会话：加载历史、流式发送；落盘由服务端 /api/chat 负责。
+ * 智聊会话：分页加载历史、流式发送；落盘由服务端 /api/chat 负责。
  */
 export function useAiChat(): UseAiChatResult {
   const t = useTranslations('aiChat')
   const [messages, setMessages] = useState<UiMessage[]>([])
   const [historyLoading, setHistoryLoading] = useState(true)
+  const [historyLoadingMore, setHistoryLoadingMore] = useState(false)
+  const [hasMoreHistory, setHasMoreHistory] = useState(false)
   const [streaming, setStreaming] = useState(false)
   const [sessionEpoch, setSessionEpoch] = useState(0)
-  const listRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesRef = useRef(messages)
+  const loadingMoreRef = useRef(false)
   messagesRef.current = messages
 
   useEffect(() => {
@@ -42,16 +57,10 @@ export function useAiChat(): UseAiChatResult {
     ;(async () => {
       setHistoryLoading(true)
       try {
-        const list = await fetchChatHistory()
+        const page = await fetchChatHistoryPage()
         if (cancelled) return
-        setMessages(
-          list.map((m) => ({
-            id: m.id,
-            role: m.role,
-            content: m.content,
-            createdAt: m.createdAt,
-          })),
-        )
+        setMessages(toUiMessages(page.messages))
+        setHasMoreHistory(page.hasMore)
       } catch (err) {
         if (!cancelled) {
           toast.error(err instanceof Error ? err.message : t('historyLoadFail'))
@@ -67,12 +76,6 @@ export function useAiChat(): UseAiChatResult {
   }, [])
 
   useEffect(() => {
-    const el = listRef.current
-    if (!el) return
-    el.scrollTop = el.scrollHeight
-  }, [messages, streaming])
-
-  useEffect(() => {
     return () => {
       abortRef.current?.abort()
     }
@@ -83,6 +86,34 @@ export function useAiChat(): UseAiChatResult {
     abortRef.current = null
     setStreaming(false)
   }, [])
+
+  const loadOlderMessages = useCallback(async () => {
+    if (loadingMoreRef.current || !hasMoreHistory) return
+    const before = messagesRef.current[0]?.id
+    if (!before) return
+
+    loadingMoreRef.current = true
+    setHistoryLoadingMore(true)
+    try {
+      const page = await fetchChatHistoryPage({ before })
+      const older = toUiMessages(page.messages)
+      if (older.length === 0) {
+        setHasMoreHistory(false)
+        return
+      }
+      setMessages((prev) => {
+        const seen = new Set(prev.map((m) => m.id))
+        const unique = older.filter((m) => !seen.has(m.id))
+        return unique.length === 0 ? prev : [...unique, ...prev]
+      })
+      setHasMoreHistory(page.hasMore)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('historyLoadFail'))
+    } finally {
+      loadingMoreRef.current = false
+      setHistoryLoadingMore(false)
+    }
+  }, [hasMoreHistory, t])
 
   const clearChat = useCallback(async () => {
     if (messages.length === 0 && !streaming) return
@@ -97,6 +128,7 @@ export function useAiChat(): UseAiChatResult {
     try {
       await clearChatHistory()
       setMessages([])
+      setHasMoreHistory(false)
       setSessionEpoch((n) => n + 1)
       toast.success(t('historyCleared'))
     } catch (err) {
@@ -195,13 +227,15 @@ export function useAiChat(): UseAiChatResult {
   return {
     messages,
     historyLoading,
+    historyLoadingMore,
+    hasMoreHistory,
     streaming,
     sessionEpoch,
-    listRef,
     inputRef,
     stop,
     clearChat,
     deleteMessage,
+    loadOlderMessages,
     sendText,
   }
 }

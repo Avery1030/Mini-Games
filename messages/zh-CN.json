@@ -553,6 +553,7 @@
     "errorPrefix": "错误：{message}",
     "balanceInsufficient": "硅基流动账户余额不足，请充值后再试",
     "historyLoading": "正在加载历史…",
+    "historyLoadingMore": "加载更早的消息…",
     "historyLoadFail": "加载历史失败",
     "historyCleared": "已清空历史",
     "historyClearFail": "清空历史失败",
