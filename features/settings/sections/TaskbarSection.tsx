@@ -8,7 +8,7 @@ import { patchSettings } from '@/store/settings'
 
 export function TaskbarSection() {
   const t = useTranslations('settings')
-  const { showTaskbarClock, clockFormat, showTrayDecor } = useTaskbarSettings()
+  const { showTaskbarClock, clockFormat } = useTaskbarSettings()
 
   return (
     <div className='flex-1 min-h-0 overflow-y-auto p-3 space-y-3'>
@@ -34,11 +34,6 @@ export function TaskbarSection() {
             ]}
           />
         </div>
-        <Checkbox
-          checked={showTrayDecor}
-          onChange={(e) => patchSettings({ showTrayDecor: e.target.checked })}
-          label={t('showTrayDecor')}
-        />
       </Panel>
     </div>
   )

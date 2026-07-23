@@ -239,7 +239,6 @@
     "clockFormat": "时钟格式",
     "clock24": "24 小时制",
     "clock12": "12 小时制",
-    "showTrayDecor": "显示右侧装饰托盘图标",
     "backupHint": "导出本机全部偏好与桌面状态为 JSON，换设备时可导入还原。导入会覆盖同名配置并立即生效。",
     "backupExport": "导出",
     "backupExportHint": "包含主题、壁纸、窗口、桌面图标、记事本/画图/K线/智聊 API Key 等偏好（不含锁屏会话）。",

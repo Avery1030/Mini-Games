@@ -31,7 +31,6 @@ export type SettingsPersistState = {
   hidePlaceholderIcons: boolean
   showTaskbarClock: boolean
   clockFormat: '24h' | '12h'
-  showTrayDecor: boolean
   /** 应用窗口默认最大化打开 */
   openWindowsMaximized: boolean
 }

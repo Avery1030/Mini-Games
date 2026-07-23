@@ -239,7 +239,6 @@
     "clockFormat": "Clock format",
     "clock24": "24-hour",
     "clock12": "12-hour",
-    "showTrayDecor": "Show decorative tray icons",
     "backupHint": "Export all local preferences and desktop state as JSON so you can restore them on another device. Import overwrites matching settings and applies immediately.",
     "backupExport": "Export",
     "backupExportHint": "Includes theme, wallpaper, windows, desktop icons, notepad/paint/kline/AI chat API key preferences (lock session excluded).",

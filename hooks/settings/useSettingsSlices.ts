@@ -19,7 +19,6 @@ export function useTaskbarSettings() {
     useShallow((s) => ({
       showTaskbarClock: s.showTaskbarClock,
       clockFormat: s.clockFormat,
-      showTrayDecor: s.showTrayDecor,
     })),
   )
 }

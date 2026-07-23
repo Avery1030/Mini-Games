@@ -9,14 +9,10 @@ import { TaskbarClock } from './TaskbarClock'
 import { TaskbarWindowButton } from './TaskbarWindowButton'
 import { AveryMark } from './AveryMark'
 import { cn } from '@/lib/cn'
-import { Button } from '@/components/ui'
 import { winChrome, winChromePressed } from '@/lib/winChrome'
 import { useDesktopApps, useDesktopHydrated } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
-import { useSettingsStore } from '@/store/settings'
 import { resolveDesktopItemTitle } from '@/lib/desktop/window'
-
-const TRAY_DECOR_ICONS = ['✉️', '📤', '🐦', '▶️', '📰', '🔗'] as const
 
 /**
  * 任务栏：开始菜单、窗口按钮、托盘。自行订阅 store。
@@ -29,7 +25,6 @@ export function DesktopTaskbar() {
   const openWindow = useWindowStore((s) => s.openWindow)
   const handleTaskbarClick = useWindowStore((s) => s.handleTaskbarClick)
   const toggleMinimizeAllWindows = useWindowStore((s) => s.toggleMinimizeAllWindows)
-  const showTrayDecor = useSettingsStore((s) => s.showTrayDecor)
   const [startMenuOpen, setStartMenuOpen] = useState(false)
 
   const taskbarWindows = useMemo(() => {
@@ -94,15 +89,18 @@ export function DesktopTaskbar() {
         <div className='flex items-center gap-1.5 mr-1'>
           <ThemeSwitch />
           <LangSwitch />
-          {showTrayDecor && (
-            <div className='flex items-center gap-1'>
-              {TRAY_DECOR_ICONS.map((icon, i) => (
-                <Button key={i} size='icon-sm'>
-                  {icon}
-                </Button>
-              ))}
-            </div>
-          )}
+          <a
+            href='https://github.com/Avery1030/Mini-Windows-Desktop'
+            target='_blank'
+            rel='noopener noreferrer'
+            aria-label='GitHub'
+            title='GitHub'
+            className={cn(winChrome, 'inline-flex items-center justify-center w-6 h-6 p-0 shrink-0 select-none')}
+          >
+            <svg aria-hidden='true' focusable='false' className='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'>
+              <path d='M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144-.292-.741-.247-2.314.09-2.965.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943'></path>
+            </svg>
+          </a>
           <TaskbarClock />
         </div>
       </div>

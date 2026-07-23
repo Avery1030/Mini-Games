@@ -93,8 +93,6 @@ interface SettingsState {
   /** 任务栏显示时钟 */
   showTaskbarClock: boolean
   clockFormat: '24h' | '12h'
-  /** 任务栏右侧装饰托盘图标 */
-  showTrayDecor: boolean
   /** 应用窗口默认最大化打开 */
   openWindowsMaximized: boolean
   _hasHydrated: boolean
@@ -120,7 +118,6 @@ export type SettingsPatch = Partial<
     | 'hidePlaceholderIcons'
     | 'showTaskbarClock'
     | 'clockFormat'
-    | 'showTrayDecor'
     | 'openWindowsMaximized'
   >
 >
@@ -153,7 +150,6 @@ export const useSettingsStore = create<SettingsStore>()(
       hidePlaceholderIcons: false,
       showTaskbarClock: true,
       clockFormat: '24h',
-      showTrayDecor: true,
       openWindowsMaximized: true,
       _hasHydrated: false,
 
@@ -240,7 +236,6 @@ export const useSettingsStore = create<SettingsStore>()(
         hidePlaceholderIcons: state.hidePlaceholderIcons,
         showTaskbarClock: state.showTaskbarClock,
         clockFormat: state.clockFormat,
-        showTrayDecor: state.showTrayDecor,
         openWindowsMaximized: state.openWindowsMaximized,
       }),
       migrate: (persisted) => {
@@ -255,7 +250,6 @@ export const useSettingsStore = create<SettingsStore>()(
           hidePlaceholderIcons?: unknown
           showTaskbarClock?: unknown
           clockFormat?: unknown
-          showTrayDecor?: unknown
           openWindowsMaximized?: unknown
         }
         let custom = normalizeCustomSrc(raw.customWallpaperUrl) ?? normalizeCustomSrc(raw.customWallpaperDataUrl)
@@ -278,7 +272,6 @@ export const useSettingsStore = create<SettingsStore>()(
           hidePlaceholderIcons: raw.hidePlaceholderIcons === true,
           showTaskbarClock: raw.showTaskbarClock !== false,
           clockFormat,
-          showTrayDecor: raw.showTrayDecor !== false,
           openWindowsMaximized: raw.openWindowsMaximized !== false,
         }
       },
@@ -295,7 +288,6 @@ export const useSettingsStore = create<SettingsStore>()(
               hidePlaceholderIcons?: unknown
               showTaskbarClock?: unknown
               clockFormat?: unknown
-              showTrayDecor?: unknown
               openWindowsMaximized?: unknown
             }
           | undefined
@@ -321,7 +313,6 @@ export const useSettingsStore = create<SettingsStore>()(
           hidePlaceholderIcons: saved?.hidePlaceholderIcons === true,
           showTaskbarClock: saved?.showTaskbarClock !== false,
           clockFormat,
-          showTrayDecor: saved?.showTrayDecor !== false,
           openWindowsMaximized: saved?.openWindowsMaximized !== false,
         }
       },
