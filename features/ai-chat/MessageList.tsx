@@ -65,7 +65,7 @@ export function MessageList({
     count: messages.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 72,
-    overscan: 8,
+    overscan: 4,
     gap: 8,
     getItemKey: (index) => messages[index]?.id ?? index,
   })
@@ -82,8 +82,7 @@ export function MessageList({
     const prevCount = prevCountRef.current
     const prevFirst = prevFirstIdRef.current
     const countIncreased = messages.length > prevCount
-    const prepended =
-      countIncreased && prevFirst != null && firstId != null && firstId !== prevFirst
+    const prepended = countIncreased && prevFirst != null && firstId != null && firstId !== prevFirst
     const appended = countIncreased && (prevFirst == null || firstId === prevFirst)
 
     prevCountRef.current = messages.length
@@ -132,12 +131,7 @@ export function MessageList({
         </div>
         <div className='flex items-center gap-1.5 shrink-0'>
           {onChangeApiKey ? (
-            <Button
-              type='button'
-              size='sm'
-              onClick={onChangeApiKey}
-              title={changeApiKeyLabel ?? t('apiKeyChange')}
-            >
+            <Button type='button' size='sm' onClick={onChangeApiKey} title={changeApiKeyLabel ?? t('apiKeyChange')}>
               <KeyRound size={12} aria-hidden />
               <span>{changeApiKeyLabel ?? t('apiKeyChange')}</span>
             </Button>
@@ -162,11 +156,7 @@ export function MessageList({
               {t('historyLoadingMore')}
             </div>
           ) : null}
-          <div
-            ref={parentRef}
-            onScroll={onScroll}
-            className='h-full overflow-y-auto p-2'
-          >
+          <div ref={parentRef} onScroll={onScroll} className='h-full overflow-y-auto p-2'>
             {historyLoading ? (
               <p className='text-[11px] text-muted leading-relaxed px-1 py-2'>{t('historyLoading')}</p>
             ) : messages.length === 0 ? (
@@ -245,7 +235,7 @@ function MessageBubble({ message: m, locale, isStreaming, canDelete, onDelete }:
       className={cn(
         'group max-w-[92%] px-2 py-1.5 text-[12px] leading-relaxed border',
         m.role === 'user'
-          ? 'ml-auto bg-[var(--window-title-active)] text-[var(--window-title-text)] border-chrome-dark'
+          ? 'ml-auto bg-[var(--window-btn-hover)]/70 text-[var(--window-title-text)] border-chrome-dark'
           : 'mr-auto bg-chrome text-on-chrome border-chrome-dark',
       )}
     >

@@ -1,13 +1,8 @@
-import {
-  STORAGE_KEYS,
-  STORAGE_KEY_LIST,
-  isStorageKey,
-  type StorageKey,
-} from './keys'
+import { STORAGE_KEYS, STORAGE_KEY_LIST, isStorageKey, type StorageKey } from './keys'
 import { appStorage } from './local'
 
 /** 备份文件标识，用于校验导入内容 */
-export const BACKUP_FORMAT = 'avery-mini-app-backup' as const
+export const BACKUP_FORMAT = 'mini-windows-desktop-backup' as const
 export const BACKUP_VERSION = 1
 
 /**

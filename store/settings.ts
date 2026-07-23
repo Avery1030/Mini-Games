@@ -8,13 +8,11 @@ import {
   type WallpaperId,
 } from '@/config/wallpapers'
 import { writeWallpaperBoot } from '@/lib/wallpaper'
-import { isServer, isClient } from '@/lib/env'
+import { isClient } from '@/lib/env'
 import { isUiScale, type UiScale } from '@/lib/uiScale'
 import { STORAGE_KEYS, appStorage } from '@/lib/storage'
 
 const MAX_GALLERY = 40
-const IDB_NAME = 'mini-app-storage'
-const IDB_STORE = 'kv'
 
 export type WallpaperGalleryItem = {
   id: string
@@ -26,104 +24,7 @@ export type WallpaperGalleryItem = {
   createdAt: number
 }
 
-let idbMigratePromise: Promise<void> | null = null
-
-/** 一次性：把旧版 IndexedDB 设置迁回 localStorage，并删除 IDB 中的该项 */
-function migrateSettingsFromIdbOnce(): Promise<void> {
-  if (isServer || typeof indexedDB === 'undefined') {
-    return Promise.resolve()
-  }
-  if (idbMigratePromise) return idbMigratePromise
-
-  idbMigratePromise = new Promise((resolve) => {
-    const finish = () => {
-      void deleteIdbSettingsKey()
-      resolve()
-    }
-
-    if (appStorage.has(STORAGE_KEYS.settings)) {
-      finish()
-      return
-    }
-
-    try {
-      const req = indexedDB.open(IDB_NAME, 1)
-      req.onerror = () => resolve()
-      req.onupgradeneeded = () => {
-        const db = req.result
-        if (!db.objectStoreNames.contains(IDB_STORE)) {
-          db.createObjectStore(IDB_STORE)
-        }
-      }
-      req.onsuccess = () => {
-        const db = req.result
-        try {
-          if (!db.objectStoreNames.contains(IDB_STORE)) {
-            db.close()
-            resolve()
-            return
-          }
-          const tx = db.transaction(IDB_STORE, 'readonly')
-          const getReq = tx.objectStore(IDB_STORE).get(STORAGE_KEYS.settings)
-          getReq.onerror = () => {
-            db.close()
-            resolve()
-          }
-          getReq.onsuccess = () => {
-            const value = getReq.result
-            if (typeof value === 'string' && value && !appStorage.has(STORAGE_KEYS.settings)) {
-              try {
-                // 若仍是超大 data URL，跳过，避免撑爆 localStorage
-                if (value.length < 1_500_000) {
-                  appStorage.setRaw(STORAGE_KEYS.settings, value)
-                }
-              } catch {
-                // quota
-              }
-            }
-            db.close()
-            finish()
-          }
-        } catch {
-          db.close()
-          resolve()
-        }
-      }
-    } catch {
-      resolve()
-    }
-  })
-
-  return idbMigratePromise
-}
-
-function deleteIdbSettingsKey(): void {
-  if (typeof indexedDB === 'undefined') return
-  try {
-    const req = indexedDB.open(IDB_NAME, 1)
-    req.onsuccess = () => {
-      const db = req.result
-      try {
-        if (!db.objectStoreNames.contains(IDB_STORE)) {
-          db.close()
-          return
-        }
-        const tx = db.transaction(IDB_STORE, 'readwrite')
-        tx.objectStore(IDB_STORE).delete(STORAGE_KEYS.settings)
-        tx.oncomplete = () => db.close()
-        tx.onerror = () => db.close()
-      } catch {
-        db.close()
-      }
-    }
-  } catch {
-    // ignore
-  }
-}
-
-const settingsStorage = appStorage.createStateStorage({
-  before: () => migrateSettingsFromIdbOnce(),
-})
+const settingsStorage = appStorage.createStateStorage()
 
 function normalizeCustomSrc(raw: unknown): string | null {
   return isValidCustomWallpaperSrc(raw) ? raw : null

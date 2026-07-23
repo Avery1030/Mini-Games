@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     const upstream = await fetch(target.toString(), {
       headers: {
         Accept: 'image/*,*/*;q=0.8',
-        'User-Agent': 'mini-app-wallpaper/1.0',
+        'User-Agent': 'mini-windows-desktop-wallpaper/1.0',
       },
       redirect: 'follow',
       signal: controller.signal,

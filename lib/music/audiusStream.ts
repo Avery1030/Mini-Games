@@ -40,7 +40,7 @@ async function fetchAudioPartial(
     const res = await fetch(url, {
       headers: {
         Accept: 'audio/*,*/*;q=0.9',
-        'User-Agent': 'mini-app-music-player/1.0',
+        'User-Agent': 'mini-windows-desktop-music-player/1.0',
         ...(init?.range ? { Range: init.range } : { Range: 'bytes=0-1023' }),
       },
       redirect: 'follow',
@@ -87,7 +87,7 @@ export async function fetchAudiusAudio(
         const res = await fetch(url, {
           headers: {
             Accept: 'audio/*,*/*;q=0.9',
-            'User-Agent': 'mini-app-music-player/1.0',
+            'User-Agent': 'mini-windows-desktop-music-player/1.0',
             Range: opts.range,
           },
           redirect: 'follow',
@@ -104,7 +104,7 @@ export async function fetchAudiusAudio(
         const res = await fetch(url, {
           headers: {
             Accept: 'audio/*,*/*;q=0.9',
-            'User-Agent': 'mini-app-music-player/1.0',
+            'User-Agent': 'mini-windows-desktop-music-player/1.0',
           },
           redirect: 'follow',
           signal: controller.signal,

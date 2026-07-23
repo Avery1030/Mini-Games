@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
   try {
     const upstream = await fetch(target.toString(), {
       headers: {
-        'User-Agent': 'mini-app-music-player/1.0',
+        'User-Agent': 'mini-windows-desktop-music-player/1.0',
         Accept: 'audio/*,*/*;q=0.9',
         ...(range ? { Range: range } : {}),
       },
@@ -64,13 +64,7 @@ export async function GET(req: NextRequest) {
     }
 
     const headers = new Headers()
-    const pass = [
-      'content-type',
-      'content-length',
-      'content-range',
-      'accept-ranges',
-      'cache-control',
-    ] as const
+    const pass = ['content-type', 'content-length', 'content-range', 'accept-ranges', 'cache-control'] as const
     for (const key of pass) {
       const v = upstream.headers.get(key)
       if (v) headers.set(key, v)
@@ -84,10 +78,7 @@ export async function GET(req: NextRequest) {
     })
   } catch (err) {
     const aborted = err instanceof Error && err.name === 'AbortError'
-    return NextResponse.json(
-      { error: aborted ? '拉取音源超时' : '代理拉取失败' },
-      { status: 502 },
-    )
+    return NextResponse.json({ error: aborted ? '拉取音源超时' : '代理拉取失败' }, { status: 502 })
   } finally {
     clearTimeout(timer)
   }
