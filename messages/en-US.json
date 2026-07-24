@@ -239,6 +239,11 @@
     "showIconLabels": "Show icon labels",
     "openWindowsMaximized": "Open apps maximized",
     "openWindowsMaximizedHint": "When off, new windows use their default size. Already open windows are unchanged.",
+    "screensaverEnabled": "Enable screensaver",
+    "screensaverEnabledHint": "Shows a fullscreen screensaver after idle time. Move the mouse or press a key to dismiss.",
+    "screensaverIdle": "Wait time",
+    "screensaverIdleMinutes": "{minutes} minutes",
+    "screensaverIdleHint": "Only applies when the screensaver is enabled.",
     "taskbarHint": "Changes apply immediately.",
     "showClock": "Show clock",
     "clockFormat": "Clock format",
@@ -267,6 +272,10 @@
     "emptyPassword": "Password cannot be empty.",
     "mismatch": "The two passwords do not match.",
     "lockNow": "Lock"
+  },
+  "screensaver": {
+    "title": "Screensaver",
+    "dismissHint": "Move the mouse or press any key to dismiss"
   },
   "docs": {
     "toc": "Contents",

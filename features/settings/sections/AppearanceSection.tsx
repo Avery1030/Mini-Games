@@ -6,11 +6,22 @@ import { useTranslations } from 'next-intl'
 import { Checkbox, Panel, Select } from '@/components/ui'
 import { UI_SCALE_OPTIONS, uiScalePercent, type UiScale } from '@/lib/uiScale'
 import { useAppearanceSettings } from '@/hooks/settings'
-import { patchSettings } from '@/store/settings'
+import {
+  SCREENSAVER_IDLE_OPTIONS,
+  patchSettings,
+  type ScreensaverIdleMinutes,
+} from '@/store/settings'
 
 export function AppearanceSection() {
   const t = useTranslations('settings')
-  const { showIconLabels, iconSize, uiScale, openWindowsMaximized } = useAppearanceSettings()
+  const {
+    showIconLabels,
+    iconSize,
+    uiScale,
+    openWindowsMaximized,
+    screensaverEnabled,
+    screensaverIdleMinutes,
+  } = useAppearanceSettings()
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [themeMounted, setThemeMounted] = useState(false)
   useEffect(() => setThemeMounted(true), [])
@@ -96,6 +107,33 @@ export function AppearanceSection() {
           label={t('openWindowsMaximized')}
         />
         <p className='-mt-1 text-[10px] text-muted'>{t('openWindowsMaximizedHint')}</p>
+
+        <div className='border-t border-chrome-dark pt-3 space-y-3'>
+          <Checkbox
+            checked={screensaverEnabled}
+            onChange={(e) => patchSettings({ screensaverEnabled: e.target.checked })}
+            label={t('screensaverEnabled')}
+          />
+          <p className='-mt-1 text-[10px] text-muted'>{t('screensaverEnabledHint')}</p>
+
+          <div>
+            <div className='text-xs font-bold mb-1.5'>{t('screensaverIdle')}</div>
+            <Select
+              size='sm'
+              className='min-w-[180px]'
+              value={String(screensaverIdleMinutes)}
+              disabled={!screensaverEnabled}
+              onValueChange={(v) =>
+                patchSettings({ screensaverIdleMinutes: Number(v) as ScreensaverIdleMinutes })
+              }
+              options={SCREENSAVER_IDLE_OPTIONS.map((minutes) => ({
+                value: String(minutes),
+                label: t('screensaverIdleMinutes', { minutes }),
+              }))}
+            />
+            <p className='mt-1 text-[10px] text-muted'>{t('screensaverIdleHint')}</p>
+          </div>
+        </div>
       </Panel>
     </div>
   )

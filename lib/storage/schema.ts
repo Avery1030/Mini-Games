@@ -33,6 +33,8 @@ export type SettingsPersistState = {
   clockFormat: '24h' | '12h'
   /** 应用窗口默认最大化打开 */
   openWindowsMaximized: boolean
+  screensaverEnabled: boolean
+  screensaverIdleMinutes: 1 | 5 | 10 | 15 | 30
 }
 
 export type WindowsPersistState = {

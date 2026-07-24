@@ -63,9 +63,7 @@ export function FolderItemList({
   onClearRenameTimer,
 }: FolderItemListProps) {
   const td = useTranslations('desktop')
-  const fsDraggingIds = useFsDragStore((s) =>
-    s.session?.moved ? s.session.ids : EMPTY_SELECTION_IDS,
-  )
+  const fsDraggingIds = useFsDragStore((s) => (s.session?.moved ? s.session.ids : EMPTY_SELECTION_IDS))
 
   const dropAttr = useMemo(() => `folder:${folderId}`, [folderId])
 
@@ -80,9 +78,7 @@ export function FolderItemList({
       }}
     >
       {items.length === 0 ? (
-        <div className='h-full min-h-[8rem] flex items-center justify-center text-[11px] text-muted'>
-          {emptyText}
-        </div>
+        <div className='h-full min-h-[8rem] flex items-center justify-center text-[11px] text-muted'>{emptyText}</div>
       ) : (
         <ul
           className='divide-y divide-chrome-dark/40 min-h-full'
@@ -96,7 +92,7 @@ export function FolderItemList({
             const isDragging = fsDraggingIds.includes(child.id)
             const isEditing = editingId === child.id
             const rowClass = cn(
-              'w-full flex items-center gap-2 px-2 py-1.5 text-left',
+              'w-full flex items-center gap-2 px-2 h-7 text-left box-border',
               'hover:bg-icon-select/30 focus-visible:outline-none focus-visible:bg-icon-select/40',
               active && 'bg-icon-select text-icon-select-fg',
               isDragging && 'opacity-40',
@@ -121,7 +117,10 @@ export function FolderItemList({
                       autoComplete='off'
                       value={editValue}
                       aria-label={td('renameLabel')}
-                      className='min-w-0 flex-1 h-6 text-xs'
+                      className={cn(
+                        'min-w-0 flex-1 !h-4 !min-h-0 !py-0 !leading-4 px-1 text-xs',
+                        'border border-t-chrome-dark border-l-chrome-dark border-r-chrome-light border-b-chrome-light',
+                      )}
                       onChange={(e) => onEditValueChange(e.target.value)}
                       onClick={(e) => e.stopPropagation()}
                       onPointerDown={(e) => e.stopPropagation()}

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { WindowsDesktop } from './WindowsDesktop'
 import { BootScreen } from './BootScreen'
 import { LockScreen } from './LockScreen'
+import { Screensaver } from './Screensaver'
 import { useApplyUiScale, useWindowRouteSync } from '@/hooks/desktop'
 import { useDesktopStore } from '@/store/desktop'
 import { useWindowStore } from '@/store/window'
@@ -102,6 +103,7 @@ export function DesktopShell() {
         <>
           <WindowsDesktop />
           <LockScreen />
+          <Screensaver />
         </>
       )}
       {booting && (

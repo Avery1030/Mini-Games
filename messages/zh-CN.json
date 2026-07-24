@@ -239,6 +239,11 @@
     "showIconLabels": "在图标下方显示名称",
     "openWindowsMaximized": "应用默认最大化打开",
     "openWindowsMaximizedHint": "关闭后，新打开的窗口使用默认大小；已打开的窗口不受影响。",
+    "screensaverEnabled": "启用屏幕保护程序",
+    "screensaverEnabledHint": "无操作达到设定时间后显示全屏屏保；移动鼠标或按任意键退出。",
+    "screensaverIdle": "等待时间",
+    "screensaverIdleMinutes": "{minutes} 分钟",
+    "screensaverIdleHint": "仅在启用屏保时生效。",
     "taskbarHint": "改完立即生效。",
     "showClock": "显示时钟",
     "clockFormat": "时钟格式",
@@ -267,6 +272,10 @@
     "emptyPassword": "密码不能为空。",
     "mismatch": "两次输入的密码不一致。",
     "lockNow": "锁定"
+  },
+  "screensaver": {
+    "title": "屏幕保护程序",
+    "dismissHint": "移动鼠标或按任意键退出"
   },
   "docs": {
     "toc": "目录",

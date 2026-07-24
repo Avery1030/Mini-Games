@@ -388,7 +388,6 @@ export function CalculatorApp({ embedded = false }: CalculatorProps = {}) {
       return 'font-bold bg-[var(--window-title-active)] text-[var(--window-title-text)] hover:brightness-110'
     }
     if (tone === 'op') {
-      // 深蓝字 + 略深底，避免淡黄 accent 在 chrome 灰上对比不足
       return 'font-bold text-[var(--window-title-active)] bg-chrome-hover/80'
     }
     if (tone === 'mem') return 'text-[11px] font-medium'
@@ -410,10 +409,7 @@ export function CalculatorApp({ embedded = false }: CalculatorProps = {}) {
             <span className='shrink-0'>{memory !== 0 ? 'M' : ''}</span>
           </div>
           <div
-            className={cn(
-              'text-right text-xl font-bold tabular-nums tracking-wide truncate',
-              error && 'text-red-700',
-            )}
+            className={cn('text-right text-xl font-bold tabular-nums tracking-wide truncate', error && 'text-red-700')}
             aria-live='polite'
           >
             {display}

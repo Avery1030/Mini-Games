@@ -9,6 +9,8 @@ export function useAppearanceSettings() {
       iconSize: s.iconSize,
       uiScale: s.uiScale,
       openWindowsMaximized: s.openWindowsMaximized,
+      screensaverEnabled: s.screensaverEnabled,
+      screensaverIdleMinutes: s.screensaverIdleMinutes,
     })),
   )
 }
