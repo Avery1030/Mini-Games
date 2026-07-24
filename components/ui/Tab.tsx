@@ -7,7 +7,7 @@ export interface TabProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 /**
- * 深色内容区内的轻量 Tab（音乐播放器等）。
+ * 深色内容区内的轻量 Tab。
  */
 export function Tab({ className, active = false, children, type = 'button', ...props }: TabProps) {
   return (

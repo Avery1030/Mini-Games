@@ -11,7 +11,6 @@
     "notepad": "Notepad",
     "paint": "Paint",
     "settings": "Settings",
-    "music": "Music",
     "calculator": "Calculator",
     "recycleBin": "Recycle Bin",
     "cmd": "Command Prompt",
@@ -289,7 +288,6 @@
       "title": "Built-in apps",
       "body": [
         "Minesweeper and Tetris: classic games for zoning out.",
-        "Music: demo tracks plus Audius search; for popular copyrighted songs, import local files.",
         "Settings: Display, Appearance, Taskbar, and Data. Data lets you export/import a JSON backup of local preferences and desktop state.",
         "Document: the window you are reading. Offline content, no annotations saved.",
         "Log: dated release notes — open the Log icon; Document also shows a short recent summary.",
@@ -297,7 +295,8 @@
         "Paint: canvas doodling with palette, eraser, and shapes; works saved as PNG under .data/drawings.",
         "Calculator: open from Start or the desktop. Supports arithmetic, parentheses, powers, square root, and simple memory keys.",
         "K-Line Chart: USDT perpetual candles with period and main/sub indicators; market data from Binance public APIs.",
-        "Command Prompt: a simple DOS-style terminal to browse desktop/folder paths and open some apps."
+        "Command Prompt: a simple DOS-style terminal to browse desktop/folder paths and open some apps.",
+        "Zhi Chat: SiliconFlow streaming chat; API key stays on this device."
       ]
     },
     "changelog": {
@@ -314,7 +313,7 @@
         "Name: Mini Desktop",
         "Vibe: Win95 nostalgia shell + a bit of modern web",
         "Fonts: aiming for that classic dialog sans-serif feel",
-        "Notice: wallpapers, music, and copy here are for demo and personal fun. Respect copyright.",
+        "Notice: wallpapers and copy here are for demo and personal fun. Respect copyright.",
         "Version note: see What's new and the Log window; source of truth is content/changelog.ts."
       ]
     }
@@ -412,7 +411,7 @@
         "Fixed light/dark theme glitches in Settings panels, Document body, and status bars.",
         "Theme colors now use CSS variables; Tailwind dark: variants follow next-themes class strategy.",
         "Reorganized the repo: desktop apps under features/, helpers under lib/, shell under components/desktop/.",
-        "Split Settings and Music into smaller section components for easier maintenance.",
+        "Split Settings into smaller section components for easier maintenance.",
         "Shipped the Log window with dated release notes.",
         "Notepad: plain-text notes stored in .data/notes with list, edit, save, and delete.",
         "Paint: Canvas brush / eraser / line / rect / ellipse; PNGs stored in .data/drawings."
@@ -429,10 +428,8 @@
       ]
     },
     "2026-07-16": {
-      "title": "Music & UI kit",
+      "title": "Win95 UI kit",
       "items": [
-        "Music app gained playlist, seek bar, repeat, and shuffle.",
-        "Audius open-catalog search; import local files for popular copyrighted tracks.",
         "Extracted Win95-style UI: Button, Input, Select, Panel, Checkbox, and Context Menu.",
         "Taskbar buttons show app icons and keep open order."
       ]
@@ -446,38 +443,6 @@
         "Document app with welcome and usage notes."
       ]
     }
-  },
-  "music": {
-    "emptyPlaylist": "Empty playlist",
-    "shuffle": "Shuffle",
-    "prev": "Previous",
-    "next": "Next",
-    "play": "Play",
-    "pause": "Pause",
-    "repeat": "Repeat",
-    "mute": "Mute",
-    "unmute": "Unmute",
-    "searchPlaceholder": "Search songs / artists (Audius)…",
-    "search": "Search",
-    "searchHint": "Search the Audius open catalog. Popular copyrighted tracks are often blocked — try lofi / chill, or import local files.",
-    "playlist": "Playlist ({count})",
-    "searchResults": "Results ({count})",
-    "local": "Local",
-    "emptyList": "Playlist is empty. Search or add local audio.",
-    "remove": "Remove",
-    "needKeyword": "Enter a keyword",
-    "searchFail": "Search failed",
-    "noResults": "No results. Try another keyword.",
-    "networkError": "Network error",
-    "noSource": "No playable source for this track",
-    "searchPrompt": "Enter a keyword to search full tracks",
-    "addToPlaylist": "Add to playlist",
-    "playNow": "Play now",
-    "shortcuts": "Space play · ←/→ seek · ↑/↓ volume",
-    "repeatOff": "No repeat",
-    "repeatAll": "Repeat all",
-    "repeatOne": "Repeat one",
-    "shuffleOn": "Shuffle"
   },
   "calculator": {
     "error": "Error",

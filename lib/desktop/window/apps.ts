@@ -6,7 +6,6 @@ import {
   FileText,
   Palette,
   Settings,
-  Music,
   Calculator,
   Folder,
   Trash2,
@@ -16,7 +15,6 @@ import {
 } from 'lucide-react'
 import { Minesweeper } from '@/features/minesweeper'
 import { Tetris } from '@/features/tetris'
-import { Music as MusicApp } from '@/features/music'
 import { SettingsApp } from '@/features/settings'
 import { DocumentApp } from '@/features/document'
 import { LogApp } from '@/features/log'
@@ -101,22 +99,13 @@ export class SettingsWindow extends DesktopWindow {
   readonly app = SettingsApp
 }
 
-export class MusicWindow extends DesktopWindow {
-  readonly id = 'music' as const
-  readonly icon = Music
-  readonly defaultCoordinate: DesktopCoordinate = [2, 4]
-  readonly width = 420
-  readonly height = 620
-  readonly app = MusicApp
-}
-
 /**
  * 计算器：固定尺寸（禁止缩放），其余行为继承基类。
  */
 export class CalculatorWindow extends DesktopWindow {
   readonly id = 'calculator' as const
   readonly icon = Calculator
-  readonly defaultCoordinate: DesktopCoordinate = [2, 5]
+  readonly defaultCoordinate: DesktopCoordinate = [2, 4]
   readonly width = 320
   readonly height = 440
   readonly app = CalculatorApp

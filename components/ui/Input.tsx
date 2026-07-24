@@ -23,7 +23,7 @@ const toneClass: Record<InputTone, string> = {
 }
 
 /**
- * Win95 凹陷输入框；深色 tone 用于音乐等深色内容区。
+ * Win95 凹陷输入框；深色 tone 用于深色内容区。
  */
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   { className, size = 'md', tone = 'field', type = 'text', disabled, ...props },

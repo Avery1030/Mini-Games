@@ -1,6 +1,6 @@
 # Avery Mini Windows Desktop
 
-Windows 95 风格的 Web 桌面（Next.js App Router）：可拖拽图标与窗口、任务栏、开始菜单、锁屏，以及一整套内置应用——设置、文档、日志、记事本、画图、音乐、计算器、命令提示符、回收站、K 线图表、智聊，外加扫雷与俄罗斯方块。
+Windows 95 风格的 Web 桌面（Next.js App Router）：可拖拽图标与窗口、任务栏、开始菜单、锁屏，以及一整套内置应用——设置、文档、日志、记事本、画图、计算器、命令提示符、回收站、K 线图表、智聊，外加扫雷与俄罗斯方块。
 
 气质是「Win95 怀旧壳 + 一点当代网页」：视觉走经典对话框质感，数据大多落在本机（`localStorage` + 项目下 `.data/`），不依赖账号体系。
 
@@ -53,7 +53,6 @@ yarn lint    # ESLint
 | 日志 | `log` | 按日期查看更新记录 |
 | 记事本 | `notepad` | 纯文本笔记 CRUD；落盘 `.data/notes` |
 | 画图 | `paint` | 画布、调色板、橡皮、形状；PNG 落盘 `.data/drawings` |
-| 音乐 | `music` | 演示曲 + Audius 搜索 / 流式代理；可本地导入 |
 | 计算器 | `calculator` | 四则运算、括号、幂、开方与简单内存键；窗口不可缩放 |
 | 命令提示符 | `cmd` | DOS 风格终端（`DIR` / `CD` / `CLS` / `NOTEPAD` / `TETRIS` / `WALLPAPER` 等）；默认不占桌面图标 |
 | 回收站 | `recycleBin` | 软删除桌面资源的恢复与清空 |
@@ -81,7 +80,7 @@ yarn lint    # ESLint
 ```
 app/
   (desktop)/          桌面壳页面：/ 与 /window/[slug]
-  api/                Route Handlers（笔记、画图、壁纸、音乐、智聊）
+  api/                Route Handlers（笔记、画图、壁纸、智聊）
   layout.tsx          根布局
 components/
   desktop/            桌面壳（窗口层、任务栏、锁屏、开机屏…）
@@ -96,7 +95,7 @@ i18n/                 next-intl 路由与请求配置
 lib/
   desktop/            窗口注册表、几何、吸附、路由、桌面树…
   storage/            localStorage 封装、备份、legacy 迁移
-  wallpaper/ music/ notepad/ paint/ ai-chat/ …
+  wallpaper/ notepad/ paint/ ai-chat/ …
 messages/             zh-CN.json / en-US.json
 store/                Zustand stores
 public/               静态资源
@@ -167,7 +166,6 @@ CHANGELOG.md          仓库向更新说明
 | `POST/GET /api/paint`、`/api/paint/[id]`、`/api/paint/file/[name]` | 画作元数据与文件 |
 | `POST /api/wallpaper/upload`、`/api/wallpaper/import` | 壁纸上传 / 外链导入 |
 | `GET /api/wallpaper/file/[name]` | 读取已上传壁纸 |
-| `GET /api/music/search`、`/api/music/stream`、`/api/music/proxy` | Audius 搜索与流媒体代理 |
 | `POST /api/chat`、相关 history | 智聊：代理 SiliconFlow 流式补全并落盘会话 |
 
 **智聊：** 客户端在应用内填写 [SiliconFlow](https://siliconflow.cn/) API Key，经 `Authorization: Bearer` 传给 `/api/chat`；服务端默认模型为 `Qwen/Qwen2.5-7B-Instruct`。无需在 `.env` 中配置密钥（Key 存本机 store）。
@@ -209,4 +207,4 @@ CHANGELOG.md          仓库向更新说明
 
 ## 说明
 
-壁纸、音乐与演示文案仅供自娱与演示，请尊重版权。行情与第三方流媒体依赖公开接口，可用性与合规以各服务方条款为准。
+壁纸与演示文案仅供自娱与演示，请尊重版权。行情依赖公开接口，可用性与合规以各服务方条款为准。
