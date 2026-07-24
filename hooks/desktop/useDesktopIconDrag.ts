@@ -15,19 +15,37 @@ import {
   diffCoordinates,
   positionToCoordinate,
   previewPlacement,
+  hitFsDropTarget,
+  type FsDropTarget,
 } from '@/lib/desktop'
+import { allocateDesktopCoordinate } from '@/lib/desktop/window'
 
 type CoordApp = { id: DesktopAppId; coordinate: DesktopCoordinate }
 
 type DragSession = {
   id: DesktopAppId
+  ids: DesktopAppId[]
   pointerId: number
   startX: number
   startY: number
-  /** 指针相对图标左上角（viewport） */
   offsetX: number
   offsetY: number
   moved: boolean
+  copy: boolean
+  /** 按下时的修饰键，供单击选择逻辑使用 */
+  metaKey: boolean
+  shiftKey: boolean
+  ctrlKey: boolean
+}
+
+export type FsDropResult = {
+  ids: DesktopAppId[]
+  target: FsDropTarget
+  copy: boolean
+  clientX: number
+  clientY: number
+  primaryViewportLeft: number
+  primaryViewportTop: number
 }
 
 type UseDesktopIconDragOptions = {
@@ -35,16 +53,15 @@ type UseDesktopIconDragOptions = {
   desktopRef: RefObject<HTMLDivElement | null>
   onOpen: (id: DesktopAppId) => void
   onCommit: (updates: Array<{ id: DesktopAppId; coordinate: DesktopCoordinate }>) => void
-  /**
-   * 拖放到某点时优先处理（如丢进回收站 / 文件夹）。
-   * 返回 true 表示已消费，不再提交格点坐标。
-   */
-  onDropAtPoint?: (draggedId: DesktopAppId, clientX: number, clientY: number) => boolean
-  /** 指针下的命中目标是否可作为投放区（高亮 + 取消格点预览） */
-  isDropTarget?: (id: DesktopAppId) => boolean
+  resolveDragIds?: (id: DesktopAppId) => DesktopAppId[]
+  onFsDrop?: (result: FsDropResult) => boolean
+  isIconDropTarget?: (id: DesktopAppId) => boolean
+  /** 未拖动的单击（含修饰键） */
+  onItemClick?: (id: DesktopAppId, e: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => void
+  /** 超过拖拽阈值时同步选区（多选拖拽视觉反馈） */
+  onDragStart?: (ids: DesktopAppId[]) => void
 }
 
-/** 指针下命中的桌面图标 id（跳过正在拖拽的自身） */
 export function hitDesktopIconAtPoint(
   clientX: number,
   clientY: number,
@@ -67,8 +84,11 @@ export function useDesktopIconDrag({
   desktopRef,
   onOpen,
   onCommit,
-  onDropAtPoint,
-  isDropTarget,
+  resolveDragIds,
+  onFsDrop,
+  isIconDropTarget,
+  onItemClick,
+  onDragStart,
 }: UseDesktopIconDragOptions) {
   const appsRef = useRef(apps)
   appsRef.current = apps
@@ -77,20 +97,24 @@ export function useDesktopIconDrag({
   onOpenRef.current = onOpen
   const onCommitRef = useRef(onCommit)
   onCommitRef.current = onCommit
-  const onDropAtPointRef = useRef(onDropAtPoint)
-  onDropAtPointRef.current = onDropAtPoint
-  const isDropTargetRef = useRef(isDropTarget)
-  isDropTargetRef.current = isDropTarget
+  const resolveDragIdsRef = useRef(resolveDragIds)
+  resolveDragIdsRef.current = resolveDragIds
+  const onFsDropRef = useRef(onFsDrop)
+  onFsDropRef.current = onFsDrop
+  const isIconDropTargetRef = useRef(isIconDropTarget)
+  isIconDropTargetRef.current = isIconDropTarget
+  const onItemClickRef = useRef(onItemClick)
+  onItemClickRef.current = onItemClick
+  const onDragStartRef = useRef(onDragStart)
+  onDragStartRef.current = onDragStart
 
   const [draggingId, setDraggingId] = useState<DesktopAppId | null>(null)
-  /** fixed 定位时的 viewport 坐标 */
+  const [draggingIds, setDraggingIds] = useState<DesktopAppId[]>([])
   const [dragPixel, setDragPixel] = useState<{ left: number; top: number } | null>(null)
   const [previewCoords, setPreviewCoords] = useState<Map<DesktopAppId, DesktopCoordinate> | null>(
     null,
   )
-  /** 拖拽悬停的投放目标（回收站 / 文件夹） */
   const [dropTargetId, setDropTargetId] = useState<DesktopAppId | null>(null)
-  /** 用于双击打开：记录上一次未拖拽的点击 */
   const lastClickRef = useRef<{ id: DesktopAppId; time: number } | null>(null)
 
   const desktopLocalFromViewport = useCallback(
@@ -109,21 +133,24 @@ export function useDesktopIconDrag({
     [desktopRef],
   )
 
-  const updatePreviewFromIconViewport = useCallback(
-    (id: DesktopAppId, viewportLeft: number, viewportTop: number, clientX: number, clientY: number) => {
-      const hit = hitDesktopIconAtPoint(clientX, clientY, id)
-      const canDrop = hit != null && isDropTargetRef.current?.(hit) === true
-      setDropTargetId(canDrop ? hit : null)
+  const updateHover = useCallback(
+    (ids: DesktopAppId[], viewportLeft: number, viewportTop: number, clientX: number, clientY: number) => {
+      const ignore = new Set(ids)
+      const fsTarget = hitFsDropTarget(clientX, clientY, ignore)
 
-      // 悬停投放目标时不预览格点让位
-      if (canDrop) {
+      const iconHit = hitDesktopIconAtPoint(clientX, clientY, ids[0])
+      const iconOk =
+        iconHit != null && !ignore.has(iconHit) && isIconDropTargetRef.current?.(iconHit) === true
+      setDropTargetId(iconOk ? iconHit : null)
+
+      if (fsTarget || iconOk) {
         setPreviewCoords(null)
         return
       }
 
       const local = desktopLocalFromViewport(viewportLeft, viewportTop)
       const target = positionToCoordinate(local.left, local.top)
-      setPreviewCoords(previewPlacement(appsRef.current, id, target))
+      setPreviewCoords(previewPlacement(appsRef.current, ids[0]!, target))
     },
     [desktopLocalFromViewport],
   )
@@ -135,16 +162,30 @@ export function useDesktopIconDrag({
       if (!session) return
 
       if (!session.moved) {
-        // 单击不打开；同一图标在时间窗口内点第二次才打开（Win 经典行为）
+        onItemClickRef.current?.(session.id, {
+          metaKey: session.metaKey,
+          ctrlKey: session.ctrlKey,
+          shiftKey: session.shiftKey,
+        })
         const now = Date.now()
         const last = lastClickRef.current
-        if (last && last.id === session.id && now - last.time <= DBLCLICK_MS) {
+        if (
+          !session.metaKey &&
+          !session.ctrlKey &&
+          !session.shiftKey &&
+          last &&
+          last.id === session.id &&
+          now - last.time <= DBLCLICK_MS
+        ) {
           onOpenRef.current(session.id)
           lastClickRef.current = null
-        } else {
+        } else if (!session.metaKey && !session.ctrlKey && !session.shiftKey) {
           lastClickRef.current = { id: session.id, time: now }
+        } else {
+          lastClickRef.current = null
         }
         setDraggingId(null)
+        setDraggingIds([])
         setDragPixel(null)
         setPreviewCoords(null)
         setDropTargetId(null)
@@ -154,19 +195,49 @@ export function useDesktopIconDrag({
       lastClickRef.current = null
 
       if (commit) {
-        const handled = onDropAtPointRef.current?.(session.id, clientX, clientY) === true
+        const ignore = new Set(session.ids)
+        const fsTarget = hitFsDropTarget(clientX, clientY, ignore)
+        let handled = false
+        if (fsTarget) {
+          handled =
+            onFsDropRef.current?.({
+              ids: session.ids,
+              target: fsTarget,
+              copy: session.copy,
+              clientX,
+              clientY,
+              primaryViewportLeft: viewportLeft,
+              primaryViewportTop: viewportTop,
+            }) === true
+        }
         if (!handled) {
-          const local = desktopLocalFromViewport(viewportLeft, viewportTop)
-          const target = positionToCoordinate(local.left, local.top)
-          const next = previewPlacement(appsRef.current, session.id, target)
-          const updates = diffCoordinates(appsRef.current, next, session.id)
-          if (updates.length > 0) {
-            onCommitRef.current(updates)
+          const desktopIds = new Set(appsRef.current.map((a) => a.id))
+          if (desktopIds.has(session.id)) {
+            const local = desktopLocalFromViewport(viewportLeft, viewportTop)
+            const target = positionToCoordinate(local.left, local.top)
+            const next = previewPlacement(appsRef.current, session.id, target)
+            const others = session.ids.filter((id) => id !== session.id && desktopIds.has(id))
+            if (others.length > 0) {
+              const occupied: DesktopCoordinate[] = []
+              for (const [id, coord] of next) {
+                if (!others.includes(id)) occupied.push(coord)
+              }
+              let prefer = next.get(session.id) ?? target
+              for (const id of others) {
+                const coord = allocateDesktopCoordinate(occupied, prefer)
+                next.set(id, coord)
+                occupied.push(coord)
+                prefer = coord
+              }
+            }
+            const updates = diffCoordinates(appsRef.current, next, session.id)
+            if (updates.length > 0) onCommitRef.current(updates)
           }
         }
       }
 
       setDraggingId(null)
+      setDraggingIds([])
       setDragPixel(null)
       setPreviewCoords(null)
       setDropTargetId(null)
@@ -178,33 +249,33 @@ export function useDesktopIconDrag({
     const onMove = (e: globalThis.PointerEvent) => {
       const session = sessionRef.current
       if (!session || e.pointerId !== session.pointerId) return
+      session.copy = e.altKey
 
       const dx = e.clientX - session.startX
       const dy = e.clientY - session.startY
-
       if (!session.moved) {
         if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return
         session.moved = true
         setDraggingId(session.id)
+        setDraggingIds(session.ids)
+        onDragStartRef.current?.(session.ids)
       }
 
       const left = e.clientX - session.offsetX
       const top = e.clientY - session.offsetY
       setDragPixel({ left, top })
-      updatePreviewFromIconViewport(session.id, left, top, e.clientX, e.clientY)
+      updateHover(session.ids, left, top, e.clientX, e.clientY)
     }
 
     const onUp = (e: globalThis.PointerEvent) => {
       const session = sessionRef.current
       if (!session || e.pointerId !== session.pointerId) return
-      const left = e.clientX - session.offsetX
-      const top = e.clientY - session.offsetY
-      endDrag(left, top, e.clientX, e.clientY, true)
+      session.copy = e.altKey
+      endDrag(e.clientX - session.offsetX, e.clientY - session.offsetY, e.clientX, e.clientY, true)
     }
 
     const onCancel = () => {
-      const session = sessionRef.current
-      if (!session) return
+      if (!sessionRef.current) return
       endDrag(0, 0, 0, 0, false)
     }
 
@@ -216,26 +287,33 @@ export function useDesktopIconDrag({
       window.removeEventListener('pointerup', onUp)
       window.removeEventListener('pointercancel', onCancel)
     }
-  }, [endDrag, updatePreviewFromIconViewport])
+  }, [endDrag, updateHover])
 
   const handleIconPointerDown = useCallback((id: DesktopAppId, e: ReactPointerEvent<HTMLElement>) => {
     if (e.button !== 0) return
     e.preventDefault()
 
+    const ids = resolveDragIdsRef.current?.(id) ?? [id]
     const iconRect = e.currentTarget.getBoundingClientRect()
     sessionRef.current = {
       id,
+      ids,
       pointerId: e.pointerId,
       startX: e.clientX,
       startY: e.clientY,
       offsetX: e.clientX - iconRect.left,
       offsetY: e.clientY - iconRect.top,
       moved: false,
+      copy: e.altKey,
+      metaKey: e.metaKey,
+      shiftKey: e.shiftKey,
+      ctrlKey: e.ctrlKey,
     }
   }, [])
 
   return {
     draggingId,
+    draggingIds,
     dragPixel,
     previewCoords,
     dropTargetId,

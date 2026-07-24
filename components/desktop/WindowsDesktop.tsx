@@ -11,6 +11,7 @@ import { useDesktopWallpaper } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
 import { useDesktopStore } from '@/store/desktop'
 import { useDesktopItemsStore } from '@/store/desktopItems'
+import { useDesktopSelectionStore } from '@/store/desktopSelection'
 import { resolveDesktopItemTitle } from '@/lib/desktop/window'
 import {
   CELL_STEP,
@@ -19,6 +20,8 @@ import {
   type ArrangeAlign,
 } from '@/lib/desktop'
 import { promptRenameDesktopItem } from './promptRenameDesktopItem'
+import { FsDragLayer } from './FsDragLayer'
+import { buildDesktopContextMenu } from './buildDesktopContextMenu'
 
 /**
  * 桌面编排：壁纸 + 图标层 + 窗口层 + 任务栏 + 右键菜单。
@@ -34,7 +37,7 @@ export function WindowsDesktop() {
   const createFolder = useDesktopItemsStore((s) => s.createFolder)
   const createTextDocument = useDesktopItemsStore((s) => s.createTextDocument)
   const renameItem = useDesktopItemsStore((s) => s.renameItem)
-  const moveToRecycleBin = useDesktopItemsStore((s) => s.moveToRecycleBin)
+  const moveItemsToRecycleBin = useDesktopItemsStore((s) => s.moveItemsToRecycleBin)
   const emptyRecycleBin = useDesktopItemsStore((s) => s.emptyRecycleBin)
   const deletedCount = useDesktopItemsStore((s) => s.items.filter((f) => f.isDeleted).length)
   const rearrangeIcons = useDesktopStore((s) => s.rearrangeIcons)
@@ -79,7 +82,9 @@ export function WindowsDesktop() {
     toast.success(tRecycle('emptied', { count: n }))
   }
 
-  const handleCreateTextDocument = async (coordinate: ReturnType<typeof pointerToCoordinate> | null) => {
+  const handleCreateTextDocument = async (
+    coordinate: ReturnType<typeof pointerToCoordinate> | null,
+  ) => {
     const record = await createTextDocument({
       title: td('newTextDocumentName'),
       coordinate: coordinate ?? undefined,
@@ -97,122 +102,128 @@ export function WindowsDesktop() {
     const iconEl = target?.closest?.('[data-desktop-icon]') as HTMLElement | null
     const iconId = (iconEl?.dataset.desktopIcon ?? null) as DesktopAppId | null
     const app = iconId ? desktopIcons.find((a) => a.id === iconId) : undefined
-    const canOpen = Boolean(app?.app)
     const onBlank = !iconId
     const isUserItem = app?.kind === 'folder' || app?.kind === 'textDocument'
     const isRecycleBin = iconId === 'recycleBin'
+    const canOpen = Boolean(app?.app)
     const desktopEl = e.currentTarget as HTMLElement
-    const clickCoordinate = onBlank
-      ? pointerToCoordinate(e.clientX, e.clientY, desktopEl)
-      : null
+    const clickCoordinate = pointerToCoordinate(e.clientX, e.clientY, desktopEl)
+
+    const selStore = useDesktopSelectionStore.getState()
+    if (isUserItem && iconId) {
+      if (!(selStore.scope.type === 'desktop' && selStore.selectedIds.includes(iconId))) {
+        selStore.selectOnly(iconId, { type: 'desktop' })
+      }
+    }
+
+    const sel = useDesktopSelectionStore.getState()
+    const selectedUserIds =
+      sel.scope.type === 'desktop'
+        ? sel.selectedIds.filter((id) => {
+            const a = desktopIcons.find((x) => x.id === id)
+            return a?.kind === 'folder' || a?.kind === 'textDocument'
+          })
+        : []
 
     setContextMenu({
       x: e.clientX,
       y: e.clientY,
-      items: [
-        {
-          id: 'open',
-          label: td('open'),
-          disabled: !canOpen,
-          onSelect: () => {
+      items: buildDesktopContextMenu({
+        iconId,
+        app,
+        onBlank,
+        isUserItem,
+        isRecycleBin,
+        canOpen,
+        hasUserSelection: selectedUserIds.length > 0,
+        singleUserSelection: selectedUserIds.length === 1,
+        canPaste: Boolean(sel.clipboard?.ids.length),
+        deletedCount,
+        clickCoordinate,
+        desktopEl,
+        labels: {
+          open: td('open'),
+          rename: td('rename'),
+          copy: td('copy'),
+          cut: td('cut'),
+          delete: td('delete'),
+          paste: td('paste'),
+          new: td('new'),
+          newFolder: td('newFolder'),
+          newTextDocument: td('newTextDocument'),
+          emptyRecycleBin: td('emptyRecycleBin'),
+          arrangeIcons: td('arrangeIcons'),
+          arrangeLeft: td('arrangeLeft'),
+          arrangeRight: td('arrangeRight'),
+          refresh: td('refresh'),
+        },
+        actions: {
+          open: () => {
             if (iconId && canOpen) openWindow(iconId)
           },
-        },
-        ...(isUserItem && iconId && app && (app.kind === 'folder' || app.kind === 'textDocument')
-          ? [
-              {
-                id: 'rename',
-                label: td('rename'),
-                onSelect: () => {
-                  const kind = app.kind
-                  if (kind !== 'folder' && kind !== 'textDocument') return
-                  void handleRenameItem(iconId, kind, resolveDesktopItemTitle(app, tApps))
-                },
-              },
-              {
-                id: 'delete',
-                label: td('delete'),
-                onSelect: () => {
-                  moveToRecycleBin(iconId)
-                },
-              },
-            ]
-          : []),
-        ...(isRecycleBin
-          ? [
-              {
-                id: 'emptyRecycleBin',
-                label: td('emptyRecycleBin'),
-                disabled: deletedCount === 0,
-                onSelect: () => {
-                  void handleEmptyRecycleBin()
-                },
-              },
-            ]
-          : []),
-        ...(onBlank
-          ? [
-              {
-                id: 'new',
-                label: td('new'),
-                children: [
-                  {
-                    id: 'newFolder',
-                    label: td('newFolder'),
-                    onSelect: () => {
-                      createFolder({
-                        title: td('newFolderName'),
-                        coordinate: clickCoordinate ?? undefined,
-                      })
-                    },
-                  },
-                  {
-                    id: 'newTextDocument',
-                    label: td('newTextDocument'),
-                    onSelect: () => {
-                      void handleCreateTextDocument(clickCoordinate)
-                    },
-                  },
-                ],
-              },
-              {
-                id: 'arrangeIcons',
-                label: td('arrangeIcons'),
-                children: [
-                  {
-                    id: 'arrangeLeft',
-                    label: td('arrangeLeft'),
-                    onSelect: () => {
-                      handleArrangeIcons(desktopEl, 'left')
-                    },
-                  },
-                  {
-                    id: 'arrangeRight',
-                    label: td('arrangeRight'),
-                    onSelect: () => {
-                      handleArrangeIcons(desktopEl, 'right')
-                    },
-                  },
-                ],
-              },
-            ]
-          : []),
-        {
-          id: 'refresh',
-          label: td('refresh'),
-          onSelect: () => {
+          rename: () => {
+            if (!iconId || !app || (app.kind !== 'folder' && app.kind !== 'textDocument')) return
+            void handleRenameItem(iconId, app.kind, resolveDesktopItemTitle(app, tApps))
+          },
+          copy: () => {
+            useDesktopSelectionStore.getState().copySelection()
+          },
+          cut: () => {
+            useDesktopSelectionStore.getState().cutSelection()
+          },
+          delete: () => {
+            if (!iconId) return
+            const ids =
+              useDesktopSelectionStore.getState().scope.type === 'desktop' &&
+              useDesktopSelectionStore.getState().selectedIds.length > 0
+                ? useDesktopSelectionStore.getState().selectedIds
+                : [iconId]
+            moveItemsToRecycleBin(ids)
+            useDesktopSelectionStore.getState().clear()
+          },
+          paste: () => {
+            void useDesktopSelectionStore
+              .getState()
+              .pasteInto(null)
+              .then((ids) => {
+                if (ids.length === 0) toast.warning(td('pasteFail'))
+              })
+          },
+          createFolder: () => {
+            createFolder({
+              title: td('newFolderName'),
+              coordinate: clickCoordinate,
+            })
+          },
+          createTextDocument: () => {
+            void handleCreateTextDocument(clickCoordinate)
+          },
+          emptyRecycleBin: () => {
+            void handleEmptyRecycleBin()
+          },
+          arrangeLeft: () => {
+            handleArrangeIcons(desktopEl, 'left')
+          },
+          arrangeRight: () => {
+            handleArrangeIcons(desktopEl, 'right')
+          },
+          refresh: () => {
             window.location.reload()
           },
         },
-      ],
+      }),
     })
   }
 
   return (
     <div className='min-h-screen flex flex-col select-none font-pixel text-on-desktop' style={desktopBgStyle}>
-      <div className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem]' onContextMenu={handleDesktopContextMenu}>
+      <div
+        className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem]'
+        onContextMenu={handleDesktopContextMenu}
+      >
         <DesktopIconsLayer />
         <DesktopWindowsLayer />
+        <FsDragLayer />
       </div>
 
       <DesktopTaskbar />

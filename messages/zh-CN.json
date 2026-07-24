@@ -41,6 +41,12 @@
     "cannotDeleteBuiltin": "内置应用无法移至回收站",
     "cannotMoveBuiltin": "内置应用无法移入文件夹",
     "cannotMoveIntoFolder": "无法移入该文件夹",
+    "copy": "复制",
+    "cut": "剪切",
+    "paste": "粘贴",
+    "pasteFail": "无法粘贴",
+    "moveFail": "无法移动",
+    "selectCount": "已选择 {count} 项",
     "arrangeIcons": "排列图标",
     "arrangeLeft": "靠左",
     "arrangeRight": "靠右"

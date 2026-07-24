@@ -1,16 +1,20 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { FileText, Folder, FolderOpen } from 'lucide-react'
+import { FolderOpen } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { Button, ContextMenu, Panel, toast, type ContextMenuState } from '@/components/ui'
 import type { DesktopAppId } from '@/config/desktop'
 import { useDesktopItemsStore, type DesktopItemRecord } from '@/store/desktopItems'
+import { useDesktopSelectionStore } from '@/store/desktopSelection'
+import { useFsDragStore } from '@/store/fsDrag'
 import { getChildren } from '@/lib/desktop/itemsTree'
 import { useWindowStore } from '@/store/window'
-import { promptRenameDesktopItem } from '@/components/desktop/promptRenameDesktopItem'
+import { useFsListSelection } from '@/hooks/desktop/useFsListSelection'
+import { useInlineItemRename } from '@/hooks/desktop/useInlineItemRename'
+import { FolderItemList, FS_LIST_GRAB_X, FS_LIST_GRAB_Y } from './FolderItemList'
 
 export type FolderAppProps = {
   embedded?: boolean
@@ -19,7 +23,7 @@ export type FolderAppProps = {
 }
 
 /**
- * 文件夹窗口：展示子项树节点，支持打开 / 新建 / 移回桌面 / 删除。
+ * 文件夹窗口：任意 folderId（桌面根文件夹 / 嵌套文件夹）共用同一套多选与行内重命名。
  */
 export function FolderApp({ embedded = false, folderTitle, folderId }: FolderAppProps) {
   const t = useTranslations('folder')
@@ -27,42 +31,86 @@ export function FolderApp({ embedded = false, folderTitle, folderId }: FolderApp
   const items = useDesktopItemsStore((s) => s.items)
   const createFolder = useDesktopItemsStore((s) => s.createFolder)
   const createTextDocument = useDesktopItemsStore((s) => s.createTextDocument)
-  const renameItem = useDesktopItemsStore((s) => s.renameItem)
-  const moveItemToDesktop = useDesktopItemsStore((s) => s.moveItemToDesktop)
-  const moveToRecycleBin = useDesktopItemsStore((s) => s.moveToRecycleBin)
+  const moveItemsToDesktop = useDesktopItemsStore((s) => s.moveItemsToDesktop)
+  const moveItemsToRecycleBin = useDesktopItemsStore((s) => s.moveItemsToRecycleBin)
   const openWindow = useWindowStore((s) => s.openWindow)
+
+  const scope = useMemo(() => ({ type: 'folder' as const, folderId }), [folderId])
 
   const folderRecord = items.find((f) => f.id === folderId && f.kind === 'folder')
   const name = folderRecord?.title?.trim() || folderTitle?.trim() || t('untitled')
 
   const children = useMemo(
     () =>
-      getChildren(items, folderId).slice().sort((a, b) => {
-        if (a.kind !== b.kind) return a.kind === 'folder' ? -1 : 1
-        return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
-      }),
+      getChildren(items, folderId)
+        .slice()
+        .sort((a, b) => {
+          if (a.kind !== b.kind) return a.kind === 'folder' ? -1 : 1
+          return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
+        }),
     [items, folderId],
   )
 
-  const [selectedId, setSelectedId] = useState<DesktopAppId | null>(null)
+  const orderedIds = useMemo(() => children.map((c) => c.id), [children])
+
+  const handlePaste = useCallback(() => {
+    void useDesktopSelectionStore
+      .getState()
+      .pasteInto(folderId)
+      .then((ids) => {
+        if (ids.length === 0) toast.warning(td('pasteFail'))
+      })
+  }, [folderId, td])
+
+  const handleDelete = useCallback(() => {
+    const ids = useDesktopSelectionStore.getState().selectedIds
+    if (ids.length === 0) return
+    moveItemsToRecycleBin(ids)
+    useDesktopSelectionStore.getState().clear()
+  }, [moveItemsToRecycleBin])
+
+  const {
+    selectedIds,
+    clipboard,
+    listRef,
+    marqueeRect,
+    ensureScope,
+    handleItemClick,
+    onListBlankPointerDown,
+    singleSelected,
+    hasSelection,
+    MarqueeOverlay,
+  } = useFsListSelection({
+    scope,
+    orderedIds,
+    onDeleteSelection: () => handleDelete(),
+    onPaste: handlePaste,
+  })
+
+  const {
+    editingId,
+    editValue,
+    editInputRef,
+    startInlineRename,
+    cancelInlineRename,
+    commitEditing,
+    clearRenameTimer,
+    handleTitleClick,
+    setEditValueBoth,
+  } = useInlineItemRename({ parentId: folderId, scope, selectedIds })
+
+  const selected = useMemo(
+    () => children.filter((c) => selectedIds.includes(c.id)),
+    [children, selectedIds],
+  )
+  const primarySelected = selected[0] ?? null
+
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
-  const selected = children.find((c) => c.id === selectedId) ?? null
 
   const openChild = (child: DesktopItemRecord) => {
+    clearRenameTimer()
+    cancelInlineRename()
     openWindow(child.id)
-  }
-
-  const handleRename = async (child: DesktopItemRecord) => {
-    const next = await promptRenameDesktopItem({
-      currentName: child.title,
-      title: td('renameTitle'),
-      itemId: child.id,
-      kind: child.kind,
-      parentId: folderId,
-    })
-    if (next == null || next === child.title.trim()) return
-    const ok = await renameItem(child.id, next)
-    if (!ok) toast.error(td(child.kind === 'folder' ? 'renameDuplicate' : 'renameDuplicateText'))
   }
 
   const handleCreateFolder = () => {
@@ -77,10 +125,51 @@ export function FolderApp({ embedded = false, folderTitle, folderId }: FolderApp
     if (!record) toast.error(td('createTextDocumentFail'))
   }
 
+  const handleMoveToDesktop = () => {
+    if (selectedIds.length === 0) return
+    const moved = moveItemsToDesktop(selectedIds)
+    if (moved.length === 0) toast.warning(t('moveToDesktopFail'))
+    else useDesktopSelectionStore.getState().clear()
+  }
+
+  const handleItemPointerDown = (child: DesktopItemRecord, e: React.PointerEvent) => {
+    if (e.button !== 0) return
+    if (editingId === child.id) return
+    e.preventDefault()
+    const ids = useDesktopSelectionStore.getState().prepareDragSelection(child.id, scope)
+    useFsDragStore.getState().begin({
+      primaryId: child.id,
+      ids,
+      pointerId: e.pointerId,
+      offsetX: FS_LIST_GRAB_X,
+      offsetY: FS_LIST_GRAB_Y,
+      startX: e.clientX,
+      startY: e.clientY,
+      copy: e.altKey,
+    })
+  }
+
   const handleContextMenu = (e: React.MouseEvent, child?: DesktopItemRecord) => {
     e.preventDefault()
     e.stopPropagation()
-    if (child) setSelectedId(child.id)
+    const sel = useDesktopSelectionStore.getState()
+    if (child) {
+      if (
+        !(
+          sel.scope.type === 'folder' &&
+          sel.scope.folderId === folderId &&
+          sel.selectedIds.includes(child.id)
+        )
+      ) {
+        sel.selectOnly(child.id, scope)
+      }
+    }
+
+    const selectionCount = (child ? useDesktopSelectionStore.getState().selectedIds : selectedIds)
+      .length
+    const hasSel = selectionCount > 0
+    const singleSel = selectionCount === 1
+    const canPaste = Boolean(clipboard?.ids.length)
 
     setContextMenu({
       x: e.clientX,
@@ -90,34 +179,55 @@ export function FolderApp({ embedded = false, folderTitle, folderId }: FolderApp
             {
               id: 'open',
               label: td('open'),
+              disabled: !singleSel,
               onSelect: () => openChild(child),
             },
             {
               id: 'rename',
               label: td('rename'),
+              disabled: !singleSel,
+              onSelect: () => startInlineRename(child),
+            },
+            {
+              id: 'copy',
+              label: td('copy'),
+              disabled: !hasSel,
               onSelect: () => {
-                void handleRename(child)
+                useDesktopSelectionStore.getState().copySelection()
               },
+            },
+            {
+              id: 'cut',
+              label: td('cut'),
+              disabled: !hasSel,
+              onSelect: () => {
+                useDesktopSelectionStore.getState().cutSelection()
+              },
+            },
+            {
+              id: 'paste',
+              label: td('paste'),
+              disabled: !canPaste,
+              onSelect: handlePaste,
             },
             {
               id: 'toDesktop',
               label: t('moveToDesktop'),
-              onSelect: () => {
-                if (!moveItemToDesktop(child.id)) {
-                  toast.warning(t('moveToDesktopFail'))
-                }
-              },
+              onSelect: handleMoveToDesktop,
             },
             {
               id: 'delete',
               label: td('delete'),
-              onSelect: () => {
-                moveToRecycleBin(child.id)
-                if (selectedId === child.id) setSelectedId(null)
-              },
+              onSelect: handleDelete,
             },
           ]
         : [
+            {
+              id: 'paste',
+              label: td('paste'),
+              disabled: !canPaste,
+              onSelect: handlePaste,
+            },
             {
               id: 'new',
               label: td('new'),
@@ -140,6 +250,11 @@ export function FolderApp({ embedded = false, folderTitle, folderId }: FolderApp
     })
   }
 
+  const statusText =
+    selectedIds.length > 1
+      ? td('selectCount', { count: selectedIds.length })
+      : t('status', { name, count: children.length })
+
   return (
     <div
       className={cn(
@@ -147,6 +262,7 @@ export function FolderApp({ embedded = false, folderTitle, folderId }: FolderApp
         !embedded && 'p-0',
       )}
       onContextMenu={(e) => handleContextMenu(e)}
+      onPointerDown={ensureScope}
     >
       <div className='shrink-0 flex flex-wrap items-center gap-2 px-3 py-2 border-b border-chrome-dark bg-chrome'>
         <Button size='sm' onClick={handleCreateFolder}>
@@ -157,31 +273,19 @@ export function FolderApp({ embedded = false, folderTitle, folderId }: FolderApp
         </Button>
         <Button
           size='sm'
-          disabled={!selected}
-          onClick={() => selected && openChild(selected)}
+          disabled={!primarySelected || !singleSelected}
+          onClick={() => primarySelected && openChild(primarySelected)}
         >
           {td('open')}
         </Button>
-        <Button
-          size='sm'
-          disabled={!selected}
-          onClick={() => {
-            if (!selected) return
-            if (!moveItemToDesktop(selected.id)) toast.warning(t('moveToDesktopFail'))
-          }}
-        >
+        <Button size='sm' disabled={!hasSelection} onClick={handleMoveToDesktop}>
           {t('moveToDesktop')}
         </Button>
-        <Button
-          size='sm'
-          disabled={!selected}
-          onClick={() => {
-            if (!selected) return
-            moveToRecycleBin(selected.id)
-            setSelectedId(null)
-          }}
-        >
+        <Button size='sm' disabled={!hasSelection} onClick={handleDelete}>
           {td('delete')}
+        </Button>
+        <Button size='sm' disabled={!clipboard?.ids.length} onClick={handlePaste}>
+          {td('paste')}
         </Button>
       </div>
 
@@ -194,46 +298,43 @@ export function FolderApp({ embedded = false, folderTitle, folderId }: FolderApp
           </div>
         </div>
 
-        <Panel inset className='flex-1 min-h-0 overflow-auto'>
-          {children.length === 0 ? (
-            <div className='h-full min-h-[8rem] flex items-center justify-center text-[11px] text-muted'>
-              {t('empty')}
-            </div>
-          ) : (
-            <ul className='divide-y divide-chrome-dark/40' role='listbox' aria-label={name}>
-              {children.map((child) => {
-                const active = selectedId === child.id
-                const Icon = child.kind === 'folder' ? Folder : FileText
-                return (
-                  <li key={child.id}>
-                    <button
-                      type='button'
-                      role='option'
-                      aria-selected={active}
-                      className={cn(
-                        'w-full flex items-center gap-2 px-2 py-1.5 text-left',
-                        'hover:bg-icon-select/30 focus-visible:outline-none focus-visible:bg-icon-select/40',
-                        active && 'bg-icon-select text-icon-select-fg',
-                      )}
-                      onClick={() => setSelectedId(child.id)}
-                      onDoubleClick={() => openChild(child)}
-                      onContextMenu={(e) => handleContextMenu(e, child)}
-                    >
-                      <Icon size={16} strokeWidth={2} className='shrink-0' aria-hidden />
-                      <span className='min-w-0 flex-1 truncate text-xs'>{child.title}</span>
-                    </button>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
+        <Panel inset className='flex-1 min-h-0 overflow-auto' data-fs-drop={`folder:${folderId}`}>
+          <FolderItemList
+            listRef={listRef}
+            folderId={folderId}
+            listLabel={name}
+            emptyText={t('empty')}
+            items={children}
+            selectedIds={selectedIds}
+            editingId={editingId}
+            editValue={editValue}
+            editInputRef={editInputRef}
+            onListBlankPointerDown={onListBlankPointerDown}
+            onEnsureScope={ensureScope}
+            onItemClick={(child, e) => {
+              if (editingId === child.id) return
+              clearRenameTimer()
+              handleItemClick(child.id, e)
+            }}
+            onTitleClick={(child, e) =>
+              handleTitleClick(child, e, (c, ev) => handleItemClick(c.id, ev))
+            }
+            onOpen={openChild}
+            onItemPointerDown={handleItemPointerDown}
+            onContextMenu={handleContextMenu}
+            onEditValueChange={setEditValueBoth}
+            onCommitEdit={commitEditing}
+            onCancelEdit={cancelInlineRename}
+            onClearRenameTimer={clearRenameTimer}
+          />
         </Panel>
       </div>
 
       <div className='shrink-0 px-3 py-1.5 border-t border-chrome-dark bg-status-bar text-[10px] text-status-bar-fg truncate'>
-        {t('status', { name, count: children.length })}
+        {statusText}
       </div>
 
+      <MarqueeOverlay rect={marqueeRect} />
       <ContextMenu menu={contextMenu} onClose={() => setContextMenu(null)} />
     </div>
   )

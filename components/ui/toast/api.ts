@@ -1,7 +1,7 @@
 import { useToastStore } from './store'
 import type { ToastOptions, ToastType } from './types'
 
-const DEFAULT_DURATION = 10_000
+const DEFAULT_DURATION = 3_000
 
 let seq = 0
 function nextId() {

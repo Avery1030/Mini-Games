@@ -11,6 +11,7 @@ import {
   isSiblingTitleTaken,
   resolveParentId,
   uniqueSiblingTitle,
+  filterSelectionRoots,
 } from '@/lib/desktop/itemsTree'
 import {
   allocateDesktopCoordinate,
@@ -24,7 +25,7 @@ import {
 } from '@/lib/desktop/window'
 import { FolderWindow, TextDocumentWindow } from '@/lib/desktop/window/apps'
 import { useDesktopStore } from '@/store/desktop'
-import { createNoteApi, deleteNoteApi, updateNoteApi } from '@/features/notepad/api'
+import { createNoteApi, deleteNoteApi, updateNoteApi, fetchNote } from '@/features/notepad/api'
 
 export type { DesktopItemRecord, DesktopResourceKind, DesktopFolderRecord } from '@/lib/desktop/itemTypes'
 
@@ -39,6 +40,8 @@ type CreateItemOpts = {
   open?: boolean
   /** 父文件夹；null/缺省 = 桌面根 */
   parentId?: DesktopAppId | null
+  /** 文本文档初始内容（复制用） */
+  content?: string
 }
 
 type DesktopItemsActions = {
@@ -58,6 +61,13 @@ type DesktopItemsActions = {
   restoreFromRecycleBin: (id: DesktopAppId) => boolean
   purgeFromRecycleBin: (id: DesktopAppId) => Promise<boolean>
   emptyRecycleBin: () => Promise<number>
+  moveItemsIntoFolder: (ids: DesktopAppId[], folderId: DesktopAppId) => DesktopAppId[]
+  moveItemsToDesktop: (ids: DesktopAppId[], preferCoordinate?: DesktopCoordinate) => DesktopAppId[]
+  moveItemsToRecycleBin: (ids: DesktopAppId[]) => DesktopAppId[]
+  /** 深拷贝到目标目录（null = 桌面）；返回新建根 id */
+  copyItems: (ids: DesktopAppId[], targetParentId: DesktopAppId | null) => Promise<DesktopAppId[]>
+  restoreItemsFromRecycleBin: (ids: DesktopAppId[]) => DesktopAppId[]
+  purgeItemsFromRecycleBin: (ids: DesktopAppId[]) => Promise<DesktopAppId[]>
 }
 
 export type DesktopItemsStore = DesktopItemsState & DesktopItemsActions
@@ -208,7 +218,7 @@ export const useDesktopItemsStore = create<DesktopItemsStore>()(
         const baseTitle = opts.title?.trim() || '新建文本文档'
         let note
         try {
-          note = await createNoteApi({ title: baseTitle, content: '' })
+          note = await createNoteApi({ title: baseTitle, content: opts.content ?? '' })
         } catch {
           return null
         }
@@ -499,6 +509,120 @@ export const useDesktopItemsStore = create<DesktopItemsStore>()(
         set({ items: get().items.filter((f) => !removeIds.has(f.id)) })
         await Promise.all(deleted.map((f) => deleteLinkedNote(f)))
         return deleted.length
+      },
+
+      moveItemsIntoFolder: (ids, folderId) => {
+        const roots = filterSelectionRoots(get().items, ids)
+        const moved: DesktopAppId[] = []
+        for (const id of roots) {
+          if (get().moveItemIntoFolder(id, folderId)) moved.push(id)
+        }
+        return moved
+      },
+
+      moveItemsToDesktop: (ids, preferCoordinate) => {
+        const roots = filterSelectionRoots(get().items, ids)
+        const moved: DesktopAppId[] = []
+        let nextPrefer = preferCoordinate
+        for (const id of roots) {
+          const item = get().items.find((i) => i.id === id)
+          if (!item || item.isDeleted) continue
+          // 已在桌面：只可选中重排
+          if (resolveParentId(item.parentId) == null) {
+            if (nextPrefer) {
+              const occupied = Object.entries(useDesktopStore.getState().coordinates)
+                .filter(([cid]) => cid !== id)
+                .map(([, c]) => c)
+              const placed = allocateDesktopCoordinate(occupied, nextPrefer)
+              useDesktopStore.getState().ensureCoordinate(id, placed)
+              nextPrefer = placed
+            }
+            moved.push(id)
+            continue
+          }
+          if (get().moveItemToDesktop(id, nextPrefer)) {
+            moved.push(id)
+            // 下一项落在刚放置点附近，避免全部挤回默认 [4,1]
+            nextPrefer = useDesktopStore.getState().coordinates[id] ?? nextPrefer
+          }
+        }
+        return moved
+      },
+
+      moveItemsToRecycleBin: (ids) => {
+        const roots = filterSelectionRoots(get().items, ids)
+        const moved: DesktopAppId[] = []
+        for (const id of roots) {
+          if (get().moveToRecycleBin(id)) moved.push(id)
+        }
+        return moved
+      },
+
+      copyItems: async (ids, targetParentId) => {
+        const snapshot = get().items
+        const roots = filterSelectionRoots(snapshot, ids)
+        const createdRoots: DesktopAppId[] = []
+
+        const copyOne = async (
+          sourceId: DesktopAppId,
+          parentId: DesktopAppId | null,
+        ): Promise<DesktopAppId | null> => {
+          const src = snapshot.find((i) => i.id === sourceId && !i.isDeleted)
+          if (!src) return null
+
+          if (src.kind === 'folder') {
+            const folder = get().createFolder({
+              title: src.title,
+              parentId,
+              open: false,
+            })
+            if (!folder) return null
+            const children = getChildren(snapshot, sourceId)
+            for (const child of children) {
+              await copyOne(child.id, folder.id)
+            }
+            return folder.id
+          }
+
+          let content = ''
+          if (src.noteId) {
+            try {
+              const note = await fetchNote(src.noteId)
+              content = note.content ?? ''
+            } catch {
+              content = ''
+            }
+          }
+          const doc = await get().createTextDocument({
+            title: src.title,
+            parentId,
+            content,
+            open: false,
+          })
+          return doc?.id ?? null
+        }
+
+        for (const id of roots) {
+          const created = await copyOne(id, targetParentId)
+          if (created) createdRoots.push(created)
+        }
+        return createdRoots
+      },
+
+      restoreItemsFromRecycleBin: (ids) => {
+        const restored: DesktopAppId[] = []
+        for (const id of ids) {
+          if (get().restoreFromRecycleBin(id)) restored.push(id)
+        }
+        return restored
+      },
+
+      purgeItemsFromRecycleBin: async (ids) => {
+        const purged: DesktopAppId[] = []
+        for (const id of ids) {
+          if (await get().purgeFromRecycleBin(id)) purged.push(id)
+        }
+        return purged
       },
     }),
     {

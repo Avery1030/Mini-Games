@@ -149,3 +149,28 @@ export function getRecycleBinRoots(items: DesktopItemRecord[]): DesktopItemRecor
 export function isDesktopRootItem(item: DesktopItemRecord): boolean {
   return !item.isDeleted && resolveParentId(item.parentId) == null
 }
+
+/**
+ * 多选中的「顶层」id：若祖先也在选区则排除（避免父+子重复操作）。
+ */
+export function filterSelectionRoots(
+  items: DesktopItemRecord[],
+  ids: DesktopAppId[],
+): DesktopAppId[] {
+  const idSet = new Set(ids)
+  const byId = new Map(items.map((i) => [i.id, i]))
+  return ids.filter((id) => {
+    const item = byId.get(id)
+    if (!item || item.isDeleted) return false
+    let pid = resolveParentId(item.parentId)
+    const guard = new Set<DesktopAppId>()
+    while (pid) {
+      if (guard.has(pid)) break
+      guard.add(pid)
+      if (idSet.has(pid)) return false
+      const parent = byId.get(pid)
+      pid = parent ? resolveParentId(parent.parentId) : null
+    }
+    return true
+  })
+}

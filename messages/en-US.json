@@ -41,6 +41,12 @@
     "cannotDeleteBuiltin": "Built-in apps cannot be moved to the Recycle Bin",
     "cannotMoveBuiltin": "Built-in apps cannot be moved into folders",
     "cannotMoveIntoFolder": "Cannot move into that folder",
+    "copy": "Copy",
+    "cut": "Cut",
+    "paste": "Paste",
+    "pasteFail": "Unable to paste",
+    "moveFail": "Unable to move",
+    "selectCount": "{count} items selected",
     "arrangeIcons": "Arrange Icons",
     "arrangeLeft": "Align Left",
     "arrangeRight": "Align Right"

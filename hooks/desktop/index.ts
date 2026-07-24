@@ -1,5 +1,8 @@
 export { useDesktopApps, useDesktopHydrated } from './useDesktopApps'
 export { useDesktopIconDrag, hitDesktopIconAtPoint } from './useDesktopIconDrag'
+export { useMarqueeSelect, MarqueeOverlay } from './useMarqueeSelect'
+export { useFsListSelection } from './useFsListSelection'
+export { useInlineItemRename } from './useInlineItemRename'
 export { useApplyUiScale } from './useApplyUiScale'
 export { useDesktopWallpaper } from './useDesktopWallpaper'
 export { useWindowGeometry } from './useWindowGeometry'

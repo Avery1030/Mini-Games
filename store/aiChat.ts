@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { STORAGE_KEYS, appStorage } from '@/lib/storage'
+import { isClient } from '@/lib/env'
 
 type AiChatState = {
   /** 硅基流动 API Key（随备份导出） */
@@ -10,8 +11,6 @@ type AiChatState = {
   clearApiKey: () => void
   setHasHydrated: (value: boolean) => void
 }
-
-const isClient = typeof window !== 'undefined'
 
 export const useAiChatStore = create<AiChatState>()(
   persist(

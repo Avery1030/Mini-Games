@@ -1,6 +1,8 @@
 export { useDesktopStore } from './desktop'
 export { useWindowStore } from './window'
 export { useDesktopItemsStore } from './desktopItems'
+export { useDesktopSelectionStore } from './desktopSelection'
+export { useFsDragStore } from './fsDrag'
 export { useSettingsStore, patchSettings, type SettingsPatch } from './settings'
 export { useNotepadStore } from './notepad'
 export { usePaintStore } from './paint'

@@ -1,14 +1,6 @@
 'use client'
 
-import {
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-  type ComponentType,
-} from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ComponentType } from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/cn'
@@ -64,9 +56,9 @@ function MenuItem({ icon: Icon, label, shortcut, hasSubmenu, active, onClick, on
   )
 }
 
-function MenuSeparator() {
-  return <div role='separator' className='my-0.5 mx-1 h-[2px] bg-chrome-dark shadow-[0_1px_0_var(--chrome-light)]' />
-}
+const MenuSeparator = () => (
+  <div role='separator' className='my-0.5 mx-1 h-[2px] bg-chrome-dark shadow-[0_1px_0_var(--chrome-light)]' />
+)
 
 /** 预留任务栏高度，避免子菜单被挡住 */
 const TASKBAR_SAFE = 48
@@ -92,10 +84,7 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
     getDesktopAppDefinitionsSnapshot,
     getDesktopAppDefinitionsSnapshot,
   )
-  const launchable = useMemo(
-    () => definitions.filter((app) => app.app && app.showInStartMenu !== false),
-    [definitions],
-  )
+  const launchable = useMemo(() => definitions.filter((app) => app.app && app.showInStartMenu !== false), [definitions])
 
   useLayoutEffect(() => {
     if (!programsOpen) {
@@ -243,11 +232,7 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
                 const Icon = app.icon
                 return (
                   <li key={app.id} role='none'>
-                    <MenuItem
-                      icon={Icon}
-                      label={resolveDesktopItemTitle(app, tApps)}
-                      onClick={() => launch(app.id)}
-                    />
+                    <MenuItem icon={Icon} label={resolveDesktopItemTitle(app, tApps)} onClick={() => launch(app.id)} />
                   </li>
                 )
               })}

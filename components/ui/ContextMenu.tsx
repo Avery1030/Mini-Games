@@ -47,11 +47,7 @@ function MenuList({
     <ul
       ref={listRef}
       role='menu'
-      className={cn(
-        winChrome,
-        'min-w-[140px] p-0.5 shadow-[2px_2px_0_rgba(0,0,0,0.35)] font-pixel',
-        className,
-      )}
+      className={cn(winChrome, 'min-w-[140px] p-0.5 shadow-[2px_2px_0_rgba(0,0,0,0.35)] font-pixel', className)}
       style={style}
       onContextMenu={(e) => e.preventDefault()}
     >
@@ -89,17 +85,11 @@ function MenuList({
               }}
             >
               <span className='flex-1 min-w-0'>{item.label}</span>
-              {hasChildren ? (
-                <ChevronRight size={14} className='shrink-0 opacity-80' aria-hidden />
-              ) : null}
+              {hasChildren ? <ChevronRight size={14} className='shrink-0 opacity-80' aria-hidden /> : null}
             </button>
 
             {hasChildren && open && item.children ? (
-              <MenuList
-                items={item.children}
-                onClose={onClose}
-                className='absolute left-full top-0 z-[1] ml-[-2px]'
-              />
+              <MenuList items={item.children} onClose={onClose} className='absolute left-full top-0 z-[1] ml-[-2px]' />
             ) : null}
           </li>
         )
@@ -134,20 +124,21 @@ export function ContextMenu({ menu, onClose }: ContextMenuProps) {
 
   useEffect(() => {
     if (!menu) return
-    const onPointer = (e: MouseEvent) => {
+    const onPointer = (e: PointerEvent) => {
       if (!ref.current?.contains(e.target as Node)) onClose()
     }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
     }
-    // 下一帧再监听，避免本次右键立刻关掉
+    // 下一帧再监听，避免本次右键立刻关掉。
+    // 用 pointerdown：桌面框选/图标拖在 pointerdown 上 preventDefault 会抑制 mousedown。
     const t = window.setTimeout(() => {
-      document.addEventListener('mousedown', onPointer)
+      document.addEventListener('pointerdown', onPointer, true)
       document.addEventListener('keydown', onKey)
     }, 0)
     return () => {
       window.clearTimeout(t)
-      document.removeEventListener('mousedown', onPointer)
+      document.removeEventListener('pointerdown', onPointer, true)
       document.removeEventListener('keydown', onKey)
     }
   }, [menu, onClose])
@@ -159,7 +150,7 @@ export function ContextMenu({ menu, onClose }: ContextMenuProps) {
       listRef={ref}
       items={menu.items}
       onClose={onClose}
-      className='fixed z-[2000]'
+      className='fixed z-[2000] select-none'
       style={{ left: pos.left, top: pos.top }}
     />,
     document.body,

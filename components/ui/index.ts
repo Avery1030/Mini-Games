@@ -17,6 +17,7 @@ export {
   type ContextMenuItem,
   type ContextMenuState,
 } from './ContextMenu'
+export { resolveMenuItems, type MenuItemConfig } from './resolveMenuItems'
 export {
   ModalHost,
   ModalFrame,

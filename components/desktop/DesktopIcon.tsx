@@ -35,9 +35,11 @@ export type DesktopIconProps = {
   animateYield: boolean
   /** 拖拽投放高亮（如回收站） */
   isDropTarget?: boolean
-  dragLeft?: number
-  dragTop?: number
+  /** 多选高亮 */
+  isSelected?: boolean
   onPointerDown: (e: React.PointerEvent<HTMLElement>) => void
+  /** 用户资源标记，供投放探测 */
+  fsKind?: 'folder' | 'textDocument'
 }
 
 export function DesktopIcon({
@@ -55,42 +57,45 @@ export function DesktopIcon({
   yielding,
   animateYield,
   isDropTarget = false,
-  dragLeft,
-  dragTop,
+  isSelected = false,
   onPointerDown,
+  fsKind,
 }: DesktopIconProps) {
-  const layoutStyle: CSSProperties =
-    isDragging && dragLeft != null && dragTop != null
+  // 拖拽中保留格点占位（半透明），真正的跟手幽灵由上层 portal 渲染，避免被窗口层挡住
+  const layoutStyle: CSSProperties = isDragging
+    ? {
+        gridColumn: col,
+        gridRow: row,
+        transition: 'none',
+        opacity: 0.35,
+      }
+    : yielding
       ? {
-          position: 'fixed',
-          left: dragLeft,
-          top: dragTop,
-          transition: 'opacity 120ms ease',
+          position: 'absolute',
+          left,
+          top,
+          transition: animateYield ? YIELD_TRANSITION : 'none',
         }
-      : yielding
-        ? {
-            position: 'absolute',
-            left,
-            top,
-            transition: animateYield ? YIELD_TRANSITION : 'none',
-          }
-        : {
-            gridColumn: col,
-            gridRow: row,
-            transition: 'none',
-          }
+      : {
+          gridColumn: col,
+          gridRow: row,
+          transition: 'none',
+        }
 
   return (
     <div
       role='button'
       tabIndex={0}
       aria-label={label}
+      aria-selected={isSelected}
       data-desktop-icon={appId}
+      data-fs-kind={fsKind}
       className={cn(
         'group flex flex-col items-center gap-1 px-0.5 py-1 self-start outline-none',
-        isDragging ? 'z-[200] opacity-85 cursor-grabbing pointer-events-none' : 'z-[101] cursor-pointer',
+        isDragging ? 'z-[101] cursor-grabbing pointer-events-none' : 'z-[101] cursor-pointer',
         !isDragging && !yielding && 'relative',
         isDropTarget && 'ring-2 ring-[var(--icon-focus-ring)] ring-offset-1 bg-icon-select/25',
+        isSelected && !isDragging && 'bg-icon-select/35',
       )}
       style={{
         width: CELL_SIZE,
@@ -126,8 +131,9 @@ export function DesktopIcon({
             'group-hover:text-icon-select-fg group-hover:[text-shadow:none]',
             'group-focus-visible:text-icon-select-fg group-focus-visible:[text-shadow:none]',
             'group-active:text-icon-select-fg group-active:[text-shadow:none]',
+            isSelected && 'text-icon-select-fg [text-shadow:none]',
           )}
-          style={{ textShadow: ICON_LABEL_OUTLINE }}
+          style={{ textShadow: isSelected ? 'none' : ICON_LABEL_OUTLINE }}
         >
           {label}
         </span>
