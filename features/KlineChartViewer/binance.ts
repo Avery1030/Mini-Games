@@ -1,4 +1,5 @@
 import { http } from '@/lib/http'
+import { createManagedWebSocket, type ManagedWebSocket } from '@/lib/websocket'
 import { KLINES_LIMIT, periodToInterval, type BinanceInterval, type Period } from './constants'
 
 export type KLineBar = {
@@ -138,7 +139,43 @@ export type KlineSocketHandlers = {
   onError?: (error: Event | Error) => void
 }
 
-/** 订阅 U 本位永续实时 K 线（币安 /market 分层；失败则轮询） */
+function parseKlinePayload(raw: string): KLineBar | null {
+  const payload = JSON.parse(raw) as {
+    data?: {
+      k?: {
+        t: number
+        o: string
+        h: string
+        l: string
+        c: string
+        v: string
+        q: string
+      }
+    }
+    k?: {
+      t: number
+      o: string
+      h: string
+      l: string
+      c: string
+      v: string
+      q: string
+    }
+  }
+  const k = payload.data?.k ?? payload.k
+  if (!k) return null
+  return {
+    timestamp: k.t,
+    open: Number(k.o),
+    high: Number(k.h),
+    low: Number(k.l),
+    close: Number(k.c),
+    volume: Number(k.v),
+    turnover: Number(k.q),
+  }
+}
+
+/** 订阅 U 本位永续实时 K 线（托管 WS：心跳看门狗 + 指数退避；失败则轮询） */
 export function subscribeBinanceKline(
   symbol: string,
   interval: BinanceInterval,
@@ -153,10 +190,8 @@ export function subscribeBinanceKline(
   ]
 
   let closed = false
-  let ws: WebSocket | null = null
   let pollTimer: ReturnType<typeof setInterval> | null = null
-  let wsIndex = 0
-  let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  let managed: ManagedWebSocket | null = null
 
   const stopPoll = () => {
     if (pollTimer) {
@@ -181,93 +216,38 @@ export function subscribeBinanceKline(
     pollTimer = setInterval(() => void tick(), 5_000)
   }
 
-  const parseKlinePayload = (raw: string) => {
-    const payload = JSON.parse(raw) as {
-      data?: {
-        k?: {
-          t: number
-          o: string
-          h: string
-          l: string
-          c: string
-          v: string
-          q: string
-        }
-      }
-      k?: {
-        t: number
-        o: string
-        h: string
-        l: string
-        c: string
-        v: string
-        q: string
-      }
-    }
-    const k = payload.data?.k ?? payload.k
-    if (!k) return null
-    return {
-      timestamp: k.t,
-      open: Number(k.o),
-      high: Number(k.h),
-      low: Number(k.l),
-      close: Number(k.c),
-      volume: Number(k.v),
-      turnover: Number(k.q),
-    } satisfies KLineBar
-  }
-
-  const connectWs = () => {
-    if (closed) return
-    if (wsIndex >= wsUrls.length) {
-      startPoll()
-      return
-    }
-    const url = wsUrls[wsIndex]!
-    try {
-      ws = new WebSocket(url)
-    } catch {
-      wsIndex += 1
-      connectWs()
-      return
-    }
-
-    ws.onmessage = (event) => {
+  managed = createManagedWebSocket({
+    urls: wsUrls,
+    // 币安协议层 ping/pong 由浏览器处理；应用层用收包看门狗检测半开 / 僵死连接
+    heartbeatTimeout: 90_000,
+    resetWatchdogOnAnyMessage: true,
+    enableSendQueue: false,
+    reconnectDelay: 1_000,
+    maxReconnectDelay: 30_000,
+    maxRetries: wsUrls.length * 4,
+    listenNetwork: true,
+    listenVisibility: true,
+    // URL 已带 stream，重连后无需再发 SUBSCRIBE；预留 onReady 供鉴权型行情扩展
+    onMessage: (event) => {
       try {
         const bar = parseKlinePayload(String(event.data))
         if (bar) handlers.onBar(bar)
       } catch (err) {
         handlers.onError?.(err instanceof Error ? err : new Error(String(err)))
       }
-    }
-
-    ws.onerror = (event) => {
-      handlers.onError?.(event)
-    }
-
-    ws.onclose = () => {
-      ws = null
-      if (closed) return
-      wsIndex += 1
-      reconnectTimer = setTimeout(() => {
-        reconnectTimer = null
-        connectWs()
-      }, 800)
-    }
-  }
-
-  connectWs()
+    },
+    onError: ({ error }) => {
+      handlers.onError?.(error)
+    },
+    onExhausted: () => {
+      if (!closed) startPoll()
+    },
+  })
 
   return () => {
     closed = true
-    if (reconnectTimer) clearTimeout(reconnectTimer)
     stopPoll()
-    if (ws) {
-      ws.onclose = null
-      ws.onerror = null
-      ws.onmessage = null
-      ws.close()
-      ws = null
-    }
+    managed?.close()
+    managed = null
   }
 }

@@ -127,6 +127,14 @@ export const useDesktopStore = create<DesktopStore>()(
       partialize: (state) => ({
         coordinates: state.coordinates,
       }),
+      migrate: (persisted) => {
+        const raw = (persisted ?? {}) as { coordinates?: unknown }
+        const coordinates =
+          raw.coordinates && typeof raw.coordinates === 'object' && !Array.isArray(raw.coordinates)
+            ? (raw.coordinates as Partial<Record<DesktopAppId, DesktopCoordinate>>)
+            : {}
+        return { coordinates }
+      },
       merge: (persisted, current) => {
         const saved = persisted as { coordinates?: Partial<Record<DesktopAppId, DesktopCoordinate>> } | undefined
         return {

@@ -508,6 +508,18 @@ export const useDesktopItemsStore = create<DesktopItemsStore>()(
       partialize: (state) => ({
         items: state.items,
       }),
+      migrate: (persisted) => {
+        const raw = (persisted ?? {}) as {
+          items?: Array<Partial<DesktopItemRecord> & { id: string; title: string }>
+          folders?: Array<Partial<DesktopItemRecord> & { id: string; title: string }>
+        }
+        // 旧版曾用 folders；现行 schema 统一为 items
+        if (Array.isArray(raw.items)) return { items: raw.items }
+        if (Array.isArray(raw.folders)) {
+          return { items: raw.folders.map((f) => ({ ...f, kind: 'folder' as const })) }
+        }
+        return { items: [] }
+      },
       merge: (persisted, current) => {
         const saved = persisted as {
           items?: Array<Partial<DesktopItemRecord> & { id: string; title: string }>

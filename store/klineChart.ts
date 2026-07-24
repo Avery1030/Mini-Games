@@ -98,6 +98,16 @@ export const useKlineChartStore = create<KlineChartState>()(
         panes: s.panes,
         drawingToolbarCollapsed: s.drawingToolbarCollapsed,
       }),
+      migrate: (persisted) => {
+        const raw = (persisted ?? {}) as Partial<KlineChartState>
+        return {
+          symbol: normalizeSymbol(raw.symbol),
+          interval: normalizeInterval(raw.interval),
+          overlays: normalizeList(raw.overlays, OVERLAY_SET, [...DEFAULT_OVERLAYS]),
+          panes: normalizeList(raw.panes, PANE_SET, [...DEFAULT_PANES]),
+          drawingToolbarCollapsed: raw.drawingToolbarCollapsed === true,
+        }
+      },
       merge: (persisted, current) => {
         const saved = persisted as Partial<KlineChartState> | undefined
         return {

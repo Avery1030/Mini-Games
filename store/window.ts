@@ -359,6 +359,18 @@ export const useWindowStore = create<WindowStore>()(
         topZIndex: state.topZIndex,
         nextOpenOrder: state.nextOpenOrder,
       }),
+      migrate: (persisted) => {
+        const raw = (persisted ?? {}) as {
+          windows?: Partial<Record<DesktopAppId, Partial<DesktopWindowRuntime>>>
+          topZIndex?: unknown
+          nextOpenOrder?: unknown
+        }
+        return {
+          windows: raw.windows && typeof raw.windows === 'object' ? raw.windows : {},
+          topZIndex: typeof raw.topZIndex === 'number' ? raw.topZIndex : WINDOW_Z_BASE,
+          nextOpenOrder: typeof raw.nextOpenOrder === 'number' ? raw.nextOpenOrder : 1,
+        }
+      },
       merge: (persisted, current) => {
         const saved = persisted as
           | {
