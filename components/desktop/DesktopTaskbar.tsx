@@ -1,21 +1,26 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { StartMenu } from './StartMenu'
 import LangSwitch from './LangSwitch'
 import ThemeSwitch from './ThemeSwitch'
 import { TaskbarClock } from './TaskbarClock'
 import { TaskbarWindowButton } from './TaskbarWindowButton'
 import { AveryMark } from './AveryMark'
+import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { winChrome, winChromePressed } from '@/lib/winChrome'
-import { useDesktopApps, useDesktopHydrated } from '@/hooks/desktop'
+import { useDesktopApps, useDesktopHydrated, useTaskbarReorder } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
 import { resolveDesktopItemTitle } from '@/lib/desktop/window'
 
+const SCROLL_STEP = 160
+
 /**
- * 任务栏：开始菜单、窗口按钮、托盘。自行订阅 store。
+ * 任务栏：开始菜单、窗口按钮（可拖拽排序、溢出箭头）、托盘。自行订阅 store。
  */
 export function DesktopTaskbar() {
   const t = useTranslations()
@@ -24,8 +29,12 @@ export function DesktopTaskbar() {
   const hasHydrated = useDesktopHydrated()
   const openWindow = useWindowStore((s) => s.openWindow)
   const handleTaskbarClick = useWindowStore((s) => s.handleTaskbarClick)
+  const reorderTaskbarWindows = useWindowStore((s) => s.reorderTaskbarWindows)
   const toggleMinimizeAllWindows = useWindowStore((s) => s.toggleMinimizeAllWindows)
   const [startMenuOpen, setStartMenuOpen] = useState(false)
+  const listRef = useRef<HTMLDivElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
 
   const taskbarWindows = useMemo(() => {
     if (!hasHydrated) return []
@@ -41,6 +50,55 @@ export function DesktopTaskbar() {
         isActive: app.active,
       }))
   }, [apps, hasHydrated, tApps])
+
+  const byId = useMemo(() => new Map(taskbarWindows.map((w) => [w.id, w])), [taskbarWindows])
+
+  const { displayOrder, draggingId, ghost, onPointerDown } = useTaskbarReorder({
+    items: taskbarWindows,
+    listRef,
+    onReorder: reorderTaskbarWindows,
+    onClick: handleTaskbarClick,
+  })
+
+  const updateScrollAffordance = useCallback(() => {
+    const el = listRef.current
+    if (!el) {
+      setCanScrollLeft(false)
+      setCanScrollRight(false)
+      return
+    }
+    const { scrollLeft, scrollWidth, clientWidth } = el
+    const max = scrollWidth - clientWidth
+    const overflow = max > 1
+    setCanScrollLeft(overflow && scrollLeft > 1)
+    setCanScrollRight(overflow && scrollLeft < max - 1)
+  }, [])
+
+  useLayoutEffect(() => {
+    updateScrollAffordance()
+  }, [displayOrder, updateScrollAffordance])
+
+  useEffect(() => {
+    const el = listRef.current
+    if (!el) return
+    updateScrollAffordance()
+    el.addEventListener('scroll', updateScrollAffordance, { passive: true })
+    const ro = new ResizeObserver(() => updateScrollAffordance())
+    ro.observe(el)
+    return () => {
+      el.removeEventListener('scroll', updateScrollAffordance)
+      ro.disconnect()
+    }
+  }, [updateScrollAffordance])
+
+  const scrollByDir = (dir: -1 | 1) => {
+    const el = listRef.current
+    if (!el) return
+    el.scrollBy({ left: dir * SCROLL_STEP, behavior: 'smooth' })
+  }
+
+  const ghostWin = ghost ? byId.get(ghost.id) : null
+  const GhostIcon = ghostWin?.icon
 
   return (
     <footer className='relative z-[9000] h-12 min-h-[48px] flex items-center px-2 bg-taskbar text-on-chrome border-t-2 border-taskbar-edge shadow-[inset_1px_1px_0_var(--taskbar-shadow)] overflow-visible'>
@@ -61,22 +119,80 @@ export function DesktopTaskbar() {
         <StartMenu open={startMenuOpen} onClose={() => setStartMenuOpen(false)} onOpenApp={openWindow} />
       </div>
 
-      <div className='flex items-center gap-1 min-w-0 ml-1 overflow-x-auto shrink'>
-        {taskbarWindows.map((w) => (
-          <TaskbarWindowButton
-            key={w.id}
-            id={w.id}
-            title={w.title}
-            icon={w.icon}
-            pressed={w.isActive && !w.minimized}
-            onClick={() => handleTaskbarClick(w.id)}
-          />
-        ))}
+      <div className='flex items-center min-w-0 ml-1 shrink flex-1 max-w-full'>
+        {canScrollLeft ? (
+          <button
+            type='button'
+            className={cn(winChrome, 'h-7 w-5 shrink-0 inline-flex items-center justify-center mr-0.5')}
+            aria-label={t('window.taskbarScrollLeft')}
+            onClick={() => scrollByDir(-1)}
+          >
+            <ChevronLeft size={14} strokeWidth={2.5} aria-hidden />
+          </button>
+        ) : null}
+
+        <div
+          ref={listRef}
+          className='taskbar-window-strip flex items-center gap-1 min-w-0 flex-1 overflow-x-auto overflow-y-hidden'
+          aria-label={t('window.taskbarWindows')}
+        >
+          {displayOrder.map((id) => {
+            const w = byId.get(id)
+            if (!w) return null
+            return (
+              <TaskbarWindowButton
+                key={w.id}
+                id={w.id}
+                title={w.title}
+                icon={w.icon}
+                pressed={w.isActive && !w.minimized}
+                dragging={draggingId === w.id}
+                onActivate={() => handleTaskbarClick(w.id)}
+                onPointerDown={(e) => onPointerDown(w.id, e)}
+              />
+            )
+          })}
+        </div>
+
+        {canScrollRight ? (
+          <button
+            type='button'
+            className={cn(winChrome, 'h-7 w-5 shrink-0 inline-flex items-center justify-center ml-0.5')}
+            aria-label={t('window.taskbarScrollRight')}
+            onClick={() => scrollByDir(1)}
+          >
+            <ChevronRight size={14} strokeWidth={2.5} aria-hidden />
+          </button>
+        ) : null}
       </div>
 
-      {/* 空白区双击 → 显示桌面 / 还原（不抢窗口按钮 / 托盘点击） */}
+      {ghost && ghostWin && GhostIcon && typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              className='fixed z-[10050] pointer-events-none opacity-95'
+              style={{
+                left: ghost.left,
+                top: ghost.top,
+                width: ghost.width,
+                height: ghost.height,
+              }}
+              aria-hidden
+            >
+              <Button
+                size='md'
+                variant={ghostWin.isActive && !ghostWin.minimized ? 'pressed' : 'raised'}
+                className='max-w-[160px] w-full px-2 py-1.5 h-auto gap-1.5 justify-start shadow-md'
+              >
+                <GhostIcon size={14} className='shrink-0' aria-hidden />
+                <span className='truncate'>{ghostWin.title}</span>
+              </Button>
+            </div>,
+            document.body,
+          )
+        : null}
+
       <div
-        className='flex-1 self-stretch min-w-2 cursor-default'
+        className='self-stretch min-w-2 w-2 shrink-0 cursor-default'
         role='presentation'
         aria-label={t('window.minimizeAllHint')}
         onDoubleClick={(e) => {

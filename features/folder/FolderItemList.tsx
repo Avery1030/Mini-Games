@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { Input } from '@/components/ui'
 import type { DesktopAppId } from '@/config/desktop'
+import { formatItemDisplayName } from '@/lib/desktop/fileTypes'
 import type { DesktopItemRecord } from '@/store/desktopItems'
 import { EMPTY_SELECTION_IDS } from '@/store/desktopSelection'
 import { useFsDragStore } from '@/store/fsDrag'
@@ -169,7 +170,7 @@ export function FolderItemList({
                       onOpen(child)
                     }}
                   >
-                    {child.title}
+                    {formatItemDisplayName(child.kind, child.title)}
                   </span>
                 </button>
               </li>

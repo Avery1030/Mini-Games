@@ -10,6 +10,7 @@ import type { DesktopAppId } from '@/config/desktop'
 import { useDesktopItemsStore } from '@/store/desktopItems'
 import { useDesktopSelectionStore } from '@/store/desktopSelection'
 import { getRecycleBinRoots } from '@/lib/desktop/itemsTree'
+import { formatItemDisplayName } from '@/lib/desktop/fileTypes'
 import { useFsListSelection } from '@/hooks/desktop/useFsListSelection'
 
 export type RecycleBinAppProps = {
@@ -69,7 +70,10 @@ export function RecycleBinApp({ embedded = false }: RecycleBinAppProps) {
         message:
           ids.length === 1
             ? t('confirmPurge', {
-                name: deletedItems.find((f) => f.id === ids[0])?.title || t('untitled'),
+                name: (() => {
+                  const item = deletedItems.find((f) => f.id === ids[0])
+                  return item ? formatItemDisplayName(item.kind, item.title) : t('untitled')
+                })(),
               })
             : td('selectCount', { count: ids.length }),
       })
@@ -182,7 +186,9 @@ export function RecycleBinApp({ embedded = false }: RecycleBinAppProps) {
                         onPointerDown={(e) => e.stopPropagation()}
                       >
                         <Icon size={16} strokeWidth={2} className='shrink-0' aria-hidden />
-                        <span className='min-w-0 flex-1 truncate text-xs'>{item.title}</span>
+                        <span className='min-w-0 flex-1 truncate text-xs'>
+                          {formatItemDisplayName(item.kind, item.title)}
+                        </span>
                         <span
                           className={cn(
                             'shrink-0 text-[10px] tabular-nums',

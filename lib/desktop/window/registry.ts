@@ -19,6 +19,7 @@ import {
   RecycleBinWindow,
   SettingsWindow,
   TetrisWindow,
+  TaskManagerWindow,
 } from './apps'
 
 type RegistryListener = () => void
@@ -40,6 +41,7 @@ const BUILTIN_WINDOWS: DesktopWindow[] = [
   new CmdWindow(),
   new KlineChartViewerWindow(),
   new AiChatWindow(),
+  new TaskManagerWindow(),
 ]
 
 const dynamicWindows = new Map<DesktopAppId, DesktopWindow>()

@@ -3,6 +3,7 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 import type { DesktopAppId, DesktopCoordinate } from '@/config/desktop'
 import { STORAGE_KEYS, appStorage } from '@/lib/storage'
 import type { DesktopItemRecord, DesktopResourceKind } from '@/lib/desktop/itemTypes'
+import { parseItemTitleInput } from '@/lib/desktop/fileTypes'
 import {
   getChildren,
   getDeletedDescendantIds,
@@ -257,10 +258,10 @@ export const useDesktopItemsStore = create<DesktopItemsStore>()(
       },
 
       renameItem: async (id, title) => {
-        const trimmed = title.trim()
-        if (!trimmed) return false
         const item = get().items.find((f) => f.id === id)
         if (!item || item.isDeleted) return false
+        const trimmed = parseItemTitleInput(item.kind, title)
+        if (!trimmed) return false
         if (isSiblingTitleTaken(get().items, item.kind, trimmed, resolveParentId(item.parentId), id)) {
           return false
         }
@@ -279,10 +280,10 @@ export const useDesktopItemsStore = create<DesktopItemsStore>()(
       },
 
       setItemTitle: (id, title) => {
-        const trimmed = title.trim()
-        if (!trimmed) return false
         const item = get().items.find((f) => f.id === id)
         if (!item || item.isDeleted) return false
+        const trimmed = parseItemTitleInput(item.kind, title)
+        if (!trimmed) return false
         if (isSiblingTitleTaken(get().items, item.kind, trimmed, resolveParentId(item.parentId), id)) {
           return false
         }

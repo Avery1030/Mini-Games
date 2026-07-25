@@ -8,6 +8,7 @@ import {
   listDesktopWindows,
 } from './registry'
 import { coordKey } from '@/lib/desktop/layout'
+import { formatItemDisplayName } from '@/lib/desktop/fileTypes'
 
 export type CreateDesktopFolderOptions = {
   title?: string
@@ -162,14 +163,18 @@ export function isFolderTitleTaken(title: string, excludeId?: DesktopAppId): boo
   return isDesktopItemTitleTaken('folder', title, excludeId)
 }
 
-/** 解析图标/窗口显示名：动态 title 优先，内置走 i18n */
+/** 解析图标/窗口显示名：动态 title 优先，内置走 i18n；用户文件按类型加后缀 */
 export function resolveDesktopItemTitle(
-  app: Pick<DesktopAppDefinition, 'id' | 'title'>,
+  app: Pick<DesktopAppDefinition, 'id' | 'title' | 'kind'>,
   tApps: (key: string) => string,
 ): string {
-  if (app.title && app.title.trim()) return app.title.trim()
-  if (isBuiltinAppId(app.id)) return tApps(app.id)
-  return app.id
+  const base =
+    app.title && app.title.trim()
+      ? app.title.trim()
+      : isBuiltinAppId(app.id)
+        ? tApps(app.id)
+        : app.id
+  return formatItemDisplayName(app.kind ?? 'app', base)
 }
 
 /** 根据已占用格点分配空位；优先 prefer，冲突则从该点向外找最近空位 */

@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useRef, useState, type ComponentType } from 'react'
+import { useEffect, useRef, useState, type ComponentType, type PointerEvent as ReactPointerEvent } from 'react'
 import { TaskbarWindowPreview } from './TaskbarWindowPreview'
 import { type DesktopAppId } from '@/config/desktop'
 import { Button } from '@/components/ui'
+import { cn } from '@/lib/cn'
 
 const SHOW_DELAY_MS = 380
 const HIDE_DELAY_MS = 160
@@ -18,13 +19,25 @@ type Props = {
   title: string
   icon: AppIcon
   pressed: boolean
-  onClick: () => void
+  /** 正在被拖拽（占位半透明） */
+  dragging?: boolean
+  /** 预览卡片内点击激活（不走拖拽） */
+  onActivate: () => void
+  onPointerDown: (e: ReactPointerEvent) => void
 }
 
 /**
- * 任务栏窗口按钮：悬停延迟后弹出窗口缩略预览。
+ * 任务栏窗口按钮：悬停预览；按住拖拽排序（由父级处理）。
  */
-export function TaskbarWindowButton({ id, title, icon: Icon, pressed, onClick }: Props) {
+export function TaskbarWindowButton({
+  id,
+  title,
+  icon: Icon,
+  pressed,
+  dragging = false,
+  onActivate,
+  onPointerDown,
+}: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
   const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -38,6 +51,7 @@ export function TaskbarWindowButton({ id, title, icon: Icon, pressed, onClick }:
   }
 
   const scheduleShow = () => {
+    if (dragging) return
     if (hideTimer.current) {
       clearTimeout(hideTimer.current)
       hideTimer.current = null
@@ -65,37 +79,43 @@ export function TaskbarWindowButton({ id, title, icon: Icon, pressed, onClick }:
 
   useEffect(() => () => clearTimers(), [])
 
-  const activate = () => {
+  useEffect(() => {
+    if (!dragging) return
     clearTimers()
     setPreviewOpen(false)
-    onClick()
-  }
+  }, [dragging])
 
   return (
     <div
       ref={rootRef}
       data-taskbar-app-id={id}
-      className='relative shrink-0 data-[taskbar-animating]:brightness-110 data-[taskbar-animating]:ring-1 data-[taskbar-animating]:ring-accent'
+      className={cn('relative shrink-0 touch-none', dragging && 'opacity-35')}
       onMouseEnter={scheduleShow}
       onMouseLeave={scheduleHide}
+      onPointerDown={onPointerDown}
     >
       <Button
         size='md'
         variant={pressed ? 'pressed' : 'raised'}
-        className='max-w-[160px] px-2 py-1.5 h-auto gap-1.5 justify-start'
+        className='max-w-[160px] px-2 py-1.5 h-auto gap-1.5 justify-start pointer-events-none'
         title={title}
-        onClick={activate}
+        tabIndex={-1}
+        aria-hidden
       >
         <Icon size={14} className='shrink-0' aria-hidden />
         <span className='truncate'>{title}</span>
       </Button>
-      {previewOpen && (
+      {previewOpen && !dragging && (
         <TaskbarWindowPreview
           windowId={id}
           title={title}
           icon={Icon}
           anchorEl={rootRef.current}
-          onActivate={activate}
+          onActivate={() => {
+            clearTimers()
+            setPreviewOpen(false)
+            onActivate()
+          }}
           onMouseEnter={cancelHide}
           onMouseLeave={scheduleHide}
         />

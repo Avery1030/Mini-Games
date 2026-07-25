@@ -32,6 +32,11 @@ interface WindowActions {
   setHasHydrated: (value: boolean) => void
   openWindow: (id: DesktopAppId) => void
   closeWindow: (id: DesktopAppId) => void
+  /**
+   * 强制结束任务：跳过 onBeforeClose（用于任务管理器「结束任务」）。
+   * 仍会调用 onAfterClose。
+   */
+  forceCloseWindow: (id: DesktopAppId) => void
   closeAllWindows: () => void
   minimizeWindow: (id: DesktopAppId) => void
   /**
@@ -39,10 +44,17 @@ interface WindowActions {
    * 已全部最小化且有快照 → 还原之前可见窗。
    */
   toggleMinimizeAllWindows: () => void
+  /** 一键最小化全部可见窗口（记快照，便于之后「显示桌面」还原） */
+  minimizeAllWindows: (opts?: { excludeIds?: DesktopAppId[] }) => void
   /** 记忆窗口位置/尺寸（关闭后仍保留） */
   updateWindowBounds: (id: DesktopAppId, bounds: WindowBounds) => void
   focusWindow: (id: DesktopAppId) => void
   handleTaskbarClick: (id: DesktopAppId) => void
+  /**
+   * 仅重排任务栏 openOrder，不改 zIndex / active / minimized。
+   * @param orderedIds 当前打开窗口的期望从左到右顺序
+   */
+  reorderTaskbarWindows: (orderedIds: DesktopAppId[]) => void
   /** 动态注册时确保有运行时槽位 */
   ensureWindow: (id: DesktopAppId) => void
   /** 动态注销时移除运行时槽位 */
@@ -217,6 +229,26 @@ export const useWindowStore = create<WindowStore>()(
         deskWin?.onAfterClose()
       },
 
+      forceCloseWindow: (id) => {
+        const { windows } = get()
+        const target = windows[id]
+        if (!target?.isOpen) return
+        const deskWin = getDesktopWindow(id)
+
+        let next = patchWindow(windows, id, {
+          isOpen: false,
+          minimized: false,
+          active: false,
+          zIndex: 0,
+          openOrder: 0,
+        })
+        if (target.active) {
+          next = activateNext(next, id)
+        }
+        set({ windows: next })
+        deskWin?.onAfterClose()
+      },
+
       closeAllWindows: () => {
         const { windows } = get()
         set({
@@ -249,8 +281,43 @@ export const useWindowStore = create<WindowStore>()(
         deskWin?.onAfterMinimize()
       },
 
+      minimizeAllWindows: (opts) => {
+        const exclude = new Set(opts?.excludeIds ?? [])
+        const { windows } = get()
+        const openEntries = (Object.entries(windows) as [DesktopAppId, DesktopWindowRuntime][]).filter(
+          ([, w]) => w.isOpen,
+        )
+        const visibleIds = openEntries
+          .filter(([id, w]) => !w.minimized && !exclude.has(id))
+          .map(([id]) => id)
+        if (visibleIds.length === 0) return
+
+        const activeId =
+          openEntries.find(([id, w]) => w.active && !w.minimized && !exclude.has(id))?.[0] ??
+          visibleIds.slice().sort((a, b) => windows[b].zIndex - windows[a].zIndex)[0] ??
+          null
+
+        const next = { ...windows }
+        for (const id of visibleIds) {
+          next[id] = { ...next[id], minimized: true, active: false }
+        }
+        // 若当前活动窗被排除，保持其 active
+        if (exclude.size > 0) {
+          for (const id of exclude) {
+            if (next[id]?.isOpen && !next[id].minimized) {
+              next[id] = { ...next[id], active: true }
+              break
+            }
+          }
+        }
+        set({
+          windows: next,
+          showDesktopSnapshot: { visibleIds, activeId },
+        })
+      },
+
       toggleMinimizeAllWindows: () => {
-        const { windows, showDesktopSnapshot, topZIndex } = get()
+        const { windows, showDesktopSnapshot, topZIndex, minimizeAllWindows } = get()
         const openEntries = (Object.entries(windows) as [DesktopAppId, DesktopWindowRuntime][]).filter(
           ([, w]) => w.isOpen,
         )
@@ -285,20 +352,7 @@ export const useWindowStore = create<WindowStore>()(
           return
         }
 
-        // 有可见窗 → 记下并全部最小化
-        const activeId =
-          openEntries.find(([, w]) => w.active && !w.minimized)?.[0] ??
-          visibleIds.slice().sort((a, b) => windows[b].zIndex - windows[a].zIndex)[0] ??
-          null
-
-        const next = { ...windows }
-        for (const id of visibleIds) {
-          next[id] = { ...next[id], minimized: true, active: false }
-        }
-        set({
-          windows: next,
-          showDesktopSnapshot: { visibleIds, activeId },
-        })
+        minimizeAllWindows()
       },
 
       focusWindow: (id) => {
@@ -334,6 +388,33 @@ export const useWindowStore = create<WindowStore>()(
           return
         }
         focusWindow(id)
+      },
+
+      reorderTaskbarWindows: (orderedIds) => {
+        const { windows } = get()
+        const seen = new Set<DesktopAppId>()
+        const ordered: DesktopAppId[] = []
+        for (const id of orderedIds) {
+          if (!windows[id]?.isOpen || seen.has(id)) continue
+          seen.add(id)
+          ordered.push(id)
+        }
+        // 遗漏的打开窗追加到末尾，保持原相对顺序
+        const rest = (Object.entries(windows) as [DesktopAppId, DesktopWindowRuntime][])
+          .filter(([id, w]) => w.isOpen && !seen.has(id))
+          .sort(([, a], [, b]) => a.openOrder - b.openOrder)
+          .map(([id]) => id)
+        const finalOrder = [...ordered, ...rest]
+        if (finalOrder.length === 0) return
+
+        const next = { ...windows }
+        finalOrder.forEach((id, i) => {
+          next[id] = { ...next[id], openOrder: i + 1 }
+        })
+        set({
+          windows: next,
+          nextOpenOrder: finalOrder.length + 1,
+        })
       },
 
       ensureWindow: (id) => {

@@ -475,3 +475,21 @@ body::-webkit-scrollbar-button,
   background-color: var(--scrollbar-face) !important;
   box-shadow: inset 1px 1px 0 var(--scrollbar-edge-dark) !important;
 }
+
+/* 任务栏窗口条：隐藏原生滚动条（改用两侧箭头） */
+.taskbar-window-strip {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.taskbar-window-strip::-webkit-scrollbar,
+.taskbar-window-strip::-webkit-scrollbar-button,
+.taskbar-window-strip::-webkit-scrollbar-thumb,
+.taskbar-window-strip::-webkit-scrollbar-track,
+.taskbar-window-strip::-webkit-scrollbar-corner {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}

@@ -12,6 +12,7 @@ import {
   Terminal,
   ChartCandlestick,
   Bot,
+  AppWindow,
 } from 'lucide-react'
 import { Minesweeper } from '@/features/minesweeper'
 import { Tetris } from '@/features/tetris'
@@ -128,8 +129,6 @@ export class CmdWindow extends DesktopWindow {
   readonly defaultCoordinate: DesktopCoordinate = [3, 1]
   readonly width = 640
   readonly height = 400
-  /** 不占桌面图标，仅从开始菜单启动 */
-  readonly showOnDesktop = false
   private appComponent: ComponentType<{ embedded?: boolean }> | null = null
 
   get app(): ComponentType<{ embedded?: boolean }> {
@@ -296,4 +295,28 @@ export class AiChatWindow extends DesktopWindow {
   readonly width = 560
   readonly height = 520
   readonly app = AiChatApp
+}
+
+/**
+ * 任务管理器：运行窗口 / 程序列表，结束任务与最小化全部。
+ * 延迟加载，避免 apps → feature → hooks → registry 循环依赖。
+ */
+export class TaskManagerWindow extends DesktopWindow {
+  readonly id = 'taskManager' as const
+  readonly icon = AppWindow
+  readonly defaultCoordinate: DesktopCoordinate = [3, 4]
+  readonly width = 420
+  readonly height = 480
+  private appComponent: ComponentType<{ embedded?: boolean }> | null = null
+
+  get app(): ComponentType<{ embedded?: boolean }> {
+    if (!this.appComponent) {
+      this.appComponent = (props: { embedded?: boolean }) => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { TaskManagerApp } = require('@/features/task-manager') as typeof import('@/features/task-manager')
+        return createElement(TaskManagerApp, { embedded: props.embedded })
+      }
+    }
+    return this.appComponent
+  }
 }

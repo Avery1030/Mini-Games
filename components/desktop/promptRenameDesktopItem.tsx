@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { Button, Input, closeModal, openModal } from '@/components/ui'
 import type { DesktopAppId } from '@/config/desktop'
 import { isSiblingTitleTaken, resolveParentId } from '@/lib/desktop/itemsTree'
+import { parseItemTitleInput } from '@/lib/desktop/fileTypes'
 import { useDesktopItemsStore, type DesktopResourceKind } from '@/store/desktopItems'
 
 type PromptResult = string | null
@@ -102,7 +103,7 @@ function RenameItemForm({
   }, [])
 
   const submit = () => {
-    const trimmed = name.trim()
+    const trimmed = parseItemTitleInput(kind, name)
     if (!trimmed) {
       setError(td('renameEmpty'))
       return

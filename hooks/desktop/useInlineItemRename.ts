@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import type { DesktopAppId } from '@/config/desktop'
 import { DBLCLICK_MS } from '@/lib/desktop'
 import { isSiblingTitleTaken } from '@/lib/desktop/itemsTree'
+import { parseItemTitleInput } from '@/lib/desktop/fileTypes'
 import type { SelectionScope } from '@/store/desktopSelection'
 import { useDesktopSelectionStore } from '@/store/desktopSelection'
 import { useDesktopItemsStore, type DesktopItemRecord } from '@/store/desktopItems'
@@ -72,7 +73,7 @@ export function useInlineItemRename({ parentId, scope, selectedIds }: UseInlineI
       }
       if (editCommitLockRef.current) return
       editCommitLockRef.current = true
-      const trimmed = raw.trim()
+      const trimmed = parseItemTitleInput(child.kind, raw)
       if (!trimmed || trimmed === child.title.trim()) {
         cancelInlineRename()
         return
