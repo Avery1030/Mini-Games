@@ -134,7 +134,7 @@ export function AppearanceSection() {
                 value: String(minutes),
                 label:
                   minutes === 0
-                    ? t('screensaverIdleSeconds', { seconds: 10 })
+                    ? t('screensaverIdleNever')
                     : t('screensaverIdleMinutes', { minutes }),
               }))}
             />

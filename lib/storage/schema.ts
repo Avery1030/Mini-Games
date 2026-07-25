@@ -34,7 +34,7 @@ export type SettingsPersistState = {
   /** 应用窗口默认最大化打开 */
   openWindowsMaximized: boolean
   screensaverEnabled: boolean
-  /** `0` = 临时 10 秒调试项 */
+  /** `0` = 永不自动启动 */
   screensaverIdleMinutes: 0 | 1 | 5 | 10 | 15 | 30
   screensaverStyle: 'fireworks'
 }

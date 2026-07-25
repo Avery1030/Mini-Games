@@ -30,18 +30,18 @@ const MAX_GALLERY = 40
 
 /**
  * 屏保空闲超时（分钟）。
- * `0` 为临时调试项，表示 10 秒（见 screensaverIdleToMs）。
+ * `0` 表示永不自动启动（见 screensaverIdleToMs）。
  */
-export const SCREENSAVER_IDLE_OPTIONS = [0, 1, 5, 10, 15, 30] as const
+export const SCREENSAVER_IDLE_OPTIONS = [1, 5, 10, 15, 30, 0] as const
 export type ScreensaverIdleMinutes = (typeof SCREENSAVER_IDLE_OPTIONS)[number]
 
 export function isScreensaverIdleMinutes(v: unknown): v is ScreensaverIdleMinutes {
   return SCREENSAVER_IDLE_OPTIONS.includes(v as ScreensaverIdleMinutes)
 }
 
-/** 将屏保空闲选项转为毫秒；`0` → 10 秒（临时） */
+/** 将屏保空闲选项转为毫秒；`0`（永不）→ 0，使 idle 监听不启动 */
 export function screensaverIdleToMs(minutes: ScreensaverIdleMinutes): number {
-  if (minutes === 0) return 10_000
+  if (minutes === 0) return 0
   return minutes * 60_000
 }
 
@@ -274,7 +274,7 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: STORAGE_KEYS.settings,
-      version: 17,
+      version: 18,
       storage: createJSONStorage(() => settingsStorage),
       partialize: (state) => ({
         wallpaperId: state.wallpaperId,
