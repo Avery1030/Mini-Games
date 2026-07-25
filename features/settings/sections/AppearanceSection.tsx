@@ -73,7 +73,11 @@ export function AppearanceSection() {
           />
           <p className='mt-1 text-[10px] text-muted'>
             {t('themeResolved', {
-              theme: themeMounted ? (resolvedTheme === 'dark' ? t('themeResolvedDark') : t('themeResolvedLight')) : '…',
+              theme: themeMounted
+                ? resolvedTheme === 'dark'
+                  ? t('themeResolvedDark')
+                  : t('themeResolvedLight')
+                : '…',
             })}
           </p>
         </div>
@@ -128,7 +132,10 @@ export function AppearanceSection() {
               }
               options={SCREENSAVER_IDLE_OPTIONS.map((minutes) => ({
                 value: String(minutes),
-                label: t('screensaverIdleMinutes', { minutes }),
+                label:
+                  minutes === 0
+                    ? t('screensaverIdleSeconds', { seconds: 10 })
+                    : t('screensaverIdleMinutes', { minutes }),
               }))}
             />
             <p className='mt-1 text-[10px] text-muted'>{t('screensaverIdleHint')}</p>

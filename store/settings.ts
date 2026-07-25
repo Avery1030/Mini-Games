@@ -10,16 +10,39 @@ import {
 import { writeWallpaperBoot } from '@/lib/wallpaper'
 import { isClient } from '@/lib/env'
 import { isUiScale, type UiScale } from '@/lib/uiScale'
+import {
+  DEFAULT_SCREENSAVER_STYLE,
+  isScreensaverStyleId,
+  normalizeScreensaverStyleId,
+  type ScreensaverStyleId,
+} from '@/config/screensavers'
 import { STORAGE_KEYS, appStorage } from '@/lib/storage'
+
+export type { ScreensaverStyleId } from '@/config/screensavers'
+export {
+  SCREENSAVER_STYLE_OPTIONS,
+  DEFAULT_SCREENSAVER_STYLE,
+  isScreensaverStyleId,
+  normalizeScreensaverStyleId,
+} from '@/config/screensavers'
 
 const MAX_GALLERY = 40
 
-/** 屏保空闲超时（分钟） */
-export const SCREENSAVER_IDLE_OPTIONS = [1, 5, 10, 15, 30] as const
+/**
+ * 屏保空闲超时（分钟）。
+ * `0` 为临时调试项，表示 10 秒（见 screensaverIdleToMs）。
+ */
+export const SCREENSAVER_IDLE_OPTIONS = [0, 1, 5, 10, 15, 30] as const
 export type ScreensaverIdleMinutes = (typeof SCREENSAVER_IDLE_OPTIONS)[number]
 
 export function isScreensaverIdleMinutes(v: unknown): v is ScreensaverIdleMinutes {
   return SCREENSAVER_IDLE_OPTIONS.includes(v as ScreensaverIdleMinutes)
+}
+
+/** 将屏保空闲选项转为毫秒；`0` → 10 秒（临时） */
+export function screensaverIdleToMs(minutes: ScreensaverIdleMinutes): number {
+  if (minutes === 0) return 10_000
+  return minutes * 60_000
 }
 
 export type WallpaperGalleryItem = {
@@ -105,8 +128,10 @@ interface SettingsState {
   openWindowsMaximized: boolean
   /** 是否启用屏幕保护 */
   screensaverEnabled: boolean
-  /** 无操作多久后启动屏保（分钟） */
+  /** 无操作多久后启动屏保（分钟；0 = 临时 10 秒） */
   screensaverIdleMinutes: ScreensaverIdleMinutes
+  /** 当前应用的屏保视觉样式 */
+  screensaverStyle: ScreensaverStyleId
   _hasHydrated: boolean
 }
 
@@ -133,9 +158,11 @@ export type SettingsPatch = Partial<
     | 'openWindowsMaximized'
     | 'screensaverEnabled'
     | 'screensaverIdleMinutes'
+    | 'screensaverStyle'
   >
 >
 
+/** 设置字段枚举校验与清理 */
 function sanitizeSettingsPatch(partial: SettingsPatch): SettingsPatch {
   const next: SettingsPatch = { ...partial }
   if (next.iconSize != null && next.iconSize !== 'sm' && next.iconSize !== 'md' && next.iconSize !== 'lg') {
@@ -149,6 +176,9 @@ function sanitizeSettingsPatch(partial: SettingsPatch): SettingsPatch {
   }
   if (next.screensaverIdleMinutes != null && !isScreensaverIdleMinutes(next.screensaverIdleMinutes)) {
     delete next.screensaverIdleMinutes
+  }
+  if (next.screensaverStyle != null && !isScreensaverStyleId(next.screensaverStyle)) {
+    delete next.screensaverStyle
   }
   return next
 }
@@ -170,6 +200,7 @@ export const useSettingsStore = create<SettingsStore>()(
       openWindowsMaximized: true,
       screensaverEnabled: false,
       screensaverIdleMinutes: 5,
+      screensaverStyle: DEFAULT_SCREENSAVER_STYLE,
       _hasHydrated: false,
 
       setHasHydrated: (value) => set({ _hasHydrated: value }),
@@ -243,7 +274,7 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: STORAGE_KEYS.settings,
-      version: 11,
+      version: 17,
       storage: createJSONStorage(() => settingsStorage),
       partialize: (state) => ({
         wallpaperId: state.wallpaperId,
@@ -258,6 +289,7 @@ export const useSettingsStore = create<SettingsStore>()(
         openWindowsMaximized: state.openWindowsMaximized,
         screensaverEnabled: state.screensaverEnabled,
         screensaverIdleMinutes: state.screensaverIdleMinutes,
+        screensaverStyle: state.screensaverStyle,
       }),
       migrate: (persisted) => {
         const raw = (persisted ?? {}) as {
@@ -274,6 +306,7 @@ export const useSettingsStore = create<SettingsStore>()(
           openWindowsMaximized?: unknown
           screensaverEnabled?: unknown
           screensaverIdleMinutes?: unknown
+          screensaverStyle?: unknown
         }
         let custom = normalizeCustomSrc(raw.customWallpaperUrl) ?? normalizeCustomSrc(raw.customWallpaperDataUrl)
         if (custom?.startsWith('data:')) custom = null
@@ -288,6 +321,7 @@ export const useSettingsStore = create<SettingsStore>()(
         const screensaverIdleMinutes = isScreensaverIdleMinutes(raw.screensaverIdleMinutes)
           ? raw.screensaverIdleMinutes
           : 5
+        const screensaverStyle = normalizeScreensaverStyleId(raw.screensaverStyle)
         return {
           wallpaperId,
           customWallpaperUrl: custom,
@@ -301,6 +335,7 @@ export const useSettingsStore = create<SettingsStore>()(
           openWindowsMaximized: raw.openWindowsMaximized !== false,
           screensaverEnabled: raw.screensaverEnabled === true,
           screensaverIdleMinutes,
+          screensaverStyle,
         }
       },
       merge: (persisted, current) => {
@@ -319,6 +354,7 @@ export const useSettingsStore = create<SettingsStore>()(
               openWindowsMaximized?: unknown
               screensaverEnabled?: unknown
               screensaverIdleMinutes?: unknown
+              screensaverStyle?: unknown
             }
           | undefined
         let custom = normalizeCustomSrc(saved?.customWallpaperUrl) ?? normalizeCustomSrc(saved?.customWallpaperDataUrl)
@@ -335,6 +371,7 @@ export const useSettingsStore = create<SettingsStore>()(
         const screensaverIdleMinutes = isScreensaverIdleMinutes(saved?.screensaverIdleMinutes)
           ? saved.screensaverIdleMinutes
           : 5
+        const screensaverStyle = normalizeScreensaverStyleId(saved?.screensaverStyle)
         return {
           ...current,
           wallpaperId,
@@ -349,6 +386,7 @@ export const useSettingsStore = create<SettingsStore>()(
           openWindowsMaximized: saved?.openWindowsMaximized !== false,
           screensaverEnabled: saved?.screensaverEnabled === true,
           screensaverIdleMinutes,
+          screensaverStyle,
         }
       },
       onRehydrateStorage: () => (state) => {
