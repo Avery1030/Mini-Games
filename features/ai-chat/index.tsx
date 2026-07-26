@@ -76,13 +76,7 @@ export function AiChatApp({ embedded = false }: AiChatProps = {}) {
   return <AiChatReady embedded={embedded} onChangeApiKey={() => void openKeyPrompt()} />
 }
 
-function AiChatReady({
-  embedded,
-  onChangeApiKey,
-}: {
-  embedded: boolean
-  onChangeApiKey: () => void
-}) {
+function AiChatReady({ embedded, onChangeApiKey }: { embedded: boolean; onChangeApiKey: () => void }) {
   const {
     messages,
     historyLoading,

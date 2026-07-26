@@ -1,4 +1,4 @@
-export { useDesktopApps, useDesktopHydrated } from './useDesktopApps'
+export { useDesktopApps, useDesktopWindowApps, useDesktopHydrated } from './useDesktopApps'
 export { useDesktopIconDrag, hitDesktopIconAtPoint } from './useDesktopIconDrag'
 export { useMarqueeSelect, MarqueeOverlay } from './useMarqueeSelect'
 export { useFsListSelection } from './useFsListSelection'

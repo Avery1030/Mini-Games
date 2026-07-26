@@ -22,18 +22,12 @@ interface DesktopActions {
   ensureCoordinate: (id: DesktopAppId, coordinate: DesktopCoordinate) => void
   removeCoordinate: (id: DesktopAppId) => void
   /** 依次重排桌面图标（列优先向下；可靠左或靠右） */
-  rearrangeIcons: (
-    ids: DesktopAppId[],
-    options?: { maxRows?: number; align?: ArrangeAlign; maxCols?: number },
-  ) => void
+  rearrangeIcons: (ids: DesktopAppId[], options?: { maxRows?: number; align?: ArrangeAlign; maxCols?: number }) => void
 }
 
 export type DesktopStore = DesktopState & DesktopActions
 
-function withUniqueCoordinates(
-  coordinates: CoordinatesMap,
-  priorityId?: DesktopAppId,
-): CoordinatesMap {
+function withUniqueCoordinates(coordinates: CoordinatesMap, priorityId?: DesktopAppId): CoordinatesMap {
   const unique = resolveOverlaps(
     new Map(Object.entries(coordinates) as [DesktopAppId, DesktopCoordinate][]),
     priorityId,
@@ -41,9 +35,7 @@ function withUniqueCoordinates(
   return Object.fromEntries([...unique.entries()]) as CoordinatesMap
 }
 
-function mergeCoordinates(
-  saved?: Partial<Record<DesktopAppId, DesktopCoordinate>>,
-): CoordinatesMap {
+function mergeCoordinates(saved?: Partial<Record<DesktopAppId, DesktopCoordinate>>): CoordinatesMap {
   const defaults = createDefaultCoordinates()
   const defs = getDesktopAppDefinitionsSnapshot()
   const known = new Set(defs.map((d) => d.id))
@@ -53,8 +45,10 @@ function mergeCoordinates(
   }
   if (saved) {
     for (const [id, coord] of Object.entries(saved)) {
-      // 保留当前内置应用 + 动态文件夹；丢弃已下线演示应用坐标
-      if (!known.has(id as DesktopAppId) && !id.startsWith('folder_')) continue
+      // 保留内置应用 + 动态文件夹/文本文档；丢弃已下线演示应用坐标
+      if (!known.has(id as DesktopAppId) && !id.startsWith('folder_') && !id.startsWith('text_')) {
+        continue
+      }
       if (Array.isArray(coord) && coord.length === 2) {
         merged[id] = coord as DesktopCoordinate
       }
@@ -78,7 +72,6 @@ export const useDesktopStore = create<DesktopStore>()(
           for (const { id, coordinate } of updates) {
             next[id] = coordinate
           }
-          // 拖拽项优先占目标格，其它图标让位（否则新文件夹等会被挤回「到不了的位置」）
           const priorityId = updates[0]?.id
           return { coordinates: withUniqueCoordinates(next, priorityId) }
         })
@@ -90,10 +83,7 @@ export const useDesktopStore = create<DesktopStore>()(
             return { coordinates: withUniqueCoordinates(state.coordinates) }
           }
           return {
-            coordinates: withUniqueCoordinates(
-              { ...state.coordinates, [id]: coordinate } as CoordinatesMap,
-              id,
-            ),
+            coordinates: withUniqueCoordinates({ ...state.coordinates, [id]: coordinate } as CoordinatesMap, id),
           }
         })
       },
@@ -101,6 +91,7 @@ export const useDesktopStore = create<DesktopStore>()(
       removeCoordinate: (id) => {
         set((state) => {
           if (!state.coordinates[id]) return state
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { [id]: _removed, ...rest } = state.coordinates
           return { coordinates: withUniqueCoordinates(rest as CoordinatesMap) }
         })
@@ -121,9 +112,7 @@ export const useDesktopStore = create<DesktopStore>()(
     {
       name: STORAGE_KEYS.coordinates,
       version: 1,
-      storage: createJSONStorage(() =>
-        appStorage.createStateStorage({ before: () => migrateLegacyDesktopPersist() }),
-      ),
+      storage: createJSONStorage(() => appStorage.createStateStorage({ before: () => migrateLegacyDesktopPersist() })),
       partialize: (state) => ({
         coordinates: state.coordinates,
       }),

@@ -1,13 +1,6 @@
 'use client'
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type PointerEvent as ReactPointerEvent,
-  type RefObject,
-} from 'react'
+import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react'
 import type { DesktopAppId, DesktopCoordinate } from '@/config/desktop'
 import {
   DBLCLICK_MS,
@@ -62,11 +55,7 @@ type UseDesktopIconDragOptions = {
   onDragStart?: (ids: DesktopAppId[]) => void
 }
 
-export function hitDesktopIconAtPoint(
-  clientX: number,
-  clientY: number,
-  ignoreId?: DesktopAppId,
-): DesktopAppId | null {
+export function hitDesktopIconAtPoint(clientX: number, clientY: number, ignoreId?: DesktopAppId): DesktopAppId | null {
   if (typeof document === 'undefined') return null
   const els = document.elementsFromPoint(clientX, clientY)
   for (const el of els) {
@@ -111,9 +100,7 @@ export function useDesktopIconDrag({
   const [draggingId, setDraggingId] = useState<DesktopAppId | null>(null)
   const [draggingIds, setDraggingIds] = useState<DesktopAppId[]>([])
   const [dragPixel, setDragPixel] = useState<{ left: number; top: number } | null>(null)
-  const [previewCoords, setPreviewCoords] = useState<Map<DesktopAppId, DesktopCoordinate> | null>(
-    null,
-  )
+  const [previewCoords, setPreviewCoords] = useState<Map<DesktopAppId, DesktopCoordinate> | null>(null)
   const [dropTargetId, setDropTargetId] = useState<DesktopAppId | null>(null)
   const lastClickRef = useRef<{ id: DesktopAppId; time: number } | null>(null)
 
@@ -139,11 +126,11 @@ export function useDesktopIconDrag({
       const fsTarget = hitFsDropTarget(clientX, clientY, ignore)
 
       const iconHit = hitDesktopIconAtPoint(clientX, clientY, ids[0])
-      const iconOk =
-        iconHit != null && !ignore.has(iconHit) && isIconDropTargetRef.current?.(iconHit) === true
+      const iconOk = iconHit != null && !ignore.has(iconHit) && isIconDropTargetRef.current?.(iconHit) === true
       setDropTargetId(iconOk ? iconHit : null)
 
-      if (fsTarget || iconOk) {
+      const dropBlocksYield = iconOk || (fsTarget != null && fsTarget.type !== 'desktop')
+      if (dropBlocksYield) {
         setPreviewCoords(null)
         return
       }

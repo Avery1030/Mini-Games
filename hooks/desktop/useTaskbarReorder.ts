@@ -22,16 +22,13 @@ type DragSession = {
   id: DesktopAppId
   pointerId: number
   startX: number
-  startY: number
-  /** 指针相对按钮左缘 */
+  /** 指针相对按钮左缘的抓取偏移（用于实时跟随） */
   grabOffsetX: number
-  buttonWidth: number
-  buttonHeight: number
+  /** 最近一次指针 X（让位重排后重新校准 transform） */
+  lastClientX: number
   moved: boolean
   /** 拖拽中预览顺序（含被拖项） */
   order: DesktopAppId[]
-  ghostLeft: number
-  ghostTop: number
 }
 
 export type UseTaskbarReorderOptions = {
@@ -54,7 +51,7 @@ function sameOrder(a: DesktopAppId[], b: DesktopAppId[]): boolean {
 }
 
 /**
- * 任务栏窗口按钮拖拽排序：只改 openOrder；拖拽中 FLIP 让位过渡。
+ * 任务栏窗口按钮拖拽排序：仅 X 轴；被拖项实时跟随指针；其余 FLIP 让位；只改 openOrder。
  */
 export function useTaskbarReorder({ items, listRef, onReorder, onClick }: UseTaskbarReorderOptions) {
   const itemsRef = useRef(items)
@@ -79,7 +76,10 @@ export function useTaskbarReorder({ items, listRef, onReorder, onClick }: UseTas
     root.querySelectorAll<HTMLElement>('[data-taskbar-app-id]').forEach((el) => {
       const id = el.dataset.taskbarAppId as DesktopAppId | undefined
       if (!id) return
+      const prev = el.style.transform
+      el.style.transform = 'none'
       map.set(id, el.getBoundingClientRect().left)
+      el.style.transform = prev
     })
     return map
   }, [listRef])
@@ -90,9 +90,14 @@ export function useTaskbarReorder({ items, listRef, onReorder, onClick }: UseTas
       if (!root) return order.indexOf(draggingId)
       const others = order.filter((id) => id !== draggingId)
       for (let i = 0; i < others.length; i++) {
-        const el = root.querySelector<HTMLElement>(`[data-taskbar-app-id="${CSS.escape(String(others[i]))}"]`)
+        const el = root.querySelector<HTMLElement>(
+          `[data-taskbar-app-id="${CSS.escape(String(others[i]))}"]`,
+        )
         if (!el) continue
+        const prev = el.style.transform
+        el.style.transform = 'none'
         const rect = el.getBoundingClientRect()
+        el.style.transform = prev
         if (clientX < rect.left + rect.width / 2) return i
       }
       return others.length
@@ -100,7 +105,27 @@ export function useTaskbarReorder({ items, listRef, onReorder, onClick }: UseTas
     [listRef],
   )
 
-  // FLIP：顺序变化后让其余按钮平滑让位
+  /** 被拖按钮：按抓取点跟随指针 X（布局槽位变化后重新校准） */
+  const syncDragTransform = useCallback(
+    (clientX: number) => {
+      const s = sessionRef.current
+      if (!s?.moved) return
+      const root = listRef.current
+      if (!root) return
+      const el = root.querySelector<HTMLElement>(
+        `[data-taskbar-app-id="${CSS.escape(String(s.id))}"]`,
+      )
+      if (!el) return
+      el.style.transition = 'none'
+      el.style.transform = 'none'
+      const layoutLeft = el.getBoundingClientRect().left
+      const dx = clientX - s.grabOffsetX - layoutLeft
+      el.style.transform = `translateX(${dx}px)`
+    },
+    [listRef],
+  )
+
+  // FLIP：顺序变化后让其余按钮平滑让位；再校准被拖项跟随位置
   useLayoutEffect(() => {
     if (!session?.moved) return
     const root = listRef.current
@@ -111,7 +136,10 @@ export function useTaskbarReorder({ items, listRef, onReorder, onClick }: UseTas
       if (!id || id === session.id) return
       const prev = first.get(id)
       if (prev == null) return
+      const t = el.style.transform
+      el.style.transform = 'none'
       const now = el.getBoundingClientRect().left
+      el.style.transform = t
       const dx = prev - now
       if (Math.abs(dx) < 0.5) return
       el.style.transition = 'none'
@@ -120,10 +148,11 @@ export function useTaskbarReorder({ items, listRef, onReorder, onClick }: UseTas
       el.style.transition = `transform ${YIELD_MS}ms ease`
       el.style.transform = 'translateX(0)'
     })
-  }, [displayOrder, session?.moved, session?.id, listRef])
+    syncDragTransform(sessionRef.current?.lastClientX ?? session.lastClientX)
+  }, [displayOrder, session?.moved, session?.id, listRef, syncDragTransform])
 
   useEffect(() => {
-    const clearYieldStyles = () => {
+    const clearDragStyles = () => {
       const root = listRef.current
       if (!root) return
       root.querySelectorAll<HTMLElement>('[data-taskbar-app-id]').forEach((el) => {
@@ -136,17 +165,18 @@ export function useTaskbarReorder({ items, listRef, onReorder, onClick }: UseTas
       const s = sessionRef.current
       if (!s || e.pointerId !== s.pointerId) return
 
+      // 仅认 X 轴位移，纵向滑动不启动/不干扰排序
       const dx = e.clientX - s.startX
-      const dy = e.clientY - s.startY
-      if (!s.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return
-
+      let becameMoved = false
       if (!s.moved) {
+        if (Math.abs(dx) < DRAG_THRESHOLD) return
         firstLeftsRef.current = snapshotLefts()
         s.moved = true
+        becameMoved = true
       }
 
-      const ghostLeft = e.clientX - s.grabOffsetX
-      const ghostTop = e.clientY - s.buttonHeight / 2
+      s.lastClientX = e.clientX
+
       const nextIndex = insertIndexAt(e.clientX, s.id, s.order)
       const nextOrder = moveId(s.order, s.id, nextIndex)
       const orderChanged = !sameOrder(nextOrder, s.order)
@@ -155,15 +185,19 @@ export function useTaskbarReorder({ items, listRef, onReorder, onClick }: UseTas
         s.order = nextOrder
       }
 
-      const next: DragSession = {
-        ...s,
-        ghostLeft,
-        ghostTop,
-        order: s.order,
-        moved: true,
+      // 仅在开始拖拽或顺序变化时触发 React 更新（跟手用 DOM transform）
+      if (becameMoved || orderChanged) {
+        const next: DragSession = {
+          ...s,
+          order: s.order,
+          lastClientX: e.clientX,
+          moved: true,
+        }
+        sessionRef.current = next
+        setSession(next)
+      } else {
+        syncDragTransform(e.clientX)
       }
-      sessionRef.current = next
-      setSession(next)
     }
 
     const onUp = (e: PointerEvent) => {
@@ -171,7 +205,7 @@ export function useTaskbarReorder({ items, listRef, onReorder, onClick }: UseTas
       if (!s || e.pointerId !== s.pointerId) return
       sessionRef.current = null
       setSession(null)
-      clearYieldStyles()
+      clearDragStyles()
 
       if (!s.moved) {
         onClickRef.current(s.id)
@@ -191,54 +225,38 @@ export function useTaskbarReorder({ items, listRef, onReorder, onClick }: UseTas
       window.removeEventListener('pointerup', onUp)
       window.removeEventListener('pointercancel', onUp)
     }
-  }, [insertIndexAt, listRef, snapshotLefts])
+  }, [insertIndexAt, listRef, snapshotLefts, syncDragTransform])
 
-  const onPointerDown = useCallback(
-    (id: DesktopAppId, e: ReactPointerEvent) => {
-      if (e.button !== 0) return
-      const target = (e.currentTarget as HTMLElement).closest(
-        '[data-taskbar-app-id]',
-      ) as HTMLElement | null
-      if (!target) return
-      e.preventDefault()
-      const rect = target.getBoundingClientRect()
-      const order = itemsRef.current.map((i) => i.id)
-      const next: DragSession = {
-        id,
-        pointerId: e.pointerId,
-        startX: e.clientX,
-        startY: e.clientY,
-        grabOffsetX: e.clientX - rect.left,
-        buttonWidth: rect.width,
-        buttonHeight: rect.height,
-        moved: false,
-        order,
-        ghostLeft: rect.left,
-        ghostTop: rect.top,
-      }
-      sessionRef.current = next
-      setSession(next)
-      try {
-        target.setPointerCapture(e.pointerId)
-      } catch {
-        /* ignore */
-      }
-    },
-    [],
-  )
+  const onPointerDown = useCallback((id: DesktopAppId, e: ReactPointerEvent) => {
+    if (e.button !== 0) return
+    const target = (e.currentTarget as HTMLElement).closest(
+      '[data-taskbar-app-id]',
+    ) as HTMLElement | null
+    if (!target) return
+    e.preventDefault()
+    const order = itemsRef.current.map((i) => i.id)
+    const rect = target.getBoundingClientRect()
+    const next: DragSession = {
+      id,
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      grabOffsetX: e.clientX - rect.left,
+      lastClientX: e.clientX,
+      moved: false,
+      order,
+    }
+    sessionRef.current = next
+    setSession(next)
+    try {
+      target.setPointerCapture(e.pointerId)
+    } catch {
+      /* ignore */
+    }
+  }, [])
 
   return {
     displayOrder,
     draggingId: session?.moved ? session.id : null,
-    ghost: session?.moved
-      ? {
-          id: session.id,
-          left: session.ghostLeft,
-          top: session.ghostTop,
-          width: session.buttonWidth,
-          height: session.buttonHeight,
-        }
-      : null,
     onPointerDown,
   }
 }

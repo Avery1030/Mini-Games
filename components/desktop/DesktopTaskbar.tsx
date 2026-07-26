@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { StartMenu } from './StartMenu'
@@ -10,7 +9,6 @@ import ThemeSwitch from './ThemeSwitch'
 import { TaskbarClock } from './TaskbarClock'
 import { TaskbarWindowButton } from './TaskbarWindowButton'
 import { AveryMark } from './AveryMark'
-import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { winChrome, winChromePressed } from '@/lib/winChrome'
 import { useDesktopApps, useDesktopHydrated, useTaskbarReorder } from '@/hooks/desktop'
@@ -53,7 +51,7 @@ export function DesktopTaskbar() {
 
   const byId = useMemo(() => new Map(taskbarWindows.map((w) => [w.id, w])), [taskbarWindows])
 
-  const { displayOrder, draggingId, ghost, onPointerDown } = useTaskbarReorder({
+  const { displayOrder, draggingId, onPointerDown } = useTaskbarReorder({
     items: taskbarWindows,
     listRef,
     onReorder: reorderTaskbarWindows,
@@ -96,9 +94,6 @@ export function DesktopTaskbar() {
     if (!el) return
     el.scrollBy({ left: dir * SCROLL_STEP, behavior: 'smooth' })
   }
-
-  const ghostWin = ghost ? byId.get(ghost.id) : null
-  const GhostIcon = ghostWin?.icon
 
   return (
     <footer className='relative z-[9000] h-12 min-h-[48px] flex items-center px-2 bg-taskbar text-on-chrome border-t-2 border-taskbar-edge shadow-[inset_1px_1px_0_var(--taskbar-shadow)] overflow-visible'>
@@ -165,31 +160,6 @@ export function DesktopTaskbar() {
           </button>
         ) : null}
       </div>
-
-      {ghost && ghostWin && GhostIcon && typeof document !== 'undefined'
-        ? createPortal(
-            <div
-              className='fixed z-[10050] pointer-events-none opacity-95'
-              style={{
-                left: ghost.left,
-                top: ghost.top,
-                width: ghost.width,
-                height: ghost.height,
-              }}
-              aria-hidden
-            >
-              <Button
-                size='md'
-                variant={ghostWin.isActive && !ghostWin.minimized ? 'pressed' : 'raised'}
-                className='max-w-[160px] w-full px-2 py-1.5 h-auto gap-1.5 justify-start shadow-md'
-              >
-                <GhostIcon size={14} className='shrink-0' aria-hidden />
-                <span className='truncate'>{ghostWin.title}</span>
-              </Button>
-            </div>,
-            document.body,
-          )
-        : null}
 
       <div
         className='self-stretch min-w-2 w-2 shrink-0 cursor-default'

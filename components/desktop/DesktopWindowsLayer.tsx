@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { WindowsWindow } from './WindowsWindow'
-import { useDesktopApps, useDesktopHydrated } from '@/hooks/desktop'
+import { useDesktopWindowApps, useDesktopHydrated } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
 import { useSettingsStore } from '@/store/settings'
 import { DEFAULT_WINDOW_CHROME } from '@/config/desktop'
@@ -12,10 +12,11 @@ import { getDesktopWindow, resolveDesktopItemTitle } from '@/lib/desktop/window'
 
 /**
  * 已打开窗口层：自行订阅 window/desktop 合并视图，与图标层解耦。
+ * 排序与订阅均忽略 openOrder（任务栏专用），避免任务栏拖拽触发窗口重渲染。
  */
 export function DesktopWindowsLayer() {
   const tApps = useTranslations('apps')
-  const apps = useDesktopApps()
+  const apps = useDesktopWindowApps()
   const hasHydrated = useDesktopHydrated()
   const closeWindow = useWindowStore((s) => s.closeWindow)
   const minimizeWindow = useWindowStore((s) => s.minimizeWindow)
@@ -29,7 +30,7 @@ export function DesktopWindowsLayer() {
         ? apps
             .filter((app) => app.isOpen)
             .slice()
-            .sort((a, b) => a.openOrder - b.openOrder || a.zIndex - b.zIndex)
+            .sort((a, b) => a.zIndex - b.zIndex)
         : [],
     [hasHydrated, apps],
   )

@@ -77,8 +77,7 @@ export const useKlineChartStore = create<KlineChartState>()(
         set((state) => ({ panes: toggleInList(state.panes, name) }))
       },
 
-      setOverlays: (overlays) =>
-        set({ overlays: normalizeList(overlays, OVERLAY_SET, [...DEFAULT_OVERLAYS]) }),
+      setOverlays: (overlays) => set({ overlays: normalizeList(overlays, OVERLAY_SET, [...DEFAULT_OVERLAYS]) }),
 
       setPanes: (panes) => set({ panes: normalizeList(panes, PANE_SET, [...DEFAULT_PANES]) }),
 

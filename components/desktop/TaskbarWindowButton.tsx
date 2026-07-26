@@ -19,7 +19,7 @@ type Props = {
   title: string
   icon: AppIcon
   pressed: boolean
-  /** 正在被拖拽（占位半透明） */
+  /** 正在被拖拽（高亮，非幽灵） */
   dragging?: boolean
   /** 预览卡片内点击激活（不走拖拽） */
   onActivate: () => void
@@ -89,7 +89,10 @@ export function TaskbarWindowButton({
     <div
       ref={rootRef}
       data-taskbar-app-id={id}
-      className={cn('relative shrink-0 touch-none', dragging && 'opacity-35')}
+      className={cn(
+        'relative shrink-0 touch-none',
+        dragging && 'z-10 brightness-110 ring-1 ring-accent cursor-grabbing will-change-transform',
+      )}
       onMouseEnter={scheduleShow}
       onMouseLeave={scheduleHide}
       onPointerDown={onPointerDown}
