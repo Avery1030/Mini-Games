@@ -66,8 +66,7 @@ export function useTaskbarReorder({ items, listRef, onReorder, onClick }: UseTas
   const firstLeftsRef = useRef<Map<DesktopAppId, number>>(new Map())
 
   const baseOrder = items.map((i) => i.id)
-  const displayOrder =
-    session?.moved && session.order.length > 0 ? session.order : baseOrder
+  const displayOrder = session?.moved && session.order.length > 0 ? session.order : baseOrder
 
   const snapshotLefts = useCallback(() => {
     const root = listRef.current
@@ -90,9 +89,7 @@ export function useTaskbarReorder({ items, listRef, onReorder, onClick }: UseTas
       if (!root) return order.indexOf(draggingId)
       const others = order.filter((id) => id !== draggingId)
       for (let i = 0; i < others.length; i++) {
-        const el = root.querySelector<HTMLElement>(
-          `[data-taskbar-app-id="${CSS.escape(String(others[i]))}"]`,
-        )
+        const el = root.querySelector<HTMLElement>(`[data-taskbar-app-id="${CSS.escape(String(others[i]))}"]`)
         if (!el) continue
         const prev = el.style.transform
         el.style.transform = 'none'
@@ -112,9 +109,7 @@ export function useTaskbarReorder({ items, listRef, onReorder, onClick }: UseTas
       if (!s?.moved) return
       const root = listRef.current
       if (!root) return
-      const el = root.querySelector<HTMLElement>(
-        `[data-taskbar-app-id="${CSS.escape(String(s.id))}"]`,
-      )
+      const el = root.querySelector<HTMLElement>(`[data-taskbar-app-id="${CSS.escape(String(s.id))}"]`)
       if (!el) return
       el.style.transition = 'none'
       el.style.transform = 'none'
@@ -149,6 +144,7 @@ export function useTaskbarReorder({ items, listRef, onReorder, onClick }: UseTas
       el.style.transform = 'translateX(0)'
     })
     syncDragTransform(sessionRef.current?.lastClientX ?? session.lastClientX)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displayOrder, session?.moved, session?.id, listRef, syncDragTransform])
 
   useEffect(() => {
@@ -229,9 +225,7 @@ export function useTaskbarReorder({ items, listRef, onReorder, onClick }: UseTas
 
   const onPointerDown = useCallback((id: DesktopAppId, e: ReactPointerEvent) => {
     if (e.button !== 0) return
-    const target = (e.currentTarget as HTMLElement).closest(
-      '[data-taskbar-app-id]',
-    ) as HTMLElement | null
+    const target = (e.currentTarget as HTMLElement).closest('[data-taskbar-app-id]') as HTMLElement | null
     if (!target) return
     e.preventDefault()
     const order = itemsRef.current.map((i) => i.id)

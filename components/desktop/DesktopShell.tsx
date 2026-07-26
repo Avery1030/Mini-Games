@@ -11,8 +11,11 @@ import { useWindowStore } from '@/store/window'
 import { useSettingsStore } from '@/store/settings'
 import { useLockStore } from '@/store/lock'
 
+/** 临时关闭开机动画；改回 true 即可恢复 */
+const BOOT_ANIMATION_ENABLED = true
+
 /** 匀速开机总时长 */
-const BOOT_DURATION_MS = 10_000
+const BOOT_DURATION_MS = 3_000
 const BOOT_FADE_MS = 320
 
 /**
@@ -26,7 +29,7 @@ export function DesktopShell() {
   const lockHydrated = useLockStore((s) => s._hasHydrated)
   const storesReady = windowsHydrated && desktopHydrated && settingsHydrated && lockHydrated
 
-  const [booting, setBooting] = useState(true)
+  const [booting, setBooting] = useState(BOOT_ANIMATION_ENABLED)
   const [fading, setFading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [skipPending, setSkipPending] = useState(false)
@@ -57,10 +60,13 @@ export function DesktopShell() {
   }, [finish])
 
   useEffect(() => {
+    if (!BOOT_ANIMATION_ENABLED) return
     if (storesReady && skipRef.current) finish()
   }, [storesReady, finish])
 
   useEffect(() => {
+    if (!BOOT_ANIMATION_ENABLED) return
+
     const startedAt = performance.now()
     let raf = 0
 
@@ -94,19 +100,22 @@ export function DesktopShell() {
   }, [finish])
 
   useEffect(() => {
+    if (!BOOT_ANIMATION_ENABLED) return
     if (storesReady && progress >= 100 && !finishedRef.current) finish()
   }, [storesReady, progress, finish])
 
+  const showDesktop = BOOT_ANIMATION_ENABLED ? !booting : storesReady
+
   return (
     <>
-      {!booting && (
+      {showDesktop && (
         <>
           <WindowsDesktop />
           <LockScreen />
           <Screensaver />
         </>
       )}
-      {booting && (
+      {BOOT_ANIMATION_ENABLED && booting && (
         <BootScreen
           progress={progress}
           fading={fading}

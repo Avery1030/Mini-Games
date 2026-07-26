@@ -1,6 +1,14 @@
 'use client'
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+} from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { StartMenu } from './StartMenu'
@@ -95,8 +103,22 @@ export function DesktopTaskbar() {
     el.scrollBy({ left: dir * SCROLL_STEP, behavior: 'smooth' })
   }
 
+  /** 双击任务栏空白（非开始/窗口按钮/托盘）→ 显示桌面切换 */
+  const onTaskbarBlankDoubleClick = (e: ReactMouseEvent<HTMLElement>) => {
+    const el = e.target as Element | null
+    if (!el) return
+    if (el.closest('[data-taskbar-app-id], [data-start-menu-root], a, button, input, [data-taskbar-tray]')) {
+      return
+    }
+    e.preventDefault()
+    toggleMinimizeAllWindows()
+  }
+
   return (
-    <footer className='relative z-[9000] h-12 min-h-[48px] flex items-center px-2 bg-taskbar text-on-chrome border-t-2 border-taskbar-edge shadow-[inset_1px_1px_0_var(--taskbar-shadow)] overflow-visible'>
+    <footer
+      className='relative z-[9000] h-12 min-h-[48px] flex items-center px-2 bg-taskbar text-on-chrome border-t-2 border-taskbar-edge shadow-[inset_1px_1px_0_var(--taskbar-shadow)] overflow-visible'
+      onDoubleClick={onTaskbarBlankDoubleClick}
+    >
       <div className='relative h-4/5 flex items-center overflow-visible' data-start-menu-root>
         <button
           type='button'
@@ -128,8 +150,9 @@ export function DesktopTaskbar() {
 
         <div
           ref={listRef}
-          className='taskbar-window-strip flex items-center gap-1 min-w-0 flex-1 overflow-x-auto overflow-y-hidden'
+          className='taskbar-window-strip flex items-center gap-1 min-w-0 flex-1 self-stretch overflow-x-auto overflow-y-hidden'
           aria-label={t('window.taskbarWindows')}
+          title={t('window.minimizeAllHint')}
         >
           {displayOrder.map((id) => {
             const w = byId.get(id)
@@ -162,16 +185,14 @@ export function DesktopTaskbar() {
       </div>
 
       <div
-        className='self-stretch min-w-2 w-2 shrink-0 cursor-default'
+        className='self-stretch min-w-3 w-3 shrink-0 cursor-default'
         role='presentation'
         aria-label={t('window.minimizeAllHint')}
-        onDoubleClick={(e) => {
-          e.preventDefault()
-          toggleMinimizeAllWindows()
-        }}
+        title={t('window.minimizeAllHint')}
+        data-taskbar-show-desktop
       />
 
-      <div className='flex items-center gap-2 pl-2 shrink-0'>
+      <div className='flex items-center gap-2 pl-2 shrink-0' data-taskbar-tray>
         <div className='flex items-center gap-1.5 mr-1'>
           <ThemeSwitch />
           <LangSwitch />

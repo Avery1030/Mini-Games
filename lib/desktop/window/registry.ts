@@ -12,6 +12,7 @@ import {
   DocumentWindow,
   KlineChartViewerWindow,
   AiChatWindow,
+  ImageViewerWindow,
   LogWindow,
   MinesweeperWindow,
   NotepadWindow,
@@ -42,6 +43,7 @@ const BUILTIN_WINDOWS: DesktopWindow[] = [
   new KlineChartViewerWindow(),
   new AiChatWindow(),
   new TaskManagerWindow(),
+  new ImageViewerWindow(),
 ]
 
 const dynamicWindows = new Map<DesktopAppId, DesktopWindow>()

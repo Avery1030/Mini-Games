@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { WALLPAPER_DATA_DIR } from '@/lib/wallpaper'
 
-const MAX_BYTES = 15 * 1024 * 1024
+const MAX_BYTES = 30 * 1024 * 1024
 
 function extFromFile(file: File): 'jpg' | 'png' | 'webp' | 'gif' {
   const t = file.type.toLowerCase()
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '仅支持图片文件' }, { status: 400 })
   }
   if (file.size > MAX_BYTES) {
-    return NextResponse.json({ error: '图片请小于 15MB' }, { status: 400 })
+    return NextResponse.json({ error: '图片请小于 30MB' }, { status: 400 })
   }
 
   try {

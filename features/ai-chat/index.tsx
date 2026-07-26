@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { KeyRound } from 'lucide-react'
 import { cn } from '@/lib/cn'
@@ -18,8 +18,9 @@ export type { AiChatProps } from './types'
 /**
  * 智聊：流式对话 + 表情；历史存服务端 .data/ai-chat/session.json。
  * 首次需录入 API Key（persist，可随备份导出）。
+ * memo：窗口 isActive/zIndex 切换时避免整树重渲染导致虚拟列表滚动条跳动。
  */
-export function AiChatApp({ embedded = false }: AiChatProps = {}) {
+export const AiChatApp = memo(function AiChatApp({ embedded = false }: AiChatProps = {}) {
   const t = useTranslations('aiChat')
   const apiKey = useAiChatStore((s) => s.apiKey)
   const hydrated = useAiChatStore((s) => s._hasHydrated)
@@ -74,7 +75,7 @@ export function AiChatApp({ embedded = false }: AiChatProps = {}) {
   }
 
   return <AiChatReady embedded={embedded} onChangeApiKey={() => void openKeyPrompt()} />
-}
+})
 
 function AiChatReady({ embedded, onChangeApiKey }: { embedded: boolean; onChangeApiKey: () => void }) {
   const {

@@ -16,7 +16,8 @@
     "cmd": "命令提示符",
     "klineChartViewer": "K线图表",
     "aiChat": "智聊",
-    "taskManager": "任务管理器"
+    "taskManager": "任务管理器",
+    "imageViewer": "图片查看器"
   },
   "desktop": {
     "open": "打开",
@@ -183,6 +184,37 @@
     "runningCount": "运行中的任务：{count}",
     "programCount": "已安装程序：{count}"
   },
+  "imageViewer": {
+    "library": "图库",
+    "upload": "上传",
+    "delete": "删除",
+    "loading": "加载中…",
+    "empty": "还没有图片，点上传或输入 URL 添加。",
+    "selectOrUpload": "从左侧选择图片，或上传 / 导入一张。",
+    "urlPlaceholder": "粘贴图片 URL…",
+    "previewUrl": "预览",
+    "importUrl": "添加",
+    "urlRequired": "请输入图片地址",
+    "urlInvalid": "请输入有效的 http(s) 地址",
+    "onlyImages": "请选择图片文件",
+    "uploadOk": "已上传 {count} 张",
+    "uploadFail": "上传失败",
+    "importOk": "已添加到图库",
+    "importFail": "导入失败",
+    "loadFail": "加载失败",
+    "deleteFail": "删除失败",
+    "deleted": "已删除",
+    "confirmDeleteOne": "确定删除「{title}」？此操作不可恢复。",
+    "confirmDeleteMany": "确定删除选中的 {count} 张图片？此操作不可恢复。",
+    "sourceUpload": "本地上传",
+    "sourceUrl": "URL 导入",
+    "prev": "上一张",
+    "next": "下一张",
+    "previewAlt": "图片预览",
+    "footer": "图片查看器 · 共 {total} 张 · 已选 {selected}",
+    "footerUrlPreview": "正在预览外链（未保存到图库）",
+    "selectAllHint": "⌘/Ctrl+A 全选"
+  },
   "theme": {
     "toLight": "切换到浅色主题",
     "toDark": "切换到深色主题",
@@ -348,7 +380,8 @@
         "计算器：从开始菜单或桌面打开，支持四则运算、括号、幂、开方与简单内存键。",
         "K 线图表：查看 USDT 永续合约 K 线，可切换周期与主副图指标；行情来自币安公开接口。",
         "命令提示符：简易 DOS 风格终端，可浏览桌面/文件夹路径并打开部分应用。",
-        "智聊：接入 SiliconFlow 流式对话，API Key 保存在本机。"
+        "智聊：接入 SiliconFlow 流式对话，API Key 保存在本机。",
+        "图片查看器：上传本地图片或从 URL 导入，支持多选浏览；图片保存在本机 .data/images。"
       ]
     },
     "changelog": {

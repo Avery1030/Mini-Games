@@ -13,6 +13,7 @@ import {
   ChartCandlestick,
   Bot,
   AppWindow,
+  ImageIcon,
 } from 'lucide-react'
 import { Minesweeper } from '@/features/minesweeper'
 import { Tetris } from '@/features/tetris'
@@ -23,6 +24,7 @@ import { NotepadApp } from '@/features/notepad'
 import { PaintApp } from '@/features/paint'
 import { CalculatorApp } from '@/features/calculator'
 import { AiChatApp } from '@/features/ai-chat'
+import { ImageViewerApp } from '@/features/image-viewer'
 import {
   DEFAULT_WINDOW_CHROME,
   type DesktopAppId,
@@ -295,6 +297,18 @@ export class AiChatWindow extends DesktopWindow {
   readonly width = 560
   readonly height = 520
   readonly app = AiChatApp
+}
+
+/**
+ * 图片查看器：本地上传 / URL 导入，落盘 .data/images，支持多选浏览。
+ */
+export class ImageViewerWindow extends DesktopWindow {
+  readonly id = 'imageViewer' as const
+  readonly icon = ImageIcon
+  readonly defaultCoordinate: DesktopCoordinate = [3, 5]
+  readonly width = 760
+  readonly height = 560
+  readonly app = ImageViewerApp
 }
 
 /**

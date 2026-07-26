@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { WALLPAPER_DATA_DIR } from '@/lib/wallpaper'
 
-const MAX_BYTES = 15 * 1024 * 1024
+const MAX_BYTES = 30 * 1024 * 1024
 
 function extFromContentType(ct: string | null, url: string): 'jpg' | 'png' | 'webp' | 'gif' {
   const t = (ct || '').toLowerCase()

@@ -43,10 +43,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   ref,
 ) {
   const isIcon = size.startsWith('icon')
-  const chrome =
-    variant === 'pressed'
-      ? winChromePressed
-      : winChrome
+  const chrome = variant === 'pressed' ? winChromePressed : winChrome
 
   return (
     <button
@@ -65,7 +62,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       )}
       {...props}
     >
-      {loading ? <Loader2 className={cn('animate-spin', isIcon ? 'w-3.5 h-3.5' : 'w-3 h-3')} /> : null}
+      {loading ? <Loader2 size={16} className='animate-spin' /> : null}
       {loading && isIcon ? null : children}
     </button>
   )

@@ -30,7 +30,7 @@ export function DesktopWindowsLayer() {
         ? apps
             .filter((app) => app.isOpen)
             .slice()
-            .sort((a, b) => a.zIndex - b.zIndex)
+            .sort((a, b) => a.openOrder - b.openOrder || String(a.id).localeCompare(String(b.id)))
         : [],
     [hasHydrated, apps],
   )
@@ -43,7 +43,6 @@ export function DesktopWindowsLayer() {
         const deskWin = getDesktopWindow(app.id)
         const chrome = deskWin?.chrome ?? app.chrome ?? DEFAULT_WINDOW_CHROME
         const remembered = app.bounds
-        // 有记忆则用记忆尺寸；否则才用定义里的默认宽高
         const width = remembered?.width ?? app.width ?? 400
         const height = remembered?.height ?? app.height ?? 320
         const cascadeIndex = openApps.filter((item) => item.zIndex < app.zIndex).length
@@ -52,11 +51,8 @@ export function DesktopWindowsLayer() {
           : getCascadedPosition(cascadeIndex, width, height)
         const canMaximize = chrome.maximizable
         const rememberedForChrome =
-          remembered && !canMaximize && remembered.maximized
-            ? { ...remembered, maximized: false }
-            : remembered
-        const defaultMaximized =
-          canMaximize && (remembered != null ? remembered.maximized : openWindowsMaximized)
+          remembered && !canMaximize && remembered.maximized ? { ...remembered, maximized: false } : remembered
+        const defaultMaximized = canMaximize && (remembered != null ? remembered.maximized : openWindowsMaximized)
 
         return (
           <WindowsWindow

@@ -282,6 +282,48 @@ svg.lucide[width='56'] {
 }
 
 /* 全局 Toast：右上角向左推入 / 向右推出 */
+/* 图片查看器主预览轮播（淡入淡出 + 轻位移） */
+@keyframes imgViewerSlideInRight {
+  from {
+    opacity: 0.35;
+    transform: translateX(22%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes imgViewerSlideInLeft {
+  from {
+    opacity: 0.35;
+    transform: translateX(-22%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes imgViewerSlideOutLeft {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-22%);
+  }
+}
+@keyframes imgViewerSlideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(22%);
+  }
+}
+
 @keyframes toast-slide-in {
   from {
     transform: translateX(calc(100% + 16px));

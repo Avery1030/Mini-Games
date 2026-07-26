@@ -16,7 +16,8 @@
     "cmd": "Command Prompt",
     "klineChartViewer": "K-Line Chart",
     "aiChat": "Zhi Chat",
-    "taskManager": "Task Manager"
+    "taskManager": "Task Manager",
+    "imageViewer": "Image Viewer"
   },
   "desktop": {
     "open": "Open",
@@ -183,6 +184,37 @@
     "runningCount": "Running tasks: {count}",
     "programCount": "Installed programs: {count}"
   },
+  "imageViewer": {
+    "library": "Library",
+    "upload": "Upload",
+    "delete": "Delete",
+    "loading": "Loading…",
+    "empty": "No images yet. Upload or paste a URL.",
+    "selectOrUpload": "Select images on the left, or upload / import one.",
+    "urlPlaceholder": "Paste image URL…",
+    "previewUrl": "Preview",
+    "importUrl": "Add",
+    "urlRequired": "Enter an image URL",
+    "urlInvalid": "Enter a valid http(s) URL",
+    "onlyImages": "Please choose image files",
+    "uploadOk": "Uploaded {count} image(s)",
+    "uploadFail": "Upload failed",
+    "importOk": "Added to library",
+    "importFail": "Import failed",
+    "loadFail": "Failed to load",
+    "deleteFail": "Delete failed",
+    "deleted": "Deleted",
+    "confirmDeleteOne": "Delete “{title}”? This cannot be undone.",
+    "confirmDeleteMany": "Delete {count} selected images? This cannot be undone.",
+    "sourceUpload": "Local upload",
+    "sourceUrl": "URL import",
+    "prev": "Previous",
+    "next": "Next",
+    "previewAlt": "Image preview",
+    "footer": "Image Viewer · {total} total · {selected} selected",
+    "footerUrlPreview": "Previewing remote URL (not saved)",
+    "selectAllHint": "⌘/Ctrl+A to select all"
+  },
   "theme": {
     "toLight": "Switch to light theme",
     "toDark": "Switch to dark theme",
@@ -348,7 +380,8 @@
         "Calculator: open from Start or the desktop. Supports arithmetic, parentheses, powers, square root, and simple memory keys.",
         "K-Line Chart: USDT perpetual candles with period and main/sub indicators; market data from Binance public APIs.",
         "Command Prompt: a simple DOS-style terminal to browse desktop/folder paths and open some apps.",
-        "Zhi Chat: SiliconFlow streaming chat; API key stays on this device."
+        "Zhi Chat: SiliconFlow streaming chat; API key stays on this device.",
+        "Image Viewer: upload local images or import from a URL; multi-select browsing; files stored under .data/images."
       ]
     },
     "changelog": {

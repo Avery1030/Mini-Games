@@ -212,7 +212,8 @@ export function WindowsWindow({
               : 'border-2 border-t-chrome-dark border-l-chrome-dark border-r-chrome-light border-b-chrome-light',
           )}
         >
-          <div className='absolute inset-0 overflow-auto'>{children}</div>
+          {/* 由应用自行管理滚动；勿用 overflow-auto，避免与内层列表叠出第二条滚动条（聚焦切换时会跳动） */}
+          <div className='absolute inset-0 overflow-hidden'>{children}</div>
         </div>
       </div>
 
