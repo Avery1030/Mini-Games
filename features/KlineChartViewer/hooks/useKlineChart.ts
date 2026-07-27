@@ -1,17 +1,11 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { findInterval, findSymbol, OVERLAY_INDICATORS, PANE_INDICATORS, periodToInterval } from '../constants'
+import { applyChartStyles, ensureDrawingOverlaysReady, ensureKlineLocales } from '../chartStyles'
+import { useEffect, useRef, useState } from 'react'
 import type { Chart, DataLoader } from 'klinecharts'
 import { useKlineChartStore } from '@/store'
 import { fetchBarsForLoader, subscribeBinanceKline } from '../binance'
-import { applyChartStyles, ensureDrawingOverlaysReady, ensureKlineLocales } from '../chartStyles'
-import {
-  findInterval,
-  findSymbol,
-  OVERLAY_INDICATORS,
-  PANE_INDICATORS,
-  periodToInterval,
-} from '../constants'
 import { syncCandleOverlay, syncPaneIndicator } from '../indicators'
 
 type UseKlineChartOptions = {

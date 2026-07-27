@@ -9,11 +9,16 @@ export type Period = {
 /** 币安 K 线周期（与 REST / WS 一致） */
 export type BinanceInterval = '1m' | '5m' | '15m' | '1h' | '2h' | '4h' | '8h' | '12h' | '1d' | '3d' | '1w' | '1M'
 
+/** 币安 continuousKlines / continuousKline 合约类型 */
+export type BinanceContractType = 'PERPETUAL' | 'TRADIFI_PERPETUAL'
+
 export type SymbolOption = {
   ticker: string
   label: string
   pricePrecision: number
   volumePrecision: number
+  /** 默认 PERPETUAL；TradFi 标的用 TRADIFI_PERPETUAL */
+  contractType?: BinanceContractType
 }
 
 export type IntervalOption = {
@@ -41,6 +46,13 @@ export const SYMBOLS: SymbolOption[] = [
   { ticker: 'AVAXUSDT', label: 'AVAXUSDT', pricePrecision: 3, volumePrecision: 2 },
   { ticker: 'DOTUSDT', label: 'DOTUSDT', pricePrecision: 3, volumePrecision: 2 },
   { ticker: 'ZECUSDT', label: 'ZECUSDT', pricePrecision: 3, volumePrecision: 2 },
+  {
+    ticker: 'SNDKUSDT',
+    label: 'SNDKUSDT',
+    pricePrecision: 2,
+    volumePrecision: 2,
+    contractType: 'TRADIFI_PERPETUAL',
+  },
 ]
 
 export const INTERVALS: IntervalOption[] = [

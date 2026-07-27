@@ -197,7 +197,7 @@ export const useSettingsStore = create<SettingsStore>()(
       hidePlaceholderIcons: false,
       showTaskbarClock: true,
       clockFormat: '24h',
-      openWindowsMaximized: true,
+      openWindowsMaximized: false,
       screensaverEnabled: false,
       screensaverIdleMinutes: 5,
       screensaverStyle: DEFAULT_SCREENSAVER_STYLE,

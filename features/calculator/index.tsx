@@ -404,12 +404,15 @@ export function CalculatorApp({ embedded = false }: CalculatorProps = {}) {
     >
       <div className={cn('flex-1 min-h-0 flex flex-col gap-2', embedded ? 'p-3' : 'p-2')}>
         <div className={cn(winChromeSunken, 'bg-field px-2 py-1.5 space-y-0.5')}>
-          <div className='flex items-center justify-between gap-2 text-[10px] text-muted min-h-[14px]'>
-            <span className='truncate'>{expr || ' '}</span>
-            <span className='shrink-0'>{memory !== 0 ? 'M' : ''}</span>
+          <div className='flex h-3.5 items-center justify-between gap-2 overflow-hidden text-[10px] leading-none text-muted'>
+            <span className='min-w-0 truncate'>{expr}</span>
+            <span className='w-3 shrink-0 text-right'>{memory !== 0 ? 'M' : ''}</span>
           </div>
           <div
-            className={cn('text-right text-xl font-bold tabular-nums tracking-wide truncate', error && 'text-red-700')}
+            className={cn(
+              'h-7 text-right text-xl font-bold leading-7 tabular-nums tracking-wide truncate',
+              error && 'text-red-700',
+            )}
             aria-live='polite'
           >
             {display}
@@ -430,9 +433,9 @@ export function CalculatorApp({ embedded = false }: CalculatorProps = {}) {
           ))}
         </div>
       </div>
-      <div className='shrink-0 px-3 py-1.5 border-t border-chrome-dark bg-status-bar text-[10px] text-status-bar-fg truncate'>
+      {/* <div className='shrink-0 px-3 py-1.5 border-t border-chrome-dark bg-status-bar text-[10px] text-status-bar-fg truncate'>
         {t('hint')}
-      </div>
+      </div> */}
     </div>
   )
 }

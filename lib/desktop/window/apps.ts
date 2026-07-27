@@ -110,13 +110,14 @@ export class CalculatorWindow extends DesktopWindow {
   readonly icon = Calculator
   readonly defaultCoordinate: DesktopCoordinate = [2, 4]
   readonly width = 320
-  readonly height = 440
+  readonly height = 480
   readonly app = CalculatorApp
 
   override get chrome(): WindowChromeOptions {
     return {
       ...DEFAULT_WINDOW_CHROME,
       resizable: false,
+      maximizable: false,
     }
   }
 }
@@ -278,8 +279,9 @@ export class KlineChartViewerWindow extends DesktopWindow {
   get app(): ComponentType<{ embedded?: boolean }> {
     if (!this.appComponent) {
       this.appComponent = (props: { embedded?: boolean }) => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { KlineChartViewer } = require('@/features/KlineChartViewer') as typeof import('@/features/KlineChartViewer')
+        const { KlineChartViewer } =
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          require('@/features/KlineChartViewer') as typeof import('@/features/KlineChartViewer')
         return createElement(KlineChartViewer, { embedded: props.embedded })
       }
     }

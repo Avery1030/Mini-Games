@@ -571,8 +571,7 @@
     }
   },
   "calculator": {
-    "error": "错误",
-    "hint": "支持键盘输入 · 括号与 xʸ 可做稍复杂运算"
+    "error": "错误"
   },
   "klineChart": {
     "symbol": "交易对",

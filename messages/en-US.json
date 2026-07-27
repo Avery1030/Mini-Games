@@ -571,8 +571,7 @@
     }
   },
   "calculator": {
-    "error": "Error",
-    "hint": "Keyboard supported · Use ( ) and xʸ for more complex math"
+    "error": "Error"
   },
   "klineChart": {
     "symbol": "Symbol",

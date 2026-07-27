@@ -1,6 +1,13 @@
 import { http } from '@/lib/http'
 import { createManagedWebSocket, type ManagedWebSocket } from '@/lib/websocket'
-import { KLINES_LIMIT, periodToInterval, type BinanceInterval, type Period } from './constants'
+import {
+  findSymbol,
+  KLINES_LIMIT,
+  periodToInterval,
+  type BinanceContractType,
+  type BinanceInterval,
+  type Period,
+} from './constants'
 
 export type KLineBar = {
   timestamp: number
@@ -60,11 +67,15 @@ export function normalizeBinanceKlines(rows: BinanceKlineRaw[]): KLineBar[] {
 
 type ContinuousKlineQuery = {
   pair: string
-  contractType: 'PERPETUAL'
+  contractType: BinanceContractType
   interval: BinanceInterval
   limit: number
   startTime?: number
   endTime?: number
+}
+
+function resolveContractType(symbol: string): BinanceContractType {
+  return findSymbol(symbol).contractType ?? 'PERPETUAL'
 }
 
 /**
@@ -73,7 +84,7 @@ type ContinuousKlineQuery = {
 export async function fetchBinanceKlines(params: FetchKlinesParams): Promise<KLineBar[]> {
   const query: ContinuousKlineQuery = {
     pair: params.symbol.toUpperCase(),
-    contractType: 'PERPETUAL',
+    contractType: resolveContractType(params.symbol),
     interval: params.interval,
     limit: params.limit ?? KLINES_LIMIT,
     startTime: params.startTime,
@@ -181,7 +192,8 @@ export function subscribeBinanceKline(
   interval: BinanceInterval,
   handlers: KlineSocketHandlers,
 ): () => void {
-  const stream = `${symbol.toLowerCase()}_perpetual@continuousKline_${interval}`
+  const contractType = resolveContractType(symbol).toLowerCase()
+  const stream = `${symbol.toLowerCase()}_${contractType}@continuousKline_${interval}`
   const wsUrls = [
     `wss://fstream.binance.com/market/ws/${stream}`,
     `wss://fstream.binancefuture.com/market/ws/${stream}`,
