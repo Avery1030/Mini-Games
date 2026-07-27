@@ -5,8 +5,6 @@ export type StreamChatOptions = {
   /** 与乐观 UI 一致，便于随后按 id 删除 */
   userMessageId: string
   assistantMessageId: string
-  /** 硅基流动 API Key（来自本地 store） */
-  apiKey: string
   signal?: AbortSignal
   onDelta: (text: string) => void
 }
@@ -33,7 +31,6 @@ export async function streamChatCompletion(options: StreamChatOptions): Promise<
       {
         headers: {
           Accept: 'text/event-stream',
-          Authorization: `Bearer ${options.apiKey}`,
         },
         responseType: 'stream',
         signal: options.signal,

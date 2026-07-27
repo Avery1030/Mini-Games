@@ -7,7 +7,6 @@ import { clearChatHistory, deleteChatMessage, fetchChatHistoryPage } from '../ap
 import { streamChatCompletion } from '../stream'
 import type { UiMessage } from '../types'
 import { mapStreamErrorMessage, nextId } from '../utils'
-import { useAiChatStore } from '@/store/aiChat'
 
 export type UseAiChatResult = {
   messages: UiMessage[]
@@ -173,12 +172,6 @@ export function useAiChat(): UseAiChatResult {
       const text = rawText.trim()
       if (!text || streaming) return
 
-      const apiKey = useAiChatStore.getState().apiKey.trim()
-      if (!apiKey) {
-        toast.error(t('apiKeyRequired'))
-        return
-      }
-
       const prior = messagesRef.current
       const now = Date.now()
 
@@ -202,7 +195,6 @@ export function useAiChat(): UseAiChatResult {
           content: text,
           userMessageId: userMsg.id,
           assistantMessageId: assistantId,
-          apiKey,
           signal: controller.signal,
           onDelta: (piece) => {
             setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, content: m.content + piece } : m)))

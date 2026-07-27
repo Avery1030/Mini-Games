@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { Bot, Check, Copy, KeyRound, Trash2 } from 'lucide-react'
+import { Bot, Check, Copy, Trash2 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { Button, Panel, toast } from '@/components/ui'
@@ -27,8 +27,6 @@ export type MessageListProps = {
   onDeleteMessage: (id: string) => void
   onLoadOlder: () => Promise<void>
   onQuickPrompt: (text: string) => void
-  onChangeApiKey?: () => void
-  changeApiKeyLabel?: string
 }
 
 /**
@@ -44,8 +42,6 @@ export function MessageList({
   onDeleteMessage,
   onLoadOlder,
   onQuickPrompt,
-  onChangeApiKey,
-  changeApiKeyLabel,
 }: MessageListProps) {
   const t = useTranslations('aiChat')
   const locale = useLocale()
@@ -130,12 +126,6 @@ export function MessageList({
           <p className='text-[11px] text-muted truncate'>{t('hint')}</p>
         </div>
         <div className='flex items-center gap-1.5 shrink-0'>
-          {onChangeApiKey ? (
-            <Button type='button' size='sm' onClick={onChangeApiKey} title={changeApiKeyLabel ?? t('apiKeyChange')}>
-              <KeyRound size={12} aria-hidden />
-              <span>{changeApiKeyLabel ?? t('apiKeyChange')}</span>
-            </Button>
-          ) : null}
           <Button
             type='button'
             size='sm'

@@ -24,8 +24,6 @@ export const STORAGE_KEYS = {
   calendar: 'desktop-calendar',
   /** 动态桌面项（文件夹等） */
   desktopItems: 'desktop-items',
-  /** 智聊偏好（API Key 等） */
-  aiChat: 'desktop-ai-chat',
 } as const
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS]

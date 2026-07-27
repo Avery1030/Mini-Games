@@ -124,10 +124,6 @@ export type DesktopItemsPersistState = {
   folders?: DesktopFolderPersist[]
 }
 
-export type AiChatPersistState = {
-  apiKey: string
-}
-
 /**
  * 每个 key 对应的「语义值」类型。
  * - theme：纯字符串
@@ -146,7 +142,6 @@ export type StorageSchema = {
   [STORAGE_KEYS.lock]: ZustandPersistEnvelope<LockPersistState>
   [STORAGE_KEYS.calendar]: ZustandPersistEnvelope<CalendarPersistState>
   [STORAGE_KEYS.desktopItems]: ZustandPersistEnvelope<DesktopItemsPersistState>
-  [STORAGE_KEYS.aiChat]: ZustandPersistEnvelope<AiChatPersistState>
 }
 
 /** 以 JSON 读写的 key（不含 theme） */

@@ -15,15 +15,14 @@ type LlmMessage = { role: 'system' | 'user' | 'assistant'; content: string }
 
 /**
  * 客户端只传本轮用户内容；服务端读会话、拼上下文、流式代理并落盘。
- * API Key 来自请求 Authorization: Bearer（智聊本地 store）。
+ * API Key 来自环境变量 SILICONFLOW_API_KEY。
  */
 export async function POST(req: Request) {
-  const auth = req.headers.get('authorization')?.trim() ?? ''
-  const apiKey = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : ''
+  const apiKey = process.env.SILICONFLOW_API_KEY?.trim() ?? ''
   if (!apiKey) {
     return NextResponse.json(
-      { error: 'Missing API key. Enter SiliconFlow API Key in Zhi Chat.' },
-      { status: 401 },
+      { error: 'Missing SILICONFLOW_API_KEY. Set it in .env / .env.local.' },
+      { status: 503 },
     )
   }
 
@@ -124,7 +123,7 @@ export async function POST(req: Request) {
       lower.includes('balance') ||
       lower.includes('余额')
     if (balanceRelated) {
-      detail = '硅基流动账户余额不足，请到控制台充值，或在智聊中更换可用的 API Key。'
+      detail = '硅基流动账户余额不足，请到控制台充值，或更换 .env 中的 SILICONFLOW_API_KEY。'
     }
 
     return NextResponse.json({ error: detail }, { status: upstream.status || 502 })

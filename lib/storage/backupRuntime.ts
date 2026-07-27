@@ -24,7 +24,6 @@ async function rehydrateAllStores(): Promise<void> {
     { usePaintStore },
     { useKlineChartStore },
     { useCalendarStore },
-    { useAiChatStore },
   ] = await Promise.all([
     import('@/store/desktop'),
     import('@/store/desktopItems'),
@@ -34,7 +33,6 @@ async function rehydrateAllStores(): Promise<void> {
     import('@/store/paint'),
     import('@/store/klineChart'),
     import('@/store/calendar'),
-    import('@/store/aiChat'),
   ])
 
   const order: PersistApi[] = [
@@ -46,7 +44,6 @@ async function rehydrateAllStores(): Promise<void> {
     usePaintStore.persist,
     useKlineChartStore.persist,
     useCalendarStore.persist,
-    useAiChatStore.persist,
   ]
 
   for (const store of order) {

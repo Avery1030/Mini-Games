@@ -14,6 +14,9 @@ Windows 95 风格的 Web 桌面（Next.js App Router）：可拖拽图标与窗�
 # 安装依赖
 yarn
 
+# 配置智聊 API Key（可选，不配则智聊不可用）
+cp .env.example .env.local
+
 # 开发（Turbopack）
 yarn dev
 ```
@@ -57,7 +60,7 @@ yarn lint    # ESLint
 | 命令提示符 | `cmd` | DOS 风格终端（`DIR` / `CD` / `CLS` / `NOTEPAD` / `TETRIS` / `WALLPAPER` 等）；默认不占桌面图标 |
 | 回收站 | `recycleBin` | 软删除桌面资源的恢复与清空 |
 | K 线图表 | `klineChartViewer` | USDT 永续 K 线（币安公开接口）、周期与指标、画线工具 |
-| 智聊 | `aiChat` | SiliconFlow 流式对话；API Key 存本机 store，会话落盘 `.data/ai-chat` |
+| 智聊 | `aiChat` | SiliconFlow 流式对话；API Key 经 `.env` 的 `SILICONFLOW_API_KEY` 配置，会话落盘 `.data/ai-chat` |
 | 扫雷 | `minesweeper` | 经典扫雷 |
 | 俄罗斯方块 | `tetris` | 经典俄罗斯方块 |
 
@@ -137,7 +140,6 @@ CHANGELOG.md          仓库向更新说明
 | `desktop-notepad` / `desktop-paint` / `desktop-kline-chart` | 各应用偏好 |
 | `desktop-calendar` | 日历按日备注 |
 | `desktop-lock` | 锁屏会话（**不参与**备份导入导出） |
-| `desktop-ai-chat` | 智聊偏好（含本机 API Key） |
 | `desktop-wallpaper-boot` | 首屏壁纸同步标记 |
 
 设置页「数据」分区可导出 / 导入 JSON 备份（`lib/storage/backup.ts`，格式标识 `mini-windows-desktop-backup`）。备份排除 `legacyDesktop` 与 `lock`。
@@ -154,7 +156,15 @@ CHANGELOG.md          仓库向更新说明
   ai-chat/        智聊会话
 ```
 
-勿把 API Key、私钥等提交进仓库；`.env*` 亦已忽略。
+勿把 API Key、私钥等提交进仓库；`.env*` 已忽略（可提交 `.env.example`）。
+
+### 环境变量
+
+复制 `.env.example` 为 `.env.local` 后填写：
+
+| 变量 | 用途 |
+| ---- | ---- |
+| `SILICONFLOW_API_KEY` | 智聊调用 [SiliconFlow](https://siliconflow.cn/) 的 API Key（仅服务端） |
 
 ---
 
@@ -168,7 +178,7 @@ CHANGELOG.md          仓库向更新说明
 | `GET /api/wallpaper/file/[name]` | 读取已上传壁纸 |
 | `POST /api/chat`、相关 history | 智聊：代理 SiliconFlow 流式补全并落盘会话 |
 
-**智聊：** 客户端在应用内填写 [SiliconFlow](https://siliconflow.cn/) API Key，经 `Authorization: Bearer` 传给 `/api/chat`；服务端默认模型为 `Qwen/Qwen2.5-7B-Instruct`。无需在 `.env` 中配置密钥（Key 存本机 store）。
+**智聊：** 在 `.env` / `.env.local` 配置 `SILICONFLOW_API_KEY`；服务端 `/api/chat` 读取该密钥代理 [SiliconFlow](https://siliconflow.cn/) 流式补全，默认模型为 `Qwen/Qwen2.5-7B-Instruct`。
 
 **K 线：** 浏览器直连币安公开行情接口，无服务端密钥。
 
