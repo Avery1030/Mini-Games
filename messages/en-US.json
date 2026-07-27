@@ -86,7 +86,14 @@
     "minimizeAllHint": "Double-click empty area to minimize all; double-click again to restore",
     "taskbarWindows": "Taskbar windows",
     "taskbarScrollLeft": "Scroll taskbar left",
-    "taskbarScrollRight": "Scroll taskbar right"
+    "taskbarScrollRight": "Scroll taskbar right",
+    "taskbarOpen": "Open",
+    "taskbarCloseMenu": "Close",
+    "taskbarClose": "Close window",
+    "taskbarCloseLeft": "Close windows to the left",
+    "taskbarCloseRight": "Close windows to the right",
+    "taskbarCloseAll": "Close all windows",
+    "taskbarShowDesktop": "Show desktop"
   },
   "folder": {
     "untitled": "Folder",
@@ -470,13 +477,47 @@
   "changelog": {
     "toc": "Versions",
     "footer": "Changelog · {count} entries · Current: {title}",
+    "2026-07-27": {
+      "title": "IndexedDB & deploy",
+      "items": [
+        "Notepad, Paint, wallpapers, Image Viewer, and Zhi Chat sessions now use browser IndexedDB instead of server .data — works on Vercel and other serverless hosts.",
+        "Zhi Chat API key moves to SILICONFLOW_API_KEY in .env / .env.local; in-app key entry is removed.",
+        "Chat proxy adds upstream and idle timeouts; context is sent from the client. Remote images go through /api/proxy-image then into IndexedDB.",
+        "Image uploads are capped at 10MB.",
+        "Production build uses plain next build (no Turbopack). Ignore package-lock.json and stick to Yarn’s lockfile.",
+        "Patched React Server Components CVEs; fixed a WinCloseIcon size prop type error that broke builds."
+      ]
+    },
+    "2026-07-26": {
+      "title": "Image Viewer & taskbar",
+      "items": [
+        "New Image Viewer: multi-file upload, URL import, multi-select browsing, and thumbnails.",
+        "Taskbar window buttons support horizontal scrolling and drag-to-reorder; window management logic cleaned up."
+      ]
+    },
+    "2026-07-25": {
+      "title": "Screensaver",
+      "items": [
+        "Screensaver can be enabled in Settings with idle timeout options (including Never).",
+        "Multiple dynamic canvas styles; idle trigger and localization polished."
+      ]
+    },
+    "2026-07-24": {
+      "title": "Multi-select & market feed",
+      "items": [
+        "Desktop icons support marquee multi-select; drag-and-drop and context menus improved for batch actions.",
+        "K-line subscriptions use a managed WebSocket with sturdier connection and error handling.",
+        "Removed music features and APIs; UI and docs cleaned up accordingly."
+      ]
+    },
     "2026-07-23": {
       "title": "Window routes, backup & charts",
       "items": [
         "Window routes: the focused app syncs to /window/{id} without reloading; refresh deep-links reopen it, and Back/Forward retarget focus.",
         "Settings gains a Data section to export/import a JSON backup of local preferences and desktop state.",
         "Settings sidebar is now Display, Appearance, Taskbar, and Data; the unused Desktop section was removed.",
-        "K-Line Chart for USDT perpetuals with periods and indicators; Notepad / Paint / K-line share a typed http client."
+        "K-Line Chart for USDT perpetuals with periods and indicators; Notepad / Paint / K-line share a typed http client.",
+        "Zhi Chat ships with streaming chat, paged history + virtual scroll, and per-message delete; tray decor options simplified."
       ]
     },
     "2026-07-21": {

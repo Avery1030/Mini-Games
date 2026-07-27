@@ -230,13 +230,22 @@ export const useSettingsStore = create<SettingsStore>()(
       },
 
       addToWallpaperGallery: (item) => {
-        if (!isValidCustomWallpaperSrc(item.url) || item.url.startsWith('data:')) return
+        if (!isValidCustomWallpaperSrc(item.url) || item.url.startsWith('data:') || item.url.startsWith('blob:')) {
+          return
+        }
         set((state) => {
           const withoutDup = state.wallpaperGallery.filter((g) => g.url !== item.url)
+          const thumb =
+            item.thumbUrl &&
+            isValidCustomWallpaperSrc(item.thumbUrl) &&
+            !item.thumbUrl.startsWith('data:') &&
+            !item.thumbUrl.startsWith('blob:')
+              ? item.thumbUrl
+              : undefined
           const next: WallpaperGalleryItem = {
             id: item.id ?? `wp-${Date.now()}`,
             url: item.url,
-            thumbUrl: item.thumbUrl?.startsWith('data:') ? undefined : item.thumbUrl,
+            thumbUrl: thumb,
             name: item.name,
             createdAt: Date.now(),
           }
@@ -274,7 +283,7 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: STORAGE_KEYS.settings,
-      version: 18,
+      version: 19,
       storage: createJSONStorage(() => settingsStorage),
       partialize: (state) => ({
         wallpaperId: state.wallpaperId,

@@ -5,10 +5,16 @@ import {
   resolveDesktopBackgroundStyle,
   DESKTOP_BG_PLACEHOLDER_STYLE,
   CUSTOM_WALLPAPER_ID,
+  isDesktopWallpaperDisplaySrc,
 } from '@/config/wallpapers'
 import { resolveMediaDisplayUrl } from '@/lib/idb'
 import { readWallpaperBoot } from '@/lib/wallpaper'
 import { useSettingsStore } from '@/store/settings'
+
+function isSyncDisplaySrc(src: string): boolean {
+  // blob: 刷新后必挂，首屏同步路径只用 http(s) / data / 历史本地 API
+  return isDesktopWallpaperDisplaySrc(src) && !src.startsWith('blob:')
+}
 
 /**
  * 桌面壁纸样式：首帧用占位，boot 同步恢复，settings 水合后再跟设置。
@@ -27,7 +33,9 @@ export function useDesktopWallpaper(): CSSProperties {
         // 异步解析，先占位
         return
       }
-      setDesktopBgStyle(resolveDesktopBackgroundStyle(CUSTOM_WALLPAPER_ID, boot.customUrl))
+      if (isSyncDisplaySrc(boot.customUrl)) {
+        setDesktopBgStyle(resolveDesktopBackgroundStyle(CUSTOM_WALLPAPER_ID, boot.customUrl))
+      }
       return
     }
     if (boot?.wallpaperId && boot.wallpaperId !== CUSTOM_WALLPAPER_ID) {

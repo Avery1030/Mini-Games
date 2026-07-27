@@ -86,7 +86,14 @@
     "minimizeAllHint": "双击空白处：最小化全部窗口；再次双击还原",
     "taskbarWindows": "任务栏窗口",
     "taskbarScrollLeft": "向左滚动任务栏",
-    "taskbarScrollRight": "向右滚动任务栏"
+    "taskbarScrollRight": "向右滚动任务栏",
+    "taskbarOpen": "打开",
+    "taskbarCloseMenu": "关闭",
+    "taskbarClose": "关闭当前",
+    "taskbarCloseLeft": "关闭左侧",
+    "taskbarCloseRight": "关闭右侧",
+    "taskbarCloseAll": "关闭所有",
+    "taskbarShowDesktop": "显示桌面"
   },
   "folder": {
     "untitled": "文件夹",
@@ -470,13 +477,47 @@
   "changelog": {
     "toc": "版本",
     "footer": "更新日志 · 共 {count} 条 · 当前：{title}",
+    "2026-07-27": {
+      "title": "IndexedDB 与线上部署",
+      "items": [
+        "记事本、画图、壁纸、图片查看器与智聊会话改为浏览器 IndexedDB 存储，不再依赖服务端 .data 落盘，可在 Vercel 等 Serverless 环境正常使用。",
+        "智聊 API Key 改为 .env / .env.local 的 SILICONFLOW_API_KEY；应用内不再录入密钥。",
+        "智聊代理增加上游超时与空闲超时，上下文由客户端传入；外链图片经 /api/proxy-image 代理后写入本机。",
+        "图片上传统一限制 10MB 以内。",
+        "生产构建改用标准 next build（去掉 turbopack）；忽略 package-lock.json，统一以 Yarn 锁文件为准。",
+        "修复 React Server Components 相关 CVE；修正 WinCloseIcon 误传 size 导致的构建类型错误。"
+      ]
+    },
+    "2026-07-26": {
+      "title": "图片查看器与任务栏",
+      "items": [
+        "新增图片查看器：支持本地多图上传与 URL 导入、多选浏览与缩略图。",
+        "任务栏窗口按钮支持横向滚动与拖拽重排；精简窗口管理相关逻辑。"
+      ]
+    },
+    "2026-07-25": {
+      "title": "屏幕保护",
+      "items": [
+        "设置中可开启屏幕保护，并配置空闲时长（含「永不」）。",
+        "屏保支持多种动态画布样式；空闲触发与本地化文案一并完善。"
+      ]
+    },
+    "2026-07-24": {
+      "title": "多选桌面与行情连接",
+      "items": [
+        "桌面图标支持框选多选；拖放、右键菜单与批量操作体验增强。",
+        "K 线订阅改为托管 WebSocket，连接与错误处理更稳。",
+        "移除音乐相关功能与接口，界面与文档同步清理。"
+      ]
+    },
     "2026-07-23": {
       "title": "窗口路由、备份与行情",
       "items": [
         "窗口动态路由：聚焦窗口同步到地址栏 /window/{应用}，无刷新改 URL；刷新深链可重新打开该窗口，浏览器后退/前进切换聚焦。",
         "设置新增「数据」分区：可导出/导入本机偏好与桌面状态的 JSON 备份，换设备时可还原。",
         "设置侧栏调整为显示、外观、任务栏、数据；去掉已不再使用的「桌面」分区开关。",
-        "K 线图表：USDT 永续合约 K 线、周期与主副图；记事本 / 画图 / K 线请求统一走类型化 http 客户端。"
+        "K 线图表：USDT 永续合约 K 线、周期与主副图；记事本 / 画图 / K 线请求统一走类型化 http 客户端。",
+        "智聊上线：流式对话、历史分页与虚拟滚动、单条删除；任务栏托盘装饰选项精简。"
       ]
     },
     "2026-07-21": {

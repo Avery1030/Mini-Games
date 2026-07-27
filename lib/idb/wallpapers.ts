@@ -1,5 +1,5 @@
 import { IDB_STORES, idbDelete, idbGet, idbGetAll, idbPut, newId } from './db'
-import { getCachedObjectUrl, rememberObjectUrl, revokeObjectUrl } from './objectUrl'
+import { getCachedObjectUrl, isLiveObjectUrl, rememberObjectUrl, revokeObjectUrl } from './objectUrl'
 import { extFromMimeOrName, makeThumbBlob, type ImageExt } from './images'
 
 /** 设置 / boot 里存的稳定引用（非 blob:） */
@@ -65,10 +65,12 @@ export function wallpaperObjectUrls(rec: WallpaperRecord): { url: string; thumbU
   return { url, thumbUrl }
 }
 
-/** 将 idb-wp: / http(s) / 已有 blob: 解析为可给 CSS/img 用的地址 */
+/** 将 idb-wp: / http(s) / 本会话有效 blob: 解析为可给 CSS/img 用的地址 */
 export async function resolveMediaDisplayUrl(src: string | null | undefined): Promise<string | null> {
   if (!src) return null
-  if (src.startsWith('blob:') || src.startsWith('data:image/')) return src
+  // 刷新后残留的 blob: 字符串已失效，不能当持久引用
+  if (src.startsWith('blob:')) return isLiveObjectUrl(src) ? src : null
+  if (src.startsWith('data:image/')) return src
   if (src.startsWith('http://') || src.startsWith('https://')) return src
 
   const id = parseWallpaperRef(src)
@@ -82,7 +84,8 @@ export async function resolveMediaDisplayUrl(src: string | null | undefined): Pr
 
 export async function resolveMediaThumbUrl(src: string | null | undefined): Promise<string | null> {
   if (!src) return null
-  if (src.startsWith('blob:') || src.startsWith('data:image/') || src.startsWith('http')) return src
+  if (src.startsWith('blob:')) return isLiveObjectUrl(src) ? src : null
+  if (src.startsWith('data:image/') || src.startsWith('http')) return src
   const id = parseWallpaperRef(src)
   if (!id) return null
   const cached = getCachedObjectUrl(thumbKey(id))

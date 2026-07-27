@@ -17,11 +17,14 @@ import ThemeSwitch from './ThemeSwitch'
 import { TaskbarClock } from './TaskbarClock'
 import { TaskbarWindowButton } from './TaskbarWindowButton'
 import { AveryMark } from './AveryMark'
+import { buildTaskbarContextMenu } from './buildTaskbarContextMenu'
 import { cn } from '@/lib/cn'
 import { winChrome, winChromePressed } from '@/lib/winChrome'
 import { useDesktopApps, useDesktopHydrated, useTaskbarReorder } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
 import { resolveDesktopItemTitle } from '@/lib/desktop/window'
+import { ContextMenu, type ContextMenuState } from '@/components/ui'
+import type { DesktopAppId } from '@/config/desktop'
 
 const SCROLL_STEP = 160
 
@@ -30,14 +33,19 @@ const SCROLL_STEP = 160
  */
 export function DesktopTaskbar() {
   const t = useTranslations()
+  const tWin = useTranslations('window')
   const tApps = useTranslations('apps')
   const apps = useDesktopApps()
   const hasHydrated = useDesktopHydrated()
   const openWindow = useWindowStore((s) => s.openWindow)
+  const closeWindow = useWindowStore((s) => s.closeWindow)
+  const closeAllWindows = useWindowStore((s) => s.closeAllWindows)
+  const minimizeWindow = useWindowStore((s) => s.minimizeWindow)
   const handleTaskbarClick = useWindowStore((s) => s.handleTaskbarClick)
   const reorderTaskbarWindows = useWindowStore((s) => s.reorderTaskbarWindows)
   const toggleMinimizeAllWindows = useWindowStore((s) => s.toggleMinimizeAllWindows)
   const [startMenuOpen, setStartMenuOpen] = useState(false)
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
@@ -65,6 +73,63 @@ export function DesktopTaskbar() {
     onReorder: reorderTaskbarWindows,
     onClick: handleTaskbarClick,
   })
+
+  const closeContextMenu = useCallback(() => setContextMenu(null), [])
+
+  const openTaskbarContextMenu = useCallback(
+    (windowId: DesktopAppId, e: ReactMouseEvent) => {
+      const target = byId.get(windowId)
+      if (!target) return
+      const orderedIds = displayOrder.filter((id) => byId.has(id))
+      const idx = orderedIds.indexOf(windowId)
+
+      setContextMenu({
+        x: e.clientX,
+        y: e.clientY,
+        items: buildTaskbarContextMenu({
+          windowId,
+          minimized: target.minimized,
+          orderedIds,
+          labels: {
+            open: tWin('taskbarOpen'),
+            minimize: tWin('minimize'),
+            restore: tWin('restore'),
+            close: tWin('taskbarCloseMenu'),
+            closeCurrent: tWin('taskbarClose'),
+            closeLeft: tWin('taskbarCloseLeft'),
+            closeRight: tWin('taskbarCloseRight'),
+            closeAll: tWin('taskbarCloseAll'),
+            showDesktop: tWin('taskbarShowDesktop'),
+          },
+          actions: {
+            open: () => openWindow(windowId),
+            minimize: () => minimizeWindow(windowId),
+            closeCurrent: () => closeWindow(windowId),
+            closeLeft: () => {
+              if (idx <= 0) return
+              for (const id of orderedIds.slice(0, idx)) closeWindow(id)
+            },
+            closeRight: () => {
+              if (idx < 0 || idx >= orderedIds.length - 1) return
+              for (const id of orderedIds.slice(idx + 1)) closeWindow(id)
+            },
+            closeAll: () => closeAllWindows(),
+            showDesktop: () => toggleMinimizeAllWindows(),
+          },
+        }),
+      })
+    },
+    [
+      byId,
+      closeAllWindows,
+      closeWindow,
+      displayOrder,
+      minimizeWindow,
+      openWindow,
+      tWin,
+      toggleMinimizeAllWindows,
+    ],
+  )
 
   const updateScrollAffordance = useCallback(() => {
     const el = listRef.current
@@ -167,6 +232,7 @@ export function DesktopTaskbar() {
                 dragging={draggingId === w.id}
                 onActivate={() => handleTaskbarClick(w.id)}
                 onPointerDown={(e) => onPointerDown(w.id, e)}
+                onContextMenu={(e) => openTaskbarContextMenu(w.id, e)}
               />
             )
           })}
@@ -211,6 +277,8 @@ export function DesktopTaskbar() {
           <TaskbarClock />
         </div>
       </div>
+
+      <ContextMenu menu={contextMenu} onClose={closeContextMenu} />
     </footer>
   )
 }

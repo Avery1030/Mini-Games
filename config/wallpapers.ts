@@ -129,6 +129,20 @@ export function isValidCustomWallpaperSrc(src: unknown): src is string {
   }
 }
 
+/** 可直接用于 CSS 的壁纸地址（blob / http(s) / data / 历史本地 API；不含 idb-wp:） */
+export function isDesktopWallpaperDisplaySrc(src: unknown): src is string {
+  if (typeof src !== 'string' || !src) return false
+  if (src.startsWith('blob:')) return true
+  if (src.startsWith('data:image/')) return true
+  if (LOCAL_WALLPAPER_RE.test(src)) return true
+  try {
+    const u = new URL(src)
+    return u.protocol === 'https:' || u.protocol === 'http:'
+  } catch {
+    return false
+  }
+}
+
 /** SSR / hydrate 首帧共用占位，避免 mismatch */
 export const DESKTOP_BG_PLACEHOLDER_STYLE: CSSProperties = {
   backgroundColor: '#1a2a29',
@@ -137,17 +151,13 @@ export const DESKTOP_BG_PLACEHOLDER_STYLE: CSSProperties = {
 /**
  * 解析桌面背景样式。
  * 自定义图用 longhand，避免 background 简写在 SSR/CSR 序列化不一致。
+ * 传入的 customSrc 应为已解析的可展示地址（blob:/http:），不要传 idb-wp:。
  */
 export function resolveDesktopBackgroundStyle(
   wallpaperId: WallpaperId | string | undefined,
   customSrc: string | null | undefined,
 ): CSSProperties {
-  if (
-    wallpaperId === CUSTOM_WALLPAPER_ID &&
-    customSrc &&
-    isValidCustomWallpaperSrc(customSrc) &&
-    !customSrc.startsWith('idb-wp:')
-  ) {
+  if (wallpaperId === CUSTOM_WALLPAPER_ID && customSrc && isDesktopWallpaperDisplaySrc(customSrc)) {
     return {
       backgroundColor: '#1a1a1a',
       backgroundImage: `url(${JSON.stringify(customSrc)})`,

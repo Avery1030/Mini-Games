@@ -1,12 +1,19 @@
 'use client'
 
-import { useEffect, useRef, useState, type ComponentType, type PointerEvent as ReactPointerEvent } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ComponentType,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 import { TaskbarWindowPreview } from './TaskbarWindowPreview'
 import { type DesktopAppId } from '@/config/desktop'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/cn'
 
-const SHOW_DELAY_MS = 380
+const SHOW_DELAY_MS = 1500
 const HIDE_DELAY_MS = 160
 
 type AppIcon = ComponentType<{
@@ -24,6 +31,7 @@ type Props = {
   /** 预览卡片内点击激活（不走拖拽） */
   onActivate: () => void
   onPointerDown: (e: ReactPointerEvent) => void
+  onContextMenu?: (e: ReactMouseEvent) => void
 }
 
 /**
@@ -37,6 +45,7 @@ export function TaskbarWindowButton({
   dragging = false,
   onActivate,
   onPointerDown,
+  onContextMenu,
 }: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
   const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -96,6 +105,13 @@ export function TaskbarWindowButton({
       onMouseEnter={scheduleShow}
       onMouseLeave={scheduleHide}
       onPointerDown={onPointerDown}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        clearTimers()
+        setPreviewOpen(false)
+        onContextMenu?.(e)
+      }}
     >
       <Button
         size='md'
