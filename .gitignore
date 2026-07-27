@@ -9,6 +9,8 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+# 本项目用 Yarn；忽略 npm 锁文件，避免与 yarn.lock 冲突
+package-lock.json
 
 # testing
 /coverage
