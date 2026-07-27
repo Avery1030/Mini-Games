@@ -11,7 +11,7 @@ import type { AiChatProps } from './types'
 export type { AiChatProps } from './types'
 
 /**
- * 智聊：流式对话 + 表情；历史存服务端 .data/ai-chat/session.json。
+ * 智聊：流式对话 + 表情；历史存浏览器 IndexedDB。
  * API Key 由服务端环境变量 SILICONFLOW_API_KEY 提供。
  * memo：窗口 isActive/zIndex 切换时避免整树重渲染导致虚拟列表滚动条跳动。
  */

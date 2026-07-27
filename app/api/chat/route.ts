@@ -1,9 +1,5 @@
 import { NextResponse } from 'next/server'
-import {
-  AI_CHAT_SYSTEM_PROMPT,
-  appendAiChatMessages,
-  proxyChatSseStream,
-} from '@/lib/ai-chat'
+import { AI_CHAT_SYSTEM_PROMPT, proxyChatSseStream } from '@/lib/ai-chat'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -11,12 +7,9 @@ export const dynamic = 'force-dynamic'
 const SILICONFLOW_URL = 'https://api.siliconflow.cn/v1/chat/completions'
 const DEFAULT_MODEL = 'Qwen/Qwen2.5-7B-Instruct'
 const MAX_CONTENT_CHARS = 16_000
-/** 发给模型的最近消息条数（含本轮），避免超长上下文拖慢首包 */
 const MAX_CONTEXT_MESSAGES = 40
 const MAX_TOKENS = 2048
-/** 等待上游响应头的超时 */
 const UPSTREAM_HEADERS_TIMEOUT_MS = 45_000
-/** 上游流空闲超时 */
 const UPSTREAM_IDLE_TIMEOUT_MS = 60_000
 
 type LlmMessage = { role: 'system' | 'user' | 'assistant'; content: string }
@@ -37,8 +30,25 @@ function mergeAbortSignals(signals: AbortSignal[]): AbortSignal {
   return controller.signal
 }
 
+function normalizeContext(raw: unknown): Array<{ role: 'user' | 'assistant'; content: string }> {
+  if (!Array.isArray(raw)) return []
+  const out: Array<{ role: 'user' | 'assistant'; content: string }> = []
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue
+    const m = item as { role?: unknown; content?: unknown }
+    if (m.role !== 'user' && m.role !== 'assistant') continue
+    if (typeof m.content !== 'string') continue
+    const content = m.content.trim()
+    if (!content) continue
+    if ([...content].length > MAX_CONTENT_CHARS) continue
+    out.push({ role: m.role, content })
+    if (out.length >= MAX_CONTEXT_MESSAGES) break
+  }
+  return out
+}
+
 /**
- * 客户端只传本轮用户内容；服务端读会话、拼上下文、流式代理并落盘。
+ * 纯 SiliconFlow 流式代理：上下文由客户端传入（IndexedDB 会话），服务端不落盘。
  * API Key 来自环境变量 SILICONFLOW_API_KEY。
  */
 export async function POST(req: Request) {
@@ -69,28 +79,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'content too long' }, { status: 400 })
   }
 
-  const bodyObj = body as {
-    userMessageId?: unknown
-    assistantMessageId?: unknown
-  }
-  const userMessageId =
-    typeof bodyObj.userMessageId === 'string' ? bodyObj.userMessageId.trim() : undefined
-  const assistantMessageId =
-    typeof bodyObj.assistantMessageId === 'string' ? bodyObj.assistantMessageId.trim() : undefined
+  const prior = normalizeContext((body as { messages?: unknown }).messages)
+  // 去掉尾部与本轮重复的 user（客户端可能已带上）
+  const trimmed =
+    prior.length > 0 && prior[prior.length - 1]?.role === 'user' && prior[prior.length - 1]?.content === content
+      ? prior.slice(0, -1)
+      : prior
 
-  let session
-  try {
-    session = await appendAiChatMessages([{ id: userMessageId, role: 'user', content }])
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Failed to save user message'
-    console.error('[ai-chat] append user', err)
-    return NextResponse.json({ error: message }, { status: 500 })
-  }
-
-  const recent = session.messages.slice(-MAX_CONTEXT_MESSAGES)
   const messages: LlmMessage[] = [
     { role: 'system', content: AI_CHAT_SYSTEM_PROMPT },
-    ...recent.map(({ role, content: c }) => ({ role, content: c })),
+    ...trimmed.slice(-(MAX_CONTEXT_MESSAGES - 1)),
+    { role: 'user', content },
   ]
 
   const model =
@@ -98,7 +97,6 @@ export async function POST(req: Request) {
       (body as { model: string }).model.trim()) ||
     DEFAULT_MODEL
 
-  /** 仅约束「拿到响应头」；拿到后立即 clear，避免拖死后续 SSE body */
   const headersTimeoutController = new AbortController()
   const headersTimeoutId = setTimeout(
     () => headersTimeoutController.abort(),
@@ -174,17 +172,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: detail }, { status: upstream.status || 502 })
   }
 
-  const stream = proxyChatSseStream(
-    upstream.body,
-    async (assistantText) => {
-      const text = assistantText.trim()
-      if (!text) return
-      await appendAiChatMessages([
-        { id: assistantMessageId, role: 'assistant', content: assistantText },
-      ])
-    },
-    { idleTimeoutMs: UPSTREAM_IDLE_TIMEOUT_MS, signal: req.signal },
-  )
+  const stream = proxyChatSseStream(upstream.body, async () => {}, {
+    idleTimeoutMs: UPSTREAM_IDLE_TIMEOUT_MS,
+    signal: req.signal,
+  })
 
   return new Response(stream, {
     status: 200,

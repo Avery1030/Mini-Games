@@ -2,21 +2,19 @@ import { http, HttpError } from '@/lib/http'
 
 export type StreamChatOptions = {
   content: string
-  /** 与乐观 UI 一致，便于随后按 id 删除 */
-  userMessageId: string
-  assistantMessageId: string
+  /** 发给模型的近期上下文（不含本轮 user；服务端会再追加 content） */
+  messages?: Array<{ role: 'user' | 'assistant'; content: string }>
   signal?: AbortSignal
   onDelta: (text: string) => void
 }
 
 type ChatRequestBody = {
   content: string
-  userMessageId: string
-  assistantMessageId: string
+  messages?: Array<{ role: 'user' | 'assistant'; content: string }>
 }
 
 /**
- * 经全局 http 调用 /api/chat（本轮 content + 消息 id），解析 OpenAI 兼容 SSE。
+ * 经全局 http 调用 /api/chat，解析 OpenAI 兼容 SSE。
  */
 export async function streamChatCompletion(options: StreamChatOptions): Promise<void> {
   let res: Response
@@ -25,8 +23,7 @@ export async function streamChatCompletion(options: StreamChatOptions): Promise<
       '/api/chat',
       {
         content: options.content,
-        userMessageId: options.userMessageId,
-        assistantMessageId: options.assistantMessageId,
+        messages: options.messages,
       },
       {
         headers: {

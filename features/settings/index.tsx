@@ -8,7 +8,6 @@ import { Panel, SplitPane } from '@/components/ui'
 import {
   CUSTOM_WALLPAPER_ID,
   getWallpaperLabel,
-  isValidCustomWallpaperSrc,
   type WallpaperId,
 } from '@/config/wallpapers'
 import { useSettingsStore } from '@/store/settings'
@@ -69,18 +68,16 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
     setUploading(true)
     setUploadError(null)
     try {
-      const form = new FormData()
-      form.append('file', file, file.name)
-      const res = await fetch('/api/wallpaper/upload', { method: 'POST', body: form })
-      const data = (await res.json()) as { url?: string; error?: string }
-      if (!res.ok || !data.url || !isValidCustomWallpaperSrc(data.url)) {
-        throw new Error(data.error || '上传失败')
-      }
+      const { saveWallpaperFromFile, wallpaperRef } = await import('@/lib/idb')
+      const rec = await saveWallpaperFromFile(file)
+      const url = wallpaperRef(rec.id)
       useSettingsStore.getState().addToWallpaperGallery({
-        url: data.url,
+        id: rec.id,
+        url,
+        thumbUrl: url,
         name: file.name.replace(/\.[^.]+$/, '') || '上传壁纸',
       })
-      setDraft({ kind: 'custom', url: data.url })
+      setDraft({ kind: 'custom', url })
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : '上传失败')
     } finally {
@@ -98,17 +95,22 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
     }
     setUploading(true)
     try {
-      const res = await fetch('/api/wallpaper/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
+      const { fetchRemoteImageBlob, saveWallpaperFromRemote, wallpaperRef } = await import('@/lib/idb')
+      const { blob, contentType } = await fetchRemoteImageBlob(url)
+      const rec = await saveWallpaperFromRemote({
+        blob,
+        contentType,
+        name: '导入链接',
+        nameHint: url,
       })
-      const data = (await res.json()) as { url?: string; error?: string }
-      if (!res.ok || !data.url || !isValidCustomWallpaperSrc(data.url)) {
-        throw new Error(data.error || '导入失败')
-      }
-      useSettingsStore.getState().addToWallpaperGallery({ url: data.url, name: '导入链接' })
-      setDraft({ kind: 'custom', url: data.url })
+      const ref = wallpaperRef(rec.id)
+      useSettingsStore.getState().addToWallpaperGallery({
+        id: rec.id,
+        url: ref,
+        thumbUrl: ref,
+        name: '导入链接',
+      })
+      setDraft({ kind: 'custom', url: ref })
       setImportUrl('')
     } catch (err) {
       setImportError(err instanceof Error ? err.message : '导入失败')
@@ -181,6 +183,12 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
                 onImportUrlChange={setImportUrl}
                 onRemoveGalleryItem={(id, url) => {
                   useSettingsStore.getState().removeFromWallpaperGallery(id)
+                  if (url.startsWith('idb-wp:')) {
+                    void import('@/lib/idb').then(({ parseWallpaperRef, deleteWallpaper }) => {
+                      const wid = parseWallpaperRef(url)
+                      if (wid) void deleteWallpaper(wid)
+                    })
+                  }
                   if (draft.kind === 'custom' && draft.url === url) {
                     setDraft({ kind: 'preset', id: 'classic-teal' })
                   }

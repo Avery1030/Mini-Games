@@ -6,12 +6,13 @@ import {
   DESKTOP_BG_PLACEHOLDER_STYLE,
   CUSTOM_WALLPAPER_ID,
 } from '@/config/wallpapers'
+import { resolveMediaDisplayUrl } from '@/lib/idb'
 import { readWallpaperBoot } from '@/lib/wallpaper'
 import { useSettingsStore } from '@/store/settings'
 
 /**
  * 桌面壁纸样式：首帧用占位，boot 同步恢复，settings 水合后再跟设置。
- * 禁止在 render 里读 localStorage，避免 SSR hydrate mismatch。
+ * IndexedDB 壁纸异步解析为 blob URL。
  */
 export function useDesktopWallpaper(): CSSProperties {
   const wallpaperId = useSettingsStore((s) => s.wallpaperId)
@@ -21,11 +22,12 @@ export function useDesktopWallpaper(): CSSProperties {
 
   useLayoutEffect(() => {
     const boot = readWallpaperBoot()
-    const gallery = useSettingsStore.getState().wallpaperGallery
     if (boot?.wallpaperId === CUSTOM_WALLPAPER_ID && boot.customUrl) {
-      const full =
-        gallery.find((g) => g.url === boot.customUrl || g.thumbUrl === boot.customUrl)?.url ?? boot.customUrl
-      setDesktopBgStyle(resolveDesktopBackgroundStyle(CUSTOM_WALLPAPER_ID, full))
+      if (boot.customUrl.startsWith('idb-wp:')) {
+        // 异步解析，先占位
+        return
+      }
+      setDesktopBgStyle(resolveDesktopBackgroundStyle(CUSTOM_WALLPAPER_ID, boot.customUrl))
       return
     }
     if (boot?.wallpaperId && boot.wallpaperId !== CUSTOM_WALLPAPER_ID) {
@@ -34,13 +36,38 @@ export function useDesktopWallpaper(): CSSProperties {
   }, [])
 
   useEffect(() => {
-    if (!settingsHydrated) return
-    const gallery = useSettingsStore.getState().wallpaperGallery
-    const full =
-      customWallpaperUrl &&
-      (gallery.find((g) => g.url === customWallpaperUrl || g.thumbUrl === customWallpaperUrl)?.url ??
-        customWallpaperUrl)
-    setDesktopBgStyle(resolveDesktopBackgroundStyle(wallpaperId, full))
+    let cancelled = false
+    const run = async () => {
+      if (!settingsHydrated) {
+        const boot = readWallpaperBoot()
+        if (boot?.wallpaperId === CUSTOM_WALLPAPER_ID && boot.customUrl?.startsWith('idb-wp:')) {
+          const resolved = await resolveMediaDisplayUrl(boot.customUrl)
+          if (!cancelled && resolved) {
+            setDesktopBgStyle(resolveDesktopBackgroundStyle(CUSTOM_WALLPAPER_ID, resolved))
+          }
+        }
+        return
+      }
+      const gallery = useSettingsStore.getState().wallpaperGallery
+      const ref =
+        customWallpaperUrl &&
+        (gallery.find((g) => g.url === customWallpaperUrl || g.thumbUrl === customWallpaperUrl)?.url ??
+          customWallpaperUrl)
+      if (wallpaperId === CUSTOM_WALLPAPER_ID && ref) {
+        const resolved = (await resolveMediaDisplayUrl(ref)) ?? (ref.startsWith('http') ? ref : null)
+        if (!cancelled) {
+          setDesktopBgStyle(resolveDesktopBackgroundStyle(CUSTOM_WALLPAPER_ID, resolved))
+        }
+        return
+      }
+      if (!cancelled) {
+        setDesktopBgStyle(resolveDesktopBackgroundStyle(wallpaperId, null))
+      }
+    }
+    void run()
+    return () => {
+      cancelled = true
+    }
   }, [settingsHydrated, wallpaperId, customWallpaperUrl])
 
   return desktopBgStyle

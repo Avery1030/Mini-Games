@@ -2,7 +2,7 @@
 
 Windows 95 风格的 Web 桌面（Next.js App Router）：可拖拽图标与窗口、任务栏、开始菜单、锁屏，以及一整套内置应用——设置、文档、日志、记事本、画图、计算器、命令提示符、回收站、K 线图表、智聊，外加扫雷与俄罗斯方块。
 
-气质是「Win95 怀旧壳 + 一点当代网页」：视觉走经典对话框质感，数据大多落在本机（`localStorage` + 项目下 `.data/`），不依赖账号体系。
+气质是「Win95 怀旧壳 + 一点当代网页」：视觉走经典对话框质感，偏好在 `localStorage`，笔记/画作/壁纸/会话等内容在浏览器 **IndexedDB**，不依赖账号体系。
 
 ---
 
@@ -24,7 +24,7 @@ yarn dev
 浏览器打开 [http://localhost:3000](http://localhost:3000)。
 
 ```bash
-yarn build   # 生产构建（Turbopack）
+yarn build   # 生产构建
 yarn start   # 启动生产服务
 yarn lint    # ESLint
 ```
@@ -54,13 +54,14 @@ yarn lint    # ESLint
 | 设置 | `settings` | 显示（壁纸上传 / 导入）、外观、任务栏、数据（JSON 备份导入导出） |
 | 文档 | `document` | 应用说明与更新摘要（纯前端文案） |
 | 日志 | `log` | 按日期查看更新记录 |
-| 记事本 | `notepad` | 纯文本笔记 CRUD；落盘 `.data/notes` |
-| 画图 | `paint` | 画布、调色板、橡皮、形状；PNG 落盘 `.data/drawings` |
+| 记事本 | `notepad` | 纯文本笔记 CRUD；内容存 IndexedDB |
+| 画图 | `paint` | 画布、调色板、橡皮、形状；PNG 存 IndexedDB |
 | 计算器 | `calculator` | 四则运算、括号、幂、开方与简单内存键；窗口不可缩放 |
 | 命令提示符 | `cmd` | DOS 风格终端（`DIR` / `CD` / `CLS` / `NOTEPAD` / `TETRIS` / `WALLPAPER` 等）；默认不占桌面图标 |
 | 回收站 | `recycleBin` | 软删除桌面资源的恢复与清空 |
 | K 线图表 | `klineChartViewer` | USDT 永续 K 线（币安公开接口）、周期与指标、画线工具 |
-| 智聊 | `aiChat` | SiliconFlow 流式对话；API Key 经 `.env` 的 `SILICONFLOW_API_KEY` 配置，会话落盘 `.data/ai-chat` |
+| 智聊 | `aiChat` | SiliconFlow 流式对话；API Key 经 `.env` 的 `SILICONFLOW_API_KEY`；会话存 IndexedDB |
+| 图片查看器 | `imageViewer` | 本地上传 / URL 导入；图片存 IndexedDB |
 | 扫雷 | `minesweeper` | 经典扫雷 |
 | 俄罗斯方块 | `tetris` | 经典俄罗斯方块 |
 
@@ -83,7 +84,7 @@ yarn lint    # ESLint
 ```
 app/
   (desktop)/          桌面壳页面：/ 与 /window/[slug]
-  api/                Route Handlers（笔记、画图、壁纸、智聊）
+  api/                Route Handlers（智聊代理、外链图片代理）
   layout.tsx          根布局
 components/
   desktop/            桌面壳（窗口层、任务栏、锁屏、开机屏…）
@@ -97,12 +98,12 @@ hooks/
 i18n/                 next-intl 路由与请求配置
 lib/
   desktop/            窗口注册表、几何、吸附、路由、桌面树…
+  idb/                IndexedDB（笔记、画作、壁纸、图片、智聊会话）
   storage/            localStorage 封装、备份、legacy 迁移
-  wallpaper/ notepad/ paint/ ai-chat/ …
+  wallpaper/ notepad 偏好相关…
 messages/             zh-CN.json / en-US.json
 store/                Zustand stores
 public/               静态资源
-.data/                本机服务端文件数据（gitignore，勿提交密钥）
 CHANGELOG.md          仓库向更新说明
 ```
 
@@ -142,19 +143,19 @@ CHANGELOG.md          仓库向更新说明
 | `desktop-lock` | 锁屏会话（**不参与**备份导入导出） |
 | `desktop-wallpaper-boot` | 首屏壁纸同步标记 |
 
-设置页「数据」分区可导出 / 导入 JSON 备份（`lib/storage/backup.ts`，格式标识 `mini-windows-desktop-backup`）。备份排除 `legacyDesktop` 与 `lock`。
+设置页「数据」分区可导出 / 导入 JSON 备份（`lib/storage/backup.ts`，格式标识 `mini-windows-desktop-backup`）。备份排除 `legacyDesktop` 与 `lock`。**不含** IndexedDB 中的笔记 / 画作 / 壁纸二进制 / 智聊会话。
 
-### 服务端文件 `.data/`（已 gitignore）
+### IndexedDB（浏览器本机）
 
-开发与本机部署时，部分内容写在项目根 `.data/`：
+应用内容数据在客户端 IndexedDB（库名 `avery-mini-os`）：
 
-```
-.data/
-  notes/          记事本
-  drawings/       画图 PNG
-  wallpapers/     上传壁纸
-  ai-chat/        智聊会话
-```
+| Store | 用途 |
+| ----- | ---- |
+| `notes` | 记事本 |
+| `drawings` | 画图 PNG |
+| `wallpapers` | 自定义壁纸 |
+| `images` | 图片查看器 |
+| `ai-chat` | 智聊会话 |
 
 勿把 API Key、私钥等提交进仓库；`.env*` 已忽略（可提交 `.env.example`）。
 
@@ -172,13 +173,10 @@ CHANGELOG.md          仓库向更新说明
 
 | 路由 | 作用 |
 | ---- | ---- |
-| `POST/GET /api/notepad`、`/api/notepad/[id]` | 笔记列表与增删改 |
-| `POST/GET /api/paint`、`/api/paint/[id]`、`/api/paint/file/[name]` | 画作元数据与文件 |
-| `POST /api/wallpaper/upload`、`/api/wallpaper/import` | 壁纸上传 / 外链导入 |
-| `GET /api/wallpaper/file/[name]` | 读取已上传壁纸 |
-| `POST /api/chat`、相关 history | 智聊：代理 SiliconFlow 流式补全并落盘会话 |
+| `POST /api/chat` | 智聊：代理 SiliconFlow 流式补全（上下文由客户端传入） |
+| `POST /api/proxy-image` | 外链图片 CORS 代理（回传二进制，不落盘） |
 
-**智聊：** 在 `.env` / `.env.local` 配置 `SILICONFLOW_API_KEY`；服务端 `/api/chat` 读取该密钥代理 [SiliconFlow](https://siliconflow.cn/) 流式补全，默认模型为 `Qwen/Qwen2.5-7B-Instruct`。
+**智聊：** 在 `.env` / `.env.local` 配置 `SILICONFLOW_API_KEY`；会话在浏览器 IndexedDB；服务端只做流式代理，默认模型 `Qwen/Qwen2.5-7B-Instruct`。
 
 **K 线：** 浏览器直连币安公开行情接口，无服务端密钥。
 

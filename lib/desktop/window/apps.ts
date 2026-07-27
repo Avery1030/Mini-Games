@@ -300,7 +300,7 @@ export class AiChatWindow extends DesktopWindow {
 }
 
 /**
- * 图片查看器：本地上传 / URL 导入，落盘 .data/images，支持多选浏览。
+ * 图片查看器：本地上传 / URL 导入，存 IndexedDB，支持多选浏览。
  */
 export class ImageViewerWindow extends DesktopWindow {
   readonly id = 'imageViewer' as const

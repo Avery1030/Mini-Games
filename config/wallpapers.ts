@@ -110,13 +110,16 @@ export function getWallpaper(id: WallpaperId | string | undefined): WallpaperPre
   return wallpaperMap.get(id ?? '') ?? wallpaperMap.get(DEFAULT_WALLPAPER_ID)!
 }
 
-/** 本机壁纸文件路径（同源 API） */
+/** 本机 IndexedDB 壁纸引用 */
+const IDB_WALLPAPER_RE = /^idb-wp:[a-f0-9-]{36}$/i
+/** 历史本机壁纸文件路径（已废弃，仍识别以免旧设置炸掉） */
 const LOCAL_WALLPAPER_RE = /^\/api\/wallpaper\/file\/[a-f0-9-]{36}\.(jpe?g|png|webp|gif)$/i
 
-/** 自定义壁纸地址：本机文件、CDN https、或历史 data URL */
+/** 自定义壁纸地址：IndexedDB 引用、CDN https、历史 data URL / 本地 API */
 export function isValidCustomWallpaperSrc(src: unknown): src is string {
   if (typeof src !== 'string' || !src) return false
   if (src.startsWith('data:image/')) return true
+  if (IDB_WALLPAPER_RE.test(src)) return true
   if (LOCAL_WALLPAPER_RE.test(src)) return true
   try {
     const u = new URL(src)
@@ -139,7 +142,12 @@ export function resolveDesktopBackgroundStyle(
   wallpaperId: WallpaperId | string | undefined,
   customSrc: string | null | undefined,
 ): CSSProperties {
-  if (wallpaperId === CUSTOM_WALLPAPER_ID && customSrc && isValidCustomWallpaperSrc(customSrc)) {
+  if (
+    wallpaperId === CUSTOM_WALLPAPER_ID &&
+    customSrc &&
+    isValidCustomWallpaperSrc(customSrc) &&
+    !customSrc.startsWith('idb-wp:')
+  ) {
     return {
       backgroundColor: '#1a1a1a',
       backgroundImage: `url(${JSON.stringify(customSrc)})`,

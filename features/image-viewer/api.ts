@@ -1,38 +1,56 @@
-import { http, HttpError } from '@/lib/http'
+import {
+  deleteImage,
+  fetchRemoteImageBlob,
+  imageObjectUrls,
+  listImages,
+  saveImageFromFile,
+  saveImageFromRemote,
+  type ImageRecord,
+} from '@/lib/idb'
 import type { ImageItem } from './types'
 
-type ListResponse = { images: ImageItem[] }
-type UploadResponse = { images: ImageItem[] }
-type ImportResponse = { image: ImageItem }
-
-function withThumb(img: ImageItem): ImageItem {
+function toItem(rec: ImageRecord): ImageItem {
+  const { url, thumbUrl } = imageObjectUrls(rec)
   return {
-    ...img,
-    thumbUrl: img.thumbUrl || `/api/image-viewer/thumb/${img.id}`,
+    id: rec.id,
+    title: rec.title,
+    filename: rec.filename,
+    contentType: rec.contentType,
+    size: rec.size,
+    source: rec.source,
+    createdAt: rec.createdAt,
+    updatedAt: rec.updatedAt,
+    url,
+    thumbUrl,
   }
 }
 
 export async function fetchImageList(): Promise<ImageItem[]> {
-  const data = await http.get<ListResponse>('/api/image-viewer')
-  return data.images.map(withThumb)
+  const list = await listImages()
+  return list.map(toItem)
 }
 
 export async function uploadImagesApi(files: File[]): Promise<ImageItem[]> {
-  const form = new FormData()
-  for (const file of files) form.append('file', file)
-  const res = await fetch('/api/image-viewer', { method: 'POST', body: form })
-  const data = (await res.json().catch(() => ({}))) as UploadResponse & { error?: string }
-  if (!res.ok) {
-    throw new HttpError(data.error || '上传失败', res.status, data, res)
+  const out: ImageItem[] = []
+  for (const file of files) {
+    out.push(toItem(await saveImageFromFile(file)))
   }
-  return (data.images ?? []).map(withThumb)
+  return out
 }
 
 export async function importImageUrlApi(url: string): Promise<ImageItem> {
-  const data = await http.post<ImportResponse, { url: string }>('/api/image-viewer', { url })
-  return withThumb(data.image)
+  const { blob, contentType } = await fetchRemoteImageBlob(url)
+  let nameHint = 'image'
+  try {
+    nameHint = decodeURIComponent(new URL(url).pathname.split('/').pop() || 'image')
+  } catch {
+    // ignore
+  }
+  const rec = await saveImageFromRemote({ blob, contentType, nameHint })
+  return toItem(rec)
 }
 
 export async function deleteImageApi(id: string): Promise<void> {
-  await http.delete<{ ok: boolean }>(`/api/image-viewer/${id}`)
+  const ok = await deleteImage(id)
+  if (!ok) throw new Error('图片不存在')
 }

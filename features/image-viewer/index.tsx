@@ -20,7 +20,7 @@ export type ImageViewerProps = {
 type PendingAction = 'upload' | 'import' | 'delete' | null
 
 /**
- * 图片查看器：本地多图上传 / URL 导入落盘到 .data/images，支持多选浏览。
+ * 图片查看器：本地多图上传 / URL 导入到 IndexedDB，支持多选浏览。
  */
 export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
   const t = useTranslations('imageViewer')

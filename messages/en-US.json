@@ -375,13 +375,13 @@
         "Settings: Display, Appearance, Taskbar, and Data. Data lets you export/import a JSON backup of local preferences and desktop state.",
         "Document: the window you are reading. Offline content, no annotations saved.",
         "Log: dated release notes — open the Log icon; Document also shows a short recent summary.",
-        "Notepad: create, edit, and delete plain-text notes under .data on this machine. Supports titles, word wrap, and Ctrl/⌘+S.",
-        "Paint: canvas doodling with palette, eraser, and shapes; works saved as PNG under .data/drawings.",
+        "Notepad: create, edit, and delete plain-text notes in IndexedDB. Supports titles, word wrap, and Ctrl/⌘+S.",
+        "Paint: canvas doodling with palette, eraser, and shapes; works saved as PNG in IndexedDB.",
         "Calculator: open from Start or the desktop. Supports arithmetic, parentheses, powers, square root, and simple memory keys.",
         "K-Line Chart: USDT perpetual candles with period and main/sub indicators; market data from Binance public APIs.",
         "Command Prompt: a simple DOS-style terminal to browse desktop/folder paths and open some apps.",
-        "Zhi Chat: SiliconFlow streaming chat; API key is configured via .env.",
-        "Image Viewer: upload local images or import from a URL; multi-select browsing; files stored under .data/images."
+        "Zhi Chat: SiliconFlow streaming chat; API key via .env; session stored in IndexedDB.",
+        "Image Viewer: upload local images or import from a URL; multi-select browsing; files stored in IndexedDB."
       ]
     },
     "changelog": {
@@ -577,7 +577,7 @@
     }
   },
   "aiChat": {
-    "hint": "Powered by SiliconFlow · History in .data · Emoji supported",
+    "hint": "Powered by SiliconFlow · History on this device · Emoji supported",
     "empty": "Say hello to start, or tap a quick prompt below.",
     "placeholder": "Type a message, or click 🙂 to insert emoji…",
     "send": "Send",

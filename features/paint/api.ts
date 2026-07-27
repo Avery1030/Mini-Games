@@ -1,36 +1,59 @@
-import { http } from '@/lib/http'
+import {
+  createDrawing,
+  deleteDrawing,
+  drawingObjectUrl,
+  getDrawing,
+  listDrawings,
+  updateDrawing,
+  type DrawingRecord,
+} from '@/lib/idb'
 import type { DrawingDetail, DrawingMeta } from './types'
 
-type DrawingListResponse = { drawings: DrawingMeta[] }
-type DrawingResponse = { drawing: DrawingDetail }
 type DrawingWriteBody = { title?: string; imageBase64?: string }
 
-export async function fetchDrawingList(): Promise<DrawingMeta[]> {
-  const data = await http.get<DrawingListResponse>('/api/paint')
-  return data.drawings
-}
-
-export async function fetchDrawing(id: string): Promise<DrawingDetail> {
-  const data = await http.get<DrawingResponse>(`/api/paint/${id}`)
-  return data.drawing
-}
-
-export async function createDrawingApi(input?: DrawingWriteBody): Promise<DrawingDetail> {
-  const data = await http.post<DrawingResponse, DrawingWriteBody>('/api/paint', input ?? {})
+function toDetail(rec: DrawingRecord): DrawingDetail {
   return {
-    ...data.drawing,
-    imageUrl: data.drawing.hasImage ? `/api/paint/file/${data.drawing.id}.png` : null,
+    id: rec.id,
+    title: rec.title,
+    createdAt: rec.createdAt,
+    updatedAt: rec.updatedAt,
+    hasImage: Boolean(rec.png),
+    imageUrl: drawingObjectUrl(rec),
   }
 }
 
-export async function updateDrawingApi(
-  id: string,
-  patch: DrawingWriteBody,
-): Promise<DrawingDetail> {
-  const data = await http.put<DrawingResponse, DrawingWriteBody>(`/api/paint/${id}`, patch)
-  return data.drawing
+function toMeta(rec: DrawingRecord): DrawingMeta {
+  return {
+    id: rec.id,
+    title: rec.title,
+    createdAt: rec.createdAt,
+    updatedAt: rec.updatedAt,
+    hasImage: Boolean(rec.png),
+  }
+}
+
+export async function fetchDrawingList(): Promise<DrawingMeta[]> {
+  const list = await listDrawings()
+  return list.map(toMeta)
+}
+
+export async function fetchDrawing(id: string): Promise<DrawingDetail> {
+  const rec = await getDrawing(id)
+  if (!rec) throw new Error('画作不存在')
+  return toDetail(rec)
+}
+
+export async function createDrawingApi(input?: DrawingWriteBody): Promise<DrawingDetail> {
+  return toDetail(await createDrawing(input))
+}
+
+export async function updateDrawingApi(id: string, patch: DrawingWriteBody): Promise<DrawingDetail> {
+  const rec = await updateDrawing(id, patch)
+  if (!rec) throw new Error('画作不存在')
+  return toDetail(rec)
 }
 
 export async function deleteDrawingApi(id: string): Promise<void> {
-  await http.delete<{ ok: boolean }>(`/api/paint/${id}`)
+  const ok = await deleteDrawing(id)
+  if (!ok) throw new Error('画作不存在')
 }

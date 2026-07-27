@@ -1,24 +1,13 @@
-import { mkdir, writeFile } from 'fs/promises'
-import path from 'path'
-import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
-import { WALLPAPER_DATA_DIR } from '@/lib/wallpaper'
 
-const MAX_BYTES = 30 * 1024 * 1024
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
-function extFromContentType(ct: string | null, url: string): 'jpg' | 'png' | 'webp' | 'gif' {
-  const t = (ct || '').toLowerCase()
-  if (t.includes('png')) return 'png'
-  if (t.includes('webp')) return 'webp'
-  if (t.includes('gif')) return 'gif'
-  if (/\.png(\?|$)/i.test(url)) return 'png'
-  if (/\.webp(\?|$)/i.test(url)) return 'webp'
-  if (/\.gif(\?|$)/i.test(url)) return 'gif'
-  return 'jpg'
-}
+const MAX_BYTES = 10 * 1024 * 1024
 
 /**
- * 把外链图片拉取到本机再保存
+ * 外链图片 CORS 代理：拉取后原样回传，不落盘。
+ * 供壁纸 / 图片查看器在客户端写入 IndexedDB。
  */
 export async function POST(req: NextRequest) {
   let body: { url?: string }
@@ -29,9 +18,7 @@ export async function POST(req: NextRequest) {
   }
 
   const raw = body.url?.trim()
-  if (!raw) {
-    return NextResponse.json({ error: '缺少 url' }, { status: 400 })
-  }
+  if (!raw) return NextResponse.json({ error: '缺少 url' }, { status: 400 })
 
   let target: URL
   try {
@@ -50,7 +37,7 @@ export async function POST(req: NextRequest) {
     const upstream = await fetch(target.toString(), {
       headers: {
         Accept: 'image/*,*/*;q=0.8',
-        'User-Agent': 'mini-windows-desktop-wallpaper/1.0',
+        'User-Agent': 'mini-windows-desktop-proxy/1.0',
       },
       redirect: 'follow',
       signal: controller.signal,
@@ -66,16 +53,16 @@ export async function POST(req: NextRequest) {
 
     const buf = Buffer.from(await upstream.arrayBuffer())
     if (buf.length === 0 || buf.length > MAX_BYTES) {
-      return NextResponse.json({ error: '图片为空或超过 15MB' }, { status: 400 })
+      return NextResponse.json({ error: '图片为空或超过 10MB' }, { status: 400 })
     }
 
-    await mkdir(WALLPAPER_DATA_DIR, { recursive: true })
-    const ext = extFromContentType(ct, target.pathname)
-    const filename = `${randomUUID()}.${ext}`
-    await writeFile(path.join(WALLPAPER_DATA_DIR, filename), buf)
-
-    const url = `/api/wallpaper/file/${filename}`
-    return NextResponse.json({ url, thumbUrl: url, provider: 'local', size: buf.length })
+    return new NextResponse(buf, {
+      status: 200,
+      headers: {
+        'Content-Type': ct && ct.startsWith('image/') ? ct : 'application/octet-stream',
+        'Cache-Control': 'no-store',
+      },
+    })
   } catch (err) {
     const aborted = err instanceof Error && err.name === 'AbortError'
     return NextResponse.json({ error: aborted ? '拉取超时' : '导入失败' }, { status: 502 })

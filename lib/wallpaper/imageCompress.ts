@@ -33,8 +33,8 @@ export async function fileToWallpaperDataUrl(file: File): Promise<string> {
   if (!file.type.startsWith('image/')) {
     throw new Error('请选择图片文件')
   }
-  if (file.size > 25 * 1024 * 1024) {
-    throw new Error('图片过大（请小于 25MB）')
+  if (file.size > 10 * 1024 * 1024) {
+    throw new Error('图片过大（请小于 10MB）')
   }
 
   const objectUrl = URL.createObjectURL(file)

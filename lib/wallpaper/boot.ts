@@ -5,7 +5,8 @@ import { isServer } from '@/lib/env'
 export type WallpaperBootState = WallpaperBootPersist
 
 function isBootableCustomUrl(src: string): boolean {
-  return isValidCustomWallpaperSrc(src) && !src.startsWith('data:')
+  // data:/blob: 过大或会话级，不适合同步 boot；idb-wp: 与 http(s) 可写
+  return isValidCustomWallpaperSrc(src) && !src.startsWith('data:') && !src.startsWith('blob:')
 }
 
 /** 同步写入轻量标记，首屏在 settings 水合前避免闪回默认壁纸 */

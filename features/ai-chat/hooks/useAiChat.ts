@@ -7,6 +7,7 @@ import { clearChatHistory, deleteChatMessage, fetchChatHistoryPage } from '../ap
 import { streamChatCompletion } from '../stream'
 import type { UiMessage } from '../types'
 import { mapStreamErrorMessage, nextId } from '../utils'
+import { appendAiChatMessages } from '@/lib/idb'
 
 export type UseAiChatResult = {
   messages: UiMessage[]
@@ -191,15 +192,31 @@ export function useAiChat(): UseAiChatResult {
       abortRef.current = controller
 
       try {
+        await appendAiChatMessages([
+          { id: userMsg.id, role: 'user', content: text, createdAt: now },
+        ])
+
+        const context = prior
+          .filter((m) => m.content.trim())
+          .slice(-39)
+          .map((m) => ({ role: m.role, content: m.content }))
+
+        let assistantText = ''
         await streamChatCompletion({
           content: text,
-          userMessageId: userMsg.id,
-          assistantMessageId: assistantId,
+          messages: context,
           signal: controller.signal,
           onDelta: (piece) => {
+            assistantText += piece
             setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, content: m.content + piece } : m)))
           },
         })
+
+        if (assistantText.trim()) {
+          await appendAiChatMessages([
+            { id: assistantId, role: 'assistant', content: assistantText, createdAt: now },
+          ])
+        }
       } catch (err) {
         if (controller.signal.aborted) {
           setMessages((prev) =>
