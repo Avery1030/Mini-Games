@@ -1,6 +1,6 @@
-import { CUSTOM_WALLPAPER_ID, isValidCustomWallpaperSrc, isWallpaperId, type WallpaperId } from '@/config/wallpapers'
-import { isServer } from '@/lib/env'
+import { isValidCustomWallpaperSrc, isWallpaperId, type WallpaperId } from '@/config/wallpapers'
 import { STORAGE_KEYS, appStorage, type WallpaperBootPersist } from '@/lib/storage'
+import { isServer } from '@/lib/env'
 
 export type WallpaperBootState = WallpaperBootPersist
 

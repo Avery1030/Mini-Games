@@ -87,7 +87,6 @@ export function DesktopIcon({
       role='button'
       tabIndex={0}
       aria-label={label}
-      aria-selected={isSelected}
       data-desktop-icon={appId}
       data-fs-kind={fsKind}
       className={cn(

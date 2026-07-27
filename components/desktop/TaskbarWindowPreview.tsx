@@ -110,7 +110,7 @@ export function TaskbarWindowPreview({
             closeWindow(windowId)
           }}
         >
-          <WinCloseIcon size={12} className='shrink-0 text-[var(--window-title-text)]' aria-hidden />
+          <WinCloseIcon className='text-[var(--window-title-text)]' />
         </div>
       </div>
       <div
