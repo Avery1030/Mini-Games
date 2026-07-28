@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { WindowsDesktop } from './WindowsDesktop'
+import { MobileDesktop } from './mobile'
 import { BootScreen } from './BootScreen'
 import { LockScreen } from './LockScreen'
 import { Screensaver } from './Screensaver'
-import { useApplyUiScale, useWindowRouteSync } from '@/hooks/desktop'
+import { useApplyUiScale, useIsMobileViewport, useWindowRouteSync } from '@/hooks/desktop'
 import { useDesktopStore } from '@/store/desktop'
 import { useWindowStore } from '@/store/window'
 import { useSettingsStore } from '@/store/settings'
@@ -21,6 +22,7 @@ const BOOT_FADE_MS = 320
 /**
  * 客户端壳：先显示开机页，待 persist 水合完成后再挂载桌面，
  * 避免 SSR / 本地状态不一致导致的水合报错与闪烁。
+ * 窄屏（&lt;768px）渲染 MobileDesktop，宽屏渲染 WindowsDesktop。
  */
 export function DesktopShell() {
   const windowsHydrated = useWindowStore((s) => s._hasHydrated)
@@ -36,6 +38,7 @@ export function DesktopShell() {
 
   useApplyUiScale()
   useWindowRouteSync(!booting && storesReady)
+  const isMobile = useIsMobileViewport()
 
   const finishedRef = useRef(false)
   const storesReadyRef = useRef(storesReady)
@@ -110,7 +113,7 @@ export function DesktopShell() {
     <>
       {showDesktop && (
         <>
-          <WindowsDesktop />
+          {isMobile ? <MobileDesktop /> : <WindowsDesktop />}
           <LockScreen />
           <Screensaver />
         </>

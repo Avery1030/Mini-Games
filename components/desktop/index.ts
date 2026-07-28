@@ -17,3 +17,12 @@ export { TaskbarClock } from './TaskbarClock'
 export { CalendarModalContent, openCalendarModal, CALENDAR_MODAL_ID } from './CalendarModal'
 export { default as ThemeSwitch } from './ThemeSwitch'
 export { default as LangSwitch } from './LangSwitch'
+export {
+  MobileDesktop,
+  MobileStatusBar,
+  MobileHomeGrid,
+  MobileDock,
+  MobileAppHost,
+  MobileRecents,
+  MOBILE_DOCK_APP_IDS,
+} from './mobile'

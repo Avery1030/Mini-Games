@@ -109,6 +109,8 @@ yarn lint    # ESLint
 | **注册层**   | `registry.ts`         | 内置单例 + 动态项（文件夹 / 文稿）；`useSyncExternalStore` 快照                    |
 | **运行时层** | `store/window.ts` 等  | 可序列化状态：开合、zIndex、bounds、图标坐标、文件树；Zustand persist              |
 
+**壳层分流：** `DesktopShell` 通过 `useIsMobileViewport()`（`<768px`）在 `MobileDesktop`（手机主屏：状态栏 + App 网格 + Dock + 全屏应用）与 `WindowsDesktop`（Win95 桌面）之间切换；两端共用同一套 window / desktopItems store。
+
 **原则：** 能 persist 的只放 Store；带 React 组件 / 行为多态的放 Class；列表给 UI 订阅时走 Registry 快照，不要在组件里手搓「应用列表常量」。
 
 ### 关键数据流：双击图标 → 窗口出现
@@ -148,6 +150,7 @@ app/
   api/                    Route Handlers（智聊、图片代理）
 components/
   desktop/                桌面壳 UI（窗口层、任务栏、锁屏、开机…）
+  desktop/mobile/         窄屏手机主屏（状态栏 / 网格 / Dock / 全屏应用）
   ui/                     Win95 通用控件（Button / Modal / Toast / SplitPane…）
 config/                   桌面类型与静态配置（DesktopAppId、WindowBounds…）
 features/                 各应用 UI 与业务（一应用一目录）
@@ -167,8 +170,9 @@ docs/                     补充文档（如前端面试题）
 
 | 文件                      | 职责                                                            |
 | ------------------------- | --------------------------------------------------------------- |
-| `DesktopShell.tsx`        | 等各 store `_hasHydrated` + 开机动画后再挂桌面，防 SSR / 闪烁   |
+| `DesktopShell.tsx`        | 等各 store `_hasHydrated` + 开机动画后再挂桌面；按断点分流手机/Win95 壳 |
 | `WindowsDesktop.tsx`      | 编排图标层 / 窗口层 / 任务栏 / 拖放幽灵层等（各层独立订 store） |
+| `mobile/MobileDesktop.tsx`| 手机主屏：状态栏 + App 网格 + Dock；前台应用全屏 Host           |
 | `DesktopIconsLayer.tsx`   | 图标渲染、框选、右键、打开                                      |
 | `DesktopWindowsLayer.tsx` | 已开窗口列表；合并 `bounds` 与默认宽高后交给 `WindowsWindow`    |
 | `WindowsWindow.tsx`       | 单窗 chrome、焦点盾、对接几何 / 最小化动画 hooks                |
@@ -208,8 +212,9 @@ docs/                     补充文档（如前端面试题）
 | `useMarqueeSelect`   | 空白处框选（回调用 ref，避免重绑 `window` 监听）                                             |
 | `useDesktopIconDrag` | 图标拖拽落格、Alt 复制                                                                       |
 | `useTaskbarReorder`  | 任务栏按钮排序（只改 `openOrder`）                                                           |
+| `useIsMobileViewport`| `matchMedia('(max-width: 767px)')`，SSR 默认 false                                            |
 | `useIdleTimeout`     | 屏保触发                                                                                     |
-| `useApplyUiScale`    | CSS 变量 UI 缩放                                                                             |
+| `useApplyUiScale`    | CSS 变量 UI 缩放（窄屏自动封顶过大档位）                                                     |
 
 ### Stores（`store`）
 

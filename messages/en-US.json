@@ -53,6 +53,17 @@
     "arrangeLeft": "Align Left",
     "arrangeRight": "Align Right"
   },
+  "mobile": {
+    "backHome": "Back to Home",
+    "close": "Close",
+    "recents": "Recents",
+    "closeRecents": "Close recents",
+    "done": "Done",
+    "noRecents": "No open apps",
+    "emptyHome": "No apps on the home screen",
+    "minimized": "Minimized",
+    "running": "Running"
+  },
   "startMenu": {
     "brand": "Avery Mini App",
     "programs": "Programs",

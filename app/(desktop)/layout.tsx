@@ -1,9 +1,15 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { DesktopPage } from '@/components/desktop'
 
 export const metadata: Metadata = {
   title: 'Avery Mini OS',
-  description: '仿版 Windows 风格桌面界面',
+  description: 'Avery Mini OS is a modern desktop operating system designed to be fast, secure, and easy to use.',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 }
 
 /**

@@ -53,6 +53,17 @@
     "arrangeLeft": "靠左",
     "arrangeRight": "靠右"
   },
+  "mobile": {
+    "backHome": "返回主屏",
+    "close": "关闭",
+    "recents": "多任务",
+    "closeRecents": "关闭多任务",
+    "done": "完成",
+    "noRecents": "暂无打开的应用",
+    "emptyHome": "主屏暂无应用",
+    "minimized": "已最小化",
+    "running": "运行中"
+  },
   "startMenu": {
     "brand": "Avery Mini App",
     "programs": "程序",
