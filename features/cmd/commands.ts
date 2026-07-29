@@ -267,7 +267,7 @@ function cycleWallpaper(ctx: CmdContext): CmdRunResult {
   const ids = WALLPAPERS.map((w) => w.id)
   const idx = ids.indexOf(wallpaperId as Exclude<WallpaperId, 'custom'>)
   const next = ids[(idx + 1) % ids.length] ?? ids[0]
-  applyWallpaper(next)
+  applyWallpaper({ wallpaperId: next })
   const preset = WALLPAPERS.find((w) => w.id === next)
   return {
     lines: [sys(ctx.t('wallpaperChanged', { name: preset?.name ?? next }))],

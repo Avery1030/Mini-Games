@@ -12,6 +12,7 @@ import {
   type FsDropTarget,
 } from '@/lib/desktop'
 import { allocateDesktopCoordinate } from '@/lib/desktop/window'
+import { isServer } from '@/lib/env'
 
 type CoordApp = { id: DesktopAppId; coordinate: DesktopCoordinate }
 
@@ -56,7 +57,7 @@ type UseDesktopIconDragOptions = {
 }
 
 export function hitDesktopIconAtPoint(clientX: number, clientY: number, ignoreId?: DesktopAppId): DesktopAppId | null {
-  if (typeof document === 'undefined') return null
+  if (isServer) return null
   const els = document.elementsFromPoint(clientX, clientY)
   for (const el of els) {
     const host = (el as Element).closest?.('[data-desktop-icon]') as HTMLElement | null

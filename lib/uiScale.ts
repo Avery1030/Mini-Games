@@ -1,3 +1,5 @@
+import { isServer } from '@/lib/env'
+
 export type UiScale = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'
 
 /**
@@ -46,7 +48,7 @@ export function scalePx(base: number, scale: UiScale): number {
  * 实际样式见 globals.css（根字号 + Lucide 尺寸）。
  */
 export function applyUiScaleToDocument(scale: UiScale) {
-  if (typeof document === 'undefined') return
+  if (isServer) return
   const factor = resolveUiScaleFactor(scale)
   const root = document.documentElement
   root.style.setProperty('--ui-text-scale', String(factor))
@@ -55,7 +57,7 @@ export function applyUiScaleToDocument(scale: UiScale) {
 }
 
 export function clearUiScaleFromDocument() {
-  if (typeof document === 'undefined') return
+  if (isServer) return
   const root = document.documentElement
   root.style.removeProperty('--ui-text-scale')
   root.style.removeProperty('--ui-icon-scale')

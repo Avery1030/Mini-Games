@@ -10,6 +10,15 @@
 
 ---
 
+## 2026-07-29 — VFS、资源管理器与回收站
+
+- 新增虚拟文件系统（`lib/vfs`）：用户文件统一经适配器存储；bootstrap 含 Desktop / Documents / Pictures / Wallpapers / Trash 等目录
+- 记事本、画图、图片、壁纸改为走 VFS；智聊独立 IDB 多会话，并支持 `.chat` 导入导出
+- 新增资源管理器：浏览 VFS 路径；图片可打开、设为壁纸、复制/移动、移入回收站
+- 图片查看器对接 VFS：路径启动、本地上传入 `/Pictures`、URL 临时预览、删除走 `trash`
+- 回收站合并桌面软删除与 `/Trash`；桌面可展示 `/Desktop` 文件图标并按类型打开
+- 清理旧业务 IDB 与 legacy 迁移兼容代码；完善 README
+
 ## 2026-07-27 — IndexedDB 与线上部署
 
 - 记事本 / 画图 / 壁纸 / 图片查看器 / 智聊会话改为 IndexedDB，去掉服务端 `.data` 落盘

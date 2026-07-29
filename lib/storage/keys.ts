@@ -8,8 +8,6 @@ export const STORAGE_KEYS = {
   windows: 'desktop-windows',
   /** 桌面图标坐标（zustand persist） */
   coordinates: 'desktop-coordinates',
-  /** 旧版合一 persist，仅迁移用 */
-  legacyDesktop: 'desktop-app-windows',
   /** 壁纸首屏同步标记 */
   wallpaperBoot: 'desktop-wallpaper-boot',
   /** 记事本偏好（zustand persist） */

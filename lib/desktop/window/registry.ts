@@ -13,6 +13,7 @@ import {
   KlineChartViewerWindow,
   AiChatWindow,
   ImageViewerWindow,
+  FileExplorerWindow,
   LogWindow,
   MinesweeperWindow,
   NotepadWindow,
@@ -44,6 +45,7 @@ const BUILTIN_WINDOWS: DesktopWindow[] = [
   new AiChatWindow(),
   new TaskManagerWindow(),
   new ImageViewerWindow(),
+  new FileExplorerWindow(),
 ]
 
 const dynamicWindows = new Map<DesktopAppId, DesktopWindow>()
@@ -56,9 +58,6 @@ let windowsSnapshot: DesktopWindow[] = [...BUILTIN_WINDOWS]
 function rebuildSnapshots() {
   windowsSnapshot = [...BUILTIN_WINDOWS, ...dynamicWindows.values()]
   definitionsSnapshot = windowsSnapshot.map((w) => w.toDefinition())
-  // 兼容仍引用可变导出的旧代码
-  DESKTOP_APP_DEFINITIONS.length = 0
-  DESKTOP_APP_DEFINITIONS.push(...definitionsSnapshot)
 }
 
 function notify() {
@@ -93,9 +92,6 @@ export function listDesktopWindows(): DesktopWindow[] {
 
 /** 内置窗口列表（只读） */
 export const DESKTOP_WINDOWS: readonly DesktopWindow[] = BUILTIN_WINDOWS
-
-/** 可变导出：始终与最新快照同步（push/splice 原地更新） */
-export const DESKTOP_APP_DEFINITIONS: DesktopAppDefinition[] = [...definitionsSnapshot]
 
 type DesktopCoordController = {
   ensureCoordinate: (id: DesktopAppId, coordinate: DesktopCoordinate) => void

@@ -21,7 +21,12 @@ import {
 } from '@/lib/desktop'
 import { promptRenameDesktopItem } from './promptRenameDesktopItem'
 import { FsDragLayer } from './FsDragLayer'
+import { Desktop3DWallpaper } from './Desktop3DWallpaper'
 import { buildDesktopContextMenu } from './buildDesktopContextMenu'
+import { useSettingsStore } from '@/store/settings'
+import { TRASH_PATH, vfs } from '@/lib/vfs'
+import { isVfsDesktopFileId, useDesktopVfsStore } from '@/store/desktopVfs'
+import { openVfsFile } from '@/lib/desktop/openVfsFile'
 
 /**
  * 桌面编排：壁纸 + 图标层 + 窗口层 + 任务栏 + 右键菜单。
@@ -33,6 +38,8 @@ export function WindowsDesktop() {
   const tRecycle = useTranslations('recycleBin')
   const tm = useTranslations('modal')
   const desktopBgStyle = useDesktopWallpaper()
+  const wallpaper3dEnabled = useSettingsStore((s) => s.wallpaper3dEnabled)
+  const wallpaper3dPath = useSettingsStore((s) => s.wallpaper3dPath)
   const openWindow = useWindowStore((s) => s.openWindow)
   const createFolder = useDesktopItemsStore((s) => s.createFolder)
   const createTextDocument = useDesktopItemsStore((s) => s.createTextDocument)
@@ -72,14 +79,29 @@ export function WindowsDesktop() {
   }
 
   const handleEmptyRecycleBin = async () => {
-    if (deletedCount === 0) return
+    let vfsCount = 0
+    try {
+      vfsCount = (await vfs.readDir(TRASH_PATH)).length
+    } catch {
+      vfsCount = 0
+    }
+    const total = deletedCount + vfsCount
+    if (total === 0) {
+      toast.warning(tRecycle('emptyList'))
+      return
+    }
     const ok = await modal.confirm({
       title: tm('confirmTitle'),
-      message: tRecycle('confirmEmpty', { count: deletedCount }),
+      message: tRecycle('confirmEmpty', { count: total }),
     })
     if (!ok) return
     const n = await emptyRecycleBin()
-    toast.success(tRecycle('emptied', { count: n }))
+    try {
+      await vfs.clearTrash()
+    } catch {
+      // 桌面项已清空时仍尽量完成
+    }
+    toast.success(tRecycle('emptied', { count: n + vfsCount }))
   }
 
   const handleCreateTextDocument = async (
@@ -103,9 +125,10 @@ export function WindowsDesktop() {
     const iconId = (iconEl?.dataset.desktopIcon ?? null) as DesktopAppId | null
     const app = iconId ? desktopIcons.find((a) => a.id === iconId) : undefined
     const onBlank = !iconId
-    const isUserItem = app?.kind === 'folder' || app?.kind === 'textDocument'
+    const isVfsFile = Boolean(iconId && isVfsDesktopFileId(iconId))
+    const isUserItem = app?.kind === 'folder' || app?.kind === 'textDocument' || isVfsFile
     const isRecycleBin = iconId === 'recycleBin'
-    const canOpen = Boolean(app?.app)
+    const canOpen = Boolean(app?.app) || isVfsFile
     const desktopEl = e.currentTarget as HTMLElement
     const clickCoordinate = pointerToCoordinate(e.clientX, e.clientY, desktopEl)
 
@@ -120,6 +143,7 @@ export function WindowsDesktop() {
     const selectedUserIds =
       sel.scope.type === 'desktop'
         ? sel.selectedIds.filter((id) => {
+            if (isVfsDesktopFileId(id)) return true
             const a = desktopIcons.find((x) => x.id === id)
             return a?.kind === 'folder' || a?.kind === 'textDocument'
           })
@@ -159,7 +183,14 @@ export function WindowsDesktop() {
         },
         actions: {
           open: () => {
-            if (iconId && canOpen) openWindow(iconId)
+            if (!iconId || !canOpen) return
+            if (isVfsDesktopFileId(iconId)) {
+              void openVfsFile(iconId).then((kind) => {
+                if (kind === 'unsupported') toast.warning(td('cannotOpenVfsFile'))
+              })
+              return
+            }
+            openWindow(iconId)
           },
           rename: () => {
             if (!iconId || !app || (app.kind !== 'folder' && app.kind !== 'textDocument')) return
@@ -178,7 +209,21 @@ export function WindowsDesktop() {
               useDesktopSelectionStore.getState().selectedIds.length > 0
                 ? useDesktopSelectionStore.getState().selectedIds
                 : [iconId]
-            moveItemsToRecycleBin(ids)
+            const vfsIds = ids.filter((id) => isVfsDesktopFileId(id))
+            const itemIds = ids.filter((id) => !isVfsDesktopFileId(id))
+            if (vfsIds.length > 0) {
+              void (async () => {
+                for (const path of vfsIds) {
+                  try {
+                    await vfs.trash(path)
+                  } catch {
+                    // ignore
+                  }
+                }
+                await useDesktopVfsStore.getState().refresh()
+              })()
+            }
+            if (itemIds.length > 0) moveItemsToRecycleBin(itemIds)
             useDesktopSelectionStore.getState().clear()
           },
           paste: () => {
@@ -221,6 +266,9 @@ export function WindowsDesktop() {
         className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem]'
         onContextMenu={handleDesktopContextMenu}
       >
+        {wallpaper3dEnabled && wallpaper3dPath ? (
+          <Desktop3DWallpaper path={wallpaper3dPath} enabled />
+        ) : null}
         <DesktopIconsLayer />
         <DesktopWindowsLayer />
         <FsDragLayer />

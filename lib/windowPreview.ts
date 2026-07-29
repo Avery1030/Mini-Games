@@ -1,9 +1,11 @@
+import { isServer } from '@/lib/env'
+
 const PREVIEW_MAX_W = 220
 const PREVIEW_MAX_H = 150
 
 /** 按 data-window-id 查找窗口根节点 */
 export function queryWindowEl(id: string): HTMLElement | null {
-  if (typeof document === 'undefined') return null
+  if (isServer) return null
   return document.querySelector(`[data-window-id="${CSS.escape(id)}"]`)
 }
 

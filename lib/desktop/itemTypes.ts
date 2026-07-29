@@ -16,6 +16,3 @@ export type DesktopItemRecord = {
   deletedAt?: number
   deletedFromCoordinate?: DesktopCoordinate
 }
-
-/** @deprecated 使用 DesktopItemRecord */
-export type DesktopFolderRecord = DesktopItemRecord

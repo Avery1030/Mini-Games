@@ -2,9 +2,12 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import {
   CUSTOM_WALLPAPER_ID,
+  DEFAULT_WALLPAPER_FIT,
   DEFAULT_WALLPAPER_ID,
   isValidCustomWallpaperSrc,
+  isWallpaperFitMode,
   isWallpaperId,
+  type WallpaperFitMode,
   type WallpaperId,
 } from '@/config/wallpapers'
 import { writeWallpaperBoot } from '@/lib/wallpaper'
@@ -26,8 +29,6 @@ export {
   normalizeScreensaverStyleId,
 } from '@/config/screensavers'
 
-const MAX_GALLERY = 40
-
 /**
  * 屏保空闲超时（分钟）。
  * `0` 表示永不自动启动（见 screensaverIdleToMs）。
@@ -45,107 +46,62 @@ export function screensaverIdleToMs(minutes: ScreensaverIdleMinutes): number {
   return minutes * 60_000
 }
 
-export type WallpaperGalleryItem = {
-  id: string
-  /** 原图 CDN，用于桌面 */
-  url: string
-  /** 缩略图（可选） */
-  thumbUrl?: string
-  name?: string
-  createdAt: number
-}
-
 const settingsStorage = appStorage.createStateStorage()
 
-function normalizeCustomSrc(raw: unknown): string | null {
+function normalizeWallpaperPath(raw: unknown): string | null {
   return isValidCustomWallpaperSrc(raw) ? raw : null
 }
 
-function normalizeGallery(raw: unknown): WallpaperGalleryItem[] {
-  if (!Array.isArray(raw)) return []
-  const items: WallpaperGalleryItem[] = []
-  for (const entry of raw) {
-    if (!entry || typeof entry !== 'object') continue
-    const e = entry as Record<string, unknown>
-    if (!isValidCustomWallpaperSrc(e.url)) continue
-    // 丢弃历史超大 data URL，只保留 http(s)
-    if (typeof e.url === 'string' && e.url.startsWith('data:')) continue
-    items.push({
-      id: typeof e.id === 'string' ? e.id : `wp-${items.length}`,
-      url: e.url,
-      thumbUrl:
-        isValidCustomWallpaperSrc(e.thumbUrl) && !String(e.thumbUrl).startsWith('data:') ? e.thumbUrl : undefined,
-      name: typeof e.name === 'string' ? e.name : undefined,
-      createdAt: typeof e.createdAt === 'number' ? e.createdAt : Date.now(),
-    })
-  }
-  return items.slice(0, MAX_GALLERY)
-}
-
-function ensureGalleryHasUrl(gallery: WallpaperGalleryItem[], url: string | null): WallpaperGalleryItem[] {
-  if (!url || !isValidCustomWallpaperSrc(url) || url.startsWith('data:')) return gallery
-  if (gallery.some((g) => g.url === url || g.thumbUrl === url)) return gallery
-  return [
-    {
-      id: `imported-${Date.now()}`,
-      url,
-      thumbUrl: url,
-      name: '已应用壁纸',
-      createdAt: Date.now(),
-    },
-    ...gallery,
-  ].slice(0, MAX_GALLERY)
-}
-
-/** 若传入的是图库缩略图地址，升级为原图 url */
-export function resolveFullWallpaperUrl(
-  url: string | null | undefined,
-  gallery: WallpaperGalleryItem[],
-): string | null {
-  if (!url || !isValidCustomWallpaperSrc(url) || url.startsWith('data:')) return null
-  const hit = gallery.find((g) => g.url === url || g.thumbUrl === url)
-  if (hit) return hit.url
-  return url
+function syncWallpaperBoot(state: {
+  wallpaperId: WallpaperId
+  wallpaperPath: string | null
+  wallpaperFit: WallpaperFitMode
+  wallpaper3dEnabled: boolean
+  wallpaper3dPath: string | null
+}) {
+  writeWallpaperBoot({
+    wallpaperId: state.wallpaperId,
+    wallpaperPath: state.wallpaperPath,
+    wallpaperFit: state.wallpaperFit,
+    wallpaper3dEnabled: state.wallpaper3dEnabled,
+    wallpaper3dPath: state.wallpaper3dPath,
+  })
 }
 
 interface SettingsState {
   wallpaperId: WallpaperId
-  customWallpaperUrl: string | null
-  /** 本应用上传/导入过的壁纸列表（本机或外链） */
-  wallpaperGallery: WallpaperGalleryItem[]
-  /** 桌面图标是否显示文字 */
+  /** 自定义静态壁纸路径（VFS `/Wallpapers/…` 或 public） */
+  wallpaperPath: string | null
+  wallpaperFit: WallpaperFitMode
+  wallpaper3dEnabled: boolean
+  wallpaper3dPath: string | null
   showIconLabels: boolean
-  /** 桌面图标视觉尺寸 */
   iconSize: 'sm' | 'md' | 'lg'
-  /** 系统文字与图标整体缩放 */
   uiScale: UiScale
-  /** 隐藏尚未实现窗口的占位图标 */
   hidePlaceholderIcons: boolean
-  /** 任务栏显示时钟 */
   showTaskbarClock: boolean
   clockFormat: '24h' | '12h'
-  /** 应用窗口默认最大化打开 */
   openWindowsMaximized: boolean
-  /** 是否启用屏幕保护 */
   screensaverEnabled: boolean
-  /** 无操作多久后启动屏保（分钟；0 = 临时 10 秒） */
   screensaverIdleMinutes: ScreensaverIdleMinutes
-  /** 当前应用的屏保视觉样式 */
   screensaverStyle: ScreensaverStyleId
   _hasHydrated: boolean
 }
 
 interface SettingsActions {
   setHasHydrated: (value: boolean) => void
-  /** 批量/单字段更新可序列化设置（含枚举校验） */
   patch: (partial: SettingsPatch) => void
-  applyWallpaper: (wallpaperId: WallpaperId, customUrl?: string | null) => void
-  addToWallpaperGallery: (item: Omit<WallpaperGalleryItem, 'id' | 'createdAt'> & { id?: string }) => void
-  removeFromWallpaperGallery: (id: string) => void
+  applyWallpaper: (input: {
+    wallpaperId: WallpaperId
+    wallpaperPath?: string | null
+    wallpaperFit?: WallpaperFitMode
+    wallpaper3dEnabled?: boolean
+    wallpaper3dPath?: string | null
+  }) => void
+  setWallpaperFit: (fit: WallpaperFitMode) => void
   clearCustomWallpaper: () => void
 }
 
-/** 允许通过 patch 写入的字段（不含壁纸事务与 hydration） */
 export type SettingsPatch = Partial<
   Pick<
     SettingsState,
@@ -162,7 +118,6 @@ export type SettingsPatch = Partial<
   >
 >
 
-/** 设置字段枚举校验与清理 */
 function sanitizeSettingsPatch(partial: SettingsPatch): SettingsPatch {
   const next: SettingsPatch = { ...partial }
   if (next.iconSize != null && next.iconSize !== 'sm' && next.iconSize !== 'md' && next.iconSize !== 'lg') {
@@ -183,14 +138,40 @@ function sanitizeSettingsPatch(partial: SettingsPatch): SettingsPatch {
   return next
 }
 
+function parsePersistedWallpaper(raw: {
+  wallpaperId?: unknown
+  wallpaperPath?: unknown
+  wallpaperFit?: unknown
+  wallpaper3dEnabled?: unknown
+  wallpaper3dPath?: unknown
+}): Pick<
+  SettingsState,
+  'wallpaperId' | 'wallpaperPath' | 'wallpaperFit' | 'wallpaper3dEnabled' | 'wallpaper3dPath'
+> {
+  const path = normalizeWallpaperPath(raw.wallpaperPath)
+  let wallpaperId = isWallpaperId(raw.wallpaperId) ? raw.wallpaperId : DEFAULT_WALLPAPER_ID
+  if (wallpaperId === CUSTOM_WALLPAPER_ID && !path) {
+    wallpaperId = DEFAULT_WALLPAPER_ID
+  }
+  return {
+    wallpaperId,
+    wallpaperPath: path,
+    wallpaperFit: isWallpaperFitMode(raw.wallpaperFit) ? raw.wallpaperFit : DEFAULT_WALLPAPER_FIT,
+    wallpaper3dEnabled: raw.wallpaper3dEnabled === true,
+    wallpaper3dPath: normalizeWallpaperPath(raw.wallpaper3dPath),
+  }
+}
+
 export type SettingsStore = SettingsState & SettingsActions
 
 export const useSettingsStore = create<SettingsStore>()(
   persist(
     (set, get) => ({
       wallpaperId: DEFAULT_WALLPAPER_ID,
-      customWallpaperUrl: null,
-      wallpaperGallery: [],
+      wallpaperPath: null,
+      wallpaperFit: DEFAULT_WALLPAPER_FIT,
+      wallpaper3dEnabled: false,
+      wallpaper3dPath: null,
       showIconLabels: true,
       iconSize: 'md',
       uiScale: 'md',
@@ -211,84 +192,86 @@ export const useSettingsStore = create<SettingsStore>()(
         set(next)
       },
 
-      applyWallpaper: (id, customUrl) => {
-        if (!isWallpaperId(id)) return
-        if (id === CUSTOM_WALLPAPER_ID) {
-          const raw = customUrl ?? get().customWallpaperUrl
-          const url = resolveFullWallpaperUrl(raw, get().wallpaperGallery) ?? raw
-          if (!url || !isValidCustomWallpaperSrc(url) || url.startsWith('data:')) return
-          writeWallpaperBoot(CUSTOM_WALLPAPER_ID, url)
-          set((state) => ({
-            wallpaperId: CUSTOM_WALLPAPER_ID,
-            customWallpaperUrl: url,
-            wallpaperGallery: ensureGalleryHasUrl(state.wallpaperGallery, url),
-          }))
-          return
-        }
-        writeWallpaperBoot(id, get().customWallpaperUrl)
-        set({ wallpaperId: id })
-      },
+      applyWallpaper: (input) => {
+        if (!isWallpaperId(input.wallpaperId)) return
+        const prev = get()
+        const wallpaperFit =
+          input.wallpaperFit !== undefined && isWallpaperFitMode(input.wallpaperFit)
+            ? input.wallpaperFit
+            : prev.wallpaperFit
+        const wallpaper3dEnabled =
+          input.wallpaper3dEnabled !== undefined ? Boolean(input.wallpaper3dEnabled) : prev.wallpaper3dEnabled
+        const wallpaper3dPath =
+          input.wallpaper3dPath !== undefined
+            ? normalizeWallpaperPath(input.wallpaper3dPath)
+            : prev.wallpaper3dPath
 
-      addToWallpaperGallery: (item) => {
-        if (!isValidCustomWallpaperSrc(item.url) || item.url.startsWith('data:') || item.url.startsWith('blob:')) {
+        if (input.wallpaperId === CUSTOM_WALLPAPER_ID) {
+          const path = normalizeWallpaperPath(input.wallpaperPath ?? prev.wallpaperPath)
+          if (!path) return
+          const next = {
+            wallpaperId: CUSTOM_WALLPAPER_ID as WallpaperId,
+            wallpaperPath: path,
+            wallpaperFit,
+            wallpaper3dEnabled,
+            wallpaper3dPath,
+          }
+          syncWallpaperBoot(next)
+          set(next)
           return
         }
-        set((state) => {
-          const withoutDup = state.wallpaperGallery.filter((g) => g.url !== item.url)
-          const thumb =
-            item.thumbUrl &&
-            isValidCustomWallpaperSrc(item.thumbUrl) &&
-            !item.thumbUrl.startsWith('data:') &&
-            !item.thumbUrl.startsWith('blob:')
-              ? item.thumbUrl
-              : undefined
-          const next: WallpaperGalleryItem = {
-            id: item.id ?? `wp-${Date.now()}`,
-            url: item.url,
-            thumbUrl: thumb,
-            name: item.name,
-            createdAt: Date.now(),
-          }
-          return {
-            wallpaperGallery: [next, ...withoutDup].slice(0, MAX_GALLERY),
-          }
+
+        const next = {
+          wallpaperId: input.wallpaperId,
+          wallpaperPath: prev.wallpaperPath,
+          wallpaperFit,
+          wallpaper3dEnabled,
+          wallpaper3dPath,
+        }
+        syncWallpaperBoot(next)
+        set({
+          wallpaperId: input.wallpaperId,
+          wallpaperFit,
+          wallpaper3dEnabled,
+          wallpaper3dPath,
         })
       },
 
-      removeFromWallpaperGallery: (id) => {
-        set((state) => {
-          const removed = state.wallpaperGallery.find((g) => g.id === id)
-          const wallpaperGallery = state.wallpaperGallery.filter((g) => g.id !== id)
-          if (removed && state.customWallpaperUrl === removed.url && state.wallpaperId === CUSTOM_WALLPAPER_ID) {
-            writeWallpaperBoot(DEFAULT_WALLPAPER_ID, null)
-            return {
-              wallpaperGallery,
-              customWallpaperUrl: null,
-              wallpaperId: DEFAULT_WALLPAPER_ID,
-            }
-          }
-          return { wallpaperGallery }
-        })
+      setWallpaperFit: (fit) => {
+        if (!isWallpaperFitMode(fit)) return
+        const state = get()
+        const next = { ...state, wallpaperFit: fit }
+        syncWallpaperBoot(next)
+        set({ wallpaperFit: fit })
       },
 
       clearCustomWallpaper: () => {
-        const { wallpaperId } = get()
+        const { wallpaperId, wallpaperFit, wallpaper3dEnabled, wallpaper3dPath } = get()
         const nextId = wallpaperId === CUSTOM_WALLPAPER_ID ? DEFAULT_WALLPAPER_ID : wallpaperId
-        writeWallpaperBoot(nextId, null)
+        const next = {
+          wallpaperId: nextId,
+          wallpaperPath: null as string | null,
+          wallpaperFit,
+          wallpaper3dEnabled,
+          wallpaper3dPath,
+        }
+        syncWallpaperBoot(next)
         set({
-          customWallpaperUrl: null,
+          wallpaperPath: null,
           wallpaperId: nextId,
         })
       },
     }),
     {
       name: STORAGE_KEYS.settings,
-      version: 19,
+      version: 20,
       storage: createJSONStorage(() => settingsStorage),
       partialize: (state) => ({
         wallpaperId: state.wallpaperId,
-        customWallpaperUrl: state.customWallpaperUrl,
-        wallpaperGallery: state.wallpaperGallery,
+        wallpaperPath: state.wallpaperPath,
+        wallpaperFit: state.wallpaperFit,
+        wallpaper3dEnabled: state.wallpaper3dEnabled,
+        wallpaper3dPath: state.wallpaper3dPath,
         showIconLabels: state.showIconLabels,
         iconSize: state.iconSize,
         uiScale: state.uiScale,
@@ -301,40 +284,16 @@ export const useSettingsStore = create<SettingsStore>()(
         screensaverStyle: state.screensaverStyle,
       }),
       migrate: (persisted) => {
-        const raw = (persisted ?? {}) as {
-          wallpaperId?: unknown
-          customWallpaperUrl?: unknown
-          customWallpaperDataUrl?: unknown
-          wallpaperGallery?: unknown
-          showIconLabels?: unknown
-          iconSize?: unknown
-          uiScale?: unknown
-          hidePlaceholderIcons?: unknown
-          showTaskbarClock?: unknown
-          clockFormat?: unknown
-          openWindowsMaximized?: unknown
-          screensaverEnabled?: unknown
-          screensaverIdleMinutes?: unknown
-          screensaverStyle?: unknown
-        }
-        let custom = normalizeCustomSrc(raw.customWallpaperUrl) ?? normalizeCustomSrc(raw.customWallpaperDataUrl)
-        if (custom?.startsWith('data:')) custom = null
-        let wallpaperId = isWallpaperId(raw.wallpaperId) ? raw.wallpaperId : DEFAULT_WALLPAPER_ID
-        if (wallpaperId === CUSTOM_WALLPAPER_ID && !custom) {
-          wallpaperId = DEFAULT_WALLPAPER_ID
-        }
-        const gallery = ensureGalleryHasUrl(normalizeGallery(raw.wallpaperGallery), custom)
+        const raw = (persisted ?? {}) as Record<string, unknown>
+        const wp = parsePersistedWallpaper(raw)
         const iconSize = raw.iconSize === 'sm' || raw.iconSize === 'md' || raw.iconSize === 'lg' ? raw.iconSize : 'md'
         const uiScale = isUiScale(raw.uiScale) ? raw.uiScale : 'md'
         const clockFormat = raw.clockFormat === '12h' || raw.clockFormat === '24h' ? raw.clockFormat : '24h'
         const screensaverIdleMinutes = isScreensaverIdleMinutes(raw.screensaverIdleMinutes)
           ? raw.screensaverIdleMinutes
           : 5
-        const screensaverStyle = normalizeScreensaverStyleId(raw.screensaverStyle)
         return {
-          wallpaperId,
-          customWallpaperUrl: custom,
-          wallpaperGallery: gallery,
+          ...wp,
           showIconLabels: raw.showIconLabels !== false,
           iconSize,
           uiScale,
@@ -344,74 +303,43 @@ export const useSettingsStore = create<SettingsStore>()(
           openWindowsMaximized: raw.openWindowsMaximized !== false,
           screensaverEnabled: raw.screensaverEnabled === true,
           screensaverIdleMinutes,
-          screensaverStyle,
+          screensaverStyle: normalizeScreensaverStyleId(raw.screensaverStyle),
         }
       },
       merge: (persisted, current) => {
-        const saved = persisted as
-          | {
-              wallpaperId?: unknown
-              customWallpaperUrl?: unknown
-              customWallpaperDataUrl?: unknown
-              wallpaperGallery?: unknown
-              showIconLabels?: unknown
-              iconSize?: unknown
-              uiScale?: unknown
-              hidePlaceholderIcons?: unknown
-              showTaskbarClock?: unknown
-              clockFormat?: unknown
-              openWindowsMaximized?: unknown
-              screensaverEnabled?: unknown
-              screensaverIdleMinutes?: unknown
-              screensaverStyle?: unknown
-            }
-          | undefined
-        let custom = normalizeCustomSrc(saved?.customWallpaperUrl) ?? normalizeCustomSrc(saved?.customWallpaperDataUrl)
-        if (custom?.startsWith('data:')) custom = null
-        let wallpaperId = isWallpaperId(saved?.wallpaperId) ? saved.wallpaperId : DEFAULT_WALLPAPER_ID
-        if (wallpaperId === CUSTOM_WALLPAPER_ID && !custom) {
-          wallpaperId = DEFAULT_WALLPAPER_ID
-        }
-        const gallery = ensureGalleryHasUrl(normalizeGallery(saved?.wallpaperGallery), custom)
+        const saved = (persisted ?? {}) as Record<string, unknown>
+        const wp = parsePersistedWallpaper(saved)
         const iconSize =
-          saved?.iconSize === 'sm' || saved?.iconSize === 'md' || saved?.iconSize === 'lg' ? saved.iconSize : 'md'
-        const uiScale = isUiScale(saved?.uiScale) ? saved.uiScale : 'md'
-        const clockFormat = saved?.clockFormat === '12h' || saved?.clockFormat === '24h' ? saved.clockFormat : '24h'
-        const screensaverIdleMinutes = isScreensaverIdleMinutes(saved?.screensaverIdleMinutes)
+          saved.iconSize === 'sm' || saved.iconSize === 'md' || saved.iconSize === 'lg' ? saved.iconSize : 'md'
+        const uiScale = isUiScale(saved.uiScale) ? saved.uiScale : 'md'
+        const clockFormat = saved.clockFormat === '12h' || saved.clockFormat === '24h' ? saved.clockFormat : '24h'
+        const screensaverIdleMinutes = isScreensaverIdleMinutes(saved.screensaverIdleMinutes)
           ? saved.screensaverIdleMinutes
           : 5
-        const screensaverStyle = normalizeScreensaverStyleId(saved?.screensaverStyle)
         return {
           ...current,
-          wallpaperId,
-          customWallpaperUrl: custom,
-          wallpaperGallery: gallery,
-          showIconLabels: saved?.showIconLabels !== false,
+          ...wp,
+          showIconLabels: saved.showIconLabels !== false,
           iconSize,
           uiScale,
-          hidePlaceholderIcons: saved?.hidePlaceholderIcons === true,
-          showTaskbarClock: saved?.showTaskbarClock !== false,
+          hidePlaceholderIcons: saved.hidePlaceholderIcons === true,
+          showTaskbarClock: saved.showTaskbarClock !== false,
           clockFormat,
-          openWindowsMaximized: saved?.openWindowsMaximized !== false,
-          screensaverEnabled: saved?.screensaverEnabled === true,
+          openWindowsMaximized: saved.openWindowsMaximized !== false,
+          screensaverEnabled: saved.screensaverEnabled === true,
           screensaverIdleMinutes,
-          screensaverStyle,
+          screensaverStyle: normalizeScreensaverStyleId(saved.screensaverStyle),
         }
       },
       onRehydrateStorage: () => (state) => {
         if (!state) return
-        const full = resolveFullWallpaperUrl(state.customWallpaperUrl, state.wallpaperGallery)
-        if (full && full !== state.customWallpaperUrl) {
-          state.customWallpaperUrl = full
-        }
-        writeWallpaperBoot(state.wallpaperId, state.customWallpaperUrl)
+        syncWallpaperBoot(state)
         state.setHasHydrated(true)
       },
     },
   ),
 )
 
-/** 事件回调里改设置，无需在组件顶层订阅 action */
 export function patchSettings(partial: SettingsPatch) {
   useSettingsStore.getState().patch(partial)
 }
@@ -420,7 +348,7 @@ if (isClient) {
   const markHydrated = () => {
     const s = useSettingsStore.getState()
     if (!s._hasHydrated) {
-      writeWallpaperBoot(s.wallpaperId, s.customWallpaperUrl)
+      syncWallpaperBoot(s)
       useSettingsStore.setState({ _hasHydrated: true })
     }
   }

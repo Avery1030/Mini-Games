@@ -1,51 +1,61 @@
 'use client'
 
 import { type RefObject } from 'react'
-import { FolderOpen, Trash2, Link2 } from 'lucide-react'
+import { Box, FolderOpen, Trash2, Link2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { Button, Input, Panel } from '@/components/ui'
-import { WALLPAPERS } from '@/config/wallpapers'
+import { WALLPAPERS, WALLPAPER_FIT_MODES, type WallpaperFitMode } from '@/config/wallpapers'
 import { useResolvedMediaUrl } from '@/hooks/useResolvedMediaUrl'
-import type { WallpaperGalleryItem } from '@/store/settings'
+import type { WallpaperAsset } from '@/lib/wallpaper'
 import type { WallpaperDraft } from '../types'
 
 export interface DisplaySectionProps {
-  embedded?: boolean
   draft: WallpaperDraft
   draftLabel: string
   dirty: boolean
-  gallery: WallpaperGalleryItem[]
+  fit: WallpaperFitMode
+  enable3d: boolean
+  images: WallpaperAsset[]
+  models: WallpaperAsset[]
+  loadingList: boolean
   uploading: boolean
   uploadError: string | null
   importUrl: string
   importError: string | null
-  inputRef: RefObject<HTMLInputElement | null>
+  imageInputRef: RefObject<HTMLInputElement | null>
+  modelInputRef: RefObject<HTMLInputElement | null>
   onDraftChange: (draft: WallpaperDraft) => void
-  onPickFile: (files: FileList | null) => void
+  onFitChange: (fit: WallpaperFitMode) => void
+  onEnable3dChange: (enabled: boolean) => void
+  onPickImage: (files: FileList | null) => void
+  onPickModel: (files: FileList | null) => void
   onImportLink: () => void
   onImportUrlChange: (url: string) => void
-  onRemoveGalleryItem: (id: string, url: string) => void
+  onRemoveAsset: (path: string) => void
   onApply: () => void
+  activeImagePath: string | null
+  activeModelPath: string | null
 }
 
-function GalleryTile({
+function ImageTile({
   item,
   selected,
+  locked,
   onSelect,
   onRemove,
-  fallbackName,
   removeTitle,
+  inUseTitle,
 }: {
-  item: WallpaperGalleryItem
+  item: WallpaperAsset
   selected: boolean
+  locked: boolean
   onSelect: () => void
   onRemove: () => void
-  fallbackName: string
   removeTitle: string
+  inUseTitle: string
 }) {
-  // idb-wp: 需先解析成 blob:，不能直接丢进 CSS url()
-  const preview = useResolvedMediaUrl(item.thumbUrl || item.url, 'thumb')
+  const preview = useResolvedMediaUrl(item.path, 'thumb')
 
   return (
     <div
@@ -57,19 +67,72 @@ function GalleryTile({
       <button type='button' className='w-full text-left' onClick={onSelect}>
         <div className='relative w-full aspect-[16/10] rounded-sm border border-[#666] shadow-inner bg-[#333] overflow-hidden'>
           {preview ? (
-            // eslint-disable-next-line @next/next/no-img-element -- blob:/http 预览，非远程优化场景
+            // eslint-disable-next-line @next/next/no-img-element -- blob 预览
             <img src={preview} alt='' className='absolute inset-0 h-full w-full object-cover' draggable={false} />
           ) : null}
         </div>
-        <span className='text-[11px] truncate px-0.5 block mt-1'>{item.name || fallbackName}</span>
+        <span className='text-[11px] truncate px-0.5 block mt-1'>{item.name}</span>
       </button>
       <button
         type='button'
-        className='absolute top-2 right-2 p-0.5 bg-black/50 text-white rounded-sm hover:bg-black/70'
-        title={removeTitle}
+        className={cn(
+          'absolute top-2 right-2 p-0.5 rounded-sm text-white',
+          locked ? 'bg-black/30 cursor-not-allowed' : 'bg-black/50 hover:bg-black/70',
+        )}
+        title={locked ? inUseTitle : removeTitle}
+        disabled={locked}
         onClick={(e) => {
           e.stopPropagation()
-          onRemove()
+          if (!locked) onRemove()
+        }}
+      >
+        <Trash2 size={11} />
+      </button>
+    </div>
+  )
+}
+
+function ModelTile({
+  item,
+  selected,
+  locked,
+  onSelect,
+  onRemove,
+  removeTitle,
+  inUseTitle,
+}: {
+  item: WallpaperAsset
+  selected: boolean
+  locked: boolean
+  onSelect: () => void
+  onRemove: () => void
+  removeTitle: string
+  inUseTitle: string
+}) {
+  return (
+    <div
+      className={cn(
+        'relative flex flex-col gap-1 p-1.5 text-left border-2',
+        selected ? 'border-[#000080] bg-[#000080]/15' : 'border-transparent hover:border-[#808080]',
+      )}
+    >
+      <button type='button' className='w-full text-left' onClick={onSelect}>
+        <div className='relative w-full aspect-[16/10] rounded-sm border border-[#666] shadow-inner bg-[#1a1a2e] overflow-hidden flex items-center justify-center'>
+          <Box size={28} className='text-[#9ab]' />
+        </div>
+        <span className='text-[11px] truncate px-0.5 block mt-1'>{item.name}</span>
+      </button>
+      <button
+        type='button'
+        className={cn(
+          'absolute top-2 right-2 p-0.5 rounded-sm text-white',
+          locked ? 'bg-black/30 cursor-not-allowed' : 'bg-black/50 hover:bg-black/70',
+        )}
+        title={locked ? inUseTitle : removeTitle}
+        disabled={locked}
+        onClick={(e) => {
+          e.stopPropagation()
+          if (!locked) onRemove()
         }}
       >
         <Trash2 size={11} />
@@ -82,62 +145,75 @@ export function DisplaySection({
   draft,
   draftLabel,
   dirty,
-  gallery,
+  fit,
+  enable3d,
+  images,
+  models,
+  loadingList,
   uploading,
   uploadError,
   importUrl,
   importError,
-  inputRef,
+  imageInputRef,
+  modelInputRef,
   onDraftChange,
-  onPickFile,
+  onFitChange,
+  onEnable3dChange,
+  onPickImage,
+  onPickModel,
   onImportLink,
   onImportUrlChange,
-  onRemoveGalleryItem,
+  onRemoveAsset,
   onApply,
+  activeImagePath,
+  activeModelPath,
 }: DisplaySectionProps) {
   const t = useTranslations('settings')
   const tw = useTranslations('wallpapers')
 
   return (
     <>
-      <div className='flex flex-1 min-h-0 flex-col gap-3 overflow-hidden p-3'>
+      <div className='flex flex-1 min-h-0 flex-col gap-3 overflow-y-auto p-3'>
         <div className='shrink-0'>
           <h2 className='text-base font-bold mb-1'>{t('sections.display')}</h2>
           <p className='text-xs text-muted'>{t('displayHint')}</p>
         </div>
 
-        <Panel inset className='flex min-h-0 flex-1 flex-col overflow-hidden'>
+        <Panel inset className='flex flex-col overflow-hidden'>
           <div className='flex shrink-0 items-center justify-between gap-2 mb-2'>
             <div className='text-xs font-bold'>{t('myImages')}</div>
-            <Button size='sm' loading={uploading} disabled={uploading} onClick={() => inputRef.current?.click()}>
+            <Button size='sm' loading={uploading} disabled={uploading} onClick={() => imageInputRef.current?.click()}>
               {!uploading && <FolderOpen size={12} />}
               {uploading ? t('uploading') : t('upload')}
             </Button>
             <input
-              ref={inputRef}
+              ref={imageInputRef}
               type='file'
               accept='image/jpeg,image/png,image/webp,image/gif,image/bmp'
               className='hidden'
-              onChange={(e) => void onPickFile(e.target.files)}
+              onChange={(e) => void onPickImage(e.target.files)}
             />
           </div>
 
-          {gallery.length > 0 ? (
-            <div className='grid min-h-0 flex-1 grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto content-start pr-1 mb-2'>
-              {gallery.map((item) => (
-                <GalleryTile
-                  key={item.id}
+          {loadingList ? (
+            <p className='text-[11px] text-muted mb-2'>{t('loadingWallpapers')}</p>
+          ) : images.length > 0 ? (
+            <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 content-start pr-1 mb-2 max-h-48 overflow-y-auto'>
+              {images.map((item) => (
+                <ImageTile
+                  key={item.path}
                   item={item}
-                  selected={draft.kind === 'custom' && draft.url === item.url}
-                  onSelect={() => onDraftChange({ kind: 'custom', url: item.url })}
-                  onRemove={() => onRemoveGalleryItem(item.id, item.url)}
-                  fallbackName={t('customFallback')}
-                  removeTitle={t('removeFromList')}
+                  selected={draft.kind === 'image' && draft.path === item.path}
+                  locked={item.path === activeImagePath}
+                  onSelect={() => onDraftChange({ kind: 'image', path: item.path })}
+                  onRemove={() => onRemoveAsset(item.path)}
+                  removeTitle={t('removeToTrash')}
+                  inUseTitle={t('cannotDeleteActive')}
                 />
               ))}
             </div>
           ) : (
-            <p className='min-h-0 flex-1 text-[11px] text-muted mb-2'>{t('noImages')}</p>
+            <p className='text-[11px] text-muted mb-2'>{t('noImages')}</p>
           )}
 
           <div className='flex shrink-0 gap-1 items-center'>
@@ -165,9 +241,63 @@ export function DisplaySection({
           {importError && <p className='mt-1 shrink-0 text-[11px] text-[#c00]'>{importError}</p>}
         </Panel>
 
-        <Panel inset className='flex min-h-0 flex-1 flex-col overflow-hidden'>
+        <Panel inset className='flex shrink-0 flex-col gap-2'>
+          <div className='text-xs font-bold'>{t('fitMode')}</div>
+          <div className='flex flex-wrap gap-1'>
+            {WALLPAPER_FIT_MODES.map((mode) => (
+              <Button key={mode} size='sm' active={fit === mode} onClick={() => onFitChange(mode)}>
+                {t(`fit.${mode}`)}
+              </Button>
+            ))}
+          </div>
+        </Panel>
+
+        <Panel inset className='flex flex-col overflow-hidden'>
+          <div className='flex shrink-0 flex-wrap items-center justify-between gap-2 mb-2'>
+            <div className='text-xs font-bold'>{t('models3d')}</div>
+            <label className='flex items-center gap-1.5 text-[11px]'>
+              <input
+                type='checkbox'
+                checked={enable3d}
+                onChange={(e) => onEnable3dChange(e.target.checked)}
+              />
+              {t('enable3d')}
+            </label>
+            <Button size='sm' loading={uploading} disabled={uploading} onClick={() => modelInputRef.current?.click()}>
+              {!uploading && <Box size={12} />}
+              {t('uploadGlb')}
+            </Button>
+            <input
+              ref={modelInputRef}
+              type='file'
+              accept='.glb,model/gltf-binary'
+              className='hidden'
+              onChange={(e) => void onPickModel(e.target.files)}
+            />
+          </div>
+          {models.length > 0 ? (
+            <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 content-start pr-1 max-h-40 overflow-y-auto'>
+              {models.map((item) => (
+                <ModelTile
+                  key={item.path}
+                  item={item}
+                  selected={draft.kind === 'model' && draft.path === item.path}
+                  locked={item.path === activeModelPath}
+                  onSelect={() => onDraftChange({ kind: 'model', path: item.path })}
+                  onRemove={() => onRemoveAsset(item.path)}
+                  removeTitle={t('removeToTrash')}
+                  inUseTitle={t('cannotDeleteActive')}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className='text-[11px] text-muted'>{t('noModels')}</p>
+          )}
+        </Panel>
+
+        <Panel inset className='flex flex-col overflow-hidden'>
           <div className='text-xs font-bold mb-2 shrink-0'>{t('presets')}</div>
-          <div className='grid min-h-0 flex-1 grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto content-start pr-1'>
+          <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 content-start pr-1 max-h-48 overflow-y-auto'>
             {WALLPAPERS.map((paper) => {
               const selected = draft.kind === 'preset' && draft.id === paper.id
               return (

@@ -1,4 +1,14 @@
 import type { CSSProperties } from 'react'
+import {
+  isPublicWallpaperSrc,
+  isVfsWallpaperPath,
+} from '@/lib/wallpaper/resolve'
+import type { WallpaperFitMode } from '@/lib/wallpaper/types'
+import { isWallpaperFitMode } from '@/lib/wallpaper/types'
+
+export type { WallpaperFitMode } from '@/lib/wallpaper/types'
+export { WALLPAPER_FIT_MODES, isWallpaperFitMode } from '@/lib/wallpaper/types'
+export { isPublicWallpaperSrc, isVfsWallpaperPath } from '@/lib/wallpaper/resolve'
 
 export type WallpaperId =
   | 'classic-teal'
@@ -23,9 +33,10 @@ export interface WallpaperPreset {
   background: string
 }
 
-/** 默认壁纸：当前经典青绿渐变 */
+/** 默认壁纸：当前经典青绿渐变（系统内置 CSS，不进 VFS） */
 export const DEFAULT_WALLPAPER_ID: WallpaperId = 'classic-teal'
 export const CUSTOM_WALLPAPER_ID: WallpaperId = 'custom'
+export const DEFAULT_WALLPAPER_FIT: WallpaperFitMode = 'cover'
 
 export const WALLPAPERS: WallpaperPreset[] = [
   {
@@ -110,17 +121,13 @@ export function getWallpaper(id: WallpaperId | string | undefined): WallpaperPre
   return wallpaperMap.get(id ?? '') ?? wallpaperMap.get(DEFAULT_WALLPAPER_ID)!
 }
 
-/** 本机 IndexedDB 壁纸引用 */
-const IDB_WALLPAPER_RE = /^idb-wp:[a-f0-9-]{36}$/i
-/** 历史本机壁纸文件路径（已废弃，仍识别以免旧设置炸掉） */
-const LOCAL_WALLPAPER_RE = /^\/api\/wallpaper\/file\/[a-f0-9-]{36}\.(jpe?g|png|webp|gif)$/i
-
-/** 自定义壁纸地址：IndexedDB 引用、CDN https、历史 data URL / 本地 API */
+/**
+ * 自定义壁纸引用：VFS `/Wallpapers/…`、public `/wallpapers/…`、http(s)。
+ */
 export function isValidCustomWallpaperSrc(src: unknown): src is string {
   if (typeof src !== 'string' || !src) return false
-  if (src.startsWith('data:image/')) return true
-  if (IDB_WALLPAPER_RE.test(src)) return true
-  if (LOCAL_WALLPAPER_RE.test(src)) return true
+  if (isVfsWallpaperPath(src)) return true
+  if (isPublicWallpaperSrc(src)) return true
   try {
     const u = new URL(src)
     return u.protocol === 'https:' || u.protocol === 'http:'
@@ -129,17 +136,50 @@ export function isValidCustomWallpaperSrc(src: unknown): src is string {
   }
 }
 
-/** 可直接用于 CSS 的壁纸地址（blob / http(s) / data / 历史本地 API；不含 idb-wp:） */
+/** 可直接用于 CSS 的壁纸地址（blob / http(s) / data / public） */
 export function isDesktopWallpaperDisplaySrc(src: unknown): src is string {
   if (typeof src !== 'string' || !src) return false
   if (src.startsWith('blob:')) return true
   if (src.startsWith('data:image/')) return true
-  if (LOCAL_WALLPAPER_RE.test(src)) return true
+  if (isPublicWallpaperSrc(src)) return true
   try {
     const u = new URL(src)
     return u.protocol === 'https:' || u.protocol === 'http:'
   } catch {
     return false
+  }
+}
+
+function fitToBackgroundProps(fit: WallpaperFitMode): Pick<
+  CSSProperties,
+  'backgroundSize' | 'backgroundPosition' | 'backgroundRepeat'
+> {
+  switch (fit) {
+    case 'tile':
+      return {
+        backgroundSize: 'auto',
+        backgroundPosition: 'left top',
+        backgroundRepeat: 'repeat',
+      }
+    case 'center':
+      return {
+        backgroundSize: 'auto',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }
+    case 'stretch':
+      return {
+        backgroundSize: '100% 100%',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }
+    case 'cover':
+    default:
+      return {
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }
   }
 }
 
@@ -150,20 +190,19 @@ export const DESKTOP_BG_PLACEHOLDER_STYLE: CSSProperties = {
 
 /**
  * 解析桌面背景样式。
- * 自定义图用 longhand，避免 background 简写在 SSR/CSR 序列化不一致。
- * 传入的 customSrc 应为已解析的可展示地址（blob:/http:），不要传 idb-wp:。
+ * customSrc 应为已解析的可展示地址（blob:/http:/public），不要传 VFS 路径。
  */
 export function resolveDesktopBackgroundStyle(
   wallpaperId: WallpaperId | string | undefined,
   customSrc: string | null | undefined,
+  fit: WallpaperFitMode = DEFAULT_WALLPAPER_FIT,
 ): CSSProperties {
+  const safeFit = isWallpaperFitMode(fit) ? fit : DEFAULT_WALLPAPER_FIT
   if (wallpaperId === CUSTOM_WALLPAPER_ID && customSrc && isDesktopWallpaperDisplaySrc(customSrc)) {
     return {
       backgroundColor: '#1a1a1a',
       backgroundImage: `url(${JSON.stringify(customSrc)})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
+      ...fitToBackgroundProps(safeFit),
     }
   }
   return {

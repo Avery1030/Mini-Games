@@ -3,7 +3,7 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 import type { DesktopAppId, DesktopWindowRuntime, WindowBounds } from '@/config/desktop'
 import { DEFAULT_WINDOW_RUNTIME } from '@/config/desktop'
 import { createDefaultWindows, getDesktopWindow, registerWindowController } from '@/lib/desktop/window'
-import { STORAGE_KEYS, appStorage, migrateLegacyDesktopPersist } from '@/lib/storage'
+import { STORAGE_KEYS, appStorage } from '@/lib/storage'
 
 const WINDOW_Z_BASE = 1000
 
@@ -434,7 +434,7 @@ export const useWindowStore = create<WindowStore>()(
     {
       name: STORAGE_KEYS.windows,
       version: 2,
-      storage: createJSONStorage(() => appStorage.createStateStorage({ before: () => migrateLegacyDesktopPersist() })),
+      storage: createJSONStorage(() => appStorage.createStateStorage()),
       partialize: (state) => ({
         windows: state.windows,
         topZIndex: state.topZIndex,

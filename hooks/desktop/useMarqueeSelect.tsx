@@ -1,15 +1,10 @@
 'use client'
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type PointerEvent as ReactPointerEvent,
-} from 'react'
+import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { createPortal } from 'react-dom'
 import type { DesktopAppId } from '@/config/desktop'
 import { DRAG_THRESHOLD, hitIdsInMarquee, normalizeMarquee, type MarqueeRect } from '@/lib/desktop'
+import { isServer } from '@/lib/env'
 
 type MarqueeSession = {
   pointerId: number
@@ -134,7 +129,7 @@ export function useMarqueeSelect({
 
 export function MarqueeOverlay({ rect }: { rect: MarqueeRect | null }) {
   if (!rect || (rect.width < 2 && rect.height < 2)) return null
-  if (typeof document === 'undefined') return null
+  if (isServer) return null
   return createPortal(
     <div
       aria-hidden

@@ -11,7 +11,6 @@ export type {
   ThemeStorageValue,
   ZustandPersistEnvelope,
   SettingsPersistState,
-  SettingsGalleryItemPersist,
   WindowsPersistState,
   CoordinatesPersistState,
   NotepadPersistState,
@@ -19,20 +18,13 @@ export type {
   PaintToolPersist,
   KlineChartPersistState,
   WallpaperBootPersist,
-  LegacyDesktopPersistState,
   LockPersistState,
   CalendarPersistState,
-  DesktopFolderPersist,
   DesktopItemsPersistState,
+  DesktopItemPersist,
 } from './schema'
 
 export { appStorage } from './local'
-
-export {
-  migrateLegacyDesktopPersist,
-  WINDOWS_KEY,
-  COORDINATES_KEY,
-} from './migrateLegacy'
 
 export {
   BACKUP_FORMAT,

@@ -3,19 +3,35 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { useTranslations } from 'next-intl'
 import { modal, toast } from '@/components/ui'
-import { clearChatHistory, deleteChatMessage, fetchChatHistoryPage } from '../api'
+import {
+  appendChatMessage,
+  clearChatHistory,
+  createChatSession,
+  deleteChatMessage,
+  ensureChatSession,
+  exportChatSession,
+  fetchChatHistoryPage,
+  fetchSessionList,
+  importChatSession,
+  listImportableChatFiles,
+  removeChatSession,
+  renameChatSession,
+  switchChatSession,
+  type AiChatSessionMeta,
+} from '../api'
 import { streamChatCompletion } from '../stream'
 import type { UiMessage } from '../types'
 import { mapStreamErrorMessage, nextId } from '../utils'
-import { appendAiChatMessages } from '@/lib/idb'
+import { promptSessionTitle } from '../promptNewSessionTitle'
 
 export type UseAiChatResult = {
+  sessions: AiChatSessionMeta[]
+  activeSessionId: string | null
   messages: UiMessage[]
   historyLoading: boolean
   historyLoadingMore: boolean
   hasMoreHistory: boolean
   streaming: boolean
-  /** 清空会话时递增，供输入区重置 */
   sessionEpoch: number
   inputRef: RefObject<HTMLTextAreaElement | null>
   stop: () => void
@@ -23,24 +39,21 @@ export type UseAiChatResult = {
   deleteMessage: (id: string) => Promise<void>
   loadOlderMessages: () => Promise<void>
   sendText: (rawText: string) => Promise<void>
-}
-
-function toUiMessages(
-  list: Array<{ id: string; role: 'user' | 'assistant'; content: string; createdAt: number }>,
-): UiMessage[] {
-  return list.map((m) => ({
-    id: m.id,
-    role: m.role,
-    content: m.content,
-    createdAt: m.createdAt,
-  }))
+  newSession: () => Promise<void>
+  selectSession: (sessionId: string) => Promise<void>
+  renameSessionById: (sessionId: string) => Promise<void>
+  deleteSessionById: (sessionId: string) => Promise<void>
+  exportActiveSession: () => Promise<void>
+  importFromVfs: () => Promise<void>
 }
 
 /**
- * 智聊会话：分页加载历史、流式发送；落盘由服务端 /api/chat 负责。
+ * 智聊：多会话 + 分页历史；消息增量写入独立 IndexedDB；请求仅发本轮 content。
  */
 export function useAiChat(): UseAiChatResult {
   const t = useTranslations('aiChat')
+  const [sessions, setSessions] = useState<AiChatSessionMeta[]>([])
+  const [activeSessionId, setActiveSessionIdState] = useState<string | null>(null)
   const [messages, setMessages] = useState<UiMessage[]>([])
   const [historyLoading, setHistoryLoading] = useState(true)
   const [historyLoadingMore, setHistoryLoadingMore] = useState(false)
@@ -50,24 +63,44 @@ export function useAiChat(): UseAiChatResult {
   const abortRef = useRef<AbortController | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesRef = useRef(messages)
+  const activeSessionIdRef = useRef(activeSessionId)
   const loadingMoreRef = useRef(false)
   messagesRef.current = messages
+  activeSessionIdRef.current = activeSessionId
+
+  const refreshSessions = useCallback(async () => {
+    const list = await fetchSessionList()
+    setSessions(list)
+    return list
+  }, [])
+
+  const loadSessionMessages = useCallback(async (sessionId: string) => {
+    setHistoryLoading(true)
+    try {
+      const page = await fetchChatHistoryPage(sessionId)
+      setMessages(page.messages)
+      setHasMoreHistory(page.hasMore)
+      setSessionEpoch((n) => n + 1)
+    } finally {
+      setHistoryLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      setHistoryLoading(true)
       try {
-        const page = await fetchChatHistoryPage()
+        const session = await ensureChatSession()
         if (cancelled) return
-        setMessages(toUiMessages(page.messages))
-        setHasMoreHistory(page.hasMore)
+        setActiveSessionIdState(session.id)
+        await refreshSessions()
+        if (cancelled) return
+        await loadSessionMessages(session.id)
       } catch (err) {
         if (!cancelled) {
           toast.error(err instanceof Error ? err.message : t('historyLoadFail'))
+          setHistoryLoading(false)
         }
-      } finally {
-        if (!cancelled) setHistoryLoading(false)
       }
     })()
     return () => {
@@ -89,22 +122,22 @@ export function useAiChat(): UseAiChatResult {
   }, [])
 
   const loadOlderMessages = useCallback(async () => {
-    if (loadingMoreRef.current || !hasMoreHistory) return
+    const sessionId = activeSessionIdRef.current
+    if (!sessionId || loadingMoreRef.current || !hasMoreHistory) return
     const before = messagesRef.current[0]?.id
     if (!before) return
 
     loadingMoreRef.current = true
     setHistoryLoadingMore(true)
     try {
-      const page = await fetchChatHistoryPage({ before })
-      const older = toUiMessages(page.messages)
-      if (older.length === 0) {
+      const page = await fetchChatHistoryPage(sessionId, { before })
+      if (page.messages.length === 0) {
         setHasMoreHistory(false)
         return
       }
       setMessages((prev) => {
         const seen = new Set(prev.map((m) => m.id))
-        const unique = older.filter((m) => !seen.has(m.id))
+        const unique = page.messages.filter((m) => !seen.has(m.id))
         return unique.length === 0 ? prev : [...unique, ...prev]
       })
       setHasMoreHistory(page.hasMore)
@@ -116,7 +149,103 @@ export function useAiChat(): UseAiChatResult {
     }
   }, [hasMoreHistory, t])
 
+  const newSession = useCallback(async () => {
+    if (streaming) stop()
+    const title = await promptSessionTitle({
+      mode: 'create',
+      defaultTitle: t('sessionNamePlaceholder'),
+    })
+    if (title == null) return
+    try {
+      const session = await createChatSession(title)
+      setActiveSessionIdState(session.id)
+      setMessages([])
+      setHasMoreHistory(false)
+      setSessionEpoch((n) => n + 1)
+      await refreshSessions()
+      toast.success(t('sessionCreated'))
+      requestAnimationFrame(() => inputRef.current?.focus())
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('sessionCreateFail'))
+    }
+  }, [streaming, stop, refreshSessions, t])
+
+  const selectSession = useCallback(
+    async (sessionId: string) => {
+      if (sessionId === activeSessionIdRef.current) return
+      if (streaming) stop()
+      try {
+        await switchChatSession(sessionId)
+        setActiveSessionIdState(sessionId)
+        await loadSessionMessages(sessionId)
+        requestAnimationFrame(() => inputRef.current?.focus())
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : t('historyLoadFail'))
+      }
+    },
+    [streaming, stop, loadSessionMessages, t],
+  )
+
+  const renameSessionById = useCallback(
+    async (sessionId: string) => {
+      const current = sessions.find((s) => s.id === sessionId)
+      const title = await promptSessionTitle({
+        mode: 'edit',
+        defaultTitle: current?.title ?? t('sessionNamePlaceholder'),
+      })
+      if (title == null) return
+      try {
+        await renameChatSession(sessionId, title)
+        await refreshSessions()
+        toast.success(t('sessionRenamed'))
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : t('sessionRenameFail'))
+      }
+    },
+    [sessions, refreshSessions, t],
+  )
+
+  const deleteSessionById = useCallback(
+    async (sessionId: string) => {
+      const ok = await modal.confirm({
+        title: t('deleteSessionTitle'),
+        message: t('deleteSessionConfirm'),
+        confirmText: t('delete'),
+        cancelText: t('cancel'),
+      })
+      if (!ok) return
+      if (streaming && sessionId === activeSessionIdRef.current) stop()
+      try {
+        const wasActive = sessionId === activeSessionIdRef.current
+        await removeChatSession(sessionId)
+        const list = await refreshSessions()
+        if (!wasActive) {
+          toast.success(t('sessionDeleted'))
+          return
+        }
+        if (list[0]) {
+          await switchChatSession(list[0].id)
+          setActiveSessionIdState(list[0].id)
+          await loadSessionMessages(list[0].id)
+        } else {
+          const created = await createChatSession(t('sessionNamePlaceholder'))
+          setActiveSessionIdState(created.id)
+          setMessages([])
+          setHasMoreHistory(false)
+          setSessionEpoch((n) => n + 1)
+          await refreshSessions()
+        }
+        toast.success(t('sessionDeleted'))
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : t('sessionDeleteFail'))
+      }
+    },
+    [streaming, stop, refreshSessions, loadSessionMessages, t],
+  )
+
   const clearChat = useCallback(async () => {
+    const sessionId = activeSessionIdRef.current
+    if (!sessionId) return
     if (messages.length === 0 && !streaming) return
     const ok = await modal.confirm({
       title: t('clearConfirmTitle'),
@@ -127,19 +256,22 @@ export function useAiChat(): UseAiChatResult {
     if (!ok) return
     if (streaming) stop()
     try {
-      await clearChatHistory()
+      await clearChatHistory(sessionId)
       setMessages([])
       setHasMoreHistory(false)
       setSessionEpoch((n) => n + 1)
+      await refreshSessions()
       toast.success(t('historyCleared'))
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('historyClearFail'))
     }
     requestAnimationFrame(() => inputRef.current?.focus())
-  }, [messages.length, streaming, stop, t])
+  }, [messages.length, streaming, stop, refreshSessions, t])
 
   const deleteMessage = useCallback(
     async (id: string) => {
+      const sessionId = activeSessionIdRef.current
+      if (!sessionId) return
       const list = messagesRef.current
       const target = list.find((m) => m.id === id)
       if (!target) return
@@ -158,20 +290,60 @@ export function useAiChat(): UseAiChatResult {
       if (!ok) return
 
       try {
-        await deleteChatMessage(id)
+        await deleteChatMessage(sessionId, id)
         setMessages((prev) => prev.filter((m) => m.id !== id))
+        await refreshSessions()
         toast.success(t('messageDeleted'))
       } catch (err) {
         toast.error(err instanceof Error ? err.message : t('messageDeleteFail'))
       }
     },
-    [streaming, t],
+    [streaming, refreshSessions, t],
   )
+
+  const exportActiveSession = useCallback(async () => {
+    const sessionId = activeSessionIdRef.current
+    if (!sessionId) return
+    try {
+      const { path } = await exportChatSession(sessionId)
+      toast.success(t('exportOk', { path }))
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('exportFail'))
+    }
+  }, [t])
+
+  const importFromVfs = useCallback(async () => {
+    try {
+      const files = await listImportableChatFiles()
+      if (files.length === 0) {
+        toast.warning(t('importEmpty'))
+        return
+      }
+      const latest = files[0]!
+      const ok = await modal.confirm({
+        title: t('importTitle'),
+        message: t('importConfirm', { name: latest.name }),
+        confirmText: t('import'),
+        cancelText: t('cancel'),
+      })
+      if (!ok) return
+      if (streaming) stop()
+      const session = await importChatSession(latest.path)
+      await switchChatSession(session.id)
+      setActiveSessionIdState(session.id)
+      await refreshSessions()
+      await loadSessionMessages(session.id)
+      toast.success(t('importOk'))
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('importFail'))
+    }
+  }, [streaming, stop, refreshSessions, loadSessionMessages, t])
 
   const sendText = useCallback(
     async (rawText: string) => {
+      const sessionId = activeSessionIdRef.current
       const text = rawText.trim()
-      if (!text || streaming) return
+      if (!text || streaming || !sessionId) return
 
       const prior = messagesRef.current
       const now = Date.now()
@@ -182,7 +354,7 @@ export function useAiChat(): UseAiChatResult {
         id: assistantId,
         role: 'assistant',
         content: '',
-        createdAt: now,
+        createdAt: now + 1,
       }
 
       setMessages([...prior, userMsg, assistantMsg])
@@ -192,19 +364,17 @@ export function useAiChat(): UseAiChatResult {
       abortRef.current = controller
 
       try {
-        await appendAiChatMessages([
-          { id: userMsg.id, role: 'user', content: text, createdAt: now },
-        ])
-
-        const context = prior
-          .filter((m) => m.content.trim())
-          .slice(-39)
-          .map((m) => ({ role: m.role, content: m.content }))
+        await appendChatMessage(sessionId, {
+          id: userMsg.id,
+          role: 'user',
+          content: text,
+          createdAt: userMsg.createdAt,
+        })
+        void refreshSessions()
 
         let assistantText = ''
         await streamChatCompletion({
           content: text,
-          messages: context,
           signal: controller.signal,
           onDelta: (piece) => {
             assistantText += piece
@@ -213,9 +383,13 @@ export function useAiChat(): UseAiChatResult {
         })
 
         if (assistantText.trim()) {
-          await appendAiChatMessages([
-            { id: assistantId, role: 'assistant', content: assistantText, createdAt: now },
-          ])
+          await appendChatMessage(sessionId, {
+            id: assistantId,
+            role: 'assistant',
+            content: assistantText,
+            createdAt: assistantMsg.createdAt,
+          })
+          void refreshSessions()
         }
       } catch (err) {
         if (controller.signal.aborted) {
@@ -238,10 +412,12 @@ export function useAiChat(): UseAiChatResult {
         requestAnimationFrame(() => inputRef.current?.focus())
       }
     },
-    [streaming, t],
+    [streaming, refreshSessions, t],
   )
 
   return {
+    sessions,
+    activeSessionId,
     messages,
     historyLoading,
     historyLoadingMore,
@@ -254,5 +430,11 @@ export function useAiChat(): UseAiChatResult {
     deleteMessage,
     loadOlderMessages,
     sendText,
+    newSession,
+    selectSession,
+    renameSessionById,
+    deleteSessionById,
+    exportActiveSession,
+    importFromVfs,
   }
 }

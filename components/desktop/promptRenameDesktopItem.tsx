@@ -59,20 +59,6 @@ export function promptRenameDesktopItem(options: PromptRenameDesktopItemOptions)
   })
 }
 
-/** @deprecated 使用 promptRenameDesktopItem */
-export function promptRenameFolder(options: {
-  currentName: string
-  title: string
-  folderId: DesktopAppId
-}): Promise<PromptResult> {
-  return promptRenameDesktopItem({
-    currentName: options.currentName,
-    title: options.title,
-    itemId: options.folderId,
-    kind: 'folder',
-  })
-}
-
 function RenameItemForm({
   initialName,
   itemId,

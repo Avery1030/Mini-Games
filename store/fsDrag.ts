@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { DesktopAppId } from '@/config/desktop'
 import { hitFsDropTarget, type FsDropTarget } from '@/lib/desktop/fsDrop'
+import { isServer } from '@/lib/env'
 
 export type FsDragSession = {
   primaryId: DesktopAppId
@@ -79,7 +80,7 @@ export const useFsDragStore = create<FsDragStore>()((set, get) => ({
     const fsDropHighlight = moved ? hitFsDropTarget(e.clientX, e.clientY, ignore) : null
 
     let iconDropTargetId: DesktopAppId | null = null
-    if (moved && typeof document !== 'undefined') {
+    if (moved && !isServer) {
       for (const el of document.elementsFromPoint(e.clientX, e.clientY)) {
         const host = (el as Element).closest?.('[data-desktop-icon]') as HTMLElement | null
         if (!host) continue

@@ -146,11 +146,7 @@ export function MessageList({
               {t('historyLoadingMore')}
             </div>
           ) : null}
-          <div
-            ref={parentRef}
-            onScroll={onScroll}
-            className='h-full overflow-y-scroll p-2 [scrollbar-gutter:stable]'
-          >
+          <div ref={parentRef} onScroll={onScroll} className='h-full overflow-y-auto p-2'>
             {historyLoading ? (
               <p className='text-[11px] text-muted leading-relaxed px-1 py-2'>{t('historyLoading')}</p>
             ) : messages.length === 0 ? (

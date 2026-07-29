@@ -27,8 +27,9 @@ import {
 import { FolderWindow, TextDocumentWindow } from '@/lib/desktop/window/apps'
 import { useDesktopStore } from '@/store/desktop'
 import { createNoteApi, deleteNoteApi, updateNoteApi, fetchNote } from '@/features/notepad/api'
+import { TRASH_PATH, vfs } from '@/lib/vfs'
 
-export type { DesktopItemRecord, DesktopResourceKind, DesktopFolderRecord } from '@/lib/desktop/itemTypes'
+export type { DesktopItemRecord, DesktopResourceKind } from '@/lib/desktop/itemTypes'
 
 type DesktopItemsState = {
   items: DesktopItemRecord[]
@@ -163,6 +164,38 @@ async function deleteLinkedNote(item: DesktopItemRecord) {
     await deleteNoteApi(item.noteId)
   } catch {
     // ignore
+  }
+}
+
+function isTrashPath(path: string): boolean {
+  return path === TRASH_PATH || path.startsWith(`${TRASH_PATH}/`)
+}
+
+/** 桌面文本文档软删时，同步把 VFS 笔记移入 /Trash */
+async function trashLinkedNotes(records: DesktopItemRecord[]) {
+  for (const item of records) {
+    if (item.kind !== 'textDocument' || !item.noteId) continue
+    try {
+      const node = await vfs.getNodeById(item.noteId)
+      if (!node || node.isDirectory || isTrashPath(node.path)) continue
+      await vfs.trash(node.path)
+    } catch {
+      // ignore
+    }
+  }
+}
+
+/** 桌面文本文档还原时，同步从 /Trash 还原 VFS 笔记 */
+async function restoreLinkedNotes(records: DesktopItemRecord[]) {
+  for (const item of records) {
+    if (item.kind !== 'textDocument' || !item.noteId) continue
+    try {
+      const node = await vfs.getNodeById(item.noteId)
+      if (!node || node.path === TRASH_PATH || !isTrashPath(node.path)) continue
+      await vfs.restore(node.path)
+    } catch {
+      // ignore
+    }
   }
 }
 
@@ -416,6 +449,7 @@ export const useDesktopItemsStore = create<DesktopItemsStore>()(
             }
           }),
         })
+        void trashLinkedNotes(items.filter((f) => subtreeSet.has(f.id)))
         return true
       },
 
@@ -478,6 +512,7 @@ export const useDesktopItemsStore = create<DesktopItemsStore>()(
             }
           }),
         })
+        void restoreLinkedNotes(items.filter((f) => restoreIds.has(f.id)))
         return true
       },
 
@@ -628,7 +663,7 @@ export const useDesktopItemsStore = create<DesktopItemsStore>()(
     }),
     {
       name: STORAGE_KEYS.desktopItems,
-      version: 5,
+      version: 6,
       storage: createJSONStorage(() => appStorage.createStateStorage()),
       partialize: (state) => ({
         items: state.items,
@@ -636,26 +671,15 @@ export const useDesktopItemsStore = create<DesktopItemsStore>()(
       migrate: (persisted) => {
         const raw = (persisted ?? {}) as {
           items?: Array<Partial<DesktopItemRecord> & { id: string; title: string }>
-          folders?: Array<Partial<DesktopItemRecord> & { id: string; title: string }>
         }
-        // 旧版曾用 folders；现行 schema 统一为 items
-        if (Array.isArray(raw.items)) return { items: raw.items }
-        if (Array.isArray(raw.folders)) {
-          return { items: raw.folders.map((f) => ({ ...f, kind: 'folder' as const })) }
-        }
-        return { items: [] }
+        return { items: Array.isArray(raw.items) ? raw.items : [] }
       },
       merge: (persisted, current) => {
         const saved = persisted as {
           items?: Array<Partial<DesktopItemRecord> & { id: string; title: string }>
-          folders?: Array<Partial<DesktopItemRecord> & { id: string; title: string }>
         } | undefined
 
-        const rawList = Array.isArray(saved?.items)
-          ? saved!.items
-          : Array.isArray(saved?.folders)
-            ? saved!.folders.map((f) => ({ ...f, kind: 'folder' as const }))
-            : []
+        const rawList = Array.isArray(saved?.items) ? saved.items : []
 
         const items = rawList
           .map((f) => normalizeItem(f))

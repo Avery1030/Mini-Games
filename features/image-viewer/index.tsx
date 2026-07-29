@@ -5,11 +5,18 @@ import { useTranslations } from 'next-intl'
 import { ChevronLeft, ChevronRight, FolderOpen, Link2, Trash2 } from 'lucide-react'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { Button, Input, SplitPane, modal, toast } from '@/components/ui'
-import { deleteImageApi, fetchImageList, importImageUrlApi, uploadImagesApi } from './api'
+import {
+  fetchImageByPath,
+  fetchImageList,
+  importImageUrlApi,
+  trashImageApi,
+  uploadImagesApi,
+} from './api'
 import { ImagePreviewCarousel, type SlideDirection } from './ImagePreviewCarousel'
 import { ImageSidebar } from './ImageSidebar'
 import type { ImageItem } from './types'
 import { cn } from '@/lib/cn'
+import { useImageViewerStore } from '@/store/imageViewer'
 
 const SLIDE_LOCK_MS = 280
 
@@ -20,7 +27,7 @@ export type ImageViewerProps = {
 type PendingAction = 'upload' | 'import' | 'delete' | null
 
 /**
- * 图片查看器：本地多图上传 / URL 导入到 IndexedDB，支持多选浏览。
+ * 图片查看器：VFS `/Pictures` 图库 + 路径启动预览；URL 仅临时预览（不写入 VFS）。
  */
 export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
   const t = useTranslations('imageViewer')
@@ -36,6 +43,9 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
   const [urlPreview, setUrlPreview] = useState<string | null>(null)
   const [slideDir, setSlideDir] = useState<SlideDirection>(0)
   const slideLockRef = useRef(false)
+
+  const openEpoch = useImageViewerStore((s) => s.openEpoch)
+  const consumePendingFilePath = useImageViewerStore((s) => s.consumePendingFilePath)
 
   const busy = pending != null
 
@@ -55,6 +65,29 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
     return list
   }, [])
 
+  const openByPath = useCallback(
+    async (filePath: string) => {
+      try {
+        const item = await fetchImageByPath(filePath)
+        setImages((prev) => {
+          const without = prev.filter((img) => img.id !== item.id && img.path !== item.path)
+          // 图库内已有则刷新该项；外部路径插入列表顶部供预览
+          const inGallery = item.path.startsWith('/Pictures/') && !item.path.startsWith('/Pictures/Drawings/')
+          if (inGallery) {
+            return [item, ...without.filter((img) => img.path !== item.path)]
+          }
+          return [item, ...without]
+        })
+        setSelectedIds([item.id])
+        setActiveId(item.id)
+        setUrlPreview(null)
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : t('loadFail'))
+      }
+    },
+    [t],
+  )
+
   useEffect(() => {
     let cancelled = false
     ;(async () => {
@@ -62,6 +95,11 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
       try {
         const list = await refreshList()
         if (cancelled) return
+        const pendingPath = consumePendingFilePath()
+        if (pendingPath) {
+          await openByPath(pendingPath)
+          return
+        }
         if (list.length > 0) {
           setSelectedIds([list[0]!.id])
           setActiveId(list[0]!.id)
@@ -75,7 +113,15 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
     return () => {
       cancelled = true
     }
-  }, [refreshList, t])
+    // 仅首屏；后续打开走 openEpoch
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (openEpoch === 0) return
+    const path = consumePendingFilePath()
+    if (path) void openByPath(path)
+  }, [consumePendingFilePath, openByPath, openEpoch])
 
   const selectOnly = useCallback((id: string) => {
     setUrlPreview(null)
@@ -143,7 +189,7 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
   const handleUpload = async (fileList: FileList | null) => {
     if (!fileList?.length) return
     const files = Array.from(fileList).filter(
-      (f) => f.type.startsWith('image/') || /\.(jpe?g|png|gif|webp)$/i.test(f.name),
+      (f) => f.type.startsWith('image/') || /\.(jpe?g|png|gif|webp|bmp)$/i.test(f.name),
     )
     if (files.length === 0) {
       toast.warning(t('onlyImages'))
@@ -166,6 +212,7 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
     }
   }
 
+  /** 网络 URL：仅临时预览，不写入 VFS */
   const handleUrlPreview = () => {
     const raw = urlInput.trim()
     if (!raw) {
@@ -183,6 +230,7 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
     setActiveId(null)
   }
 
+  /** 显式导入：网络图写入 VFS `/Pictures` */
   const handleUrlImport = async () => {
     const raw = urlInput.trim()
     if (!raw) {
@@ -221,7 +269,8 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
     setPending('delete')
     try {
       for (const id of selectedIds) {
-        await deleteImageApi(id)
+        const item = images.find((i) => i.id === id)
+        await trashImageApi({ id, path: item?.path })
       }
       const list = await refreshList()
       setSelectedIds(list[0] ? [list[0].id] : [])
@@ -275,7 +324,7 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
-                void handleUrlImport()
+                handleUrlPreview()
               }
             }}
           />

@@ -1,4 +1,5 @@
 import type { DesktopAppId } from '@/config/desktop'
+import { isServer } from '@/lib/env'
 
 export const WINDOW_ROUTE_STATE_KEY = '__windowRoute' as const
 
@@ -6,10 +7,7 @@ export type WindowHistoryState = {
   [WINDOW_ROUTE_STATE_KEY]?: true
 }
 
-export type WindowRoute =
-  | { type: 'desktop' }
-  | { type: 'window'; id: DesktopAppId }
-  | { type: 'foreign' }
+export type WindowRoute = { type: 'desktop' } | { type: 'window'; id: DesktopAppId } | { type: 'foreign' }
 
 /** 聚焦窗口对应的 path；无聚焦时为桌面根路径。 */
 export function windowPath(id: DesktopAppId | null): string {
@@ -30,7 +28,7 @@ export function parseWindowPath(pathname: string): WindowRoute {
 }
 
 export function setWindowUrl(id: DesktopAppId | null, mode: 'push' | 'replace' = 'push'): void {
-  if (typeof window === 'undefined') return
+  if (isServer) return
   const path = windowPath(id)
   if (window.location.pathname === path) return
   const state: WindowHistoryState = { [WINDOW_ROUTE_STATE_KEY]: true }

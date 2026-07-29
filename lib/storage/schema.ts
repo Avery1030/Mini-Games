@@ -12,19 +12,15 @@ export type ZustandPersistEnvelope<TState> = {
 /** next-themes 存的是纯字符串，不是 JSON */
 export type ThemeStorageValue = 'light' | 'dark'
 
-/** 与 store/settings 的 WallpaperGalleryItem 对齐（避免循环依赖） */
-export type SettingsGalleryItemPersist = {
-  id: string
-  url: string
-  thumbUrl?: string
-  name?: string
-  createdAt: number
-}
+export type WallpaperFitModePersist = 'tile' | 'cover' | 'center' | 'stretch'
 
 export type SettingsPersistState = {
   wallpaperId: WallpaperId
-  customWallpaperUrl: string | null
-  wallpaperGallery: SettingsGalleryItemPersist[]
+  /** 当前自定义壁纸 VFS/public 路径 */
+  wallpaperPath: string | null
+  wallpaperFit: WallpaperFitModePersist
+  wallpaper3dEnabled: boolean
+  wallpaper3dPath: string | null
   showIconLabels: boolean
   iconSize: 'sm' | 'md' | 'lg'
   uiScale: UiScale
@@ -74,20 +70,10 @@ export type KlineChartPersistState = {
 /** 壁纸首屏 boot 标记 */
 export type WallpaperBootPersist = {
   wallpaperId: WallpaperId
-  customUrl?: string
-}
-
-/** 旧版桌面合一 persist（仅迁移读取） */
-export type LegacyDesktopPersistState = {
-  apps?: Array<{
-    id: DesktopAppId
-    isOpen?: boolean
-    minimized?: boolean
-    active?: boolean
-    zIndex?: number
-    coordinate?: DesktopCoordinate
-  }>
-  topZIndex?: number
+  wallpaperPath?: string
+  wallpaperFit?: WallpaperFitModePersist
+  wallpaper3dEnabled?: boolean
+  wallpaper3dPath?: string
 }
 
 export type LockPersistState = {
@@ -115,13 +101,8 @@ export type DesktopItemPersist = {
   deletedFromCoordinate?: DesktopCoordinate
 }
 
-/** @deprecated 使用 DesktopItemPersist */
-export type DesktopFolderPersist = DesktopItemPersist
-
 export type DesktopItemsPersistState = {
   items: DesktopItemPersist[]
-  /** @deprecated v3 及更早；merge 时迁移到 items */
-  folders?: DesktopFolderPersist[]
 }
 
 /**
@@ -134,7 +115,6 @@ export type StorageSchema = {
   [STORAGE_KEYS.settings]: ZustandPersistEnvelope<SettingsPersistState>
   [STORAGE_KEYS.windows]: ZustandPersistEnvelope<WindowsPersistState>
   [STORAGE_KEYS.coordinates]: ZustandPersistEnvelope<CoordinatesPersistState>
-  [STORAGE_KEYS.legacyDesktop]: ZustandPersistEnvelope<LegacyDesktopPersistState>
   [STORAGE_KEYS.wallpaperBoot]: WallpaperBootPersist
   [STORAGE_KEYS.notepad]: ZustandPersistEnvelope<NotepadPersistState>
   [STORAGE_KEYS.paint]: ZustandPersistEnvelope<PaintPersistState>

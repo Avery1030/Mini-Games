@@ -6,6 +6,7 @@ import { WinCloseIcon } from '@/components/ui/WindowChromeIcons'
 import { type DesktopAppId } from '@/config/desktop'
 import { useWindowStore } from '@/store/window'
 import { createPortal } from 'react-dom'
+import { isServer } from '@/lib/env'
 import { cn } from '@/lib/cn'
 
 type AppIcon = ComponentType<{
@@ -82,7 +83,7 @@ export function TaskbarWindowPreview({
     }
   }, [windowId, posLeft, posBottom])
 
-  if (!pos || typeof document === 'undefined') return null
+  if (!pos || isServer) return null
 
   return createPortal(
     <div

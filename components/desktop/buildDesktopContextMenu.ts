@@ -86,7 +86,7 @@ const DESKTOP_MENU_CONFIG: MenuItemConfig<DesktopContextMenuCtx>[] = [
     id: 'emptyRecycleBin',
     label: (ctx) => ctx.labels.emptyRecycleBin,
     when: (ctx) => ctx.isRecycleBin,
-    disabled: (ctx) => ctx.deletedCount === 0,
+    disabled: () => false,
     onSelect: (ctx) => ctx.actions.emptyRecycleBin(),
   },
   {

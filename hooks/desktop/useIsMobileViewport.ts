@@ -1,12 +1,13 @@
 'use client'
 
 import { useSyncExternalStore } from 'react'
+import { isServer } from '@/lib/env'
 
 /** 与 Tailwind `md` 对齐：&lt;768px 为手机壳 */
 export const MOBILE_VIEWPORT_QUERY = '(max-width: 767px)'
 
 function subscribe(onStoreChange: () => void): () => void {
-  if (typeof window === 'undefined') return () => {}
+  if (isServer) return () => {}
   const mql = window.matchMedia(MOBILE_VIEWPORT_QUERY)
   mql.addEventListener('change', onStoreChange)
   return () => mql.removeEventListener('change', onStoreChange)

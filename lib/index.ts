@@ -4,7 +4,6 @@ export {
   appStorage,
   STORAGE_KEYS,
   isStorageKey,
-  migrateLegacyDesktopPersist,
   type StorageKey,
   type StorageSchema,
   type ThemeStorageValue,

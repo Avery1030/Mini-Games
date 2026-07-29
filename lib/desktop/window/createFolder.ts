@@ -107,17 +107,8 @@ export function createDesktopTextDocumentWindow(
   return win
 }
 
-export function removeDesktopFolderWindow(id: DesktopAppId): boolean {
-  return unregisterDesktopWindow(id)
-}
-
 export function removeDesktopItemWindow(id: DesktopAppId): boolean {
   return unregisterDesktopWindow(id)
-}
-
-/** @deprecated 使用 renameDesktopItemWindow */
-export function renameDesktopFolderWindow(id: DesktopAppId, title: string): boolean {
-  return renameDesktopItemWindow(id, 'folder', title)
 }
 
 export function renameDesktopItemWindow(
@@ -137,30 +128,6 @@ export function renameDesktopItemWindow(
   }
   refreshDesktopWindow(id)
   return true
-}
-
-/**
- * @deprecated 名称唯一性请用 lib/desktop/itemsTree.isSiblingTitleTaken
- * 保留兼容：全局同 kind 窗口标题检测
- */
-export function isDesktopItemTitleTaken(
-  kind: Extract<DesktopItemKind, 'folder' | 'textDocument'>,
-  title: string,
-  excludeId?: DesktopAppId,
-): boolean {
-  const key = normalizeTitle(title)
-  if (!key) return false
-  return listDesktopWindows().some(
-    (w) =>
-      w.kind === kind &&
-      w.id !== excludeId &&
-      normalizeTitle(w.title ?? '') === key,
-  )
-}
-
-/** @deprecated */
-export function isFolderTitleTaken(title: string, excludeId?: DesktopAppId): boolean {
-  return isDesktopItemTitleTaken('folder', title, excludeId)
 }
 
 /** 解析图标/窗口显示名：动态 title 优先，内置走 i18n；用户文件按类型加后缀 */

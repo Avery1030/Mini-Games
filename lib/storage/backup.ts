@@ -7,11 +7,10 @@ export const BACKUP_VERSION = 1
 
 /**
  * 参与导入导出的 storage key。
- * - 排除 legacyDesktop：仅迁移用
  * - 排除 lock：锁屏会话绑定本机临时密码，跨设备还原无意义且可能误锁
  */
 export const BACKUP_STORAGE_KEYS: StorageKey[] = STORAGE_KEY_LIST.filter(
-  (key) => key !== STORAGE_KEYS.legacyDesktop && key !== STORAGE_KEYS.lock,
+  (key) => key !== STORAGE_KEYS.lock,
 )
 
 export type AppBackupSnapshot = {

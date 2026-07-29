@@ -9,7 +9,6 @@ export {
 } from './DesktopWindow'
 export {
   DESKTOP_WINDOWS,
-  DESKTOP_APP_DEFINITIONS,
   getDesktopWindow,
   getAppDefinition,
   getDesktopAppDefinitions,
@@ -29,14 +28,10 @@ export {
 export {
   createDesktopFolderWindow,
   createDesktopTextDocumentWindow,
-  removeDesktopFolderWindow,
   removeDesktopItemWindow,
-  renameDesktopFolderWindow,
   renameDesktopItemWindow,
   resolveDesktopItemTitle,
   allocateDesktopCoordinate,
-  isFolderTitleTaken,
-  isDesktopItemTitleTaken,
   type CreateDesktopFolderOptions,
   type CreateDesktopTextDocumentOptions,
 } from './createFolder'

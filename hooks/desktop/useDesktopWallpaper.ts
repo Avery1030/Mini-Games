@@ -6,40 +6,45 @@ import {
   DESKTOP_BG_PLACEHOLDER_STYLE,
   CUSTOM_WALLPAPER_ID,
   isDesktopWallpaperDisplaySrc,
+  DEFAULT_WALLPAPER_FIT,
 } from '@/config/wallpapers'
-import { resolveMediaDisplayUrl } from '@/lib/idb'
-import { readWallpaperBoot } from '@/lib/wallpaper'
+import { readWallpaperBoot, resolveWallpaperDisplayUrl } from '@/lib/wallpaper'
 import { useSettingsStore } from '@/store/settings'
 
 function isSyncDisplaySrc(src: string): boolean {
-  // blob: 刷新后必挂，首屏同步路径只用 http(s) / data / 历史本地 API
   return isDesktopWallpaperDisplaySrc(src) && !src.startsWith('blob:')
 }
 
 /**
- * 桌面壁纸样式：首帧用占位，boot 同步恢复，settings 水合后再跟设置。
- * IndexedDB 壁纸异步解析为 blob URL。
+ * 桌面壁纸样式：首帧占位 → boot 同步恢复 → settings 水合后跟配置。
+ * VFS 壁纸异步解析为 blob URL。
  */
 export function useDesktopWallpaper(): CSSProperties {
   const wallpaperId = useSettingsStore((s) => s.wallpaperId)
-  const customWallpaperUrl = useSettingsStore((s) => s.customWallpaperUrl)
+  const wallpaperPath = useSettingsStore((s) => s.wallpaperPath)
+  const wallpaperFit = useSettingsStore((s) => s.wallpaperFit)
   const settingsHydrated = useSettingsStore((s) => s._hasHydrated)
   const [desktopBgStyle, setDesktopBgStyle] = useState<CSSProperties>(DESKTOP_BG_PLACEHOLDER_STYLE)
 
   useLayoutEffect(() => {
     const boot = readWallpaperBoot()
-    if (boot?.wallpaperId === CUSTOM_WALLPAPER_ID && boot.customUrl) {
-      if (boot.customUrl.startsWith('idb-wp:')) {
-        // 异步解析，先占位
+    if (boot?.wallpaperId === CUSTOM_WALLPAPER_ID && boot.wallpaperPath) {
+      if (boot.wallpaperPath.startsWith('/Wallpapers/')) {
         return
       }
-      if (isSyncDisplaySrc(boot.customUrl)) {
-        setDesktopBgStyle(resolveDesktopBackgroundStyle(CUSTOM_WALLPAPER_ID, boot.customUrl))
+      if (isSyncDisplaySrc(boot.wallpaperPath)) {
+        setDesktopBgStyle(
+          resolveDesktopBackgroundStyle(
+            CUSTOM_WALLPAPER_ID,
+            boot.wallpaperPath,
+            boot.wallpaperFit ?? DEFAULT_WALLPAPER_FIT,
+          ),
+        )
       }
       return
     }
     if (boot?.wallpaperId && boot.wallpaperId !== CUSTOM_WALLPAPER_ID) {
-      setDesktopBgStyle(resolveDesktopBackgroundStyle(boot.wallpaperId, null))
+      setDesktopBgStyle(resolveDesktopBackgroundStyle(boot.wallpaperId, null, boot.wallpaperFit))
     }
   }, [])
 
@@ -48,35 +53,40 @@ export function useDesktopWallpaper(): CSSProperties {
     const run = async () => {
       if (!settingsHydrated) {
         const boot = readWallpaperBoot()
-        if (boot?.wallpaperId === CUSTOM_WALLPAPER_ID && boot.customUrl?.startsWith('idb-wp:')) {
-          const resolved = await resolveMediaDisplayUrl(boot.customUrl)
+        if (boot?.wallpaperId === CUSTOM_WALLPAPER_ID && boot.wallpaperPath?.startsWith('/Wallpapers/')) {
+          const resolved = await resolveWallpaperDisplayUrl(boot.wallpaperPath)
           if (!cancelled && resolved) {
-            setDesktopBgStyle(resolveDesktopBackgroundStyle(CUSTOM_WALLPAPER_ID, resolved))
+            setDesktopBgStyle(
+              resolveDesktopBackgroundStyle(
+                CUSTOM_WALLPAPER_ID,
+                resolved,
+                boot.wallpaperFit ?? DEFAULT_WALLPAPER_FIT,
+              ),
+            )
           }
         }
         return
       }
-      const gallery = useSettingsStore.getState().wallpaperGallery
-      const ref =
-        customWallpaperUrl &&
-        (gallery.find((g) => g.url === customWallpaperUrl || g.thumbUrl === customWallpaperUrl)?.url ??
-          customWallpaperUrl)
-      if (wallpaperId === CUSTOM_WALLPAPER_ID && ref) {
-        const resolved = (await resolveMediaDisplayUrl(ref)) ?? (ref.startsWith('http') ? ref : null)
+      if (wallpaperId === CUSTOM_WALLPAPER_ID && wallpaperPath) {
+        const resolved =
+          (await resolveWallpaperDisplayUrl(wallpaperPath)) ??
+          (wallpaperPath.startsWith('http') || wallpaperPath.startsWith('/wallpapers/')
+            ? wallpaperPath
+            : null)
         if (!cancelled) {
-          setDesktopBgStyle(resolveDesktopBackgroundStyle(CUSTOM_WALLPAPER_ID, resolved))
+          setDesktopBgStyle(resolveDesktopBackgroundStyle(CUSTOM_WALLPAPER_ID, resolved, wallpaperFit))
         }
         return
       }
       if (!cancelled) {
-        setDesktopBgStyle(resolveDesktopBackgroundStyle(wallpaperId, null))
+        setDesktopBgStyle(resolveDesktopBackgroundStyle(wallpaperId, null, wallpaperFit))
       }
     }
     void run()
     return () => {
       cancelled = true
     }
-  }, [settingsHydrated, wallpaperId, customWallpaperUrl])
+  }, [settingsHydrated, wallpaperId, wallpaperPath, wallpaperFit])
 
   return desktopBgStyle
 }

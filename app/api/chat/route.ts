@@ -7,7 +7,6 @@ export const dynamic = 'force-dynamic'
 const SILICONFLOW_URL = 'https://api.siliconflow.cn/v1/chat/completions'
 const DEFAULT_MODEL = 'Qwen/Qwen2.5-7B-Instruct'
 const MAX_CONTENT_CHARS = 16_000
-const MAX_CONTEXT_MESSAGES = 40
 const MAX_TOKENS = 2048
 const UPSTREAM_HEADERS_TIMEOUT_MS = 45_000
 const UPSTREAM_IDLE_TIMEOUT_MS = 60_000
@@ -30,25 +29,8 @@ function mergeAbortSignals(signals: AbortSignal[]): AbortSignal {
   return controller.signal
 }
 
-function normalizeContext(raw: unknown): Array<{ role: 'user' | 'assistant'; content: string }> {
-  if (!Array.isArray(raw)) return []
-  const out: Array<{ role: 'user' | 'assistant'; content: string }> = []
-  for (const item of raw) {
-    if (!item || typeof item !== 'object') continue
-    const m = item as { role?: unknown; content?: unknown }
-    if (m.role !== 'user' && m.role !== 'assistant') continue
-    if (typeof m.content !== 'string') continue
-    const content = m.content.trim()
-    if (!content) continue
-    if ([...content].length > MAX_CONTENT_CHARS) continue
-    out.push({ role: m.role, content })
-    if (out.length >= MAX_CONTEXT_MESSAGES) break
-  }
-  return out
-}
-
 /**
- * 纯 SiliconFlow 流式代理：上下文由客户端传入（IndexedDB 会话），服务端不落盘。
+ * 纯 SiliconFlow 流式代理：仅接收本轮 content，不接收客户端历史消息。
  * API Key 来自环境变量 SILICONFLOW_API_KEY。
  */
 export async function POST(req: Request) {
@@ -79,16 +61,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'content too long' }, { status: 400 })
   }
 
-  const prior = normalizeContext((body as { messages?: unknown }).messages)
-  // 去掉尾部与本轮重复的 user（客户端可能已带上）
-  const trimmed =
-    prior.length > 0 && prior[prior.length - 1]?.role === 'user' && prior[prior.length - 1]?.content === content
-      ? prior.slice(0, -1)
-      : prior
-
+  // 刻意忽略 body.messages：用户确认后不携带历史长对话
   const messages: LlmMessage[] = [
     { role: 'system', content: AI_CHAT_SYSTEM_PROMPT },
-    ...trimmed.slice(-(MAX_CONTEXT_MESSAGES - 1)),
     { role: 'user', content },
   ]
 

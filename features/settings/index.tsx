@@ -1,27 +1,51 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { Panel, SplitPane } from '@/components/ui'
 import {
   CUSTOM_WALLPAPER_ID,
+  DEFAULT_WALLPAPER_FIT,
   getWallpaperLabel,
+  type WallpaperFitMode,
   type WallpaperId,
 } from '@/config/wallpapers'
 import { useSettingsStore } from '@/store/settings'
 import { useWallpaperSettings } from '@/hooks/settings'
 import {
-  AppearanceSection,
-  DataSection,
-  DisplaySection,
-  TaskbarSection,
-} from './sections'
+  importWallpaperImageFromUrl,
+  listWallpaperImages,
+  listWallpaperModels,
+  trashWallpaper,
+  uploadWallpaperImage,
+  uploadWallpaperModel,
+  type WallpaperAsset,
+} from '@/lib/wallpaper'
+import { AppearanceSection, DataSection, DisplaySection, TaskbarSection } from './sections'
 import { SETTINGS_SECTIONS, type SectionId, type WallpaperDraft } from './types'
 
 export interface SettingsProps {
   embedded?: boolean
+}
+
+function draftFromSettings(
+  wallpaperId: WallpaperId,
+  wallpaperPath: string | null,
+  wallpaper3dEnabled: boolean,
+  wallpaper3dPath: string | null,
+): WallpaperDraft {
+  if (wallpaper3dEnabled && wallpaper3dPath) {
+    return { kind: 'model', path: wallpaper3dPath }
+  }
+  if (wallpaperId === CUSTOM_WALLPAPER_ID && wallpaperPath) {
+    return { kind: 'image', path: wallpaperPath }
+  }
+  return {
+    kind: 'preset',
+    id: (wallpaperId === CUSTOM_WALLPAPER_ID ? 'classic-teal' : wallpaperId) as Exclude<WallpaperId, 'custom'>,
+  }
 }
 
 export function SettingsApp({ embedded = false }: SettingsProps = {}) {
@@ -29,60 +53,95 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
   const tw = useTranslations('wallpapers')
   const [section, setSection] = useState<SectionId>('display')
 
-  const { wallpaperId, customWallpaperUrl, gallery } = useWallpaperSettings()
+  const { wallpaperId, wallpaperPath, wallpaperFit, wallpaper3dEnabled, wallpaper3dPath } = useWallpaperSettings()
 
-  const inputRef = useRef<HTMLInputElement>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const modelInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [importUrl, setImportUrl] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
+  const [images, setImages] = useState<WallpaperAsset[]>([])
+  const [models, setModels] = useState<WallpaperAsset[]>([])
+  const [loadingList, setLoadingList] = useState(true)
 
   const [draft, setDraft] = useState<WallpaperDraft>(() =>
-    wallpaperId === CUSTOM_WALLPAPER_ID && customWallpaperUrl
-      ? { kind: 'custom', url: customWallpaperUrl }
-      : {
-          kind: 'preset',
-          id: (wallpaperId === CUSTOM_WALLPAPER_ID ? 'classic-teal' : wallpaperId) as Exclude<
-            WallpaperId,
-            'custom'
-          >,
-        },
+    draftFromSettings(wallpaperId, wallpaperPath, wallpaper3dEnabled, wallpaper3dPath),
   )
+  const [fit, setFit] = useState<WallpaperFitMode>(wallpaperFit || DEFAULT_WALLPAPER_FIT)
+  const [enable3d, setEnable3d] = useState(wallpaper3dEnabled)
+
+  const refreshLists = useCallback(async () => {
+    setLoadingList(true)
+    try {
+      const [imgs, mods] = await Promise.all([listWallpaperImages(), listWallpaperModels()])
+      setImages(imgs)
+      setModels(mods)
+    } catch (err) {
+      console.error('[settings] list wallpapers failed', err)
+      setImages([])
+      setModels([])
+    } finally {
+      setLoadingList(false)
+    }
+  }, [])
 
   useEffect(() => {
-    if (wallpaperId === CUSTOM_WALLPAPER_ID && customWallpaperUrl) {
-      setDraft({ kind: 'custom', url: customWallpaperUrl })
-    } else if (wallpaperId !== CUSTOM_WALLPAPER_ID) {
-      setDraft({ kind: 'preset', id: wallpaperId as Exclude<WallpaperId, 'custom'> })
-    }
-  }, [wallpaperId, customWallpaperUrl])
+    void refreshLists()
+  }, [refreshLists])
+
+  useEffect(() => {
+    setDraft(draftFromSettings(wallpaperId, wallpaperPath, wallpaper3dEnabled, wallpaper3dPath))
+    setFit(wallpaperFit || DEFAULT_WALLPAPER_FIT)
+    setEnable3d(wallpaper3dEnabled)
+  }, [wallpaperId, wallpaperPath, wallpaperFit, wallpaper3dEnabled, wallpaper3dPath])
 
   const dirty = useMemo(() => {
-    if (draft.kind === 'preset') return wallpaperId !== draft.id
-    return wallpaperId !== CUSTOM_WALLPAPER_ID || customWallpaperUrl !== draft.url
-  }, [draft, wallpaperId, customWallpaperUrl])
+    if (fit !== wallpaperFit) return true
+    if (enable3d !== wallpaper3dEnabled) return true
+    if (draft.kind === 'preset') {
+      return wallpaperId !== draft.id || (enable3d && wallpaper3dPath != null && draft.kind === 'preset')
+    }
+    if (draft.kind === 'image') {
+      return wallpaperId !== CUSTOM_WALLPAPER_ID || wallpaperPath !== draft.path
+    }
+    // model
+    return !wallpaper3dEnabled || wallpaper3dPath !== draft.path || !enable3d
+  }, [draft, fit, enable3d, wallpaperId, wallpaperPath, wallpaperFit, wallpaper3dEnabled, wallpaper3dPath])
 
-  const onPickFile = async (files: FileList | null) => {
+  const onPickImage = async (files: FileList | null) => {
     const file = files?.[0]
     if (!file) return
     setUploading(true)
     setUploadError(null)
     try {
-      const { saveWallpaperFromFile, wallpaperRef } = await import('@/lib/idb')
-      const rec = await saveWallpaperFromFile(file)
-      const url = wallpaperRef(rec.id)
-      useSettingsStore.getState().addToWallpaperGallery({
-        id: rec.id,
-        url,
-        thumbUrl: url,
-        name: file.name.replace(/\.[^.]+$/, '') || '上传壁纸',
-      })
-      setDraft({ kind: 'custom', url })
+      const asset = await uploadWallpaperImage(file)
+      await refreshLists()
+      setDraft({ kind: 'image', path: asset.path })
+      setEnable3d(false)
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : '上传失败')
     } finally {
       setUploading(false)
-      if (inputRef.current) inputRef.current.value = ''
+      if (imageInputRef.current) imageInputRef.current.value = ''
+    }
+  }
+
+  const onPickModel = async (files: FileList | null) => {
+    const file = files?.[0]
+    if (!file) return
+    setUploading(true)
+    setUploadError(null)
+    try {
+      const asset = await uploadWallpaperModel(file)
+      await refreshLists()
+      setDraft({ kind: 'model', path: asset.path })
+      setEnable3d(true)
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : '上传失败')
+    } finally {
+      setUploading(false)
+      if (modelInputRef.current) modelInputRef.current.value = ''
     }
   }
 
@@ -95,22 +154,10 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
     }
     setUploading(true)
     try {
-      const { fetchRemoteImageBlob, saveWallpaperFromRemote, wallpaperRef } = await import('@/lib/idb')
-      const { blob, contentType } = await fetchRemoteImageBlob(url)
-      const rec = await saveWallpaperFromRemote({
-        blob,
-        contentType,
-        name: '导入链接',
-        nameHint: url,
-      })
-      const ref = wallpaperRef(rec.id)
-      useSettingsStore.getState().addToWallpaperGallery({
-        id: rec.id,
-        url: ref,
-        thumbUrl: ref,
-        name: '导入链接',
-      })
-      setDraft({ kind: 'custom', url: ref })
+      const asset = await importWallpaperImageFromUrl(url)
+      await refreshLists()
+      setDraft({ kind: 'image', path: asset.path })
+      setEnable3d(false)
       setImportUrl('')
     } catch (err) {
       setImportError(err instanceof Error ? err.message : '导入失败')
@@ -119,23 +166,64 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
     }
   }
 
+  const onRemoveAsset = async (path: string) => {
+    setUploadError(null)
+    try {
+      await trashWallpaper(path, [wallpaperPath, wallpaper3dPath])
+      await refreshLists()
+      if (draft.kind === 'image' && draft.path === path) {
+        setDraft({ kind: 'preset', id: 'classic-teal' })
+      }
+      if (draft.kind === 'model' && draft.path === path) {
+        setDraft({ kind: 'preset', id: 'classic-teal' })
+        setEnable3d(false)
+      }
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : '删除失败')
+    }
+  }
+
   const onApplyWallpaper = () => {
     const { applyWallpaper } = useSettingsStore.getState()
     if (draft.kind === 'preset') {
-      applyWallpaper(draft.id)
+      applyWallpaper({
+        wallpaperId: draft.id,
+        wallpaperFit: fit,
+        wallpaper3dEnabled: enable3d,
+        wallpaper3dPath: enable3d ? wallpaper3dPath : null,
+      })
       return
     }
-    applyWallpaper(CUSTOM_WALLPAPER_ID, draft.url)
+    if (draft.kind === 'image') {
+      applyWallpaper({
+        wallpaperId: CUSTOM_WALLPAPER_ID,
+        wallpaperPath: draft.path,
+        wallpaperFit: fit,
+        wallpaper3dEnabled: enable3d,
+        wallpaper3dPath: enable3d ? wallpaper3dPath : null,
+      })
+      return
+    }
+    applyWallpaper({
+      wallpaperId: wallpaperId === CUSTOM_WALLPAPER_ID ? CUSTOM_WALLPAPER_ID : wallpaperId,
+      wallpaperPath: wallpaperPath,
+      wallpaperFit: fit,
+      wallpaper3dEnabled: true,
+      wallpaper3dPath: draft.path,
+    })
+    setEnable3d(true)
   }
 
-  const draftLabel = draft.kind === 'preset' ? getWallpaperLabel(draft.id, false, tw) : tw('custom')
+  const draftLabel =
+    draft.kind === 'preset'
+      ? getWallpaperLabel(draft.id, false, tw)
+      : draft.kind === 'image'
+        ? tw('custom')
+        : t('modelLabel')
 
   return (
     <div
-      className={cn(
-        embeddedAppShell(embedded, 'flex text-sm text-on-chrome bg-window font-pixel'),
-        !embedded && 'p-4',
-      )}
+      className={cn(embeddedAppShell(embedded, 'flex text-sm text-on-chrome bg-window font-pixel'), !embedded && 'p-4')}
     >
       <div className='flex-1 min-h-0 flex m-2'>
         <SplitPane defaultSize={108} minSize={88} maxSize={200} storageKey='split:settings'>
@@ -167,33 +255,31 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
           <div className='h-full min-h-0 min-w-0 flex flex-col overflow-hidden'>
             {section === 'display' && (
               <DisplaySection
-                embedded={embedded}
                 draft={draft}
                 draftLabel={draftLabel}
                 dirty={dirty}
-                gallery={gallery}
+                fit={fit}
+                enable3d={enable3d}
+                images={images}
+                models={models}
+                loadingList={loadingList}
                 uploading={uploading}
                 uploadError={uploadError}
                 importUrl={importUrl}
                 importError={importError}
-                inputRef={inputRef}
+                imageInputRef={imageInputRef}
+                modelInputRef={modelInputRef}
                 onDraftChange={setDraft}
-                onPickFile={onPickFile}
+                onFitChange={setFit}
+                onEnable3dChange={setEnable3d}
+                onPickImage={onPickImage}
+                onPickModel={onPickModel}
                 onImportLink={onImportLink}
                 onImportUrlChange={setImportUrl}
-                onRemoveGalleryItem={(id, url) => {
-                  useSettingsStore.getState().removeFromWallpaperGallery(id)
-                  if (url.startsWith('idb-wp:')) {
-                    void import('@/lib/idb').then(({ parseWallpaperRef, deleteWallpaper }) => {
-                      const wid = parseWallpaperRef(url)
-                      if (wid) void deleteWallpaper(wid)
-                    })
-                  }
-                  if (draft.kind === 'custom' && draft.url === url) {
-                    setDraft({ kind: 'preset', id: 'classic-teal' })
-                  }
-                }}
+                onRemoveAsset={(path) => void onRemoveAsset(path)}
                 onApply={onApplyWallpaper}
+                activeImagePath={wallpaperId === CUSTOM_WALLPAPER_ID ? wallpaperPath : null}
+                activeModelPath={wallpaper3dEnabled ? wallpaper3dPath : null}
               />
             )}
             {section === 'appearance' && <AppearanceSection />}

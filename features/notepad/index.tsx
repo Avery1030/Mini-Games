@@ -10,6 +10,7 @@ import { createNoteApi, deleteNoteApi, fetchNote, fetchNoteList, updateNoteApi }
 import { NoteEditor } from './NoteEditor'
 import { NoteSidebar } from './NoteSidebar'
 import type { NoteMeta } from './types'
+import { subscribeOpenNote, takePendingOpenNote } from './pendingOpen'
 
 export interface NotepadProps {
   embedded?: boolean
@@ -86,10 +87,20 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
       try {
         const list = await refreshList()
         if (cancelled) return
-        const prefer = (lastNoteId && list.find((n) => n.id === lastNoteId)?.id) || list[0]?.id || null
-        if (prefer) {
-          const note = await fetchNote(prefer)
-          if (!cancelled) applyNote(note)
+        const pendingId = takePendingOpenNote()
+        // 允许打开不在 /Documents 列表中的笔记（如回收站预览）
+        const preferId = pendingId || lastNoteId || list[0]?.id || null
+        if (preferId) {
+          try {
+            const note = await fetchNote(preferId)
+            if (!cancelled) applyNote(note)
+          } catch {
+            const fallback = list[0]?.id
+            if (fallback && fallback !== preferId && !cancelled) {
+              const note = await fetchNote(fallback)
+              if (!cancelled) applyNote(note)
+            }
+          }
         }
       } catch (err) {
         if (!cancelled) toast.error(err instanceof Error ? err.message : t('loadFail'))
@@ -104,6 +115,9 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  useEffect(() => subscribeOpenNote((id) => {
+    void openNote(id)
+  }), [openNote])
   const onCreate = async () => {
     if (dirty) {
       const ok = await modal.confirm({

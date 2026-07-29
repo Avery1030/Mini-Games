@@ -1,4 +1,5 @@
 import type { DesktopAppId } from '@/config/desktop'
+import { isServer } from '@/lib/env'
 
 const TASKBAR_ATTR = 'data-taskbar-app-id'
 
@@ -13,7 +14,7 @@ export type DockPose = {
 
 /** 按 app id 查找任务栏按钮矩形 */
 export function queryTaskbarAppButton(id: string): HTMLElement | null {
-  if (typeof document === 'undefined') return null
+  if (isServer) return null
   return document.querySelector(`[${TASKBAR_ATTR}="${CSS.escape(id)}"]`)
 }
 
@@ -21,11 +22,7 @@ export function queryTaskbarAppButton(id: string): HTMLElement | null {
  * 计算窗口飞向/飞出任务栏按钮时的 translate + scale
  *（transform-origin: center center，left/top 仍为 0）
  */
-export function getDockPoseForWindow(
-  appId: string,
-  winWidth: number,
-  winHeight: number,
-): DockPose | null {
+export function getDockPoseForWindow(appId: string, winWidth: number, winHeight: number): DockPose | null {
   const el = queryTaskbarAppButton(appId)
   const w = Math.max(1, winWidth)
   const h = Math.max(1, winHeight)
@@ -45,7 +42,7 @@ export function getDockPoseForWindow(
   }
 
   // 无按钮时：落到视口底边对应水平中心
-  if (typeof window === 'undefined') return null
+  if (isServer) return null
   const cx = window.innerWidth / 2
   const cy = window.innerHeight - 24
   return {

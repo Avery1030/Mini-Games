@@ -1,8 +1,8 @@
 import type { ComponentType } from 'react'
-import { apps } from '@/messages/zh-CN.json'
+import zhCN from '@/messages/zh-CN.json'
 
 /** 内置应用 id（与 messages.apps 对齐） */
-export type BuiltinAppId = keyof typeof apps
+export type BuiltinAppId = keyof typeof zhCN.apps
 
 /**
  * 桌面图标 / 窗口 id。
@@ -91,7 +91,7 @@ export const DEFAULT_WINDOW_CHROME: WindowChromeOptions = {
   maximizable: true,
 }
 
-const BUILTIN_APP_IDS = new Set(Object.keys(apps))
+const BUILTIN_APP_IDS = new Set(Object.keys(zhCN.apps))
 
 export function isBuiltinAppId(id: string): id is BuiltinAppId {
   return BUILTIN_APP_IDS.has(id)

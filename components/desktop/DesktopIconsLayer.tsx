@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { useShallow } from 'zustand/react/shallow'
+import { File, FileText, Image as ImageIcon } from 'lucide-react'
 import { DesktopIcon, ICON_VIS } from './DesktopIcon'
 import { DesktopDragGhost } from './DesktopDragGhost'
 import { useDesktopApps, useDesktopHydrated, useDesktopIconDrag, useMarqueeSelect, MarqueeOverlay } from '@/hooks/desktop'
@@ -13,11 +14,21 @@ import { useDesktopItemsStore } from '@/store/desktopItems'
 import { EMPTY_SELECTION_IDS, useDesktopSelectionStore } from '@/store/desktopSelection'
 import { isDesktopRootItem, sortIdsByCoordinate } from '@/lib/desktop'
 import { CELL_GAP, CELL_SIZE, coordinateToPosition, resolveCoordinate } from '@/lib/desktop'
-import { resolveDesktopItemTitle } from '@/lib/desktop/window'
+import { resolveDesktopItemTitle, allocateDesktopCoordinate } from '@/lib/desktop/window'
 import { scalePx } from '@/lib/uiScale'
 import { toast } from '@/components/ui'
-import type { DesktopAppId, DesktopAppView } from '@/config/desktop'
-import { allocateDesktopCoordinate } from '@/lib/desktop/window'
+import type { DesktopAppId, DesktopAppView, DesktopCoordinate } from '@/config/desktop'
+import { DEFAULT_WINDOW_RUNTIME } from '@/config/desktop'
+import { isImagePath } from '@/features/image-viewer/api'
+import { openVfsFile } from '@/lib/desktop/openVfsFile'
+import { getExtension, vfs, type FileNode } from '@/lib/vfs'
+import { isVfsDesktopFileId, useDesktopVfsStore } from '@/store/desktopVfs'
+
+function vfsFileIcon(node: FileNode) {
+  if (isImagePath(node.path)) return ImageIcon
+  if (getExtension(node.path).toLowerCase() === 'txt') return FileText
+  return File
+}
 
 function useRootDesktopIcons(): DesktopAppView[] {
   const apps = useDesktopApps()
@@ -41,6 +52,40 @@ function useRootDesktopIcons(): DesktopAppView[] {
   }, [apps, hasHydrated, hidePlaceholderIcons, items])
 }
 
+function useVfsDesktopIconViews(): DesktopAppView[] {
+  const files = useDesktopVfsStore((s) => s.files)
+  const coordinates = useDesktopStore((s) => s.coordinates)
+
+  useEffect(() => {
+    const store = useDesktopStore.getState()
+    const occupied = Object.values(store.coordinates)
+    let prefer: DesktopCoordinate = [5, 1]
+    for (const file of files) {
+      if (store.coordinates[file.path]) continue
+      const coord = allocateDesktopCoordinate(occupied, prefer)
+      store.ensureCoordinate(file.path, coord)
+      occupied.push(coord)
+      prefer = coord
+    }
+  }, [files])
+
+  return useMemo(() => {
+    return files.map((file) => {
+      const Icon = vfsFileIcon(file)
+      return {
+        id: file.path,
+        icon: Icon,
+        defaultCoordinate: (coordinates[file.path] ?? [5, 1]) as DesktopCoordinate,
+        title: file.name,
+        width: 0,
+        height: 0,
+        ...DEFAULT_WINDOW_RUNTIME,
+        coordinate: (coordinates[file.path] ?? [5, 1]) as DesktopCoordinate,
+      } satisfies DesktopAppView
+    })
+  }, [coordinates, files])
+}
+
 /**
  * 桌面图标网格 + 多选拖拽 + 框选。自行订阅 store。
  */
@@ -55,6 +100,7 @@ export function DesktopIconsLayer() {
   const copyItems = useDesktopItemsStore((s) => s.copyItems)
   const moveItemsToDesktop = useDesktopItemsStore((s) => s.moveItemsToDesktop)
   const items = useDesktopItemsStore((s) => s.items)
+  const refreshDesktopVfs = useDesktopVfsStore((s) => s.refresh)
   const selectedIds = useDesktopSelectionStore((s) =>
     s.scope.type === 'desktop' ? s.selectedIds : EMPTY_SELECTION_IDS,
   )
@@ -67,16 +113,36 @@ export function DesktopIconsLayer() {
   )
 
   const desktopRef = useRef<HTMLDivElement>(null)
-  const desktopIcons = useRootDesktopIcons()
+  const appIcons = useRootDesktopIcons()
+  const vfsIcons = useVfsDesktopIconViews()
+  const desktopIcons = useMemo(() => [...appIcons, ...vfsIcons], [appIcons, vfsIcons])
   const itemsRef = useRef(items)
   itemsRef.current = items
 
+  useEffect(() => {
+    void refreshDesktopVfs()
+  }, [refreshDesktopVfs])
+
   const orderedUserIds = useMemo(() => {
-    const user = desktopIcons.filter((a) => a.kind === 'folder' || a.kind === 'textDocument')
+    const user = desktopIcons.filter(
+      (a) => a.kind === 'folder' || a.kind === 'textDocument' || isVfsDesktopFileId(a.id),
+    )
     return sortIdsByCoordinate(user)
   }, [desktopIcons])
 
   const selectableUserIdSet = useMemo(() => new Set(orderedUserIds), [orderedUserIds])
+
+  const handleOpen = useCallback(
+    async (id: DesktopAppId) => {
+      if (isVfsDesktopFileId(id)) {
+        const kind = await openVfsFile(id)
+        if (kind === 'unsupported') toast.warning(td('cannotOpenVfsFile'))
+        return
+      }
+      openWindow(id)
+    },
+    [openWindow, td],
+  )
 
   const onFsDrop = useCallback(
     (result: {
@@ -85,24 +151,43 @@ export function DesktopIconsLayer() {
       copy: boolean
     }) => {
       const { ids, target, copy } = result
+      const vfsIds = ids.filter((id) => isVfsDesktopFileId(id))
+      const itemIds = ids.filter((id) => !isVfsDesktopFileId(id))
+
       if (target.type === 'recycleBin') {
-        const moved = moveItemsToRecycleBin(ids)
-        if (moved.length === 0) {
-          toast.warning(td('cannotDeleteBuiltin'))
-          return true
+        if (vfsIds.length > 0) {
+          void (async () => {
+            for (const path of vfsIds) {
+              try {
+                await vfs.trash(path)
+              } catch {
+                // ignore
+              }
+            }
+            await refreshDesktopVfs()
+          })()
+        }
+        if (itemIds.length > 0) {
+          const moved = moveItemsToRecycleBin(itemIds)
+          if (moved.length === 0 && vfsIds.length === 0) {
+            toast.warning(td('cannotDeleteBuiltin'))
+            return true
+          }
         }
         useDesktopSelectionStore.getState().clear()
         return true
       }
       if (target.type === 'folder' && target.folderId) {
+        if (vfsIds.length > 0) toast.warning(td('cannotMoveVfsIntoFolder'))
+        if (itemIds.length === 0) return true
         if (copy) {
-          void copyItems(ids, target.folderId).then((created) => {
+          void copyItems(itemIds, target.folderId).then((created) => {
             if (created.length === 0) toast.warning(td('cannotMoveIntoFolder'))
             else useDesktopSelectionStore.getState().clear()
           })
           return true
         }
-        const moved = moveItemsIntoFolder(ids, target.folderId)
+        const moved = moveItemsIntoFolder(itemIds, target.folderId)
         if (moved.length === 0) {
           toast.warning(td('cannotMoveIntoFolder'))
           return true
@@ -111,14 +196,13 @@ export function DesktopIconsLayer() {
         return true
       }
       if (target.type === 'desktop') {
-        // 已在桌面根上的图标（含内置应用、桌面文件夹）：交给格点重排，不要走 FS move
-        const needsBringToDesktop = ids.some((id) => {
+        const needsBringToDesktop = itemIds.some((id) => {
           const item = itemsRef.current.find((i) => i.id === id)
           return Boolean(item && !item.isDeleted && !isDesktopRootItem(item))
         })
         if (!needsBringToDesktop) return false
         if (copy) {
-          void copyItems(ids, null).then((created) => {
+          void copyItems(itemIds, null).then((created) => {
             if (created.length === 0) toast.warning(td('pasteFail'))
           })
           return true
@@ -126,14 +210,21 @@ export function DesktopIconsLayer() {
         const prefer = allocateDesktopCoordinate(Object.values(useDesktopStore.getState().coordinates), [
           4, 1,
         ])
-        const moved = moveItemsToDesktop(ids, prefer)
+        const moved = moveItemsToDesktop(itemIds, prefer)
         if (moved.length === 0) toast.warning(td('moveFail'))
         else useDesktopSelectionStore.getState().clear()
         return true
       }
       return false
     },
-    [moveItemsToRecycleBin, moveItemsIntoFolder, copyItems, moveItemsToDesktop, td],
+    [
+      copyItems,
+      moveItemsIntoFolder,
+      moveItemsToDesktop,
+      moveItemsToRecycleBin,
+      refreshDesktopVfs,
+      td,
+    ],
   )
 
   const resolveDragIds = useCallback((id: DesktopAppId) => {
@@ -144,7 +235,9 @@ export function DesktopIconsLayer() {
     (id: DesktopAppId, mods: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) => {
       const sel = useDesktopSelectionStore.getState()
       const isUser = desktopIcons.some(
-        (a) => a.id === id && (a.kind === 'folder' || a.kind === 'textDocument'),
+        (a) =>
+          a.id === id &&
+          (a.kind === 'folder' || a.kind === 'textDocument' || isVfsDesktopFileId(a.id)),
       )
       if (!isUser) {
         sel.clear()
@@ -168,7 +261,9 @@ export function DesktopIconsLayer() {
     useDesktopIconDrag({
       apps: desktopIcons,
       desktopRef,
-      onOpen: openWindow,
+      onOpen: (id) => {
+        void handleOpen(id)
+      },
       onCommit: updateCoordinates,
       resolveDragIds,
       onFsDrop,
@@ -202,8 +297,8 @@ export function DesktopIconsLayer() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement | null
-      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
+      const el = e.target as HTMLElement | null
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return
       const scope = useDesktopSelectionStore.getState().scope
       if (scope.type !== 'desktop') return
       const meta = e.metaKey || e.ctrlKey
@@ -212,7 +307,21 @@ export function DesktopIconsLayer() {
           const ids = useDesktopSelectionStore.getState().selectedIds
           if (ids.length === 0) return
           e.preventDefault()
-          moveItemsToRecycleBin(ids)
+          const vfsIds = ids.filter((id) => isVfsDesktopFileId(id))
+          const itemIds = ids.filter((id) => !isVfsDesktopFileId(id))
+          if (vfsIds.length > 0) {
+            void (async () => {
+              for (const path of vfsIds) {
+                try {
+                  await vfs.trash(path)
+                } catch {
+                  // ignore
+                }
+              }
+              await refreshDesktopVfs()
+            })()
+          }
+          if (itemIds.length > 0) moveItemsToRecycleBin(itemIds)
           useDesktopSelectionStore.getState().clear()
         }
         return
@@ -242,13 +351,13 @@ export function DesktopIconsLayer() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [orderedUserIds, moveItemsToRecycleBin, td])
+  }, [orderedUserIds, moveItemsToRecycleBin, refreshDesktopVfs, td])
 
   return (
     <div
       ref={desktopRef}
       data-fs-drop='desktop'
-      className='relative h-full min-h-0 grid items-start content-start'
+      className='relative z-[1] h-full min-h-0 grid items-start content-start'
       style={{
         gridAutoRows: CELL_SIZE,
         gridTemplateColumns: `repeat(auto-fill, ${CELL_SIZE}px)`,
@@ -275,7 +384,11 @@ export function DesktopIconsLayer() {
             <DesktopIcon
               key={app.id}
               appId={app.id}
-              label={resolveDesktopItemTitle(app, tApps)}
+              label={
+                isVfsDesktopFileId(app.id)
+                  ? (app.title ?? app.id)
+                  : resolveDesktopItemTitle(app, tApps)
+              }
               showLabel={showIconLabels}
               iconBoxPx={iconBoxPx}
               labelClass={iconVis.label}
@@ -301,7 +414,11 @@ export function DesktopIconsLayer() {
           top={dragPixel.top}
           icon={<DragIcon size={iconVis.px} strokeWidth={iconVis.stroke} absoluteStrokeWidth />}
           iconBoxPx={iconBoxPx}
-          label={resolveDesktopItemTitle(draggingApp, tApps)}
+          label={
+            isVfsDesktopFileId(draggingApp.id)
+              ? (draggingApp.title ?? draggingApp.id)
+              : resolveDesktopItemTitle(draggingApp, tApps)
+          }
           showLabel={showIconLabels}
           labelClass={iconVis.label}
           count={draggingIds.length}

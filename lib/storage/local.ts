@@ -11,7 +11,6 @@ export type {
   CoordinatesPersistState,
   NotepadPersistState,
   PaintPersistState,
-  LegacyDesktopPersistState,
   WallpaperBootPersist,
 } from './schema'
 
@@ -21,7 +20,7 @@ function canUseStorage(): boolean {
 
 /**
  * 类型化 localStorage：
- * - getRaw / setRaw：字符串（zustand / next-themes / 迁移）
+ * - getRaw / setRaw：字符串（zustand / next-themes）
  * - getJson / setJson：按 StorageSchema 解析
  * - createStateStorage：给 zustand persist 用
  */
@@ -90,7 +89,7 @@ export const appStorage = {
    * `name` 必须是已登记的 StorageKey。
    */
   createStateStorage(options?: {
-    /** 每次读写前钩子（如 legacy / idb 迁移） */
+    /** 每次读写前钩子 */
     before?: () => void | Promise<void>
   }): {
     getItem: (name: string) => string | null | Promise<string | null>

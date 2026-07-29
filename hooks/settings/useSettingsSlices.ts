@@ -30,8 +30,10 @@ export function useWallpaperSettings() {
   return useSettingsStore(
     useShallow((s) => ({
       wallpaperId: s.wallpaperId,
-      customWallpaperUrl: s.customWallpaperUrl,
-      gallery: s.wallpaperGallery,
+      wallpaperPath: s.wallpaperPath,
+      wallpaperFit: s.wallpaperFit,
+      wallpaper3dEnabled: s.wallpaper3dEnabled,
+      wallpaper3dPath: s.wallpaper3dPath,
     })),
   )
 }

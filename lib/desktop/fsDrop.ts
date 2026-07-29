@@ -1,9 +1,7 @@
 import type { DesktopAppId } from '@/config/desktop'
+import { isServer } from '@/lib/env'
 
-export type FsDropTarget =
-  | { type: 'desktop' }
-  | { type: 'folder'; folderId: DesktopAppId }
-  | { type: 'recycleBin' }
+export type FsDropTarget = { type: 'desktop' } | { type: 'folder'; folderId: DesktopAppId } | { type: 'recycleBin' }
 
 /**
  * 探测文件系统投放目标（自上而下）。
@@ -15,7 +13,7 @@ export function hitFsDropTarget(
   clientY: number,
   ignoreIds?: ReadonlySet<DesktopAppId>,
 ): FsDropTarget | null {
-  if (typeof document === 'undefined') return null
+  if (isServer) return null
   const els = document.elementsFromPoint(clientX, clientY)
 
   for (const el of els) {

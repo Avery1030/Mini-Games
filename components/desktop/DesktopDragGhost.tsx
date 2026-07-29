@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import type { ReactNode } from 'react'
 import { CELL_SIZE } from '@/lib/desktop'
 import { cn } from '@/lib/cn'
+import { isServer } from '@/lib/env'
 
 type DesktopDragGhostProps = {
   left: number
@@ -29,14 +30,11 @@ export function DesktopDragGhost({
   count,
   copy,
 }: DesktopDragGhostProps) {
-  if (typeof document === 'undefined') return null
+  if (isServer) return null
 
   return createPortal(
     <div
-      className={cn(
-        'fixed z-[10000] pointer-events-none flex flex-col items-center gap-1 px-0.5 py-1',
-        'opacity-90',
-      )}
+      className={cn('fixed z-[10000] pointer-events-none flex flex-col items-center gap-1 px-0.5 py-1', 'opacity-90')}
       style={{ left, top, width: CELL_SIZE }}
       aria-hidden
     >
@@ -67,9 +65,7 @@ export function DesktopDragGhost({
         </span>
       )}
       {copy && (
-        <span className='text-[10px] px-1 bg-chrome text-on-chrome border border-chrome-dark font-pixel'>
-          +
-        </span>
+        <span className='text-[10px] px-1 bg-chrome text-on-chrome border border-chrome-dark font-pixel'>+</span>
       )}
     </div>,
     document.body,

@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { resolveMediaDisplayUrl, resolveMediaThumbUrl } from '@/lib/idb'
+import { resolveWallpaperDisplayUrl, resolveWallpaperThumbUrl } from '@/lib/wallpaper'
 
-/** 将 idb-wp: / http(s) 解析为可展示的 blob/http URL（不信任持久化的死 blob:） */
+/** 将 VFS / public / http(s) 壁纸引用解析为可展示 URL */
 export function useResolvedMediaUrl(
   src: string | null | undefined,
   kind: 'full' | 'thumb' = 'full',
@@ -11,6 +11,7 @@ export function useResolvedMediaUrl(
   const [url, setUrl] = useState<string | null>(() => {
     if (!src) return null
     if (src.startsWith('http://') || src.startsWith('https://')) return src
+    if (src.startsWith('/wallpapers/')) return src
     return null
   })
 
@@ -20,12 +21,11 @@ export function useResolvedMediaUrl(
       setUrl(null)
       return
     }
-    if (src.startsWith('http://') || src.startsWith('https://')) {
+    if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('/wallpapers/')) {
       setUrl(src)
       return
     }
-    // blob: 可能是刷新前残留，统一走 resolve（仅本会话 live 的才放行）
-    const resolve = kind === 'thumb' ? resolveMediaThumbUrl : resolveMediaDisplayUrl
+    const resolve = kind === 'thumb' ? resolveWallpaperThumbUrl : resolveWallpaperDisplayUrl
     void resolve(src)
       .then((u) => {
         if (!cancelled) setUrl(u)

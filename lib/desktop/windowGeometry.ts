@@ -1,4 +1,4 @@
-import { isServer } from '@/lib/env'
+import { isClient, isServer } from '@/lib/env'
 import type { WindowBounds } from '@/config/desktop'
 import { getDockPoseForWindow } from '@/lib/desktop/dockPose'
 
@@ -79,8 +79,8 @@ export function resolveDockPose(appId: string | undefined, w: number, h: number)
   const dock = appId ? getDockPoseForWindow(appId, w, h) : null
   if (dock) return { ...dock, opacity: 0 }
   return {
-    x: typeof window !== 'undefined' ? window.innerWidth / 2 - w / 2 : 0,
-    y: typeof window !== 'undefined' ? window.innerHeight - 40 - h / 2 : 0,
+    x: isClient ? window.innerWidth / 2 - w / 2 : 0,
+    y: isClient ? window.innerHeight - 40 - h / 2 : 0,
     scale: 0.08,
     opacity: 0,
   }

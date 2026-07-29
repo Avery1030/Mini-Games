@@ -1,30 +1,26 @@
 import { http, HttpError } from '@/lib/http'
 
 export type StreamChatOptions = {
+  /** 本轮用户输入；不携带历史消息 */
   content: string
-  /** 发给模型的近期上下文（不含本轮 user；服务端会再追加 content） */
-  messages?: Array<{ role: 'user' | 'assistant'; content: string }>
   signal?: AbortSignal
   onDelta: (text: string) => void
 }
 
 type ChatRequestBody = {
   content: string
-  messages?: Array<{ role: 'user' | 'assistant'; content: string }>
 }
 
 /**
  * 经全局 http 调用 /api/chat，解析 OpenAI 兼容 SSE。
+ * 仅发送本轮 content，不附带历史上下文。
  */
 export async function streamChatCompletion(options: StreamChatOptions): Promise<void> {
   let res: Response
   try {
     res = await http.post<Response, ChatRequestBody>(
       '/api/chat',
-      {
-        content: options.content,
-        messages: options.messages,
-      },
+      { content: options.content },
       {
         headers: {
           Accept: 'text/event-stream',

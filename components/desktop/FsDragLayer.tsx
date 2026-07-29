@@ -12,6 +12,7 @@ import { useDesktopStore } from '@/store/desktop'
 import { toast } from '@/components/ui'
 import { useTranslations } from 'next-intl'
 import { CELL_SIZE, pointerToCoordinate } from '@/lib/desktop'
+import { isServer } from '@/lib/env'
 import { cn } from '@/lib/cn'
 
 /**
@@ -117,7 +118,7 @@ export function FsDragLayer() {
     }
   }, [td])
 
-  if (!session?.moved || !pixel || typeof document === 'undefined') return null
+  if (!session?.moved || !pixel || isServer) return null
 
   const primary = items.find((i) => i.id === session.primaryId)
   const Icon = primary?.kind === 'textDocument' ? FileText : Folder
@@ -125,10 +126,7 @@ export function FsDragLayer() {
 
   return createPortal(
     <div
-      className={cn(
-        'fixed z-[10000] pointer-events-none flex flex-col items-center gap-1',
-        'opacity-90',
-      )}
+      className={cn('fixed z-[10000] pointer-events-none flex flex-col items-center gap-1', 'opacity-90')}
       style={{ left: pixel.left, top: pixel.top, width: CELL_SIZE }}
       aria-hidden
     >
@@ -141,9 +139,7 @@ export function FsDragLayer() {
         )}
       </div>
       {session.copy && (
-        <span className='text-[10px] px-1 bg-chrome text-on-chrome border border-chrome-dark font-pixel'>
-          +
-        </span>
+        <span className='text-[10px] px-1 bg-chrome text-on-chrome border border-chrome-dark font-pixel'>+</span>
       )}
     </div>,
     document.body,

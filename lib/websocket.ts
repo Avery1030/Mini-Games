@@ -1,3 +1,5 @@
+import { isServer } from '@/lib/env'
+
 /**
  * 托管 WebSocket（浏览器）。
  *
@@ -8,13 +10,7 @@
 /** 与 DOM `WebSocket.send` 可接受类型对齐（排除 SharedArrayBuffer） */
 export type WebSocketSendData = string | Blob | BufferSource
 
-export type ConnectionStatus =
-  | 'idle'
-  | 'connecting'
-  | 'open'
-  | 'closing'
-  | 'closed'
-  | 'reconnecting'
+export type ConnectionStatus = 'idle' | 'connecting' | 'open' | 'closing' | 'closed' | 'reconnecting'
 
 export type WebSocketCloseInfo = {
   code: number
@@ -34,14 +30,7 @@ export type WebSocketReadyContext = {
 }
 
 /** 错误分级，便于埋点 / 监控区分 */
-export type WebSocketErrorKind =
-  | 'send'
-  | 'connect'
-  | 'transform'
-  | 'heartbeat'
-  | 'ready'
-  | 'socket'
-  | 'queue'
+export type WebSocketErrorKind = 'send' | 'connect' | 'transform' | 'heartbeat' | 'ready' | 'socket' | 'queue'
 
 export type ManagedWebSocketError = {
   kind: WebSocketErrorKind
@@ -535,9 +524,7 @@ export function createManagedWebSocket(options: ManagedWebSocketOptions): Manage
       if (!socket || socket.readyState !== WebSocket.OPEN) return
       try {
         const payload =
-          typeof options.heartbeatPayload === 'function'
-            ? options.heartbeatPayload()
-            : options.heartbeatPayload
+          typeof options.heartbeatPayload === 'function' ? options.heartbeatPayload() : options.heartbeatPayload
         if (payload != null) {
           socket.send(payload)
           log('debug', 'heartbeat')
@@ -578,8 +565,7 @@ export function createManagedWebSocket(options: ManagedWebSocketOptions): Manage
     }
   }
 
-  const canReconnect = () =>
-    !stopped && !intentionalClose && !permanentFailure && shouldReconnect
+  const canReconnect = () => !stopped && !intentionalClose && !permanentFailure && shouldReconnect
 
   const scheduleReconnect = () => {
     if (!canReconnect()) return
@@ -785,7 +771,7 @@ export function createManagedWebSocket(options: ManagedWebSocketOptions): Manage
   }
 
   const onVisibility = () => {
-    if (typeof document === 'undefined' || document.visibilityState !== 'visible') return
+    if (isServer || document.visibilityState !== 'visible') return
     if (!canReconnect()) return
     const state = socket?.readyState
     if (state === WebSocket.OPEN) {
@@ -799,7 +785,7 @@ export function createManagedWebSocket(options: ManagedWebSocketOptions): Manage
     reconnectNow()
   }
 
-  if (typeof window !== 'undefined') {
+  if (!isServer) {
     if (listenNetwork) {
       window.addEventListener('online', onOnline)
       window.addEventListener('offline', onOffline)
@@ -810,7 +796,7 @@ export function createManagedWebSocket(options: ManagedWebSocketOptions): Manage
   }
 
   const removeEnvListeners = () => {
-    if (typeof window === 'undefined') return
+    if (isServer) return
     window.removeEventListener('online', onOnline)
     window.removeEventListener('offline', onOffline)
     document.removeEventListener('visibilitychange', onVisibility)

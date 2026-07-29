@@ -14,6 +14,7 @@ import {
   Bot,
   AppWindow,
   ImageIcon,
+  HardDrive,
 } from 'lucide-react'
 import { Minesweeper } from '@/features/minesweeper'
 import { Tetris } from '@/features/tetris'
@@ -147,15 +148,15 @@ export class CmdWindow extends DesktopWindow {
 }
 
 /**
- * 回收站：内置桌面应用，列出软删除的桌面资源。
+ * 回收站：内置桌面应用，列出 VFS `/Trash` 中的软删除文件。
  * RecycleBinApp 延迟加载，避免 apps → feature → store → registry 循环依赖。
  */
 export class RecycleBinWindow extends DesktopWindow {
   readonly id = 'recycleBin' as const
   readonly icon = Trash2
   readonly defaultCoordinate: DesktopCoordinate = [1, 5]
-  readonly width = 520
-  readonly height = 400
+  readonly width = 640
+  readonly height = 440
   readonly showInStartMenu = false
   private appComponent: ComponentType<{ embedded?: boolean }> | null = null
 
@@ -302,7 +303,7 @@ export class AiChatWindow extends DesktopWindow {
 }
 
 /**
- * 图片查看器：本地上传 / URL 导入，存 IndexedDB，支持多选浏览。
+ * 图片查看器：VFS `/Pictures` 图库；支持路径启动与 URL 临时预览。
  */
 export class ImageViewerWindow extends DesktopWindow {
   readonly id = 'imageViewer' as const
@@ -311,6 +312,31 @@ export class ImageViewerWindow extends DesktopWindow {
   readonly width = 760
   readonly height = 560
   readonly app = ImageViewerApp
+}
+
+/**
+ * 资源管理器：浏览 VFS 绝对路径目录。
+ */
+export class FileExplorerWindow extends DesktopWindow {
+  readonly id = 'fileExplorer' as const
+  readonly icon = HardDrive
+  readonly defaultCoordinate: DesktopCoordinate = [2, 5]
+  readonly width = 560
+  readonly height = 420
+  private appComponent: ComponentType<{ embedded?: boolean }> | null = null
+
+  get app(): ComponentType<{ embedded?: boolean }> {
+    if (!this.appComponent) {
+      this.appComponent = (props: { embedded?: boolean }) => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { FileExplorerApp } = require('@/features/file-explorer') as {
+          FileExplorerApp: ComponentType<{ embedded?: boolean }>
+        }
+        return createElement(FileExplorerApp, { embedded: props.embedded })
+      }
+    }
+    return this.appComponent
+  }
 }
 
 /**
