@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { LayoutGrid } from 'lucide-react'
 import { useDesktopApps, useDesktopHydrated } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
@@ -33,6 +33,7 @@ type MobileDockProps = {
  */
 export function MobileDock({ onOpenRecents, recentsOpen }: MobileDockProps) {
   const tApps = useTranslations('apps')
+  const locale = useLocale()
   const t = useTranslations('mobile')
   const apps = useDesktopApps()
   const hasHydrated = useDesktopHydrated()
@@ -50,15 +51,16 @@ export function MobileDock({ onOpenRecents, recentsOpen }: MobileDockProps) {
         id,
         icon: desk.icon,
         title: resolveDesktopItemTitle(
-          fromList ?? { id, title: desk.title, kind: desk.kind },
+          fromList ?? { id, title: desk.title, titles: desk.titles, kind: desk.kind },
           tApps,
+          locale,
         ),
         isOpen: fromList?.isOpen ?? false,
         minimized: fromList?.minimized ?? false,
       })
     }
     return items
-  }, [apps, hasHydrated, tApps])
+  }, [apps, hasHydrated, tApps, locale])
 
   const openCount = useMemo(
     () => (hasHydrated ? apps.filter((a) => a.isOpen).length : 0),

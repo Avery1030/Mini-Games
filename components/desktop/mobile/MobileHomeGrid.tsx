@@ -1,6 +1,6 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useVisibleDesktopIcons } from '@/components/desktop/DesktopIconsLayer'
 import { useDesktopHydrated } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
@@ -18,6 +18,7 @@ type MobileHomeGridProps = {
  */
 export function MobileHomeGrid({ dockIds = [] }: MobileHomeGridProps) {
   const tApps = useTranslations('apps')
+  const locale = useLocale()
   const t = useTranslations('mobile')
   const hasHydrated = useDesktopHydrated()
   const icons = useVisibleDesktopIcons()
@@ -39,7 +40,7 @@ export function MobileHomeGrid({ dockIds = [] }: MobileHomeGridProps) {
       <div className='grid grid-cols-4 gap-x-3 gap-y-5'>
         {icons.map((app) => {
           const Icon = app.icon
-          const title = resolveDesktopItemTitle(app, tApps)
+          const title = resolveDesktopItemTitle(app, tApps, locale)
           const canOpen = Boolean(app.app)
           const inDock = dockSet.has(app.id)
           return (

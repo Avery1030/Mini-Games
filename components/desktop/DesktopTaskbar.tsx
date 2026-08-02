@@ -9,7 +9,7 @@ import {
   useState,
   type MouseEvent as ReactMouseEvent,
 } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { StartMenu } from './StartMenu'
 import LangSwitch from './LangSwitch'
@@ -35,6 +35,7 @@ export function DesktopTaskbar() {
   const t = useTranslations()
   const tWin = useTranslations('window')
   const tApps = useTranslations('apps')
+  const locale = useLocale()
   const apps = useDesktopApps()
   const hasHydrated = useDesktopHydrated()
   const openWindow = useWindowStore((s) => s.openWindow)
@@ -58,12 +59,12 @@ export function DesktopTaskbar() {
       .sort((a, b) => a.openOrder - b.openOrder || a.zIndex - b.zIndex)
       .map((app) => ({
         id: app.id,
-        title: resolveDesktopItemTitle(app, tApps),
+        title: resolveDesktopItemTitle(app, tApps, locale),
         icon: app.icon,
         minimized: app.minimized,
         isActive: app.active,
       }))
-  }, [apps, hasHydrated, tApps])
+  }, [apps, hasHydrated, tApps, locale])
 
   const byId = useMemo(() => new Map(taskbarWindows.map((w) => [w.id, w])), [taskbarWindows])
 

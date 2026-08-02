@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useShallow } from 'zustand/react/shallow'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
@@ -31,6 +31,7 @@ type TabId = 'applications' | 'programs'
 export function TaskManagerApp({ embedded = false }: TaskManagerAppProps) {
   const t = useTranslations('taskManager')
   const tApps = useTranslations('apps')
+  const locale = useLocale()
   const apps = useDesktopApps()
   const hasHydrated = useDesktopHydrated()
   const { openWindow, forceCloseWindow, minimizeAllWindows } = useWindowStore(
@@ -56,12 +57,12 @@ export function TaskManagerApp({ embedded = false }: TaskManagerAppProps) {
         else if (a.active) statusKey = 'statusActive'
         return {
           id: a.id,
-          title: resolveDesktopItemTitle(a, tApps),
+          title: resolveDesktopItemTitle(a, tApps, locale),
           statusKey,
           Icon: a.icon,
         }
       })
-  }, [apps, hasHydrated, tApps])
+  }, [apps, hasHydrated, tApps, locale])
 
   const programs = useMemo(() => {
     if (!hasHydrated) return []
@@ -69,11 +70,11 @@ export function TaskManagerApp({ embedded = false }: TaskManagerAppProps) {
       .filter((a) => a.app && a.showInStartMenu !== false && a.id !== 'taskManager')
       .slice()
       .sort((a, b) =>
-        resolveDesktopItemTitle(a, tApps).localeCompare(resolveDesktopItemTitle(b, tApps), undefined, {
+        resolveDesktopItemTitle(a, tApps, locale).localeCompare(resolveDesktopItemTitle(b, tApps, locale), undefined, {
           sensitivity: 'base',
         }),
       )
-  }, [apps, hasHydrated, tApps])
+  }, [apps, hasHydrated, tApps, locale])
 
   const selectedRunning = running.find((r) => r.id === selectedId) ?? null
   const selectedProgram = programs.find((p) => p.id === selectedId) ?? null
@@ -112,7 +113,7 @@ export function TaskManagerApp({ embedded = false }: TaskManagerAppProps) {
       toast.warning(t('selectFirst'))
       return
     }
-    const title = resolveDesktopItemTitle(selectedProgram, tApps)
+    const title = resolveDesktopItemTitle(selectedProgram, tApps, locale)
     openWindow(selectedProgram.id)
     setTab('applications')
     setSelectedId(selectedProgram.id)
@@ -230,7 +231,7 @@ export function TaskManagerApp({ embedded = false }: TaskManagerAppProps) {
               {programs.map((prog) => {
                 const selected = selectedId === prog.id
                 const Icon = prog.icon
-                const title = resolveDesktopItemTitle(prog, tApps)
+                const title = resolveDesktopItemTitle(prog, tApps, locale)
                 return (
                   <li key={prog.id}>
                     <button

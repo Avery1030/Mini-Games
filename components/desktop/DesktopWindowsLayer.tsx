@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { WindowsWindow } from './WindowsWindow'
 import { useDesktopWindowApps, useDesktopHydrated } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
@@ -16,6 +16,7 @@ import { getDesktopWindow, resolveDesktopItemTitle } from '@/lib/desktop/window'
  */
 export function DesktopWindowsLayer() {
   const tApps = useTranslations('apps')
+  const locale = useLocale()
   const apps = useDesktopWindowApps()
   const hasHydrated = useDesktopHydrated()
   const closeWindow = useWindowStore((s) => s.closeWindow)
@@ -58,7 +59,7 @@ export function DesktopWindowsLayer() {
           <WindowsWindow
             key={app.id}
             id={app.id}
-            title={resolveDesktopItemTitle(app, tApps)}
+            title={resolveDesktopItemTitle(app, tApps, locale)}
             width={width}
             height={height}
             defaultPosition={defaultPosition}

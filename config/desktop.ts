@@ -1,14 +1,17 @@
 import type { ComponentType } from 'react'
-import zhCN from '@/messages/zh-CN.json'
 
-/** 内置应用 id（与 messages.apps 对齐） */
-export type BuiltinAppId = keyof typeof zhCN.apps
+/** 内置应用 id（字符串；是否内置由 registry.isBuiltinAppId 判定） */
+export type BuiltinAppId = string
 
 /**
  * 桌面图标 / 窗口 id。
- * 内置为 BuiltinAppId；动态项（如文件夹）为运行时字符串（folder_xxx）。
+ * 内置为已注册的 app id；动态项（如文件夹）为运行时字符串（folder_xxx）。
  */
-export type DesktopAppId = BuiltinAppId | (string & {})
+export type DesktopAppId = string
+
+/** 应用标题多语言（注册时写入，优先于 messages.apps.*） */
+export type AppLocale = 'zh-CN' | 'en-US'
+export type AppTitles = Partial<Record<AppLocale, string>>
 
 export type DesktopCoordinate = [number, number]
 
@@ -37,8 +40,10 @@ export interface DesktopAppDefinition {
   width?: number
   height?: number
   chrome?: WindowChromeOptions
-  /** 运行时标题；有则优先于 i18n `apps.*` */
+  /** 运行时标题；有则优先于 titles / i18n `apps.*` */
   title?: string
+  /** 多语言标题（registerBuiltinApp 写入） */
+  titles?: AppTitles
   kind?: DesktopItemKind
   /** 是否出现在开始菜单「程序」里；文件夹默认 false */
   showInStartMenu?: boolean
@@ -89,10 +94,4 @@ export const DEFAULT_WINDOW_CHROME: WindowChromeOptions = {
   resizable: true,
   minimizable: true,
   maximizable: true,
-}
-
-const BUILTIN_APP_IDS = new Set(Object.keys(zhCN.apps))
-
-export function isBuiltinAppId(id: string): id is BuiltinAppId {
-  return BUILTIN_APP_IDS.has(id)
 }

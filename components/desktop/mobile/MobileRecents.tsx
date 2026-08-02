@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { X } from 'lucide-react'
 import { useDesktopApps, useDesktopHydrated } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
@@ -18,6 +18,7 @@ type MobileRecentsProps = {
  */
 export function MobileRecents({ open, onClose }: MobileRecentsProps) {
   const tApps = useTranslations('apps')
+  const locale = useLocale()
   const t = useTranslations('mobile')
   const apps = useDesktopApps()
   const hasHydrated = useDesktopHydrated()
@@ -64,7 +65,7 @@ export function MobileRecents({ open, onClose }: MobileRecentsProps) {
           <ul className='min-h-0 flex-1 space-y-2 overflow-y-auto px-3 pb-2'>
             {openApps.map((app) => {
               const Icon = app.icon
-              const title = resolveDesktopItemTitle(app, tApps)
+              const title = resolveDesktopItemTitle(app, tApps, locale)
               return (
                 <li key={app.id}>
                   <div

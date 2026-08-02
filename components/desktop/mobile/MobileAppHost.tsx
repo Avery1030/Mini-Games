@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { ChevronLeft, X } from 'lucide-react'
 import { useDesktopWindowApps, useDesktopHydrated } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
@@ -23,6 +23,7 @@ function pickForeground(apps: DesktopAppView[]): DesktopAppView | null {
  */
 export function MobileAppHost() {
   const tApps = useTranslations('apps')
+  const locale = useLocale()
   const t = useTranslations('mobile')
   const apps = useDesktopWindowApps()
   const hasHydrated = useDesktopHydrated()
@@ -37,7 +38,7 @@ export function MobileAppHost() {
   if (!foreground?.app) return null
 
   const App = foreground.app
-  const title = resolveDesktopItemTitle(foreground, tApps)
+  const title = resolveDesktopItemTitle(foreground, tApps, locale)
 
   return (
     <div

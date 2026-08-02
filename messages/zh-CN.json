@@ -92,6 +92,15 @@
     "skip": "跳过",
     "hint": "按 Esc / Enter / 空格，或点击「跳过」直接进入"
   },
+  "systemError": {
+    "notFoundTitle": "找不到文件",
+    "notFoundMessage": "Windows 找不到该路径。\n请检查地址是否正确，或返回桌面继续使用。",
+    "errorTitle": "应用程序错误",
+    "errorCode": "错误",
+    "errorMessage": "此页面遇到意外错误。\n你可以重试当前操作，或返回桌面。",
+    "backHome": "返回桌面",
+    "retry": "重试"
+  },
   "window": {
     "minimize": "最小化",
     "maximize": "最大化",

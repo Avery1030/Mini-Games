@@ -6,63 +6,49 @@ import {
   type DesktopWindowRuntime,
 } from '@/config/desktop'
 import { ensureWindowSlot, removeWindowSlot, type DesktopWindow } from './DesktopWindow'
-import {
-  CalculatorWindow,
-  CmdWindow,
-  DocumentWindow,
-  KlineChartViewerWindow,
-  AiChatWindow,
-  ImageViewerWindow,
-  FileExplorerWindow,
-  LogWindow,
-  MinesweeperWindow,
-  NotepadWindow,
-  PaintWindow,
-  RecycleBinWindow,
-  SettingsWindow,
-  TetrisWindow,
-  TaskManagerWindow,
-} from './apps'
 
 type RegistryListener = () => void
 
 /**
- * 内置窗口单例（启动时固定）。
- * 新增内置应用：写子类 → 加入此数组 → messages 里加 apps.id。
+ * 内置窗口列表：由 registerBuiltinApp → pushBuiltinWindow 在模块加载时填充。
+ * 新增应用：features/<name>/register.ts + builtins.ts 一行 import。
  */
-const BUILTIN_WINDOWS: DesktopWindow[] = [
-  new MinesweeperWindow(),
-  new TetrisWindow(),
-  new DocumentWindow(),
-  new LogWindow(),
-  new NotepadWindow(),
-  new PaintWindow(),
-  new SettingsWindow(),
-  new CalculatorWindow(),
-  new RecycleBinWindow(),
-  new CmdWindow(),
-  new KlineChartViewerWindow(),
-  new AiChatWindow(),
-  new TaskManagerWindow(),
-  new ImageViewerWindow(),
-  new FileExplorerWindow(),
-]
+const builtinWindows: DesktopWindow[] = []
+const builtinIdSet = new Set<string>()
 
 const dynamicWindows = new Map<DesktopAppId, DesktopWindow>()
-const windowMap = new Map<DesktopAppId, DesktopWindow>(BUILTIN_WINDOWS.map((w) => [w.id, w]))
+const windowMap = new Map<DesktopAppId, DesktopWindow>()
 const listeners = new Set<RegistryListener>()
 
-let definitionsSnapshot: DesktopAppDefinition[] = BUILTIN_WINDOWS.map((w) => w.toDefinition())
-let windowsSnapshot: DesktopWindow[] = [...BUILTIN_WINDOWS]
+let definitionsSnapshot: DesktopAppDefinition[] = []
+let windowsSnapshot: DesktopWindow[] = []
 
 function rebuildSnapshots() {
-  windowsSnapshot = [...BUILTIN_WINDOWS, ...dynamicWindows.values()]
+  windowsSnapshot = [...builtinWindows, ...dynamicWindows.values()]
   definitionsSnapshot = windowsSnapshot.map((w) => w.toDefinition())
 }
 
 function notify() {
   rebuildSnapshots()
   for (const listener of listeners) listener()
+}
+
+/**
+ * 注册内置窗口（启动期由 registerBuiltinApp 调用）。
+ * 成功返回 true；id 冲突返回 false。
+ */
+export function pushBuiltinWindow(win: DesktopWindow): boolean {
+  if (windowMap.has(win.id)) return false
+  builtinWindows.push(win)
+  builtinIdSet.add(win.id)
+  windowMap.set(win.id, win)
+  notify()
+  return true
+}
+
+/** 是否为已注册的内置应用 id（不含动态文件夹/文稿） */
+export function isBuiltinAppId(id: string): boolean {
+  return builtinIdSet.has(id)
 }
 
 export function subscribeDesktopRegistry(listener: RegistryListener): () => void {
@@ -90,8 +76,8 @@ export function listDesktopWindows(): DesktopWindow[] {
   return windowsSnapshot
 }
 
-/** 内置窗口列表（只读） */
-export const DESKTOP_WINDOWS: readonly DesktopWindow[] = BUILTIN_WINDOWS
+/** 内置窗口列表（与 builtinWindows 同引用，加载期会增长） */
+export const DESKTOP_WINDOWS: readonly DesktopWindow[] = builtinWindows
 
 type DesktopCoordController = {
   ensureCoordinate: (id: DesktopAppId, coordinate: DesktopCoordinate) => void
@@ -177,7 +163,7 @@ export function isDynamicDesktopWindow(id: DesktopAppId): boolean {
 }
 
 export function createDefaultWindows(): Record<DesktopAppId, DesktopWindowRuntime> {
-  const list = [...BUILTIN_WINDOWS, ...dynamicWindows.values()]
+  const list = [...builtinWindows, ...dynamicWindows.values()]
   return Object.fromEntries(list.map((w) => [w.id, { ...DEFAULT_WINDOW_RUNTIME }])) as Record<
     DesktopAppId,
     DesktopWindowRuntime
@@ -185,7 +171,7 @@ export function createDefaultWindows(): Record<DesktopAppId, DesktopWindowRuntim
 }
 
 export function createDefaultCoordinates(): Record<DesktopAppId, DesktopCoordinate> {
-  const list = [...BUILTIN_WINDOWS, ...dynamicWindows.values()]
+  const list = [...builtinWindows, ...dynamicWindows.values()]
   return Object.fromEntries(
     list.map((w) => [w.id, [...w.defaultCoordinate] as DesktopCoordinate]),
   ) as Record<DesktopAppId, DesktopCoordinate>

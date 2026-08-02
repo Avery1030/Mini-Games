@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react'
 import {
   DEFAULT_WINDOW_CHROME,
+  type AppTitles,
   type DesktopAppDefinition,
   type DesktopAppId,
   type DesktopCoordinate,
@@ -69,8 +70,11 @@ export abstract class DesktopWindow {
   readonly width: number = 400
   readonly height: number = 320
 
-  /** 运行时显示名；动态项（文件夹）必填，内置项可省略走 i18n */
+  /** 运行时显示名；动态项（文件夹）必填，内置项可省略走 titles / i18n */
   title?: string
+
+  /** 多语言标题（registerBuiltinApp）；优先于 messages.apps.* */
+  readonly titles?: AppTitles
 
   readonly kind: DesktopItemKind = 'app'
 
@@ -156,6 +160,7 @@ export abstract class DesktopWindow {
       height: this.height,
       chrome: this.chrome,
       title: this.title,
+      titles: this.titles,
       kind: this.kind,
       showInStartMenu: this.showInStartMenu,
       showOnDesktop: this.showOnDesktop,

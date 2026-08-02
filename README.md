@@ -180,16 +180,16 @@ Trash 内节点对外可带 `originalPath`、`trashedAt`。禁止对回收站内
 - `DesktopWindow.ts` 只依赖 `WindowController` **接口**
 - `store/window` 初始化时 `registerWindowController(...)` 注入实现
 - 类上的 `open()` / `close()` 经 `getController()` 委托
-- 部分应用在 `apps.ts` 用 **getter + lazy** `require` 推迟加载 feature
+- 部分应用在 `register.ts` 用 **loadApp + lazy** `require` 推迟加载 feature
 - **不要**从 `lib/vfs/index` 再导出会拉 `store/window` 的「打开文件」辅助；放在 `lib/desktop/`
 
 ### 窗口默认尺寸 vs 记忆尺寸
 
 ```
-实际宽高 = runtime.bounds ?? apps.ts 的 width/height ?? 兜底值
+实际宽高 = runtime.bounds ?? register 时的 width/height ?? 兜底值
 ```
 
-`useWindowGeometry` 用 `seedRef` **仅在挂载时**读一次。改 `apps.ts` 默认高度后若本地已有该窗 `bounds`，需清该窗记忆或清站点存储后再开。
+`useWindowGeometry` 用 `seedRef` **仅在挂载时**读一次。改默认高度后若本地已有该窗 `bounds`，需清该窗记忆或清站点存储后再开。
 
 ---
 
@@ -206,12 +206,12 @@ components/
   desktop/mobile/         窄屏手机主屏
   ui/                     Win95 通用控件
 config/                   桌面类型与静态配置
-features/                 各应用 UI 与业务（一应用一目录）
+features/                 各应用 UI 与业务（一应用一目录 + register.ts）
 hooks/desktop/            桌面交互 hooks
 lib/
   vfs/                    VFS 核心 + IdbAdapter（用户文件唯一入口）
   desktop/                几何、吸附、路由、openVfsFile、vfsFileActions…
-  desktop/window/         DesktopWindow / apps / registry
+  desktop/window/         DesktopWindow / defineApp / registry / builtins
   idb/                    仅 imageUtils / objectUrl / fetchRemote（无业务库）
   ai-chat/                智聊独立 IDB + .chat 文件
   wallpaper/              壁纸解析 / VFS API / boot
@@ -238,8 +238,10 @@ store/                    Zustand stores（含 imageViewer、desktopVfs）
 | 文件                 | 职责                                               |
 | -------------------- | -------------------------------------------------- |
 | `DesktopWindow.ts`   | 抽象基类 + Controller 注入                         |
-| `apps.ts`            | 所有内置 `*Window` 子类（含 `FileExplorerWindow`） |
-| `registry.ts`        | `BUILTIN_WINDOWS`、动态注册、snapshot 订阅         |
+| `defineApp.ts`       | `registerBuiltinApp` 声明式注册                    |
+| `builtins.ts`        | side-effect import 各 `features/*/register.ts`     |
+| `apps.ts`            | 仅动态项：`FolderWindow` / `TextDocumentWindow`    |
+| `registry.ts`        | 内置/动态窗口表、snapshot 订阅                     |
 | `createFolder.ts` 等 | 动态文件夹 / 文稿创建时同步 registry + stores      |
 
 相关：
@@ -297,14 +299,14 @@ store/                    Zustand stores（含 imageViewer、desktopVfs）
 ### 新增内置应用（清单）
 
 1. 在 `features/<name>/` 实现 UI（建议支持 `embedded`）
-2. 在 `lib/desktop/window/apps.ts` 新增 `XxxWindow extends DesktopWindow`
-3. 把实例加入 `registry.ts` 的 `BUILTIN_WINDOWS`
-4. `messages` 双语文案补 `apps.<id>`（`BuiltinAppId` 由 `messages.apps` 推导）
-5. 按需：`showOnDesktop` / `showInStartMenu`
-6. 若有新 localStorage：先改 `lib/storage/keys.ts` + schema，再写 store
-7. 若读写用户文件：**只调 `vfs.*`**，不要新建业务 IDB store
+2. 新建 `features/<name>/register.ts`，调用一次 `registerBuiltinApp({ id, icon, app|loadApp, titles, ... })`  
+   （请从 `@/lib/desktop/window/defineApp` 导入，避免经 barrel 产生循环依赖）
+3. 在 `lib/desktop/window/builtins.ts` 增加一行：`import '@/features/<name>/register'`
+4. 按需：`showOnDesktop` / `showInStartMenu`；手机 Dock 改 `MOBILE_DOCK_APP_IDS`
+5. 若有新 localStorage：先改 `lib/storage/keys.ts` + schema，再写 store
+6. 若读写用户文件：**只调 `vfs.*`**，不要新建业务 IDB store
 
-**易翻车点：** 静态 import 造成 `registry ↔ store/window ↔ feature` 环（打开文件辅助勿挂进 `lib/vfs` 桶）；改默认尺寸被旧 `bounds` 盖住。
+**易翻车点：** 静态 import 造成 `registry ↔ store/window ↔ feature` 环时改用 `loadApp`；打开文件辅助勿挂进 `lib/vfs` 桶；改默认尺寸被旧 `bounds` 盖住。
 
 ### 改持久化 / 修「刷新错乱」
 

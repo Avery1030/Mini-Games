@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { DesktopIconsLayer, useVisibleDesktopIcons } from './DesktopIconsLayer'
 import { DesktopWindowsLayer } from './DesktopWindowsLayer'
 import { DesktopTaskbar } from './DesktopTaskbar'
@@ -35,6 +35,7 @@ import { openVfsFile } from '@/lib/desktop/openVfsFile'
 export function WindowsDesktop() {
   const td = useTranslations('desktop')
   const tApps = useTranslations('apps')
+  const locale = useLocale()
   const tRecycle = useTranslations('recycleBin')
   const tm = useTranslations('modal')
   const desktopBgStyle = useDesktopWallpaper()
@@ -194,7 +195,7 @@ export function WindowsDesktop() {
           },
           rename: () => {
             if (!iconId || !app || (app.kind !== 'folder' && app.kind !== 'textDocument')) return
-            void handleRenameItem(iconId, app.kind, resolveDesktopItemTitle(app, tApps))
+            void handleRenameItem(iconId, app.kind, resolveDesktopItemTitle(app, tApps, locale))
           },
           copy: () => {
             useDesktopSelectionStore.getState().copySelection()

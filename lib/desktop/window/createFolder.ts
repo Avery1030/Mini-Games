@@ -1,7 +1,7 @@
-import type { DesktopAppDefinition, DesktopAppId, DesktopCoordinate, DesktopItemKind } from '@/config/desktop'
-import { isBuiltinAppId } from '@/config/desktop'
+import type { AppLocale, DesktopAppDefinition, DesktopAppId, DesktopCoordinate, DesktopItemKind } from '@/config/desktop'
 import { FolderWindow, TextDocumentWindow } from './apps'
 import {
+  getDesktopWindow,
   registerDesktopWindow,
   refreshDesktopWindow,
   unregisterDesktopWindow,
@@ -130,17 +130,29 @@ export function renameDesktopItemWindow(
   return true
 }
 
-/** 解析图标/窗口显示名：动态 title 优先，内置走 i18n；用户文件按类型加后缀 */
+/** 解析图标/窗口显示名：动态 title → titles[locale] → i18n apps.* → id */
 export function resolveDesktopItemTitle(
-  app: Pick<DesktopAppDefinition, 'id' | 'title' | 'kind'>,
+  app: Pick<DesktopAppDefinition, 'id' | 'title' | 'kind' | 'titles'>,
   tApps: (key: string) => string,
+  locale?: string,
 ): string {
-  const base =
-    app.title && app.title.trim()
-      ? app.title.trim()
-      : isBuiltinAppId(app.id)
-        ? tApps(app.id)
-        : app.id
+  const win = getDesktopWindow(app.id)
+  const titles = app.titles ?? win?.titles
+  const loc = locale as AppLocale | undefined
+  const fromTitles =
+    (loc && titles?.[loc]) || titles?.['zh-CN'] || titles?.['en-US'] || undefined
+
+  let fromI18n: string | undefined
+  if (!app.title?.trim() && !fromTitles) {
+    try {
+      const v = tApps(app.id)
+      if (v && v !== app.id && !v.startsWith('apps.')) fromI18n = v
+    } catch {
+      /* missing key */
+    }
+  }
+
+  const base = app.title?.trim() || fromTitles || fromI18n || app.id
   return formatItemDisplayName(app.kind ?? 'app', base)
 }
 

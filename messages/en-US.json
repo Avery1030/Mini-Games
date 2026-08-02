@@ -92,6 +92,15 @@
     "skip": "Skip",
     "hint": "Press Esc / Enter / Space, or click Skip to enter"
   },
+  "systemError": {
+    "notFoundTitle": "File not found",
+    "notFoundMessage": "Windows cannot find this path.\nCheck the address, or return to the desktop.",
+    "errorTitle": "Application Error",
+    "errorCode": "Error",
+    "errorMessage": "This page ran into an unexpected error.\nYou can retry, or return to the desktop.",
+    "backHome": "Back to desktop",
+    "retry": "Retry"
+  },
   "window": {
     "minimize": "Minimize",
     "maximize": "Maximize",

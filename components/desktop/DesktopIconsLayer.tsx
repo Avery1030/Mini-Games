@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useShallow } from 'zustand/react/shallow'
 import { File, FileText, Image as ImageIcon } from 'lucide-react'
 import { DesktopIcon, ICON_VIS } from './DesktopIcon'
@@ -91,6 +91,7 @@ function useVfsDesktopIconViews(): DesktopAppView[] {
  */
 export function DesktopIconsLayer() {
   const tApps = useTranslations('apps')
+  const locale = useLocale()
   const td = useTranslations('desktop')
   const hasHydrated = useDesktopHydrated()
   const openWindow = useWindowStore((s) => s.openWindow)
@@ -387,7 +388,7 @@ export function DesktopIconsLayer() {
               label={
                 isVfsDesktopFileId(app.id)
                   ? (app.title ?? app.id)
-                  : resolveDesktopItemTitle(app, tApps)
+                  : resolveDesktopItemTitle(app, tApps, locale)
               }
               showLabel={showIconLabels}
               iconBoxPx={iconBoxPx}
@@ -417,7 +418,7 @@ export function DesktopIconsLayer() {
           label={
             isVfsDesktopFileId(draggingApp.id)
               ? (draggingApp.title ?? draggingApp.id)
-              : resolveDesktopItemTitle(draggingApp, tApps)
+              : resolveDesktopItemTitle(draggingApp, tApps, locale)
           }
           showLabel={showIconLabels}
           labelClass={iconVis.label}

@@ -20,11 +20,18 @@ export {
   unregisterDesktopWindow,
   registerDesktopCoordController,
   isDynamicDesktopWindow,
+  isBuiltinAppId,
+  pushBuiltinWindow,
   refreshDesktopWindow,
   createDefaultWindows,
   createDefaultCoordinates,
   type RegisterDesktopWindowOptions,
 } from './registry'
+export {
+  defineDesktopApp,
+  registerBuiltinApp,
+  type RegisterBuiltinAppOptions,
+} from './defineApp'
 export {
   createDesktopFolderWindow,
   createDesktopTextDocumentWindow,
@@ -35,4 +42,7 @@ export {
   type CreateDesktopFolderOptions,
   type CreateDesktopTextDocumentOptions,
 } from './createFolder'
-export * from './apps'
+export { FolderWindow, TextDocumentWindow } from './apps'
+
+/** 加载全部内置应用注册（必须在 createDefaultWindows 等之前执行） */
+import './builtins'

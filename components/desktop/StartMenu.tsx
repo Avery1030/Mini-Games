@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ComponentType } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { winChrome } from '@/lib/winChrome'
@@ -69,6 +69,7 @@ const TASKBAR_SAFE = 48
 export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
   const t = useTranslations()
   const tApps = useTranslations('apps')
+  const locale = useLocale()
   const ts = useTranslations('startMenu')
   const closeAllWindows = useWindowStore((s) => s.closeAllWindows)
   const lockWithPassword = useLockStore((s) => s.lockWithPassword)
@@ -232,7 +233,7 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
                 const Icon = app.icon
                 return (
                   <li key={app.id} role='none'>
-                    <MenuItem icon={Icon} label={resolveDesktopItemTitle(app, tApps)} onClick={() => launch(app.id)} />
+                    <MenuItem icon={Icon} label={resolveDesktopItemTitle(app, tApps, locale)} onClick={() => launch(app.id)} />
                   </li>
                 )
               })}
