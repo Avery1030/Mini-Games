@@ -11,7 +11,7 @@ export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement
 /**
  * Win95 风格复选框：凹陷方框 + 勾选标记。
  * 勾选标记用 opacity 占位（勿用 visibility:visible），
- * 否则在父级 visibility:hidden（如最小化窗口）时仍会穿透显示。
+ * 否则在父级 visibility:hidden 时仍会穿透显示。
  */
 export function Checkbox({ className, label, checked, disabled, id, ...props }: CheckboxProps) {
   return (

@@ -96,7 +96,7 @@ export function WindowsWindow({
         )
       : null
 
-  const { handleMaximize, chromeBusy, frameStyle } = useWindowDockAnim({
+  const { handleMaximize, chromeBusy, frameStyle, fullyHidden } = useWindowDockAnim({
     id,
     minimized,
     maximized: geometry.maximized,
@@ -127,6 +127,9 @@ export function WindowsWindow({
     }
   }, [consumePointer])
 
+  // 最小化飞入结束后卸载 DOM（应用树一并卸载）；还原时再挂载并播放飞出动画
+  if (fullyHidden) return null
+
   return (
     <div
       data-window-id={id}
@@ -146,7 +149,10 @@ export function WindowsWindow({
             key={edge}
             className={cn('absolute z-10', className)}
             style={{ cursor }}
-            onMouseDown={(e) => geometry.handleResizeMouseDown(e, edge)}
+            onMouseDown={(e) => {
+              onFocus?.()
+              geometry.handleResizeMouseDown(e, edge)
+            }}
             aria-hidden
           />
         ))}
@@ -157,7 +163,11 @@ export function WindowsWindow({
             'flex items-center justify-between shrink-0 h-8 px-1 pr-0 select-none font-pixel',
             geometry.maximized ? 'cursor-default' : 'cursor-grab active:cursor-grabbing',
           )}
-          onMouseDown={geometry.handleTitleMouseDown}
+          onMouseDown={(e) => {
+            // 不活跃窗也可直接拖标题栏；顺带激活
+            onFocus?.()
+            geometry.handleTitleMouseDown(e)
+          }}
           style={{ background: isActive ? 'var(--window-title-active)' : 'var(--window-title-inactive)' }}
         >
           <span className='text-[var(--window-title-text)] text-sm font-bold pl-2 truncate'>{title}</span>
@@ -214,30 +224,30 @@ export function WindowsWindow({
         >
           {/* 由应用自行管理滚动；勿用 overflow-auto，避免与内层列表叠出第二条滚动条（聚焦切换时会跳动） */}
           <div className='absolute inset-0 overflow-hidden'>{children}</div>
+          {/* 仅遮罩内容区：标题栏/缩放边可直接操作不活跃窗 */}
+          {showFocusShield && (
+            <div
+              className='absolute inset-0 z-[200]'
+              onMouseDown={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setConsumePointer(true)
+                onFocus?.()
+              }}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setConsumePointer(true)
+                onFocus?.()
+              }}
+            />
+          )}
         </div>
       </div>
-
-      {showFocusShield && (
-        <div
-          className='absolute inset-0 z-[200]'
-          onMouseDown={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            setConsumePointer(true)
-            onFocus?.()
-          }}
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-          }}
-          onContextMenu={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            setConsumePointer(true)
-            onFocus?.()
-          }}
-        />
-      )}
     </div>
   )
 }

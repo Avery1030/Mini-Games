@@ -174,8 +174,7 @@ export function useWindowDockAnim({
       interactivelyMoving || geometryAnimating || minAnim === 'hiding' || minAnim === 'showing'
         ? 'transform, width, height, opacity'
         : undefined,
-    visibility: fullyHidden ? 'hidden' : 'visible',
-    pointerEvents: fullyHidden || minAnim === 'hiding' || minAnim === 'showing' ? 'none' : 'auto',
+    pointerEvents: minAnim === 'hiding' || minAnim === 'showing' ? 'none' : 'auto',
     transition,
   }
 
@@ -183,5 +182,7 @@ export function useWindowDockAnim({
     handleMaximize,
     chromeBusy,
     frameStyle,
+    /** 最小化动画结束后为 true；调用方应 return null，避免最小化窗口留在 DOM */
+    fullyHidden,
   }
 }

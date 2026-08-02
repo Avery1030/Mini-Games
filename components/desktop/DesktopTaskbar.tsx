@@ -230,7 +230,6 @@ export function DesktopTaskbar() {
                 icon={w.icon}
                 pressed={w.isActive && !w.minimized}
                 dragging={draggingId === w.id}
-                onActivate={() => handleTaskbarClick(w.id)}
                 onPointerDown={(e) => onPointerDown(w.id, e)}
                 onContextMenu={(e) => openTaskbarContextMenu(w.id, e)}
               />
