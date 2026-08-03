@@ -7,6 +7,7 @@
     "minesweeper": "Minesweeper",
     "tetris": "Tetris",
     "suika": "Suika Game",
+    "tileMatch": "Tile Match",
     "document": "Document",
     "log": "Log",
     "notepad": "Notepad",
@@ -470,7 +471,8 @@
     "apps": {
       "title": "Built-in apps",
       "body": [
-        "Minesweeper and Tetris: classic games for zoning out.",
+        "Minesweeper, Tetris, and Suika: classic games for zoning out.",
+        "Tile Match: layered cards — match three of a kind; fill the tray and you lose.",
         "Settings: Display, Appearance, Taskbar, and Data. Data lets you export/import a JSON backup of local preferences and desktop state.",
         "Document: the window you are reading. Offline content, no annotations saved.",
         "Log: dated release notes — open the Log icon; Document also shows a short recent summary.",
@@ -569,6 +571,13 @@
   "changelog": {
     "toc": "Versions",
     "footer": "Changelog · {count} entries · Current: {title}",
+    "2026-08-04": {
+      "title": "Tile Match",
+      "items": [
+        "New mini-game Tile Match: sheep-style layered three-match cards, DOM + state only (no Canvas game engine).",
+        "Includes occlusion checks, a 7-slot tray, shuffle / undo items, and win / lose dialogs."
+      ]
+    },
     "2026-08-03": {
       "title": "Mobile window apps",
       "items": [
@@ -717,6 +726,22 @@
       "melon": "Melon",
       "watermelon": "Watermelon"
     }
+  },
+  "tileMatch": {
+    "title": "Tile Match",
+    "remaining": "Left",
+    "cleared": "Cleared",
+    "restart": "Restart",
+    "undo": "Undo",
+    "shuffle": "Shuffle",
+    "slot": "Tray",
+    "hint": "Pick free tiles; match three of a kind",
+    "boardLabel": "Tile Match board",
+    "won": "Cleared!",
+    "wonHint": "All tiles have been cleared",
+    "lost": "Game Over",
+    "lostHint": "The tray is full with no match",
+    "playAgain": "Play again"
   },
   "klineChart": {
     "symbol": "Symbol",
