@@ -250,7 +250,7 @@ export function drawSuikaFrame(
 
   // 待投放 + 落点竖直虚线
   const pending = engine.pendingLevel
-  if (pending != null && engine.status !== 'gameover') {
+  if (pending != null && !engine.isEnded) {
     const r = getFruit(pending).radius
     const x = engine.aimX
     const y = DROP_Y

@@ -84,7 +84,7 @@ export function PaintToolbar({
 
       <div className='w-px h-5 bg-chrome-dark/50 max-md:hidden' />
 
-      <div className='flex items-center gap-1'>
+      <div className='flex items-center gap-1 shrink-0'>
         <span className='text-[10px] text-muted max-md:sr-only'>{t('size')}</span>
         {BRUSH_SIZES.map((size) => (
           <button
@@ -111,15 +111,19 @@ export function PaintToolbar({
 
       <div className='w-px h-5 bg-chrome-dark/50 max-md:hidden' />
 
-      <div className='flex items-center gap-1.5 min-w-0 max-md:w-full max-md:basis-full'>
+      {/* 固定 14×2 调色板，避免 PC 工具栏被挤窄后 auto-fill 塌成单列撑爆布局 */}
+      <div className='flex items-center gap-1.5 shrink-0 max-md:w-full max-md:basis-full max-md:min-w-0'>
         <div
           className='w-7 h-7 border-2 border-t-chrome-dark border-l-chrome-dark border-r-chrome-light border-b-chrome-light shrink-0 max-md:size-8'
           style={{ background: color }}
           title={t('currentColor')}
         />
         <div
-          className='grid gap-0.5 min-w-0 flex-1 max-md:gap-1'
-          style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(18px, 1fr))' }}
+          className={cn(
+            'grid gap-0.5 shrink-0',
+            'grid-cols-[repeat(14,14px)]',
+            'max-md:flex-1 max-md:min-w-0 max-md:gap-1 max-md:grid-cols-[repeat(auto-fill,minmax(18px,1fr))]',
+          )}
         >
           {PALETTE.map((c) => (
             <button
@@ -129,7 +133,7 @@ export function PaintToolbar({
               aria-label={c}
               title={c}
               className={cn(
-                'w-3.5 h-3.5 border border-chrome-dark touch-manipulation max-md:size-[18px]',
+                'w-[14px] h-[14px] border border-chrome-dark touch-manipulation max-md:size-[18px]',
                 color.toLowerCase() === c.toLowerCase() && 'ring-1 ring-[var(--window-title-active)]',
                 disabled && 'opacity-50',
               )}
@@ -158,7 +162,7 @@ export function PaintToolbar({
 
       <div className='w-px h-5 bg-chrome-dark/50 max-md:hidden' />
 
-      <Button size='sm' className='max-md:min-h-9' disabled={disabled} onClick={onClear} title={t('clear')}>
+      <Button size='sm' className='max-md:min-h-9 shrink-0' disabled={disabled} onClick={onClear} title={t('clear')}>
         <Trash2 size={12} />
         <span className='max-md:hidden'>{t('clear')}</span>
       </Button>

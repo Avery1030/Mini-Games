@@ -1,21 +1,21 @@
 import { getFruit, randomDropLevel, type FruitLevel } from './fruits'
 import {
   applyGravityAndIntegrate,
-  applyStackedWeight,
   canMerge,
-  checkGameOver,
   collideWorldBounds,
   COLLISION_PASSES,
   createBody,
-  DEEP_PENETRATION_RATIO,
+  DANGER_GRACE,
+  DANGER_SECONDS,
   DROP_Y,
+  hardSeparateAll,
   hasDeepPenetration,
-  isVerticalStack,
+  hasFruitOverDangerLine,
   MERGE_LOCK_FRAMES,
-  PENETRATION_SLOP,
-  penetrationOf,
+  needsCollision,
+  nudgeAlignedStacks,
   resolveCircleCollision,
-  updateDangerState,
+  tickDangerGrace,
   updateSleepState,
   wakeBody,
   WORLD_HEIGHT,
@@ -24,7 +24,7 @@ import {
   type MergeEvent,
 } from './physics'
 
-export type GameStatus = 'ready' | 'playing' | 'gameover'
+export type GameStatus = 'ready' | 'playing' | 'gameover' | 'cleared'
 
 export type SuikaSnapshot = {
   bodies: readonly Body[]
@@ -63,7 +63,7 @@ function writeBest(score: number): void {
 }
 
 /**
- * 合成大西瓜引擎：对接优化后的物理（休眠 / 危险判定 / 碰撞唤醒）。
+ * 合成大西瓜引擎。
  */
 export class SuikaEngine {
   bodies: Body[] = []
@@ -75,8 +75,11 @@ export class SuikaEngine {
   pendingLevel: FruitLevel | null = 0
   dropCooldown = 0
   private nextId = 1
+  /** 越线累计秒数（引擎级，不依赖单果静止） */
+  private dangerTimer = 0
   mergeFlash: MergeEvent | null = null
   private mergeFlashTtl = 0
+  private pendingMerges: MergeEvent[] = []
   watermelonCount = 0
 
   constructor() {
@@ -94,10 +97,19 @@ export class SuikaEngine {
     this.aimX = WORLD_WIDTH / 2
     this.dropCooldown = 0
     this.nextId = 1
+    this.dangerTimer = 0
     this.mergeFlash = null
     this.mergeFlashTtl = 0
+    this.pendingMerges = []
     this.watermelonCount = 0
     this.bestScore = readBest()
+  }
+
+  drainMerges(): MergeEvent[] {
+    if (this.pendingMerges.length === 0) return []
+    const events = this.pendingMerges
+    this.pendingMerges = []
+    return events
   }
 
   setAimX(x: number): void {
@@ -107,18 +119,24 @@ export class SuikaEngine {
   }
 
   get dropLocked(): boolean {
-    return this.dropCooldown > 0 || this.status === 'gameover' || this.pendingLevel === null
+    return this.dropCooldown > 0 || this.isEnded || this.pendingLevel === null
+  }
+
+  get isEnded(): boolean {
+    return this.status === 'gameover' || this.status === 'cleared'
   }
 
   drop(): boolean {
-    if (this.status === 'gameover') return false
+    if (this.isEnded) return false
     if (this.dropCooldown > 0 || this.pendingLevel === null) return false
 
     const level = this.pendingLevel
     const r = getFruit(level).radius
+    // 落点严格跟随瞄准位置，不额外抖动
     const x = Math.max(r, Math.min(WORLD_WIDTH - r, this.aimX))
     const body = createBody(this.nextId++, level, x, DROP_Y)
     body.vy = 40
+    body.dangerGrace = DANGER_GRACE
     this.bodies.push(body)
     this.wakeNear(x, DROP_Y, r + 48)
 
@@ -130,7 +148,7 @@ export class SuikaEngine {
   }
 
   step(dt: number): void {
-    if (this.status === 'gameover') return
+    if (this.isEnded) return
 
     if (this.mergeFlashTtl > 0) {
       this.mergeFlashTtl -= dt
@@ -149,18 +167,32 @@ export class SuikaEngine {
     for (let s = 0; s < SUBSTEPS; s++) {
       this.integrate(h)
       this.walls()
-      this.collisionsAndMerges(h)
+      nudgeAlignedStacks(this.bodies, WORLD_WIDTH)
+      this.collisionsAndMerges()
       this.prune()
+      if (this.status === 'cleared') break
+    }
+
+    if (this.status === 'cleared') {
+      this.pendingLevel = null
+      return
     }
 
     const deepCrowd = hasDeepPenetration(this.bodies)
     for (const b of this.bodies) {
       if (b.removed) continue
       updateSleepState(b, dt, deepCrowd)
-      updateDangerState(b)
     }
 
-    if (checkGameOver(this.bodies)) {
+    tickDangerGrace(this.bodies, dt)
+
+    // 判负：任意非豁免水果顶边越线持续 DANGER_SECONDS
+    if (hasFruitOverDangerLine(this.bodies)) {
+      this.dangerTimer += dt
+    } else {
+      this.dangerTimer = 0
+    }
+    if (this.dangerTimer >= DANGER_SECONDS) {
       this.status = 'gameover'
       this.pendingLevel = null
     }
@@ -191,7 +223,7 @@ export class SuikaEngine {
     }
   }
 
-  private collisionsAndMerges(dt: number): void {
+  private collisionsAndMerges(): void {
     const list = this.bodies
     const n = list.length
     const mergePairs: Array<[Body, Body]> = []
@@ -203,31 +235,15 @@ export class SuikaEngine {
         for (let j = i + 1; j < n; j++) {
           const b = list[j]
           if (b.removed) continue
+          if (!needsCollision(a, b)) continue
 
-          const pen = penetrationOf(a, b)
-          // 允许浅接触也做堆叠压力（含几乎贴住）
-          const near = pen > -3
-          if (!near) continue
-
-          const minR = Math.min(a.r, b.r)
-          const deep = pen > minR * DEEP_PENETRATION_RATIO
-          const stacked = isVerticalStack(a, b)
-
-          // 浅重叠且双方休眠：非堆叠才跳过；上下堆叠必须继续被压动
-          if (a.sleeping && b.sleeping && !deep && !stacked && pen < PENETRATION_SLOP * 3) {
-            continue
-          }
-
-          if ((stacked || pen > 0) && pass === 0) {
-            applyStackedWeight(a, b, dt, WORLD_WIDTH)
-          }
-
-          if (pen <= 0) continue
-
+          // 休眠对也必须分离，不能跳过
           if (pass === 0 && canMerge(a, b)) {
             wakeBody(a)
             wakeBody(b)
             mergePairs.push([a, b])
+            // 合成前仍先推开一点，减轻穿模观感
+            resolveCircleCollision(a, b)
             continue
           }
           if (!canMerge(a, b)) {
@@ -235,9 +251,10 @@ export class SuikaEngine {
           }
         }
       }
-      // 每遍分离后夹紧边界，避免把球推出墙外又叠回去
       this.walls()
     }
+
+    hardSeparateAll(this.bodies, WORLD_WIDTH, WORLD_HEIGHT)
 
     if (mergePairs.length === 0) return
 
@@ -248,6 +265,8 @@ export class SuikaEngine {
       used.add(b.id)
       this.performMerge(a, b)
     }
+
+    hardSeparateAll(this.bodies, WORLD_WIDTH, WORLD_HEIGHT)
   }
 
   private performMerge(a: Body, b: Body): void {
@@ -276,10 +295,16 @@ export class SuikaEngine {
       writeBest(this.bestScore)
     }
 
-    if (toLevel === 10) this.watermelonCount += 1
+    if (toLevel === 10) {
+      this.watermelonCount += 1
+      this.status = 'cleared'
+      this.pendingLevel = null
+    }
 
-    this.mergeFlash = { x, y, fromLevel, toLevel, score: def.score }
+    const event: MergeEvent = { x, y, fromLevel, toLevel, score: def.score }
+    this.mergeFlash = event
     this.mergeFlashTtl = 0.35
+    this.pendingMerges.push(event)
   }
 
   private prune(): void {

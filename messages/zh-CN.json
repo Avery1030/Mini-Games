@@ -697,9 +697,12 @@
     "restart": "重开",
     "danger": "警戒线",
     "gameover": "游戏结束",
+    "gameoverHint": "水果停留在警戒线上方，挑战失败",
+    "cleared": "通关成功",
+    "clearedHint": "成功合成一颗大西瓜！",
     "finalScore": "最终分数",
     "playAgain": "再来一局",
-    "hint": "拖动瞄准，松开投放 · ←/→ 移动 · 空格投放 · R 重开",
+    "hint": "目标：合成大西瓜 · 越过警戒线失败 · 拖动投放 · ←/→ · 空格 · R 重开",
     "boardLabel": "合成大西瓜游戏区",
     "fruits": {
       "cherry": "樱桃",

@@ -3,39 +3,42 @@ import { getFruit, type FruitLevel } from './fruits'
 /** 世界尺寸（逻辑像素，与 Canvas 一致） */
 export const WORLD_WIDTH = 360
 export const WORLD_HEIGHT = 520
-/** 警戒线 y（从上往下）；水果静止越过此线过久则结束 */
+/** 警戒线 y；任意水果顶边持续越过则判负 */
 export const DANGER_LINE_Y = 88
 /** 待投放水果的固定 y */
 export const DROP_Y = 44
 
 // —— 手感参数 ——
 export const GRAVITY = 1450
-export const RESTITUTION = 0.18
-export const RESTITUTION_REST = 0.06
-export const RESTING_VEL = 40
-export const FRICTION_AIR = 0.9992
-export const FRICTION_WALL = 0.55
-export const FRICTION_GROUND = 0.2
-export const FRICTION_CONTACT = 0.12
+export const RESTITUTION = 0.2
+export const RESTITUTION_REST = 0.05
+export const RESTING_VEL = 50
+export const FRICTION_AIR = 0.999
+export const FRICTION_WALL = 0.5
+export const FRICTION_GROUND = 0.25
+export const FRICTION_CONTACT = 0.04
 export const MAX_SPEED = 900
-export const SETTLE_SPEED = 24
-export const PENETRATION_SLOP = 0.15
-export const CORRECTION_PERCENT = 0.85
-export const POSITION_ITERATIONS = 4
-export const DEEP_PENETRATION_RATIO = 0.22
-export const COLLISION_PASSES = 3
-/** 贴边判定 */
+export const SETTLE_SPEED = 30
+export const POSITION_ITERATIONS = 10
+export const DEEP_PENETRATION_RATIO = 0.05
+export const COLLISION_PASSES = 8
+export const HARD_SEPARATION_PASSES = 16
+/** 分离后额外留缝，避免下一帧重力立刻再穿模 */
+export const SEPARATION_SKIN = 0.6
 export const WALL_EPS = 2
-/** 上方水果重量转化为侧向挤出的比例 */
-export const STACK_SLIDE_FACTOR = 0.12
+export const MASS_SOFTEN = 0.5
+/** 上下果 X 差小于此值视为「同轴」 */
+export const ALIGN_X_EPS = 2
+/** 同轴接触时，只把上方果沿 X 错开这么多 */
+export const ALIGN_X_NUDGE = 3.5
 
-export const DANGER_FRAMES = 42
-export const MERGE_LOCK_FRAMES = 10
-export const DANGER_VY_THRESHOLD = 180
-/** 持续低速多久（秒）进入休眠 */
-export const SLEEP_TIME = 0.35
-/** 冲量大于该值时唤醒休眠体 */
-export const WAKE_IMPULSE = 12
+/** 顶边越线持续该秒数 → 判负（与帧率无关） */
+export const DANGER_SECONDS = 1.5
+/** 刚投放豁免（秒） */
+export const DANGER_GRACE = 1.0
+export const MERGE_LOCK_FRAMES = 8
+export const SLEEP_TIME = 0.5
+export const WAKE_IMPULSE = 10
 
 export type Body = {
   id: number
@@ -45,11 +48,12 @@ export type Body = {
   vy: number
   r: number
   level: FruitLevel
+  /** @deprecated 改用引擎级 dangerTimer；保留字段兼容 */
   dangerFrames: number
+  dangerGrace: number
   mergeLock: number
   removed: boolean
   sleeping: boolean
-  /** 低速累计时间（秒） */
   sleepTimer: number
 }
 
@@ -83,10 +87,8 @@ export function wakeBody(b: Body): void {
   b.sleepTimer = 0
 }
 
-/** 边界碰撞 + 简单摩擦 */
 export function collideWorldBounds(b: Body, width: number, height: number): void {
   if (b.sleeping) {
-    // 休眠体仍贴边夹紧，避免浮点漂移穿出
     if (b.x - b.r < 0) b.x = b.r
     else if (b.x + b.r > width) b.x = width - b.r
     if (b.y + b.r > height) b.y = height - b.r
@@ -108,7 +110,7 @@ export function collideWorldBounds(b: Body, width: number, height: number): void
     if (b.vy > 0) b.vy = -b.vy * RESTITUTION
     b.vx *= FRICTION_GROUND
     if (Math.abs(b.vy) < SETTLE_SPEED) b.vy = 0
-    if (Math.abs(b.vx) < SETTLE_SPEED * 0.4) b.vx = 0
+    if (Math.abs(b.vx) < SETTLE_SPEED * 0.35) b.vx = 0
   }
 
   if (b.y - b.r < 0) {
@@ -117,65 +119,75 @@ export function collideWorldBounds(b: Body, width: number, height: number): void
   }
 }
 
+function softenedMass(a: Body, b: Body): [number, number] {
+  const ma0 = massOf(a)
+  const mb0 = massOf(b)
+  return [Math.max(ma0, mb0 * MASS_SOFTEN), Math.max(mb0, ma0 * MASS_SOFTEN)]
+}
+
+function lateralSign(a: Body, b: Body): number {
+  return ((a.id * 3 + b.id * 7) & 1) === 0 ? 1 : -1
+}
+
 /**
- * 圆形相交：多次重算的位置分离 + 冲量 + 切向摩擦。
- * 深穿透时硬分离并均摊位移，避免小果被大果缝挤扁。
+ * 硬分离到圆心距 ≥ rA+rB+skin。
+ * 完全重合时只把上方果轻微错开 X，其余沿真实法线分离。
  */
+export function separateCircles(a: Body, b: Body, equalSplit = true): boolean {
+  let dx = b.x - a.x
+  let dy = b.y - a.y
+  let distSq = dx * dx + dy * dy
+  const minDist = a.r + b.r + SEPARATION_SKIN
+
+  if (distSq < 1e-6) {
+    const side = lateralSign(a, b)
+    const upper = a.y <= b.y ? a : b
+    upper.x += side * ALIGN_X_NUDGE
+    dx = b.x - a.x
+    dy = b.y - a.y || 1
+    distSq = dx * dx + dy * dy
+  }
+
+  if (distSq >= minDist * minDist) return false
+
+  const dist = Math.sqrt(distSq)
+  const nx = dx / dist
+  const ny = dy / dist
+  const overlap = minDist - dist
+
+  if (equalSplit) {
+    a.x -= nx * overlap * 0.5
+    a.y -= ny * overlap * 0.5
+    b.x += nx * overlap * 0.5
+    b.y += ny * overlap * 0.5
+  } else {
+    const [ma, mb] = softenedMass(a, b)
+    const invSum = 1 / (ma + mb)
+    a.x -= nx * overlap * (mb * invSum)
+    a.y -= ny * overlap * (mb * invSum)
+    b.x += nx * overlap * (ma * invSum)
+    b.y += ny * overlap * (ma * invSum)
+  }
+
+  wakeBody(a)
+  wakeBody(b)
+  return true
+}
+
 export function resolveCircleCollision(a: Body, b: Body): boolean {
   let hit = false
-  let deepest = 0
   const ma0 = massOf(a)
   const mb0 = massOf(b)
 
   for (let iter = 0; iter < POSITION_ITERATIONS; iter++) {
-    const dx = b.x - a.x
-    const dy = b.y - a.y
-    const distSq = dx * dx + dy * dy
-    const minDist = a.r + b.r
-    if (distSq >= minDist * minDist || distSq === 0) {
+    if (!separateCircles(a, b, true)) {
       if (iter === 0) return false
       break
     }
-
-    const dist = Math.sqrt(distSq)
-    const nx = dx / dist
-    const ny = dy / dist
-    const overlap = minDist - dist
-    deepest = Math.max(deepest, overlap)
-
-    const minR = Math.min(a.r, b.r)
-    const deep = overlap > minR * DEEP_PENETRATION_RATIO
-    // 深穿透：不用 slop，分离比例拉满，质量比软化让大果也让路
-    const slop = deep ? 0 : PENETRATION_SLOP
-    const percent = deep ? 1 : CORRECTION_PERCENT
-    const correction = Math.max(0, overlap - slop) * percent
-    if (correction <= 0) {
-      if (iter === 0) hit = true
-      break
-    }
-
-    let ma = ma0
-    let mb = mb0
-    if (deep) {
-      ma = Math.max(ma0, mb0 * 0.4)
-      mb = Math.max(mb0, ma0 * 0.4)
-    }
-    const invSum = 1 / (ma + mb)
-
-    a.x -= nx * correction * (mb * invSum)
-    a.y -= ny * correction * (mb * invSum)
-    b.x += nx * correction * (ma * invSum)
-    b.y += ny * correction * (ma * invSum)
     hit = true
   }
 
   if (!hit) return false
-
-  // 深穿透一定唤醒，防止休眠态残留重叠
-  if (deepest > Math.min(a.r, b.r) * DEEP_PENETRATION_RATIO) {
-    wakeBody(a)
-    wakeBody(b)
-  }
 
   const dx = b.x - a.x
   const dy = b.y - a.y
@@ -189,27 +201,23 @@ export function resolveCircleCollision(a: Body, b: Body): boolean {
   const rvy = a.vy - b.vy
   const velN = rvx * nx + rvy * ny
   if (velN > 0) {
-    if (a.sleeping || b.sleeping) {
-      wakeBody(a)
-      wakeBody(b)
-    }
+    clampSpeed(a)
+    clampSpeed(b)
     return true
   }
 
   const e = Math.abs(velN) < RESTING_VEL ? RESTITUTION_REST : RESTITUTION
   const j = (-(1 + e) * velN) / (invMa + invMb)
-  const jx = j * nx
-  const jy = j * ny
 
-  if (Math.abs(j) > WAKE_IMPULSE || a.sleeping || b.sleeping) {
+  if (Math.abs(j) > WAKE_IMPULSE) {
     wakeBody(a)
     wakeBody(b)
   }
 
-  a.vx += jx * invMa
-  a.vy += jy * invMa
-  b.vx -= jx * invMb
-  b.vy -= jy * invMb
+  a.vx += j * nx * invMa
+  a.vy += j * ny * invMa
+  b.vx -= j * nx * invMb
+  b.vy -= j * ny * invMb
 
   const tx = -ny
   const ty = nx
@@ -228,73 +236,73 @@ export function resolveCircleCollision(a: Body, b: Body): boolean {
   return true
 }
 
-/** 两球当前穿透深度（未相交为 0） */
+export function hardSeparateAll(bodies: Body[], width: number, height: number, passes = HARD_SEPARATION_PASSES): void {
+  for (let pass = 0; pass < passes; pass++) {
+    let moved = false
+    const n = bodies.length
+    for (let i = 0; i < n; i++) {
+      const a = bodies[i]
+      if (a.removed) continue
+      for (let j = i + 1; j < n; j++) {
+        const b = bodies[j]
+        if (b.removed) continue
+        if (separateCircles(a, b, true)) moved = true
+      }
+    }
+    for (const b of bodies) {
+      if (b.removed) continue
+      collideWorldBounds(b, width, height)
+    }
+    if (!moved) break
+  }
+}
+
+/**
+ * 上下两果接触且 X 几乎相同时，只把上方（新落下）的果沿 X 轻微错开。
+ * 落点本身不变；错开约 3.5px 后不再同轴，不会反复推。
+ */
+export function nudgeAlignedStacks(bodies: Body[], width: number): void {
+  const n = bodies.length
+  for (let i = 0; i < n; i++) {
+    const a = bodies[i]
+    if (a.removed) continue
+    for (let j = i + 1; j < n; j++) {
+      const b = bodies[j]
+      if (b.removed) continue
+
+      const dx = b.x - a.x
+      const dy = b.y - a.y
+      const dist = Math.hypot(dx, dy)
+      const minDist = a.r + b.r
+      if (dist > minDist + 2 || dist < 1e-6) continue
+      if (Math.abs(dx) > ALIGN_X_EPS) continue
+      if (Math.abs(dy) < Math.min(a.r, b.r) * 0.4) continue
+
+      const upper = a.y <= b.y ? a : b
+      const lower = a.y <= b.y ? b : a
+      const side = lateralSign(upper, lower)
+      upper.x = Math.max(upper.r, Math.min(width - upper.r, lower.x + side * ALIGN_X_NUDGE))
+      wakeBody(upper)
+    }
+  }
+}
+
 export function penetrationOf(a: Body, b: Body): number {
   const dist = Math.hypot(b.x - a.x, b.y - a.y)
   return Math.max(0, a.r + b.r - dist)
 }
 
-/**
- * 上方水果的重量压到下方：贴墙时转为侧向挤出，避免卡在墙缝里不掉。
- * 在已接触的一对上调用（可浅重叠）。
- */
-export function applyStackedWeight(a: Body, b: Body, dt: number, width: number): void {
-  const dist = Math.hypot(b.x - a.x, b.y - a.y)
-  const gap = a.r + b.r - dist
-  if (gap < -3) return
-
-  // y 更小的在上方
-  const upper = a.y <= b.y ? a : b
-  const lower = a.y <= b.y ? b : a
-  if (upper.id === lower.id) return
-
-  // 必须大致「压在上面」（水平偏移不能太大）
-  const dx = upper.x - lower.x
-  const dy = upper.y - lower.y // <= 0
-  if (dy > -1) return
-  if (Math.abs(dx) > lower.r + upper.r * 0.85) return
-
-  wakeBody(upper)
-  wakeBody(lower)
-
-  const distSafe = Math.hypot(dx, dy) || 0.0001
-  const nx = dx / distSafe // lower → upper
-  const ny = dy / distSafe // 上方时 ny < 0
-  const compress = Math.max(0, -ny) // 正上方接近 1
-  if (compress < 0.25) return
-
-  const mU = massOf(upper)
-  const mL = massOf(lower)
-  const load = mU * GRAVITY * dt * compress
-
-  // 下方被压得更贴地/下滑
-  lower.vy += (load / mL) * 0.45
-  // 上方保持下压
-  upper.vy += GRAVITY * dt * 0.2 * compress
-
-  const onLeft = lower.x - lower.r <= WALL_EPS
-  const onRight = lower.x + lower.r >= width - WALL_EPS
-
-  if (onLeft || onRight) {
-    // 贴墙时把压力转成离开墙的水平速度（缝里的橙子会被挤出来）
-    const outward = (onLeft ? 1 : -1) * (STACK_SLIDE_FACTOR + Math.abs(nx) * 0.2)
-    const slide = outward * (load / mL) * (0.7 + upper.r / Math.max(lower.r, 1))
-    lower.vx += slide
-    // 上方略微带一点同向，减少继续卡死
-    upper.vx += slide * 0.25
-    wakeBody(lower)
-    wakeBody(upper)
-  }
-
-  clampSpeed(lower)
-  clampSpeed(upper)
+export function needsCollision(a: Body, b: Body): boolean {
+  const dx = b.x - a.x
+  const dy = b.y - a.y
+  const min = a.r + b.r + SEPARATION_SKIN
+  return dx * dx + dy * dy < min * min
 }
 
-/** 垂直堆叠（一方明显在上）——休眠对也必须继续求解 */
 export function isVerticalStack(a: Body, b: Body): boolean {
   const dx = Math.abs(b.x - a.x)
   const dy = Math.abs(b.y - a.y)
-  return dy > dx * 0.4 && dy > Math.min(a.r, b.r) * 0.35
+  return dy > dx * 0.35 && dy > Math.min(a.r, b.r) * 0.3
 }
 
 export function canMerge(a: Body, b: Body): boolean {
@@ -309,13 +317,6 @@ export function canMerge(a: Body, b: Body): boolean {
   )
 }
 
-export function circlesOverlap(a: Body, b: Body, slack = 1.2): boolean {
-  const dx = b.x - a.x
-  const dy = b.y - a.y
-  const min = a.r + b.r - slack
-  return dx * dx + dy * dy < min * min
-}
-
 export function createBody(id: number, level: FruitLevel, x: number, y: number): Body {
   const def = getFruit(level)
   return {
@@ -327,6 +328,7 @@ export function createBody(id: number, level: FruitLevel, x: number, y: number):
     r: def.radius,
     level,
     dangerFrames: 0,
+    dangerGrace: 0,
     mergeLock: 0,
     removed: false,
     sleeping: false,
@@ -336,7 +338,6 @@ export function createBody(id: number, level: FruitLevel, x: number, y: number):
 
 export function applyGravityAndIntegrate(b: Body, dt: number): void {
   if (b.sleeping) return
-
   const safeDt = Math.min(dt, 1 / 30)
   b.vy += GRAVITY * safeDt
   b.vx *= FRICTION_AIR
@@ -346,7 +347,6 @@ export function applyGravityAndIntegrate(b: Body, dt: number): void {
   clampSpeed(b)
 }
 
-/** 每帧调用一次（非子步）：更新休眠计时；深穿透中禁止休眠 */
 export function updateSleepState(b: Body, dt: number, blockSleep = false): void {
   if (b.removed || b.mergeLock > 0) {
     wakeBody(b)
@@ -370,7 +370,6 @@ export function updateSleepState(b: Body, dt: number, blockSleep = false): void 
   }
 }
 
-/** 是否存在相对较小半径的深穿透（会看起来像被挤扁） */
 export function hasDeepPenetration(bodies: Body[]): boolean {
   const n = bodies.length
   for (let i = 0; i < n; i++) {
@@ -379,29 +378,24 @@ export function hasDeepPenetration(bodies: Body[]): boolean {
     for (let j = i + 1; j < n; j++) {
       const b = bodies[j]
       if (b.removed) continue
-      const pen = penetrationOf(a, b)
-      if (pen > Math.min(a.r, b.r) * DEEP_PENETRATION_RATIO) return true
+      if (penetrationOf(a, b) > Math.min(a.r, b.r) * DEEP_PENETRATION_RATIO) return true
     }
   }
   return false
 }
 
-/**
- * 更新危险帧（游戏结束判定），每帧调用一次。
- * 高速下落不累计，离开警戒线快速衰减。
- */
-export function updateDangerState(body: Body): void {
-  const isFallingFast = body.vy > DANGER_VY_THRESHOLD
-  const overLine = body.y - body.r < DANGER_LINE_Y
-  const settled = body.sleeping || isNearlyStatic(body)
-
-  if (overLine && !isFallingFast && settled) {
-    body.dangerFrames += 1
-  } else {
-    body.dangerFrames = Math.max(0, body.dangerFrames - 2)
+export function tickDangerGrace(bodies: Body[], dt: number): void {
+  for (const b of bodies) {
+    if (b.removed || b.dangerGrace <= 0) continue
+    b.dangerGrace = Math.max(0, b.dangerGrace - dt)
   }
 }
 
-export function checkGameOver(bodies: Body[]): boolean {
-  return bodies.some((b) => !b.removed && b.dangerFrames >= DANGER_FRAMES)
+/** 是否有非豁免水果顶边越过警戒线 */
+export function hasFruitOverDangerLine(bodies: Body[]): boolean {
+  for (const b of bodies) {
+    if (b.removed || b.dangerGrace > 0) continue
+    if (b.y - b.r < DANGER_LINE_Y) return true
+  }
+  return false
 }

@@ -697,9 +697,12 @@
     "restart": "Restart",
     "danger": "Danger",
     "gameover": "Game Over",
+    "gameoverHint": "A fruit remained above the danger line",
+    "cleared": "Cleared!",
+    "clearedHint": "You merged a watermelon!",
     "finalScore": "Final score",
     "playAgain": "Play again",
-    "hint": "Drag to aim, release to drop · ←/→ move · Space drop · R restart",
+    "hint": "Goal: merge a watermelon · Fail if over the danger line · Drag to drop · ←/→ · Space · R restart",
     "boardLabel": "Suika game board",
     "fruits": {
       "cherry": "Cherry",

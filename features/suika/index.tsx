@@ -14,9 +14,10 @@ import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { winChrome } from '@/lib/winChrome'
 import { FRUITS } from './fruits'
-import { SuikaEngine } from './game'
+import { SuikaEngine, type GameStatus } from './game'
 import { WORLD_HEIGHT, WORLD_WIDTH } from './physics'
 import { drawFruitIcon, drawSuikaFrame, type CanvasLabels } from './render'
+import { playMergeSound } from './sound'
 
 export interface SuikaProps {
   embedded?: boolean
@@ -27,7 +28,11 @@ type HudState = {
   bestScore: number
   nextLevel: number
   watermelonCount: number
-  status: 'ready' | 'playing' | 'gameover'
+  status: GameStatus
+}
+
+function isEndedStatus(status: GameStatus): boolean {
+  return status === 'gameover' || status === 'cleared'
 }
 
 function MiniFruit({ level, size }: { level: number; size: number }) {
@@ -129,6 +134,9 @@ export function Suika({ embedded = false }: SuikaProps = {}) {
       last = now
       const dt = Math.min(0.033, Math.max(0.001, raw))
       engine.step(dt)
+      for (const merge of engine.drainMerges()) {
+        playMergeSound(merge.toLevel)
+      }
       drawSuikaFrame(ctx, engine, labelsRef.current)
 
       hudAcc += dt
@@ -164,14 +172,14 @@ export function Suika({ embedded = false }: SuikaProps = {}) {
   )
 
   const onPointerDown = (e: ReactPointerEvent) => {
-    if (engineRef.current!.status === 'gameover') return
+    if (isEndedStatus(engineRef.current!.status)) return
     pressedRef.current = true
     ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
     aimAt(e.clientX)
   }
 
   const onPointerMove = (e: ReactPointerEvent) => {
-    if (engineRef.current!.status === 'gameover') return
+    if (isEndedStatus(engineRef.current!.status)) return
     aimAt(e.clientX)
   }
 
@@ -183,7 +191,7 @@ export function Suika({ embedded = false }: SuikaProps = {}) {
     } catch {
       /* ignore */
     }
-    if (engineRef.current!.status === 'gameover') return
+    if (isEndedStatus(engineRef.current!.status)) return
     aimAt(e.clientX)
     engineRef.current!.drop()
     syncHud()
@@ -212,7 +220,7 @@ export function Suika({ embedded = false }: SuikaProps = {}) {
         engine.setAimX(engine.aimX + 16)
       } else if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault()
-        if (engine.status === 'gameover') restart()
+        if (isEndedStatus(engine.status)) restart()
         else {
           engine.drop()
           syncHud()
@@ -276,9 +284,22 @@ export function Suika({ embedded = false }: SuikaProps = {}) {
             aria-label={t('boardLabel')}
           />
 
-          {hud.status === 'gameover' ? (
+          {hud.status === 'gameover' || hud.status === 'cleared' ? (
             <div className='absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/55 px-4 text-center'>
-              <p className='text-lg font-bold text-red-300 mb-1'>{t('gameover')}</p>
+              {hud.status === 'cleared' ? (
+                <>
+                  <p className='text-2xl mb-1' aria-hidden>
+                    🍉
+                  </p>
+                  <p className='text-lg font-bold text-[#a3e635] mb-1'>{t('cleared')}</p>
+                  <p className='text-sm text-white/80 mb-1'>{t('clearedHint')}</p>
+                </>
+              ) : (
+                <>
+                  <p className='text-lg font-bold text-red-300 mb-1'>{t('gameover')}</p>
+                  <p className='text-sm text-white/70 mb-1'>{t('gameoverHint')}</p>
+                </>
+              )}
               <p className='text-sm text-white/80 mb-3'>
                 {t('finalScore')}: {hud.score}
               </p>
