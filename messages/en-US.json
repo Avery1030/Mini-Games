@@ -373,7 +373,6 @@
       "stretch": "Stretch"
     },
     "models3d": "3D wallpaper",
-    "enable3d": "Enable 3D",
     "uploadGlb": "Upload GLB",
     "noModels": "No 3D models yet. Upload a .glb file.",
     "modelLabel": "3D model",
@@ -569,6 +568,16 @@
   "changelog": {
     "toc": "Versions",
     "footer": "Changelog · {count} entries · Current: {title}",
+    "2026-08-03": {
+      "title": "Mobile window apps",
+      "items": [
+        "Added MasterDetail: on narrow screens, list and detail swap full-screen; desktop keeps a resizable split pane.",
+        "Settings, Zhi Chat, Notepad, Paint, Changelog, Image Viewer, and Documents now use mobile-friendly layouts with larger touch targets.",
+        "Paint toolbar wraps on small screens; the palette uses a responsive grid.",
+        "Mobile app host scrolls inside each app to avoid nested scroll conflicts.",
+        "Task Manager Programs / Applications open or switch on a single tap on touch (desktop still uses double-click)."
+      ]
+    },
     "2026-07-29": {
       "title": "VFS, File Explorer & Recycle Bin",
       "items": [

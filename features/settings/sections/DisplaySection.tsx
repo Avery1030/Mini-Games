@@ -15,7 +15,6 @@ export interface DisplaySectionProps {
   draftLabel: string
   dirty: boolean
   fit: WallpaperFitMode
-  enable3d: boolean
   images: WallpaperAsset[]
   models: WallpaperAsset[]
   loadingList: boolean
@@ -27,7 +26,6 @@ export interface DisplaySectionProps {
   modelInputRef: RefObject<HTMLInputElement | null>
   onDraftChange: (draft: WallpaperDraft) => void
   onFitChange: (fit: WallpaperFitMode) => void
-  onEnable3dChange: (enabled: boolean) => void
   onPickImage: (files: FileList | null) => void
   onPickModel: (files: FileList | null) => void
   onImportLink: () => void
@@ -146,7 +144,6 @@ export function DisplaySection({
   draftLabel,
   dirty,
   fit,
-  enable3d,
   images,
   models,
   loadingList,
@@ -158,7 +155,6 @@ export function DisplaySection({
   modelInputRef,
   onDraftChange,
   onFitChange,
-  onEnable3dChange,
   onPickImage,
   onPickModel,
   onImportLink,
@@ -255,14 +251,6 @@ export function DisplaySection({
         <Panel inset className='flex flex-col overflow-hidden'>
           <div className='flex shrink-0 flex-wrap items-center justify-between gap-2 mb-2'>
             <div className='text-xs font-bold'>{t('models3d')}</div>
-            <label className='flex items-center gap-1.5 text-[11px]'>
-              <input
-                type='checkbox'
-                checked={enable3d}
-                onChange={(e) => onEnable3dChange(e.target.checked)}
-              />
-              {t('enable3d')}
-            </label>
             <Button size='sm' loading={uploading} disabled={uploading} onClick={() => modelInputRef.current?.click()}>
               {!uploading && <Box size={12} />}
               {t('uploadGlb')}

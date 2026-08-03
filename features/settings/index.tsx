@@ -73,7 +73,6 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
     draftFromSettings(wallpaperId, wallpaperPath, wallpaper3dEnabled, wallpaper3dPath),
   )
   const [fit, setFit] = useState<WallpaperFitMode>(wallpaperFit || DEFAULT_WALLPAPER_FIT)
-  const [enable3d, setEnable3d] = useState(wallpaper3dEnabled)
 
   const refreshLists = useCallback(async () => {
     setLoadingList(true)
@@ -97,21 +96,19 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
   useEffect(() => {
     setDraft(draftFromSettings(wallpaperId, wallpaperPath, wallpaper3dEnabled, wallpaper3dPath))
     setFit(wallpaperFit || DEFAULT_WALLPAPER_FIT)
-    setEnable3d(wallpaper3dEnabled)
   }, [wallpaperId, wallpaperPath, wallpaperFit, wallpaper3dEnabled, wallpaper3dPath])
 
   const dirty = useMemo(() => {
     if (fit !== wallpaperFit) return true
-    if (enable3d !== wallpaper3dEnabled) return true
     if (draft.kind === 'preset') {
-      return wallpaperId !== draft.id || (enable3d && wallpaper3dPath != null && draft.kind === 'preset')
+      return wallpaperId !== draft.id || wallpaper3dEnabled
     }
     if (draft.kind === 'image') {
-      return wallpaperId !== CUSTOM_WALLPAPER_ID || wallpaperPath !== draft.path
+      return wallpaperId !== CUSTOM_WALLPAPER_ID || wallpaperPath !== draft.path || wallpaper3dEnabled
     }
-    // model
-    return !wallpaper3dEnabled || wallpaper3dPath !== draft.path || !enable3d
-  }, [draft, fit, enable3d, wallpaperId, wallpaperPath, wallpaperFit, wallpaper3dEnabled, wallpaper3dPath])
+    // 选中 3D 模型：启用 3D 且路径一致则视为已应用
+    return !wallpaper3dEnabled || wallpaper3dPath !== draft.path
+  }, [draft, fit, wallpaperId, wallpaperPath, wallpaperFit, wallpaper3dEnabled, wallpaper3dPath])
 
   const onPickImage = async (files: FileList | null) => {
     const file = files?.[0]
@@ -122,7 +119,6 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
       const asset = await uploadWallpaperImage(file)
       await refreshLists()
       setDraft({ kind: 'image', path: asset.path })
-      setEnable3d(false)
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : '上传失败')
     } finally {
@@ -140,7 +136,6 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
       const asset = await uploadWallpaperModel(file)
       await refreshLists()
       setDraft({ kind: 'model', path: asset.path })
-      setEnable3d(true)
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : '上传失败')
     } finally {
@@ -161,7 +156,6 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
       const asset = await importWallpaperImageFromUrl(url)
       await refreshLists()
       setDraft({ kind: 'image', path: asset.path })
-      setEnable3d(false)
       setImportUrl('')
     } catch (err) {
       setImportError(err instanceof Error ? err.message : '导入失败')
@@ -180,7 +174,6 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
       }
       if (draft.kind === 'model' && draft.path === path) {
         setDraft({ kind: 'preset', id: 'classic-teal' })
-        setEnable3d(false)
       }
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : '删除失败')
@@ -193,8 +186,8 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
       applyWallpaper({
         wallpaperId: draft.id,
         wallpaperFit: fit,
-        wallpaper3dEnabled: enable3d,
-        wallpaper3dPath: enable3d ? wallpaper3dPath : null,
+        wallpaper3dEnabled: false,
+        wallpaper3dPath: null,
       })
       return
     }
@@ -203,11 +196,12 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
         wallpaperId: CUSTOM_WALLPAPER_ID,
         wallpaperPath: draft.path,
         wallpaperFit: fit,
-        wallpaper3dEnabled: enable3d,
-        wallpaper3dPath: enable3d ? wallpaper3dPath : null,
+        wallpaper3dEnabled: false,
+        wallpaper3dPath: null,
       })
       return
     }
+    // 选中 3D 模型并应用：直接启用 3D
     applyWallpaper({
       wallpaperId: wallpaperId === CUSTOM_WALLPAPER_ID ? CUSTOM_WALLPAPER_ID : wallpaperId,
       wallpaperPath: wallpaperPath,
@@ -215,7 +209,6 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
       wallpaper3dEnabled: true,
       wallpaper3dPath: draft.path,
     })
-    setEnable3d(true)
   }
 
   const draftLabel =
@@ -280,7 +273,6 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
                 draftLabel={draftLabel}
                 dirty={dirty}
                 fit={fit}
-                enable3d={enable3d}
                 images={images}
                 models={models}
                 loadingList={loadingList}
@@ -292,7 +284,6 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
                 modelInputRef={modelInputRef}
                 onDraftChange={setDraft}
                 onFitChange={setFit}
-                onEnable3dChange={setEnable3d}
                 onPickImage={onPickImage}
                 onPickModel={onPickModel}
                 onImportLink={onImportLink}

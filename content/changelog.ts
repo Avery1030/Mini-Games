@@ -3,6 +3,7 @@
  * 展示文案在 messages 下 changelog.<ISO日期>；日期本身用 Intl 格式化，勿在文案里写死。
  */
 export const CHANGELOG_DATES = [
+  '2026-08-03',
   '2026-07-29',
   '2026-07-27',
   '2026-07-26',
