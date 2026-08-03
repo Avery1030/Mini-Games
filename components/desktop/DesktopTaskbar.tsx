@@ -48,6 +48,7 @@ export function DesktopTaskbar() {
   const [startMenuOpen, setStartMenuOpen] = useState(false)
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const [overflow, setOverflow] = useState(false)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
 
@@ -135,15 +136,17 @@ export function DesktopTaskbar() {
   const updateScrollAffordance = useCallback(() => {
     const el = listRef.current
     if (!el) {
+      setOverflow(false)
       setCanScrollLeft(false)
       setCanScrollRight(false)
       return
     }
     const { scrollLeft, scrollWidth, clientWidth } = el
     const max = scrollWidth - clientWidth
-    const overflow = max > 1
-    setCanScrollLeft(overflow && scrollLeft > 1)
-    setCanScrollRight(overflow && scrollLeft < max - 1)
+    const hasOverflow = max > 1
+    setOverflow(hasOverflow)
+    setCanScrollLeft(hasOverflow && scrollLeft > 1)
+    setCanScrollRight(hasOverflow && scrollLeft < max - 1)
   }, [])
 
   useLayoutEffect(() => {
@@ -203,10 +206,15 @@ export function DesktopTaskbar() {
       </div>
 
       <div className='flex items-center min-w-0 ml-1 shrink flex-1 max-w-full'>
-        {canScrollLeft ? (
+        {overflow ? (
           <button
             type='button'
-            className={cn(winChrome, 'h-7 w-5 shrink-0 inline-flex items-center justify-center mr-0.5')}
+            disabled={!canScrollLeft}
+            className={cn(
+              winChrome,
+              'h-7 w-5 shrink-0 inline-flex items-center justify-center mr-0.5',
+              !canScrollLeft && 'opacity-40 cursor-not-allowed',
+            )}
             aria-label={t('window.taskbarScrollLeft')}
             onClick={() => scrollByDir(-1)}
           >
@@ -238,10 +246,15 @@ export function DesktopTaskbar() {
           })}
         </div>
 
-        {canScrollRight ? (
+        {overflow ? (
           <button
             type='button'
-            className={cn(winChrome, 'h-7 w-5 shrink-0 inline-flex items-center justify-center ml-0.5')}
+            disabled={!canScrollRight}
+            className={cn(
+              winChrome,
+              'h-7 w-5 shrink-0 inline-flex items-center justify-center ml-0.5',
+              !canScrollRight && 'opacity-40 cursor-not-allowed',
+            )}
             aria-label={t('window.taskbarScrollRight')}
             onClick={() => scrollByDir(1)}
           >
