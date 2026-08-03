@@ -10,21 +10,26 @@ export const DROP_Y = 44
 
 // —— 手感参数 ——
 export const GRAVITY = 1450
-export const RESTITUTION = 0.2
-export const RESTITUTION_REST = 0.05
+export const RESTITUTION = 0.18
+export const RESTITUTION_REST = 0.04
+export const RESTITUTION_WALL = 0.12
 export const RESTING_VEL = 50
 export const FRICTION_AIR = 0.999
-export const FRICTION_WALL = 0.5
-export const FRICTION_GROUND = 0.25
-export const FRICTION_CONTACT = 0.04
+export const FRICTION_WALL = 0.55
+export const FRICTION_GROUND = 0.3
+export const FRICTION_CONTACT = 0.06
 export const MAX_SPEED = 900
 export const SETTLE_SPEED = 30
-export const POSITION_ITERATIONS = 10
+/** 低于此速度撞墙不再反弹，直接贴死 */
+export const WALL_BOUNCE_MIN = 55
+export const POSITION_ITERATIONS = 8
 export const DEEP_PENETRATION_RATIO = 0.05
-export const COLLISION_PASSES = 8
-export const HARD_SEPARATION_PASSES = 16
+export const COLLISION_PASSES = 6
+export const HARD_SEPARATION_PASSES = 12
 /** 分离后额外留缝，避免下一帧重力立刻再穿模 */
-export const SEPARATION_SKIN = 0.6
+export const SEPARATION_SKIN = 0.35
+/** 合成判定比物理接触更宽松，避免贴住却不合成 */
+export const MERGE_SLACK = 2.5
 export const WALL_EPS = 2
 export const MASS_SOFTEN = 0.5
 /** 上下果 X 差小于此值视为「同轴」 */
@@ -36,7 +41,7 @@ export const ALIGN_X_NUDGE = 3.5
 export const DANGER_SECONDS = 1.5
 /** 刚投放豁免（秒） */
 export const DANGER_GRACE = 1.0
-export const MERGE_LOCK_FRAMES = 8
+export const MERGE_LOCK_FRAMES = 6
 export const SLEEP_TIME = 0.5
 export const WAKE_IMPULSE = 10
 
@@ -87,27 +92,40 @@ export function wakeBody(b: Body): void {
   b.sleepTimer = 0
 }
 
-export function collideWorldBounds(b: Body, width: number, height: number): void {
-  if (b.sleeping) {
-    if (b.x - b.r < 0) b.x = b.r
-    else if (b.x + b.r > width) b.x = width - b.r
-    if (b.y + b.r > height) b.y = height - b.r
+/** 仅夹紧位置，不改速度（用于多轮分离，避免反复弹墙） */
+export function clampWorldBounds(b: Body, width: number, height: number): void {
+  if (b.x - b.r < 0) b.x = b.r
+  else if (b.x + b.r > width) b.x = width - b.r
+  if (b.y + b.r > height) b.y = height - b.r
+  if (b.y - b.r < 0) b.y = b.r
+}
+
+/**
+ * 边界碰撞。bounce=false 时只贴边不反弹。
+ * 低速撞墙直接消掉法向速度，避免多次弹开。
+ */
+export function collideWorldBounds(b: Body, width: number, height: number, bounce = true): void {
+  if (b.sleeping || !bounce) {
+    clampWorldBounds(b, width, height)
     return
   }
 
   if (b.x - b.r < 0) {
     b.x = b.r
-    if (b.vx < 0) b.vx = -b.vx * RESTITUTION
+    if (b.vx < -WALL_BOUNCE_MIN) b.vx = -b.vx * RESTITUTION_WALL
+    else if (b.vx < 0) b.vx = 0
     b.vy *= Math.max(FRICTION_WALL, 0.92)
   } else if (b.x + b.r > width) {
     b.x = width - b.r
-    if (b.vx > 0) b.vx = -b.vx * RESTITUTION
+    if (b.vx > WALL_BOUNCE_MIN) b.vx = -b.vx * RESTITUTION_WALL
+    else if (b.vx > 0) b.vx = 0
     b.vy *= Math.max(FRICTION_WALL, 0.92)
   }
 
   if (b.y + b.r > height) {
     b.y = height - b.r
-    if (b.vy > 0) b.vy = -b.vy * RESTITUTION
+    if (b.vy > WALL_BOUNCE_MIN) b.vy = -b.vy * RESTITUTION_WALL
+    else if (b.vy > 0) b.vy = 0
     b.vx *= FRICTION_GROUND
     if (Math.abs(b.vy) < SETTLE_SPEED) b.vy = 0
     if (Math.abs(b.vx) < SETTLE_SPEED * 0.35) b.vx = 0
@@ -115,7 +133,7 @@ export function collideWorldBounds(b: Body, width: number, height: number): void
 
   if (b.y - b.r < 0) {
     b.y = b.r
-    if (b.vy < 0) b.vy *= -0.05
+    if (b.vy < 0) b.vy = 0
   }
 }
 
@@ -251,15 +269,16 @@ export function hardSeparateAll(bodies: Body[], width: number, height: number, p
     }
     for (const b of bodies) {
       if (b.removed) continue
-      collideWorldBounds(b, width, height)
+      // 分离轮次只贴边，禁止反复弹墙
+      clampWorldBounds(b, width, height)
     }
     if (!moved) break
   }
 }
 
 /**
- * 上下两果接触且 X 几乎相同时，只把上方（新落下）的果沿 X 轻微错开。
- * 落点本身不变；错开约 3.5px 后不再同轴，不会反复推。
+ * 上下两果接触且 X 几乎相同时，只把上方果沿 X 轻微错开。
+ * 可合成的同级水果不侧移，避免刚碰上就被推开导致不合成。
  */
 export function nudgeAlignedStacks(bodies: Body[], width: number): void {
   const n = bodies.length
@@ -269,6 +288,7 @@ export function nudgeAlignedStacks(bodies: Body[], width: number): void {
     for (let j = i + 1; j < n; j++) {
       const b = bodies[j]
       if (b.removed) continue
+      if (canMerge(a, b)) continue
 
       const dx = b.x - a.x
       const dy = b.y - a.y
@@ -296,6 +316,14 @@ export function needsCollision(a: Body, b: Body): boolean {
   const dx = b.x - a.x
   const dy = b.y - a.y
   const min = a.r + b.r + SEPARATION_SKIN
+  return dx * dx + dy * dy < min * min
+}
+
+/** 合成接触判定（比物理分离更宽松） */
+export function touchesForMerge(a: Body, b: Body, slack = MERGE_SLACK): boolean {
+  const dx = b.x - a.x
+  const dy = b.y - a.y
+  const min = a.r + b.r + slack
   return dx * dx + dy * dy < min * min
 }
 

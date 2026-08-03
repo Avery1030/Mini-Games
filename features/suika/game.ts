@@ -2,6 +2,7 @@ import { getFruit, randomDropLevel, type FruitLevel } from './fruits'
 import {
   applyGravityAndIntegrate,
   canMerge,
+  clampWorldBounds,
   collideWorldBounds,
   COLLISION_PASSES,
   createBody,
@@ -16,6 +17,7 @@ import {
   nudgeAlignedStacks,
   resolveCircleCollision,
   tickDangerGrace,
+  touchesForMerge,
   updateSleepState,
   wakeBody,
   WORLD_HEIGHT,
@@ -219,7 +221,8 @@ export class SuikaEngine {
   private walls(): void {
     for (const b of this.bodies) {
       if (b.removed) continue
-      collideWorldBounds(b, WORLD_WIDTH, WORLD_HEIGHT)
+      // 每子步只在这里反弹一次
+      collideWorldBounds(b, WORLD_WIDTH, WORLD_HEIGHT, true)
     }
   }
 
@@ -227,31 +230,35 @@ export class SuikaEngine {
     const list = this.bodies
     const n = list.length
     const mergePairs: Array<[Body, Body]> = []
+    const merging = new Set<number>()
 
     for (let pass = 0; pass < COLLISION_PASSES; pass++) {
       for (let i = 0; i < n; i++) {
         const a = list[i]
-        if (a.removed) continue
+        if (a.removed || merging.has(a.id)) continue
         for (let j = i + 1; j < n; j++) {
           const b = list[j]
-          if (b.removed) continue
-          if (!needsCollision(a, b)) continue
+          if (b.removed || merging.has(b.id)) continue
 
-          // 休眠对也必须分离，不能跳过
-          if (pass === 0 && canMerge(a, b)) {
-            wakeBody(a)
-            wakeBody(b)
-            mergePairs.push([a, b])
-            // 合成前仍先推开一点，减轻穿模观感
-            resolveCircleCollision(a, b)
+          // 合成优先：宽松接触即收录，且不再做弹开，避免刚碰上就被推散
+          if (canMerge(a, b) && touchesForMerge(a, b)) {
+            if (pass === 0) {
+              mergePairs.push([a, b])
+              merging.add(a.id)
+              merging.add(b.id)
+            }
             continue
           }
-          if (!canMerge(a, b)) {
-            resolveCircleCollision(a, b)
-          }
+
+          if (!needsCollision(a, b)) continue
+          resolveCircleCollision(a, b)
         }
       }
-      this.walls()
+      // 碰撞轮次只贴边，不弹墙
+      for (const b of this.bodies) {
+        if (b.removed) continue
+        clampWorldBounds(b, WORLD_WIDTH, WORLD_HEIGHT)
+      }
     }
 
     hardSeparateAll(this.bodies, WORLD_WIDTH, WORLD_HEIGHT)
