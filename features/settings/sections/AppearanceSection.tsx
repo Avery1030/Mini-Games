@@ -48,7 +48,7 @@ export function AppearanceSection() {
           <div className='text-xs font-bold mb-1.5'>{t('uiScale')}</div>
           <Select
             size='sm'
-            className='min-w-[180px]'
+            className='min-w-[180px] max-md:min-w-0 max-md:w-full'
             value={uiScale}
             onValueChange={(v) => patchSettings({ uiScale: v as UiScale })}
             options={UI_SCALE_OPTIONS.map((value) => ({
@@ -63,7 +63,7 @@ export function AppearanceSection() {
           <div className='text-xs font-bold mb-1.5'>{t('colorTheme')}</div>
           <Select
             size='sm'
-            className='min-w-[140px]'
+            className='min-w-[140px] max-md:min-w-0 max-md:w-full'
             value={themeValue}
             onValueChange={(v) => setTheme(v)}
             options={[
@@ -86,7 +86,7 @@ export function AppearanceSection() {
           <div className='text-xs font-bold mb-1.5'>{t('iconSize')}</div>
           <Select
             size='sm'
-            className='min-w-[140px]'
+            className='min-w-[140px] max-md:min-w-0 max-md:w-full'
             value={iconSize}
             onValueChange={(v) => patchSettings({ iconSize: v as 'sm' | 'md' | 'lg' })}
             options={[
@@ -124,7 +124,7 @@ export function AppearanceSection() {
             <div className='text-xs font-bold mb-1.5'>{t('screensaverIdle')}</div>
             <Select
               size='sm'
-              className='min-w-[180px]'
+              className='min-w-[180px] max-md:min-w-0 max-md:w-full'
               value={String(screensaverIdleMinutes)}
               disabled={!screensaverEnabled}
               onValueChange={(v) =>

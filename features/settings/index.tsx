@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
-import { Panel, SplitPane } from '@/components/ui'
+import { MasterDetail, Panel } from '@/components/ui'
+import { useIsMobileViewport } from '@/hooks/desktop'
 import {
   CUSTOM_WALLPAPER_ID,
   DEFAULT_WALLPAPER_FIT,
@@ -51,7 +52,10 @@ function draftFromSettings(
 export function SettingsApp({ embedded = false }: SettingsProps = {}) {
   const t = useTranslations('settings')
   const tw = useTranslations('wallpapers')
+  const isMobile = useIsMobileViewport()
   const [section, setSection] = useState<SectionId>('display')
+  /** 窄屏默认先看分区列表；桌面端忽略此状态 */
+  const [detailOpen, setDetailOpen] = useState(false)
 
   const { wallpaperId, wallpaperPath, wallpaperFit, wallpaper3dEnabled, wallpaper3dPath } = useWallpaperSettings()
 
@@ -223,12 +227,25 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
 
   return (
     <div
-      className={cn(embeddedAppShell(embedded, 'flex text-sm text-on-chrome bg-window font-pixel'), !embedded && 'p-4')}
+      className={cn(
+        embeddedAppShell(embedded, 'flex flex-col text-sm text-on-chrome bg-window font-pixel'),
+        !embedded && 'p-4',
+      )}
     >
-      <div className='flex-1 min-h-0 flex m-2'>
-        <SplitPane defaultSize={108} minSize={88} maxSize={200} storageKey='split:settings'>
+      <div className={cn('flex-1 min-h-0 flex m-2', isMobile && 'm-0')}>
+        <MasterDetail
+          defaultSize={108}
+          minSize={88}
+          maxSize={200}
+          storageKey='split:settings'
+          detailOpen={detailOpen}
+          onDetailOpenChange={setDetailOpen}
+          detailTitle={t(`sections.${section}`)}
+        >
           <Panel padded={false} className='h-full min-h-0 flex flex-col overflow-hidden'>
-            <div className='px-2 py-1.5 text-[11px] font-bold border-b border-chrome-dark'>{t('title')}</div>
+            <div className='px-2 py-1.5 text-[11px] font-bold border-b border-chrome-dark max-md:py-2.5 max-md:text-[13px]'>
+              {t('title')}
+            </div>
             <ul className='flex-1 overflow-y-auto p-1'>
               {SETTINGS_SECTIONS.map((id) => {
                 const selected = id === section
@@ -237,12 +254,16 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
                     <button
                       type='button'
                       className={cn(
-                        'w-full text-left px-2 py-1.5 text-[11px]',
+                        'w-full text-left px-2 py-1.5 text-[11px] touch-manipulation',
+                        'max-md:min-h-11 max-md:px-3 max-md:py-3 max-md:text-[13px]',
                         selected
                           ? 'bg-[var(--window-title-active)] text-[var(--window-title-text)]'
-                          : 'hover:bg-chrome-hover',
+                          : 'hover:bg-chrome-hover active:bg-chrome-hover',
                       )}
-                      onClick={() => setSection(id)}
+                      onClick={() => {
+                        setSection(id)
+                        setDetailOpen(true)
+                      }}
                     >
                       {t(`sections.${id}`)}
                     </button>
@@ -286,7 +307,7 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
             {section === 'taskbar' && <TaskbarSection />}
             {section === 'data' && <DataSection />}
           </div>
-        </SplitPane>
+        </MasterDetail>
       </div>
     </div>
   )

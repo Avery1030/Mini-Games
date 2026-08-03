@@ -42,7 +42,7 @@ export function NoteEditor({
 
   return (
     <Panel inset className='h-full min-h-0 flex flex-col overflow-hidden !p-2'>
-      <div className='shrink-0 flex items-center gap-2 mb-2'>
+      <div className='shrink-0 flex items-center gap-2 mb-2 max-md:mb-2.5'>
         <Input
           value={title}
           onChange={(e: ChangeEvent<HTMLInputElement>) => onTitleChange(e.target.value)}
@@ -52,7 +52,7 @@ export function NoteEditor({
           className='flex-1 font-bold'
           aria-label={t('title')}
         />
-        <Button size='md' className='px-3 font-bold' loading={saving} disabled={!dirty || saving} onClick={onSave}>
+        <Button size='md' className='px-3 font-bold max-md:min-h-9' loading={saving} disabled={!dirty || saving} onClick={onSave}>
           {t('save')}
         </Button>
       </div>
@@ -64,7 +64,7 @@ export function NoteEditor({
         className={cn(
           'flex-1 min-h-0 w-full resize-none font-pixel text-[12px] leading-relaxed',
           'bg-field text-on-chrome border-2 border-t-chrome-dark border-l-chrome-dark border-r-chrome-light border-b-chrome-light',
-          'outline-none p-2',
+          'outline-none p-2 max-md:text-[14px] max-md:leading-relaxed max-md:p-2.5',
           wordWrap ? 'whitespace-pre-wrap break-words' : 'whitespace-pre overflow-auto',
         )}
         aria-label={t('content')}

@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
-import { Button, Input, Panel, SplitPane, modal } from '@/components/ui'
+import { Button, Input, MasterDetail, Panel, modal } from '@/components/ui'
+import { useIsMobileViewport } from '@/hooks/desktop'
 import { usePaintStore } from '@/store/paint'
 import {
   createDrawingApi,
@@ -25,6 +26,8 @@ export interface PaintProps {
 export function PaintApp({ embedded = false }: PaintProps = {}) {
   const t = useTranslations('paint')
   const tm = useTranslations('modal')
+  const isMobile = useIsMobileViewport()
+  const [detailOpen, setDetailOpen] = useState(true)
   const lastDrawingId = usePaintStore((s) => s.lastDrawingId)
   const tool = usePaintStore((s) => s.tool)
   const color = usePaintStore((s) => s.color)
@@ -256,15 +259,29 @@ export function PaintApp({ embedded = false }: PaintProps = {}) {
         !embedded && 'p-4',
       )}
     >
-      <div className={cn('flex-1 min-h-0 flex p-2', embedded && 'p-3')}>
-        <SplitPane defaultSize={156} minSize={120} maxSize={300} storageKey='split:paint'>
+      <div className={cn('flex-1 min-h-0 flex p-2', embedded && 'p-3', isMobile && 'p-0')}>
+        <MasterDetail
+          defaultSize={156}
+          minSize={120}
+          maxSize={300}
+          storageKey='split:paint'
+          detailOpen={detailOpen}
+          onDetailOpenChange={setDetailOpen}
+          detailTitle={title || t('untitled')}
+        >
           <DrawingSidebar
             drawings={drawings}
             activeId={activeId}
             loading={listLoading}
             busy={busy || saving}
-            onSelect={(id) => void openDrawing(id)}
-            onCreate={() => void onCreate()}
+            onSelect={(id) => {
+              void openDrawing(id)
+              setDetailOpen(true)
+            }}
+            onCreate={() => {
+              setDetailOpen(true)
+              void onCreate()
+            }}
             onDelete={(id) => void onDelete(id)}
           />
 
@@ -275,7 +292,7 @@ export function PaintApp({ embedded = false }: PaintProps = {}) {
               </div>
             ) : (
               <>
-                <div className='shrink-0 flex items-center gap-2 px-2 py-1.5 border-b border-chrome-dark'>
+                <div className='shrink-0 flex items-center gap-2 px-2 py-1.5 border-b border-chrome-dark max-md:py-2'>
                   <Input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
@@ -287,7 +304,7 @@ export function PaintApp({ embedded = false }: PaintProps = {}) {
                   />
                   <Button
                     size='md'
-                    className='px-3 font-bold'
+                    className='px-3 font-bold max-md:min-h-9'
                     loading={saving}
                     disabled={!isDirty || saving}
                     onClick={() => void onSave()}
@@ -309,9 +326,9 @@ export function PaintApp({ embedded = false }: PaintProps = {}) {
                   onClear={() => void onClear()}
                 />
 
-                <div className='relative flex-1 min-h-0 min-w-0 bg-panel-inset'>
+                <div className='relative flex-1 min-h-0 min-w-0 bg-panel-inset touch-none'>
                   {/* absolute 铺满，避免 h-full 塌缩导致画布无法按容器放大 */}
-                  <div className='absolute inset-2'>
+                  <div className='absolute inset-1 max-md:inset-1.5 md:inset-2'>
                     <DrawingCanvas
                       ref={canvasRef}
                       tool={tool}
@@ -327,10 +344,10 @@ export function PaintApp({ embedded = false }: PaintProps = {}) {
               </>
             )}
           </Panel>
-        </SplitPane>
+        </MasterDetail>
       </div>
 
-      <div className='shrink-0 px-3 py-1.5 border-t border-chrome-dark bg-status-bar text-[10px] text-status-bar-fg flex justify-between gap-2'>
+      <div className='shrink-0 px-3 py-1.5 border-t border-chrome-dark bg-status-bar text-[10px] text-status-bar-fg flex justify-between gap-2 max-md:py-2'>
         <span className='truncate min-w-0'>
           {error ? (
             <span className='text-[#c00]'>{error}</span>
@@ -342,7 +359,7 @@ export function PaintApp({ embedded = false }: PaintProps = {}) {
             })
           )}
         </span>
-        <span className='shrink-0 opacity-80'>{t('shortcutSave')}</span>
+        <span className='shrink-0 opacity-80 max-md:hidden'>{t('shortcutSave')}</span>
       </div>
     </div>
   )

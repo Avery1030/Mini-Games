@@ -65,7 +65,9 @@
     "noRecents": "No open apps",
     "emptyHome": "No apps on the home screen",
     "minimized": "Minimized",
-    "running": "Running"
+    "running": "Running",
+    "backToList": "Back to list",
+    "showList": "List"
   },
   "startMenu": {
     "brand": "Avery Mini App",

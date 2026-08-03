@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronLeft, ChevronRight, FolderOpen, Link2, Trash2 } from 'lucide-react'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
-import { Button, Input, SplitPane, modal, toast } from '@/components/ui'
+import { Button, Input, MasterDetail, modal, toast } from '@/components/ui'
 import {
   fetchImageByPath,
   fetchImageList,
@@ -33,6 +33,7 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
   const t = useTranslations('imageViewer')
   const tm = useTranslations('modal')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [detailOpen, setDetailOpen] = useState(true)
 
   const [images, setImages] = useState<ImageItem[]>([])
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -81,6 +82,7 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
         setSelectedIds([item.id])
         setActiveId(item.id)
         setUrlPreview(null)
+        setDetailOpen(true)
       } catch (err) {
         toast.error(err instanceof Error ? err.message : t('loadFail'))
       }
@@ -128,6 +130,7 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
     setSlideDir(0)
     setSelectedIds([id])
     setActiveId(id)
+    setDetailOpen(true)
   }, [])
 
   const toggleSelect = useCallback((id: string) => {
@@ -144,6 +147,7 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
         return next
       }
       setActiveId(id)
+      setDetailOpen(true)
       return [...prev, id]
     })
   }, [])
@@ -291,21 +295,31 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
         !embedded && 'p-4',
       )}
     >
-      <div className='shrink-0 flex flex-wrap items-center gap-1.5 px-2 py-1.5 border-b border-chrome-dark bg-chrome-hover/30'>
+      <div className='shrink-0 flex flex-wrap items-center gap-1.5 px-2 py-1.5 border-b border-chrome-dark bg-chrome-hover/30 max-md:gap-2 max-md:py-2'>
         <input
           ref={fileInputRef}
           type='file'
           accept='image/*'
           multiple
           className='hidden'
-          onChange={(e) => void handleUpload(e.target.files)}
+          onChange={(e) => {
+            void handleUpload(e.target.files)
+            setDetailOpen(true)
+          }}
         />
-        <Button size='sm' disabled={busy} loading={pending === 'upload'} onClick={() => fileInputRef.current?.click()}>
+        <Button
+          size='sm'
+          className='max-md:min-h-9'
+          disabled={busy}
+          loading={pending === 'upload'}
+          onClick={() => fileInputRef.current?.click()}
+        >
           {pending !== 'upload' && <FolderOpen size={12} />}
           {t('upload')}
         </Button>
         <Button
           size='sm'
+          className='max-md:min-h-9'
           variant='raised'
           disabled={busy || selectedIds.length === 0}
           loading={pending === 'delete'}
@@ -314,36 +328,57 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
           {pending !== 'delete' && <Trash2 size={12} />}
           {t('delete')}
         </Button>
-        <div className='flex items-center gap-1 min-w-0 flex-1 max-w-md ml-auto'>
+        <div className='flex items-center gap-1 min-w-0 flex-1 max-w-md ml-auto max-md:ml-0 max-md:basis-full max-md:max-w-none'>
           <Input
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
             placeholder={t('urlPlaceholder')}
-            className='h-7 text-[11px] min-w-0 flex-1'
+            className='h-7 text-[11px] min-w-0 flex-1 max-md:h-9 max-md:text-[13px]'
             disabled={busy}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
                 handleUrlPreview()
+                setDetailOpen(true)
               }
             }}
           />
-          <Button size='sm' disabled={busy} onClick={handleUrlPreview}>
+          <Button
+            size='sm'
+            className='max-md:min-h-9'
+            disabled={busy}
+            onClick={() => {
+              handleUrlPreview()
+              setDetailOpen(true)
+            }}
+          >
             {t('previewUrl')}
           </Button>
-          <Button size='sm' disabled={busy} loading={pending === 'import'} onClick={() => void handleUrlImport()}>
+          <Button
+            size='sm'
+            className='max-md:min-h-9'
+            disabled={busy}
+            loading={pending === 'import'}
+            onClick={() => {
+              setDetailOpen(true)
+              void handleUrlImport()
+            }}
+          >
             {pending !== 'import' && <Link2 size={12} />}
             {t('importUrl')}
           </Button>
         </div>
       </div>
 
-      <SplitPane
+      <MasterDetail
         className='flex-1 min-h-0'
         defaultSize={220}
         minSize={160}
         maxSize={320}
         storageKey='split:image-viewer'
+        detailOpen={detailOpen}
+        onDetailOpenChange={setDetailOpen}
+        detailTitle={urlPreview ? t('footerUrlPreview') : activeImage?.title}
       >
         <ImageSidebar
           images={images}
@@ -355,7 +390,7 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
           onSelectAll={selectAll}
         />
         <div className='h-full min-h-0 flex flex-col bg-window-body'>
-          <div className='flex-1 min-h-0 relative flex items-center justify-center p-3 overflow-hidden'>
+          <div className='flex-1 min-h-0 relative flex items-center justify-center p-3 overflow-hidden max-md:p-2'>
             {previewSrc ? (
               <>
                 <ImagePreviewCarousel
@@ -367,37 +402,37 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
                   <>
                     <button
                       type='button'
-                      className='absolute left-2 top-1/2 -translate-y-1/2 z-[1] h-8 w-8 inline-flex items-center justify-center bg-chrome border-2 border-t-chrome-light border-l-chrome-light border-r-chrome-dark border-b-chrome-dark'
+                      className='absolute left-2 top-1/2 -translate-y-1/2 z-[1] h-8 w-8 inline-flex items-center justify-center bg-chrome border-2 border-t-chrome-light border-l-chrome-light border-r-chrome-dark border-b-chrome-dark touch-manipulation max-md:size-10'
                       aria-label={t('prev')}
                       onClick={() => goRelative(-1)}
                     >
-                      <ChevronLeft size={16} />
+                      <ChevronLeft size={16} className='max-md:size-5' />
                     </button>
                     <button
                       type='button'
-                      className='absolute right-2 top-1/2 -translate-y-1/2 z-[1] h-8 w-8 inline-flex items-center justify-center bg-chrome border-2 border-t-chrome-light border-l-chrome-light border-r-chrome-dark border-b-chrome-dark'
+                      className='absolute right-2 top-1/2 -translate-y-1/2 z-[1] h-8 w-8 inline-flex items-center justify-center bg-chrome border-2 border-t-chrome-light border-l-chrome-light border-r-chrome-dark border-b-chrome-dark touch-manipulation max-md:size-10'
                       aria-label={t('next')}
                       onClick={() => goRelative(1)}
                     >
-                      <ChevronRight size={16} />
+                      <ChevronRight size={16} className='max-md:size-5' />
                     </button>
                   </>
                 )}
               </>
             ) : (
-              <p className='text-[12px] text-muted text-center px-4'>{t('selectOrUpload')}</p>
+              <p className='text-[12px] text-muted text-center px-4 max-md:text-[13px]'>{t('selectOrUpload')}</p>
             )}
           </div>
 
           {selectedImages.length > 1 && !urlPreview && (
-            <div className='shrink-0 border-t border-chrome-dark bg-chrome/40 px-2 py-1.5 overflow-x-auto'>
+            <div className='shrink-0 border-t border-chrome-dark bg-chrome/40 px-2 py-1.5 overflow-x-auto max-md:py-2'>
               <div className='flex items-center gap-1.5 min-w-min'>
                 {selectedImages.map((img) => (
                   <button
                     key={img.id}
                     type='button'
                     className={cn(
-                      'shrink-0 w-14 h-14 border-2 bg-window-body overflow-hidden',
+                      'shrink-0 w-14 h-14 border-2 bg-window-body overflow-hidden touch-manipulation max-md:size-16',
                       img.id === activeId
                         ? 'border-accent'
                         : 'border-t-chrome-light border-l-chrome-light border-r-chrome-dark border-b-chrome-dark',
@@ -422,7 +457,7 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
             </div>
           )}
 
-          <div className='shrink-0 px-2 py-1 border-t border-chrome-dark text-[10px] text-muted'>
+          <div className='shrink-0 px-2 py-1 border-t border-chrome-dark text-[10px] text-muted max-md:py-1.5 max-md:text-[11px]'>
             {urlPreview
               ? t('footerUrlPreview')
               : t('footer', {
@@ -431,7 +466,7 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
                 })}
           </div>
         </div>
-      </SplitPane>
+      </MasterDetail>
     </div>
   )
 }

@@ -3,6 +3,7 @@ export { Input, type InputProps, type InputSize, type InputTone } from './Input'
 export { Select, type SelectProps, type SelectOption, type SelectSize } from './Select'
 export { Panel, type PanelProps } from './Panel'
 export { SplitPane, type SplitPaneProps } from './SplitPane'
+export { MasterDetail, type MasterDetailProps } from './MasterDetail'
 export { Tab, type TabProps } from './Tab'
 export { Checkbox, type CheckboxProps } from './Checkbox'
 export {

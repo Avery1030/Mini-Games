@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
-import { SplitPane, modal, toast } from '@/components/ui'
+import { MasterDetail, modal, toast } from '@/components/ui'
+import { useIsMobileViewport } from '@/hooks/desktop'
 import { useNotepadStore } from '@/store/notepad'
 import { createNoteApi, deleteNoteApi, fetchNote, fetchNoteList, updateNoteApi } from './api'
 import { NoteEditor } from './NoteEditor'
@@ -19,6 +20,8 @@ export interface NotepadProps {
 export function NotepadApp({ embedded = false }: NotepadProps = {}) {
   const t = useTranslations('notepad')
   const tm = useTranslations('modal')
+  const isMobile = useIsMobileViewport()
+  const [detailOpen, setDetailOpen] = useState(true)
   const lastNoteId = useNotepadStore((s) => s.lastNoteId)
   const wordWrap = useNotepadStore((s) => s.wordWrap)
   const setLastNoteId = useNotepadStore((s) => s.setLastNoteId)
@@ -211,15 +214,29 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
         !embedded && 'p-4',
       )}
     >
-      <div className={cn('flex-1 min-h-0 flex p-2', embedded && 'p-3')}>
-        <SplitPane defaultSize={168} minSize={120} maxSize={320} storageKey='split:notepad'>
+      <div className={cn('flex-1 min-h-0 flex p-2', embedded && 'p-3', isMobile && 'p-0')}>
+        <MasterDetail
+          defaultSize={168}
+          minSize={120}
+          maxSize={320}
+          storageKey='split:notepad'
+          detailOpen={detailOpen}
+          onDetailOpenChange={setDetailOpen}
+          detailTitle={title || t('untitled')}
+        >
           <NoteSidebar
             notes={notes}
             activeId={activeId}
             loading={listLoading}
             busy={busy || saving}
-            onSelect={(id) => void openNote(id)}
-            onCreate={() => void onCreate()}
+            onSelect={(id) => {
+              void openNote(id)
+              setDetailOpen(true)
+            }}
+            onCreate={() => {
+              setDetailOpen(true)
+              void onCreate()
+            }}
             onDelete={(id) => void onDelete(id)}
           />
           <NoteEditor
@@ -234,12 +251,12 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
             onWordWrapChange={setWordWrap}
             onSave={() => void onSave()}
           />
-        </SplitPane>
+        </MasterDetail>
       </div>
 
-      <div className='shrink-0 px-3 py-1.5 border-t border-chrome-dark bg-status-bar text-[10px] text-status-bar-fg flex justify-between gap-2'>
+      <div className='shrink-0 px-3 py-1.5 border-t border-chrome-dark bg-status-bar text-[10px] text-status-bar-fg flex justify-between gap-2 max-md:py-2'>
         <span className='truncate min-w-0'>{t('footer', { count: notes.length })}</span>
-        <span className='shrink-0 opacity-80'>{t('shortcutSave')}</span>
+        <span className='shrink-0 opacity-80 max-md:hidden'>{t('shortcutSave')}</span>
       </div>
     </div>
   )

@@ -25,7 +25,7 @@ export function TaskbarSection() {
           <div className='text-xs font-bold mb-1.5'>{t('clockFormat')}</div>
           <Select
             size='sm'
-            className='min-w-[140px]'
+            className='min-w-[140px] max-md:min-w-0 max-md:w-full'
             value={clockFormat}
             onValueChange={(v) => patchSettings({ clockFormat: v as '12h' | '24h' })}
             options={[

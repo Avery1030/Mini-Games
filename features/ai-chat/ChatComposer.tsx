@@ -82,7 +82,7 @@ export function ChatComposer({
         className={cn(
           winChromeSunken,
           'w-full resize-none px-2 py-1.5 text-[12px] bg-window text-on-chrome',
-          'outline-none disabled:opacity-60',
+          'outline-none disabled:opacity-60 max-md:min-h-[72px] max-md:text-[14px] max-md:py-2',
         )}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={(e) => {
@@ -113,11 +113,11 @@ export function ChatComposer({
         </div>
         <div className='flex items-center gap-1.5 shrink-0'>
           {streaming ? (
-            <Button type='button' size='sm' onClick={onStop}>
+            <Button type='button' size='sm' className='max-md:min-h-9 max-md:px-3' onClick={onStop}>
               {t('stop')}
             </Button>
           ) : (
-            <Button type='button' size='sm' disabled={!canSend} onClick={send}>
+            <Button type='button' size='sm' className='max-md:min-h-9 max-md:px-3' disabled={!canSend} onClick={send}>
               {t('send')}
             </Button>
           )}

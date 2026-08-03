@@ -76,7 +76,7 @@ export function MobileAppHost() {
         </button>
       </header>
 
-      <div className='min-h-0 flex-1 overflow-auto overscroll-contain'>
+      <div className='min-h-0 flex-1 overflow-hidden overscroll-contain'>
         <App embedded />
       </div>
     </div>
