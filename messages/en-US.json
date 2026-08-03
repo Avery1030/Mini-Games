@@ -6,6 +6,7 @@
   "apps": {
     "minesweeper": "Minesweeper",
     "tetris": "Tetris",
+    "suika": "Suika Game",
     "document": "Document",
     "log": "Log",
     "notepad": "Notepad",
@@ -575,7 +576,10 @@
         "Settings, Zhi Chat, Notepad, Paint, Changelog, Image Viewer, and Documents now use mobile-friendly layouts with larger touch targets.",
         "Paint toolbar wraps on small screens; the palette uses a responsive grid.",
         "Mobile app host scrolls inside each app to avoid nested scroll conflicts.",
-        "Task Manager Programs / Applications open or switch on a single tap on touch (desktop still uses double-click)."
+        "Task Manager Programs / Applications open or switch on a single tap on touch (desktop still uses double-click).",
+        "New mini-game Suika (Watermelon Merge): Canvas rendering + custom circle physics (gravity, wall/ball collisions, friction, sleep, chain merges, danger-line game over) with no third-party physics library.",
+        "Suika: vertical drop-guide dashed line, shaded spheres with centered emoji glyphs, and local best-score persistence.",
+        "Suika physics: hard separation for deep penetration, stacked-weight wall slide-out, tunable fruit/ground friction."
       ]
     },
     "2026-07-29": {
@@ -684,6 +688,32 @@
   },
   "calculator": {
     "error": "Error"
+  },
+  "suika": {
+    "title": "Suika Game",
+    "score": "Score",
+    "best": "Best",
+    "next": "Next",
+    "restart": "Restart",
+    "danger": "Danger",
+    "gameover": "Game Over",
+    "finalScore": "Final score",
+    "playAgain": "Play again",
+    "hint": "Drag to aim, release to drop · ←/→ move · Space drop · R restart",
+    "boardLabel": "Suika game board",
+    "fruits": {
+      "cherry": "Cherry",
+      "strawberry": "Strawberry",
+      "grape": "Grape",
+      "orange": "Orange",
+      "persimmon": "Persimmon",
+      "apple": "Apple",
+      "pear": "Pear",
+      "peach": "Peach",
+      "pineapple": "Pineapple",
+      "melon": "Melon",
+      "watermelon": "Watermelon"
+    }
   },
   "klineChart": {
     "symbol": "Symbol",

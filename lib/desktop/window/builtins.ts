@@ -4,6 +4,7 @@
  */
 import '@/features/minesweeper/register'
 import '@/features/tetris/register'
+import '@/features/suika/register'
 import '@/features/document/register'
 import '@/features/log/register'
 import '@/features/notepad/register'
