@@ -23,7 +23,8 @@
     "aiChat": "Zhi Chat",
     "taskManager": "Gestionnaire des tâches",
     "imageViewer": "Visionneuse d'images",
-    "fileExplorer": "Explorateur de fichiers"
+    "fileExplorer": "Explorateur de fichiers",
+    "sokoban": "Sokoban"
   },
   "desktop": {
     "open": "Ouvrir",
@@ -589,7 +590,8 @@
         "Ajout du « Puzzle » : Canvas pur avec pièces à tenons ; aimantation relative aux voisins en groupes librement déplaçables, sans librairie DnD/physique tierce.",
         "Sous-menu « Programmes » du menu Démarrer limité à 400px de hauteur max (défilement si besoin).",
         "Ajout du japonais, chinois traditionnel, russe, allemand et français ; le sélecteur de langue de la barre des tâches prend en charge sept langues.",
-        "Noms d’affichage des apps intégrées uniquement via messages.apps ; suppression des titles multilingues dans register.ts."
+        "Noms d’affichage des apps intégrées uniquement via messages.apps ; suppression des titles multilingues dans register.ts.",
+        "Ajout de « Sokoban » : niveaux JSON statiques, annuler/recommencer/sélection, dans le dossier « Jeux »."
       ]
     },
     "2026-08-03": {
@@ -918,5 +920,29 @@
       "joke": "Raconte une blague de programmeur 😄",
       "code": "Montre un exemple JS de déduplication de tableau 💻"
     }
+  },
+  "sokoban": {
+    "title": "Sokoban",
+    "moves": "Coups",
+    "placed": "Placées",
+    "level": "Niveau",
+    "levelN": "Niveau {n}",
+    "undo": "Annuler",
+    "reset": "Recommencer",
+    "loading": "Chargement du niveau…",
+    "loadFailed": "Échec du chargement du niveau.",
+    "boardLabel": "Carte Sokoban",
+    "player": "Joueur",
+    "dirUp": "Haut",
+    "dirDown": "Bas",
+    "dirLeft": "Gauche",
+    "dirRight": "Droite",
+    "hint": "Flèches ou pad à l’écran ; une caisse à la fois · Ctrl/⌘+Z annuler",
+    "won": "Niveau réussi !",
+    "wonHint": "Toutes les caisses sont sur les cibles",
+    "playAgain": "Rejouer",
+    "prevLevel": "Niveau précédent",
+    "nextLevel": "Niveau suivant",
+    "close": "Fermer"
   }
 }

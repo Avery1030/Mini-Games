@@ -23,7 +23,8 @@
     "aiChat": "Zhi Chat",
     "taskManager": "Task-Manager",
     "imageViewer": "Bildbetrachter",
-    "fileExplorer": "Datei-Explorer"
+    "fileExplorer": "Datei-Explorer",
+    "sokoban": "Sokoban"
   },
   "desktop": {
     "open": "Öffnen",
@@ -589,7 +590,8 @@
         "„Puzzle“ hinzugefügt: reines Canvas mit Zapfenstücken; relatives Einschnappen zu Nachbarn in frei ziebbare Gruppen, ohne Drittanbieter-DnD/Physik.",
         "Untermenü „Programme“ im Startmenü auf max. 400px Höhe begrenzt (bei Bedarf scrollbar).",
         "Japanisch, Traditionelles Chinesisch, Russisch, Deutsch und Französisch hinzugefügt; Sprachumschalter in der Taskleiste unterstützt sieben Sprachen.",
-        "Anzeigenamen eingebauter Apps nur noch aus messages.apps; mehrsprachige titles in register.ts entfernt."
+        "Anzeigenamen eingebauter Apps nur noch aus messages.apps; mehrsprachige titles in register.ts entfernt.",
+        "„Sokoban“ hinzugefügt: statische JSON-Level, Undo/Neustart/Auswahl, im Ordner „Spiele“."
       ]
     },
     "2026-08-03": {
@@ -918,5 +920,29 @@
       "joke": "Erzähl einen Programmierer-Witz 😄",
       "code": "Zeig ein JS-Array-Deduplizierungs-Beispiel 💻"
     }
+  },
+  "sokoban": {
+    "title": "Sokoban",
+    "moves": "Züge",
+    "placed": "Platziert",
+    "level": "Level",
+    "levelN": "Level {n}",
+    "undo": "Rückgängig",
+    "reset": "Neustart",
+    "loading": "Level wird geladen…",
+    "loadFailed": "Level konnte nicht geladen werden.",
+    "boardLabel": "Sokoban-Karte",
+    "player": "Spieler",
+    "dirUp": "Hoch",
+    "dirDown": "Runter",
+    "dirLeft": "Links",
+    "dirRight": "Rechts",
+    "hint": "Pfeiltasten oder Bildschirmpad; nur eine Kiste · Ctrl/⌘+Z rückgängig",
+    "won": "Level geschafft!",
+    "wonHint": "Alle Kisten stehen auf Zielen",
+    "playAgain": "Nochmal",
+    "prevLevel": "Vorheriges Level",
+    "nextLevel": "Nächstes Level",
+    "close": "Schließen"
   }
 }

@@ -23,7 +23,8 @@
     "aiChat": "Zhi Chat",
     "taskManager": "Task Manager",
     "imageViewer": "Image Viewer",
-    "fileExplorer": "File Explorer"
+    "fileExplorer": "File Explorer",
+    "sokoban": "Sokoban"
   },
   "desktop": {
     "open": "Open",
@@ -589,7 +590,8 @@
         "Added Jigsaw: pure Canvas tabbed pieces with neighbor relative snap into freely draggable clusters; no third-party DnD/physics libraries.",
         "Capped the Start Menu Programs submenu at 400px max height (scroll when needed).",
         "Added Japanese, Traditional Chinese, Russian, German, and French; the taskbar language switcher supports seven locales.",
-        "Built-in app display names come from messages.apps only; register.ts no longer duplicates multilingual titles."
+        "Built-in app display names come from messages.apps only; register.ts no longer duplicates multilingual titles.",
+        "Added Sokoban: static JSON levels (levels.json), undo/restart/level select, listed in the Games folder."
       ]
     },
     "2026-08-03": {
@@ -918,5 +920,29 @@
       "joke": "Tell a programmer joke 😄",
       "code": "Show a JS array dedupe example 💻"
     }
+  },
+  "sokoban": {
+    "title": "Sokoban",
+    "moves": "Moves",
+    "placed": "Placed",
+    "level": "Level",
+    "levelN": "Level {n}",
+    "undo": "Undo",
+    "reset": "Restart",
+    "loading": "Loading level…",
+    "loadFailed": "Failed to load level. Please refresh.",
+    "boardLabel": "Sokoban map",
+    "player": "Player",
+    "dirUp": "Up",
+    "dirDown": "Down",
+    "dirLeft": "Left",
+    "dirRight": "Right",
+    "hint": "Arrow keys or on-screen pad; push one crate at a time · Ctrl/⌘+Z undo",
+    "won": "Level clear!",
+    "wonHint": "All crates are on targets",
+    "playAgain": "Play again",
+    "prevLevel": "Previous level",
+    "nextLevel": "Next level",
+    "close": "Close"
   }
 }

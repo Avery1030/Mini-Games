@@ -23,7 +23,8 @@
     "aiChat": "智聊",
     "taskManager": "工作管理員",
     "imageViewer": "圖片檢視器",
-    "fileExplorer": "檔案總管"
+    "fileExplorer": "檔案總管",
+    "sokoban": "推箱子"
   },
   "desktop": {
     "open": "開啟",
@@ -589,7 +590,8 @@
         "新增「不規則拼圖」：純 Canvas 榫卯碎片；相鄰相對磁吸成組，合成大塊可繼續拖曳，無第三方拖曳/物理庫。",
         "開始功能表「程式」子功能表最大高度限制為 400px，超出可捲動。",
         "新增日文、繁體中文、俄語、德語、法語；工作列語言切換支援七種語言。",
-        "內建應用顯示名稱統一由 messages.apps 提供，register 不再重複設定多語言 titles。"
+        "內建應用顯示名稱統一由 messages.apps 提供，register 不再重複設定多語言 titles。",
+        "新增小遊戲「推箱子」：靜態 JSON 關卡、復原/重開/選關，收錄於「遊戲」資料夾。"
       ]
     },
     "2026-08-03": {
@@ -918,5 +920,29 @@
       "joke": "講一個程式設計師冷笑話 😄",
       "code": "寫一個 JS 陣列去重的例子 💻"
     }
+  },
+  "sokoban": {
+    "title": "推箱子",
+    "moves": "步數",
+    "placed": "就位",
+    "level": "關卡",
+    "levelN": "第 {n} 關",
+    "undo": "復原",
+    "reset": "重開",
+    "loading": "載入關卡…",
+    "loadFailed": "關卡載入失敗，請重新整理後再試。",
+    "boardLabel": "推箱子地圖",
+    "player": "玩家",
+    "dirUp": "上",
+    "dirDown": "下",
+    "dirLeft": "左",
+    "dirRight": "右",
+    "hint": "方向鍵或螢幕按鈕移動；一次只能推一個箱子 · Ctrl/⌘+Z 復原",
+    "won": "本關通過！",
+    "wonHint": "所有箱子都已就位",
+    "playAgain": "再玩一次",
+    "prevLevel": "上一關",
+    "nextLevel": "下一關",
+    "close": "關閉"
   }
 }
