@@ -1,14 +1,36 @@
-import { isWall, isVoid, hasBox } from './parseLevel'
 import {
-  DIR_DELTA,
   posKey,
-  samePos,
   type CellPos,
   type Direction,
   type LevelData,
   type MoveSnapshot,
   type SokobanState,
 } from './types'
+
+const DIR_DELTA: Record<Direction, CellPos> = {
+  up: { x: 0, y: -1 },
+  down: { x: 0, y: 1 },
+  left: { x: -1, y: 0 },
+  right: { x: 1, y: 0 },
+}
+
+function isWall(walls: readonly CellPos[], x: number, y: number): boolean {
+  return walls.some((w) => w.x === x && w.y === y)
+}
+
+function isVoid(voids: readonly CellPos[], x: number, y: number): boolean {
+  return voids.some((v) => v.x === x && v.y === y)
+}
+
+function hasBox(boxes: readonly CellPos[], x: number, y: number): boolean {
+  return boxes.some((b) => b.x === x && b.y === y)
+}
+
+function isSolved(boxes: readonly CellPos[], targets: readonly CellPos[]): boolean {
+  if (boxes.length !== targets.length) return false
+  const need = new Set(targets.map(posKey))
+  return boxes.every((b) => need.has(posKey(b)))
+}
 
 export function createStateFromLevel(levelId: number, level: LevelData): SokobanState {
   return {
@@ -20,12 +42,6 @@ export function createStateFromLevel(levelId: number, level: LevelData): Sokoban
     undoStack: [],
     won: false,
   }
-}
-
-export function isSolved(boxes: readonly CellPos[], targets: readonly CellPos[]): boolean {
-  if (boxes.length !== targets.length) return false
-  const need = new Set(targets.map(posKey))
-  return boxes.every((b) => need.has(posKey(b)))
 }
 
 /**
@@ -93,5 +109,5 @@ export function resetLevel(state: SokobanState): SokobanState {
 }
 
 export function boxOnTarget(box: CellPos, targets: readonly CellPos[]): boolean {
-  return targets.some((t) => samePos(t, box))
+  return targets.some((t) => t.x === box.x && t.y === box.y)
 }

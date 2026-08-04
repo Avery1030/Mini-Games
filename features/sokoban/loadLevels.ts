@@ -1,9 +1,9 @@
-import type { LevelData, LevelJsonEntry } from './types'
+import type { LevelData } from './types'
 import { normalizeLevelData } from './parseLevel'
 import { SOKOBAN_LEVELS } from './levels'
 
 export type LoadedLevels = {
-  entries: LevelJsonEntry[]
+  ids: number[]
   byId: Map<number, LevelData>
 }
 
@@ -17,7 +17,7 @@ export async function fetchAllLevels(): Promise<LoadedLevels> {
     throw new Error('[sokoban] levels empty')
   }
 
-  const entries: LevelJsonEntry[] = []
+  const ids: number[] = []
   const byId = new Map<number, LevelData>()
 
   for (const entry of SOKOBAN_LEVELS) {
@@ -31,30 +31,17 @@ export async function fetchAllLevels(): Promise<LoadedLevels> {
     }
     try {
       const level = normalizeLevelData({ map: entry.map })
-      const normalizedEntry: LevelJsonEntry = {
-        id: entry.id,
-        map: level.map,
-      }
-      entries.push(normalizedEntry)
+      ids.push(entry.id)
       byId.set(entry.id, level)
     } catch (err) {
       console.warn('[sokoban] skip unparsable level', entry.id, err)
     }
   }
 
-  if (entries.length === 0) {
+  if (ids.length === 0) {
     throw new Error('[sokoban] no valid levels')
   }
 
-  cache = { entries, byId }
+  cache = { ids, byId }
   return cache
-}
-
-export function getLevelById(bundle: LoadedLevels, id: number): LevelData | undefined {
-  return bundle.byId.get(id)
-}
-
-/** 测试或热更新时可清空缓存 */
-export function clearLevelsCache(): void {
-  cache = null
 }

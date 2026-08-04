@@ -1,23 +1,23 @@
 'use client'
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronLeft, ChevronRight, RotateCcw, Undo2 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { winChrome, winChromePressed, winChromeSunken } from '@/lib/winChrome'
 import { Select } from '@/components/ui'
+import { BOARD, MOVE_ANIM_MS, createStaticLayer, drawSokobanBoard, facingFromDelta, interpolateVisual, setupBoardCanvas, visualFromState, type BoardVisual } from './boardCanvas'
 import { boxOnTarget, createStateFromLevel, resetLevel, tryMove, undoMove } from './game'
 import { fetchAllLevels, type LoadedLevels } from './loadLevels'
-import { targetSet, wallSet, voidSet } from './parseLevel'
-import type { Direction, LevelJsonEntry, SokobanState } from './types'
+import type { Direction, SokobanState } from './types'
 
 export interface SokobanProps {
   embedded?: boolean
   onClose?: () => void
 }
 
-const MOVE_COOLDOWN_MS = 110
+const MOVE_COOLDOWN_MS = MOVE_ANIM_MS
 const CELL_MIN = 24
 const CELL_MAX = 48
 
@@ -99,101 +99,29 @@ function DpadButton({
   )
 }
 
-/** 俯视小人：头 + 肩身 + 手臂，随格子缩放 */
-function PlayerSprite({
-  size,
-  label,
-  x,
-  y,
-}: {
-  size: number
-  label: string
-  x: number
-  y: number
-}) {
-  const uid = useId().replace(/:/g, '')
-  const head = `${uid}-head`
-  const body = `${uid}-body`
-  const arm = `${uid}-arm`
-  const cap = `${uid}-cap`
-  const pad = Math.max(1, Math.round(size * 0.06))
-
-  return (
-    <div
-      className='absolute transition-[left,top] duration-100 ease-out pointer-events-none'
-      style={{ left: x, top: y, width: size, height: size, zIndex: 3 }}
-      aria-label={label}
-    >
-      <svg
-        width={size - pad * 2}
-        height={size - pad * 2}
-        viewBox='0 0 64 64'
-        className='absolute'
-        style={{ left: pad, top: pad, filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.35))' }}
-        aria-hidden
-      >
-        <defs>
-          <radialGradient id={head} cx='35%' cy='30%' r='65%'>
-            <stop offset='0%' stopColor='#ffe0bd' />
-            <stop offset='55%' stopColor='#f0b888' />
-            <stop offset='100%' stopColor='#d4926a' />
-          </radialGradient>
-          <linearGradient id={body} x1='0' y1='0' x2='0' y2='1'>
-            <stop offset='0%' stopColor='#6ea0ff' />
-            <stop offset='45%' stopColor='#3b6fe0' />
-            <stop offset='100%' stopColor='#1e3fa8' />
-          </linearGradient>
-          <linearGradient id={arm} x1='0' y1='0' x2='0' y2='1'>
-            <stop offset='0%' stopColor='#5b8ef5' />
-            <stop offset='100%' stopColor='#2a4fb8' />
-          </linearGradient>
-          <linearGradient id={cap} x1='0' y1='0' x2='0' y2='1'>
-            <stop offset='0%' stopColor='#3d5cff' />
-            <stop offset='100%' stopColor='#1a2f9e' />
-          </linearGradient>
-        </defs>
-
-        <ellipse cx='14' cy='36' rx='8' ry='11' fill={`url(#${arm})`} stroke='#153080' strokeWidth='1.2' />
-        <circle cx='12' cy='46' r='4.2' fill={`url(#${head})`} stroke='#c47a52' strokeWidth='0.8' />
-
-        <ellipse cx='50' cy='36' rx='8' ry='11' fill={`url(#${arm})`} stroke='#153080' strokeWidth='1.2' />
-        <circle cx='52' cy='46' r='4.2' fill={`url(#${head})`} stroke='#c47a52' strokeWidth='0.8' />
-
-        <ellipse cx='32' cy='38' rx='15' ry='17' fill={`url(#${body})`} stroke='#153080' strokeWidth='1.5' />
-        <ellipse cx='32' cy='30' rx='9' ry='4' fill='rgba(255,255,255,0.22)' />
-
-        <circle cx='32' cy='18' r='12' fill={`url(#${head})`} stroke='#c47a52' strokeWidth='1.2' />
-        <path
-          d='M20 16 Q32 8 44 16 Q32 12 20 16'
-          fill={`url(#${cap})`}
-          stroke='#152878'
-          strokeWidth='0.8'
-        />
-        <ellipse cx='32' cy='14' rx='10' ry='5.5' fill={`url(#${cap})`} stroke='#152878' strokeWidth='0.8' />
-
-        <circle cx='28' cy='19' r='1.8' fill='#1a1a2e' />
-        <circle cx='36' cy='19' r='1.8' fill='#1a1a2e' />
-        <circle cx='27.5' cy='18.4' r='0.6' fill='#fff' />
-        <circle cx='35.5' cy='18.4' r='0.6' fill='#fff' />
-
-        <path d='M28 23 Q32 26 36 23' fill='none' stroke='#b06040' strokeWidth='1.2' strokeLinecap='round' />
-      </svg>
-    </div>
-  )
-}
-
 /**
- * 推箱子：纯 DOM 格子地图 + 键盘/屏幕方向键，关卡见 levels.ts。
+ * 推箱子：Canvas 棋盘 + 键盘/屏幕方向键，关卡见 levels.ts。
  */
 export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
   const t = useTranslations('sokoban')
 
   const boardHostRef = useRef<HTMLDivElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
   const lastMoveAtRef = useRef(0)
   const stateRef = useRef<SokobanState | null>(null)
   const bundleRef = useRef<LoadedLevels | null>(null)
+  const visualRef = useRef<BoardVisual | null>(null)
+  const animFromRef = useRef<BoardVisual | null>(null)
+  const animToRef = useRef<BoardVisual | null>(null)
+  const animStartRef = useRef(0)
+  const rafRef = useRef(0)
+  const staticLayerRef = useRef<HTMLCanvasElement | null>(null)
+  const staticKeyRef = useRef('')
+  const levelIdForAnimRef = useRef<number | null>(null)
+  const cellPxRef = useRef(32)
 
-  const [catalog, setCatalog] = useState<LevelJsonEntry[]>([])
+  const [catalog, setCatalog] = useState<number[]>([])
   const [levelId, setLevelId] = useState<number | null>(null)
   const [state, setState] = useState<SokobanState | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -202,19 +130,116 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
   const [heldDir, setHeldDir] = useState<Direction | null>(null)
 
   stateRef.current = state
+  cellPxRef.current = cellPx
 
-  const selectLevel = useCallback((id: number) => {
-    const bundle = bundleRef.current
-    if (!bundle) return
-    const level = bundle.byId.get(id)
-    if (!level) {
-      setLoadError('loadFailed')
-      return
+  const paint = useCallback((visual: BoardVisual, level: SokobanState['level'], cell: number) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = setupBoardCanvas(canvas, level, cell)
+    if (!ctx) return
+
+    const key = `${level.width}x${level.height}:${cell}:${level.map.join('\n')}`
+    if (staticKeyRef.current !== key) {
+      staticLayerRef.current = createStaticLayer(level, cell)
+      staticKeyRef.current = key
     }
-    setLevelId(id)
-    setState(createStateFromLevel(id, level))
-    setLoadError(null)
+
+    drawSokobanBoard(ctx, {
+      level,
+      visual,
+      cellPx: cell,
+      staticLayer: staticLayerRef.current,
+    })
   }, [])
+
+  const stopAnim = useCallback(() => {
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = 0
+    }
+  }, [])
+
+  const runAnimFrame = useCallback(() => {
+    const cur = stateRef.current
+    const from = animFromRef.current
+    const to = animToRef.current
+    if (!cur || !from || !to) return
+
+    const elapsed = performance.now() - animStartRef.current
+    const t = Math.min(1, elapsed / MOVE_ANIM_MS)
+    const visual = interpolateVisual(from, to, t)
+    visualRef.current = visual
+    paint(visual, cur.level, cellPxRef.current)
+
+    if (t < 1) {
+      rafRef.current = requestAnimationFrame(runAnimFrame)
+    } else {
+      visualRef.current = to
+      animFromRef.current = null
+      animToRef.current = null
+      rafRef.current = 0
+    }
+  }, [paint])
+
+  const startMoveAnim = useCallback(
+    (next: SokobanState, snap: boolean) => {
+      const prevFacing = visualRef.current?.facing ?? 'down'
+      const facing = snap
+        ? ('down' as const)
+        : visualRef.current
+          ? facingFromDelta(visualRef.current.player, next.player, prevFacing)
+          : prevFacing
+      const target = visualFromState(next.player, next.boxes, next.level.targets, facing)
+      stopAnim()
+
+      if (snap || !visualRef.current) {
+        visualRef.current = target
+        animFromRef.current = null
+        animToRef.current = null
+        paint(target, next.level, cellPxRef.current)
+        return
+      }
+
+      animFromRef.current = visualRef.current
+      animToRef.current = target
+      animStartRef.current = performance.now()
+      rafRef.current = requestAnimationFrame(runAnimFrame)
+    },
+    [paint, runAnimFrame, stopAnim],
+  )
+
+  const startMoveAnimRef = useRef(startMoveAnim)
+  startMoveAnimRef.current = startMoveAnim
+
+  /** 把焦点从关卡 Select 收回游戏区，避免方向键再次打开下拉 */
+  const focusGame = useCallback(() => {
+    const root = rootRef.current
+    if (!root) return
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+      const active = document.activeElement
+      if (active !== root && root.contains(active)) {
+        active.blur()
+      }
+    }
+    root.focus({ preventScroll: true })
+  }, [])
+
+  const selectLevel = useCallback(
+    (id: number) => {
+      const bundle = bundleRef.current
+      if (!bundle) return
+      const level = bundle.byId.get(id)
+      if (!level) {
+        setLoadError('loadFailed')
+        return
+      }
+      setLevelId(id)
+      setState(createStateFromLevel(id, level))
+      setLoadError(null)
+      requestAnimationFrame(() => focusGame())
+    },
+    [focusGame],
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -225,11 +250,11 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
         const bundle = await fetchAllLevels()
         if (cancelled) return
         bundleRef.current = bundle
-        setCatalog(bundle.entries)
-        const first = bundle.entries[0]
-        if (first) {
-          setLevelId(first.id)
-          setState(createStateFromLevel(first.id, bundle.byId.get(first.id)!))
+        setCatalog(bundle.ids)
+        const first = bundle.ids[0]
+        if (first != null) {
+          setLevelId(first)
+          setState(createStateFromLevel(first, bundle.byId.get(first)!))
         }
       } catch (err) {
         if (cancelled) return
@@ -264,16 +289,39 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
     return () => ro.disconnect()
   }, [state])
 
-  const applyMove = useCallback((dir: Direction) => {
-    const now = Date.now()
-    if (now - lastMoveAtRef.current < MOVE_COOLDOWN_MS) return
+  // 状态变化 → 过渡 / 换关瞬切
+  useEffect(() => {
+    if (!state) return
+    const levelChanged = levelIdForAnimRef.current !== state.levelId
+    levelIdForAnimRef.current = state.levelId
+    startMoveAnimRef.current(state, levelChanged)
+  }, [state])
+
+  useEffect(() => () => stopAnim(), [stopAnim])
+
+  // cellPx 变化时重建静态层并按当前视觉位置重绘
+  useEffect(() => {
     const cur = stateRef.current
-    if (!cur || cur.won) return
-    const next = tryMove(cur, dir)
-    if (next === cur) return
-    lastMoveAtRef.current = now
-    setState(next)
-  }, [])
+    const visual = visualRef.current
+    if (!cur || !visual) return
+    staticKeyRef.current = ''
+    paint(visual, cur.level, cellPx)
+  }, [cellPx, paint])
+
+  const applyMove = useCallback(
+    (dir: Direction) => {
+      focusGame()
+      const now = Date.now()
+      if (now - lastMoveAtRef.current < MOVE_COOLDOWN_MS) return
+      const cur = stateRef.current
+      if (!cur || cur.won) return
+      const next = tryMove(cur, dir)
+      if (next === cur) return
+      lastMoveAtRef.current = now
+      setState(next)
+    },
+    [focusGame],
+  )
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -284,7 +332,15 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
       }
       const dir = keyToDir(e.key)
       if (!dir) return
+
+      const ae = document.activeElement
+      if (ae instanceof HTMLElement && ae.getAttribute('aria-expanded') === 'true') {
+        return
+      }
+
       e.preventDefault()
+      e.stopPropagation()
+      focusGame()
       setHeldDir(dir)
       applyMove(dir)
     }
@@ -292,13 +348,13 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
       const dir = keyToDir(e.key)
       if (dir) setHeldDir((prev) => (prev === dir ? null : prev))
     }
-    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keydown', onKeyDown, true)
     window.addEventListener('keyup', onKeyUp)
     return () => {
-      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keydown', onKeyDown, true)
       window.removeEventListener('keyup', onKeyUp)
     }
-  }, [applyMove])
+  }, [applyMove, focusGame])
 
   useEffect(() => {
     const clear = () => setHeldDir(null)
@@ -324,10 +380,10 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
   const goAdjacentLevel = useCallback(
     (delta: number) => {
       if (catalog.length === 0 || levelId == null) return
-      const idx = catalog.findIndex((c) => c.id === levelId)
+      const idx = catalog.indexOf(levelId)
       if (idx < 0) return
       const next = catalog[(idx + delta + catalog.length) % catalog.length]
-      if (next) selectLevel(next.id)
+      if (next != null) selectLevel(next)
     },
     [catalog, levelId, selectLevel],
   )
@@ -340,24 +396,19 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
     setState((prev) => (prev ? resetLevel(prev) : prev))
   }, [])
 
-  const walls = useMemo(() => (state ? wallSet(state.level.walls) : new Set<string>()), [state])
-  const voids = useMemo(() => (state ? voidSet(state.level.voids) : new Set<string>()), [state])
-  const targets = useMemo(() => (state ? targetSet(state.level.targets) : new Set<string>()), [state])
-
   const placedCount = useMemo(() => {
     if (!state) return 0
     return state.boxes.filter((b) => boxOnTarget(b, state.level.targets)).length
   }, [state])
 
-  const selectOptions = catalog.map((c) => ({
-    value: String(c.id),
-    label: t('levelN', { n: c.id }),
+  const selectOptions = catalog.map((id) => ({
+    value: String(id),
+    label: t('levelN', { n: id }),
   }))
-
-  const gap = Math.max(1, Math.round(cellPx * 0.04))
 
   return (
     <div
+      ref={rootRef}
       className={cn(
         embeddedAppShell(embedded, 'relative flex flex-col bg-chrome text-on-chrome min-h-0'),
         'overflow-hidden h-full outline-none',
@@ -434,7 +485,7 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
         </div>
       </div>
 
-      {/* 棋盘 */}
+      {/* 棋盘（Canvas） */}
       <div ref={boardHostRef} className='flex-1 min-h-0 flex items-center justify-center px-2 py-2 overflow-hidden'>
         {loading ? (
           <p className='text-xs text-muted'>{t('loading')}</p>
@@ -446,117 +497,16 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
             style={{
               width: state.level.width * cellPx + 12,
               height: state.level.height * cellPx + 12,
-              background:
-                'repeating-conic-gradient(color-mix(in srgb, var(--chrome-face-active) 88%, #000) 0% 25%, color-mix(in srgb, var(--chrome-face) 70%, #000) 0% 50%) 0 0 / 10px 10px',
+              background: BOARD.void,
             }}
             role='application'
             aria-label={t('boardLabel')}
           >
-            <div
-              className='relative bg-[#8b7355] dark:bg-[#5c4a38]'
-              style={{ width: state.level.width * cellPx, height: state.level.height * cellPx }}
-            >
-              {Array.from({ length: state.level.height }, (_, y) =>
-                Array.from({ length: state.level.width }, (_, x) => {
-                  const key = `${x},${y}`
-                  if (voids.has(key)) return null
-                  const isW = walls.has(key)
-                  const isT = targets.has(key)
-                  return (
-                    <div
-                      key={key}
-                      className='absolute box-border'
-                      style={{
-                        left: x * cellPx,
-                        top: y * cellPx,
-                        width: cellPx,
-                        height: cellPx,
-                      }}
-                    >
-                      {isW ? (
-                        <div
-                          className='absolute inset-0'
-                          style={{
-                            background: 'linear-gradient(135deg, #8a8a8a 0%, #5a5a5a 45%, #3f3f3f 100%)',
-                            boxShadow: 'inset 1px 1px 0 #b0b0b0, inset -1px -1px 0 #2a2a2a, 0 0 0 1px #2a2a2a',
-                          }}
-                        >
-                          <div
-                            className='absolute inset-[18%] rounded-[1px] opacity-35'
-                            style={{
-                              background:
-                                'repeating-linear-gradient(90deg, transparent 0 45%, #1a1a1a 45% 50%, transparent 50% 95%, #1a1a1a 95% 100%)',
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div
-                          className='absolute inset-0'
-                          style={{
-                            background: isT
-                              ? 'linear-gradient(180deg, #d4c49a 0%, #bba87a 100%)'
-                              : 'linear-gradient(180deg, #cfc07a 0%, #b8a85e 100%)',
-                            boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.12)',
-                          }}
-                        >
-                          {isT ? (
-                            <div className='absolute inset-0 flex items-center justify-center'>
-                              <div
-                                className='rounded-full border-2 border-[#8b4513]/80'
-                                style={{
-                                  width: Math.max(8, cellPx * 0.38),
-                                  height: Math.max(8, cellPx * 0.38),
-                                  boxShadow: 'inset 0 0 0 2px rgba(139,69,19,0.35)',
-                                }}
-                              />
-                            </div>
-                          ) : null}
-                        </div>
-                      )}
-                    </div>
-                  )
-                }),
-              )}
-
-              {state.boxes.map((b, i) => {
-                const onGoal = boxOnTarget(b, state.level.targets)
-                return (
-                  <div
-                    key={`box-${i}`}
-                    className='absolute box-border transition-[left,top] duration-100 ease-out'
-                    style={{
-                      left: b.x * cellPx + gap,
-                      top: b.y * cellPx + gap,
-                      width: cellPx - gap * 2,
-                      height: cellPx - gap * 2,
-                      zIndex: 2,
-                      borderRadius: 2,
-                      background: onGoal
-                        ? 'linear-gradient(145deg, #f0a050 0%, #d2691e 55%, #a04812 100%)'
-                        : 'linear-gradient(145deg, #e0a868 0%, #c68642 55%, #8b5a2b 100%)',
-                      boxShadow: onGoal
-                        ? 'inset 1px 1px 0 rgba(255,255,255,0.55), inset -1px -1px 0 rgba(0,0,0,0.35), 0 0 0 2px #6b3a10'
-                        : 'inset 1px 1px 0 rgba(255,255,255,0.45), inset -1px -1px 0 rgba(0,0,0,0.35)',
-                    }}
-                    aria-hidden
-                  >
-                    <div
-                      className='absolute inset-[22%] border border-black/25'
-                      style={{
-                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.2)',
-                      }}
-                    />
-                  </div>
-                )
-              })}
-
-              <PlayerSprite
-                size={cellPx}
-                x={state.player.x * cellPx}
-                y={state.player.y * cellPx}
-                label={t('player')}
-              />
-            </div>
+            <canvas
+              ref={canvasRef}
+              className='block'
+              aria-label={t('player')}
+            />
           </div>
         ) : null}
       </div>

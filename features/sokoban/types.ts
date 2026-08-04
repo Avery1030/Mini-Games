@@ -40,17 +40,6 @@ export type SokobanState = {
   won: boolean
 }
 
-export const DIR_DELTA: Record<Direction, CellPos> = {
-  up: { x: 0, y: -1 },
-  down: { x: 0, y: 1 },
-  left: { x: -1, y: 0 },
-  right: { x: 1, y: 0 },
-}
-
 export function posKey(p: CellPos): string {
   return `${p.x},${p.y}`
-}
-
-export function samePos(a: CellPos, b: CellPos): boolean {
-  return a.x === b.x && a.y === b.y
 }
