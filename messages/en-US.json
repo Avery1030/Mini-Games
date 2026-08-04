@@ -4,6 +4,7 @@
     "home": "Start"
   },
   "apps": {
+    "games": "Games",
     "minesweeper": "Minesweeper",
     "tetris": "Tetris",
     "suika": "Suika Game",
@@ -131,6 +132,12 @@
     "newTextDocument": "New Text Document",
     "moveToDesktop": "Move to Desktop",
     "moveToDesktopFail": "Could not move to desktop"
+  },
+  "games": {
+    "hint": "Double-click to play (tap once on touch).",
+    "empty": "No games yet",
+    "listLabel": "Games",
+    "status": "{count} game(s)"
   },
   "textDocument": {
     "untitled": "Text Document",
@@ -572,10 +579,11 @@
     "toc": "Versions",
     "footer": "Changelog · {count} entries · Current: {title}",
     "2026-08-04": {
-      "title": "Tile Match",
+      "title": "Tile Match & Games folder",
       "items": [
         "New mini-game Tile Match: sheep-style layered three-match cards, DOM + state only (no Canvas game engine).",
-        "Includes occlusion checks, a 7-slot tray, shuffle / undo items, and win / lose dialogs."
+        "Includes occlusion checks, a 7-slot tray, shuffle / undo items, and win / lose dialogs.",
+        "Added a built-in Games folder on the desktop; Minesweeper, Tetris, Suika, and Tile Match live inside it and no longer appear as separate desktop icons."
       ]
     },
     "2026-08-03": {

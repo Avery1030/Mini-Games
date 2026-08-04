@@ -2,6 +2,7 @@
  * 内置应用 side-effect 注册入口。
  * 新增应用：写 features/<name>/register.ts，再在此加一行 import。
  */
+import '@/features/games/register'
 import '@/features/minesweeper/register'
 import '@/features/tetris/register'
 import '@/features/suika/register'

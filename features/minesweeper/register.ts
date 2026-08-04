@@ -10,4 +10,6 @@ registerBuiltinApp({
   width: 420,
   height: 560,
   titles: { 'zh-CN': '扫雷', 'en-US': 'Minesweeper' },
+  showOnDesktop: false,
+  showInStartMenu: false,
 })

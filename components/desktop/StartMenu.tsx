@@ -62,6 +62,8 @@ const MenuSeparator = () => (
 
 /** 预留任务栏高度，避免子菜单被挡住 */
 const TASKBAR_SAFE = 48
+/** 「程序」展开列表最大高度 */
+const PROGRAMS_SUBMENU_MAX_HEIGHT = 300
 
 /**
  * Win95 风格开始菜单：程序列表、文档/设置/帮助、关闭与重启。
@@ -102,13 +104,14 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
     submenu.style.maxHeight = 'none'
     const wrapTop = wrap.getBoundingClientRect().top
     const maxBottom = window.innerHeight - TASKBAR_SAFE
+    const viewportCap = Math.max(120, maxBottom - 4)
     const contentH = submenu.scrollHeight
-    const height = Math.min(contentH, Math.max(120, maxBottom - 4))
+    const height = Math.min(contentH, viewportCap, PROGRAMS_SUBMENU_MAX_HEIGHT)
     let top = wrapTop
     if (top + height > maxBottom) top = maxBottom - height
     if (top < 4) top = 4
     setSubmenuOffsetTop(top - wrapTop)
-    setSubmenuMaxHeight(maxBottom - top)
+    setSubmenuMaxHeight(Math.min(PROGRAMS_SUBMENU_MAX_HEIGHT, maxBottom - top))
   }, [programsOpen, launchable.length])
 
   useEffect(() => {
@@ -233,7 +236,11 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
                 const Icon = app.icon
                 return (
                   <li key={app.id} role='none'>
-                    <MenuItem icon={Icon} label={resolveDesktopItemTitle(app, tApps, locale)} onClick={() => launch(app.id)} />
+                    <MenuItem
+                      icon={Icon}
+                      label={resolveDesktopItemTitle(app, tApps, locale)}
+                      onClick={() => launch(app.id)}
+                    />
                   </li>
                 )
               })}
@@ -241,7 +248,7 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
           )}
         </div>
 
-        <MenuItem
+        {/* <MenuItem
           label={ts('documents')}
           onClick={() => launch('document')}
           onMouseEnter={() => setProgramsOpen(false)}
@@ -250,7 +257,7 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
           label={ts('settings')}
           onClick={() => launch('settings')}
           onMouseEnter={() => setProgramsOpen(false)}
-        />
+        /> */}
         <MenuSeparator />
         <MenuItem label={ts('help')} onClick={() => launch('log')} onMouseEnter={() => setProgramsOpen(false)} />
         <MenuSeparator />

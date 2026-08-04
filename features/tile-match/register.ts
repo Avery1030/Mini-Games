@@ -10,6 +10,8 @@ registerBuiltinApp({
   width: 390,
   height: 720,
   titles: { 'zh-CN': '格子消消', 'en-US': 'Tile Match' },
+  showOnDesktop: false,
+  showInStartMenu: false,
   chrome: {
     resizable: true,
   },
