@@ -10,6 +10,7 @@ import { Select } from '@/components/ui'
 import { BOARD, MOVE_ANIM_MS, createStaticLayer, drawSokobanBoard, facingFromDelta, interpolateVisual, setupBoardCanvas, visualFromState, type BoardVisual } from './boardCanvas'
 import { boxOnTarget, createStateFromLevel, resetLevel, tryMove, undoMove } from './game'
 import { fetchAllLevels, type LoadedLevels } from './loadLevels'
+import { CRACK_STEP_MS, ENABLE_CRACK_DEMO, solveMinMoves } from './solver'
 import type { Direction, SokobanState } from './types'
 
 export interface SokobanProps {
@@ -120,6 +121,10 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
   const staticKeyRef = useRef('')
   const levelIdForAnimRef = useRef<number | null>(null)
   const cellPxRef = useRef(32)
+  const crackPathRef = useRef<Direction[]>([])
+  const crackIndexRef = useRef(0)
+  const crackTimerRef = useRef(0)
+  const crackDemoRef = useRef(false)
 
   const [catalog, setCatalog] = useState<number[]>([])
   const [levelId, setLevelId] = useState<number | null>(null)
@@ -128,9 +133,14 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
   const [loading, setLoading] = useState(true)
   const [cellPx, setCellPx] = useState(32)
   const [heldDir, setHeldDir] = useState<Direction | null>(null)
+  /** idle | playing | paused */
+  const [crackPhase, setCrackPhase] = useState<'idle' | 'playing' | 'paused'>('idle')
+  const [crackProgress, setCrackProgress] = useState<{ step: number; total: number } | null>(null)
+  const [crackError, setCrackError] = useState<string | null>(null)
 
   stateRef.current = state
   cellPxRef.current = cellPx
+  crackDemoRef.current = crackPhase === 'playing' || crackPhase === 'paused'
 
   const paint = useCallback((visual: BoardVisual, level: SokobanState['level'], cell: number) => {
     const canvas = canvasRef.current
@@ -211,6 +221,93 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
   const startMoveAnimRef = useRef(startMoveAnim)
   startMoveAnimRef.current = startMoveAnim
 
+  const clearCrackTimer = useCallback(() => {
+    if (crackTimerRef.current) {
+      window.clearTimeout(crackTimerRef.current)
+      crackTimerRef.current = 0
+    }
+  }, [])
+
+  const stopCrackDemo = useCallback(() => {
+    clearCrackTimer()
+    crackPathRef.current = []
+    crackIndexRef.current = 0
+    setCrackPhase('idle')
+    setCrackProgress(null)
+    setCrackError(null)
+  }, [clearCrackTimer])
+
+  const runCrackStepRef = useRef<() => void>(() => {})
+  runCrackStepRef.current = () => {
+    clearCrackTimer()
+    const path = crackPathRef.current
+    const idx = crackIndexRef.current
+    if (idx >= path.length) {
+      setCrackPhase('idle')
+      setCrackProgress(null)
+      return
+    }
+
+    const dir = path[idx]
+    const cur = stateRef.current
+    if (!cur || cur.won) {
+      stopCrackDemo()
+      return
+    }
+    const next = tryMove(cur, dir)
+    crackIndexRef.current = idx + 1
+    setCrackProgress({ step: idx + 1, total: path.length })
+    setState(next)
+    setHeldDir(dir)
+
+    if (idx + 1 >= path.length || next.won) {
+      crackTimerRef.current = window.setTimeout(() => {
+        setHeldDir(null)
+        setCrackPhase('idle')
+        setCrackProgress(null)
+      }, CRACK_STEP_MS) as unknown as number
+      return
+    }
+
+    crackTimerRef.current = window.setTimeout(() => {
+      setHeldDir(null)
+      runCrackStepRef.current()
+    }, CRACK_STEP_MS) as unknown as number
+  }
+
+  const startCrackDemo = useCallback(() => {
+    if (!ENABLE_CRACK_DEMO) return
+    const cur = stateRef.current
+    if (!cur || cur.won) return
+    setCrackError(null)
+    const path = solveMinMoves(cur)
+    if (path == null) {
+      setCrackError('unsolvable')
+      return
+    }
+    if (path.length === 0) {
+      stopCrackDemo()
+      return
+    }
+    clearCrackTimer()
+    crackPathRef.current = path
+    crackIndexRef.current = 0
+    setCrackProgress({ step: 0, total: path.length })
+    setCrackPhase('playing')
+    runCrackStepRef.current()
+  }, [clearCrackTimer, stopCrackDemo])
+
+  const pauseCrackDemo = useCallback(() => {
+    clearCrackTimer()
+    setHeldDir(null)
+    setCrackPhase('paused')
+  }, [clearCrackTimer])
+
+  const resumeCrackDemo = useCallback(() => {
+    setCrackPhase('playing')
+    runCrackStepRef.current()
+  }, [])
+
   /** 把焦点从关卡 Select 收回游戏区，避免方向键再次打开下拉 */
   const focusGame = useCallback(() => {
     const root = rootRef.current
@@ -233,12 +330,13 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
         setLoadError('loadFailed')
         return
       }
+      stopCrackDemo()
       setLevelId(id)
       setState(createStateFromLevel(id, level))
       setLoadError(null)
       requestAnimationFrame(() => focusGame())
     },
-    [focusGame],
+    [focusGame, stopCrackDemo],
   )
 
   useEffect(() => {
@@ -297,7 +395,10 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
     startMoveAnimRef.current(state, levelChanged)
   }, [state])
 
-  useEffect(() => () => stopAnim(), [stopAnim])
+  useEffect(() => () => {
+    stopAnim()
+    clearCrackTimer()
+  }, [stopAnim, clearCrackTimer])
 
   // cellPx 变化时重建静态层并按当前视觉位置重绘
   useEffect(() => {
@@ -310,6 +411,7 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
 
   const applyMove = useCallback(
     (dir: Direction) => {
+      if (crackDemoRef.current) return
       focusGame()
       const now = Date.now()
       if (now - lastMoveAtRef.current < MOVE_COOLDOWN_MS) return
@@ -325,6 +427,13 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      if (crackDemoRef.current) {
+        if (keyToDir(e.key) || (e.key === 'z' && (e.metaKey || e.ctrlKey))) {
+          e.preventDefault()
+          e.stopPropagation()
+        }
+        return
+      }
       if (e.key === 'z' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
         setState((prev) => (prev ? undoMove(prev) : prev))
@@ -389,12 +498,14 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
   )
 
   const onUndo = useCallback(() => {
+    if (crackDemoRef.current) return
     setState((prev) => (prev ? undoMove(prev) : prev))
   }, [])
 
   const onReset = useCallback(() => {
+    stopCrackDemo()
     setState((prev) => (prev ? resetLevel(prev) : prev))
-  }, [])
+  }, [stopCrackDemo])
 
   const placedCount = useMemo(() => {
     if (!state) return 0
@@ -432,7 +543,7 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
           <button
             type='button'
             className={cn(winChrome, 'h-7 w-7 shrink-0 inline-flex items-center justify-center disabled:opacity-40')}
-            disabled={catalog.length < 2 || loading}
+            disabled={catalog.length < 2 || loading || crackPhase !== 'idle'}
             aria-label={t('prevLevel')}
             onClick={() => goAdjacentLevel(-1)}
           >
@@ -443,14 +554,14 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
             className='w-[8rem] shrink-0'
             aria-label={t('level')}
             value={levelId == null ? '' : String(levelId)}
-            disabled={loading || catalog.length === 0}
+            disabled={loading || catalog.length === 0 || crackPhase !== 'idle'}
             onValueChange={onSelectLevel}
             options={selectOptions}
           />
           <button
             type='button'
             className={cn(winChrome, 'h-7 w-7 shrink-0 inline-flex items-center justify-center disabled:opacity-40')}
-            disabled={catalog.length < 2 || loading}
+            disabled={catalog.length < 2 || loading || crackPhase !== 'idle'}
             aria-label={t('nextLevel')}
             onClick={() => goAdjacentLevel(1)}
           >
@@ -462,7 +573,7 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
           <button
             type='button'
             className={cn(winChrome, 'h-7 px-2 inline-flex items-center gap-1 text-xs disabled:opacity-40')}
-            disabled={!state || state.undoStack.length === 0 || state.won}
+            disabled={!state || state.undoStack.length === 0 || state.won || crackPhase !== 'idle'}
             onClick={onUndo}
           >
             <Undo2 size={12} aria-hidden />
@@ -477,6 +588,26 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
             <RotateCcw size={12} aria-hidden />
             {t('reset')}
           </button>
+          {ENABLE_CRACK_DEMO ? (
+            crackPhase === 'playing' ? (
+              <button type='button' className={cn(winChrome, 'h-7 px-2 text-xs')} onClick={pauseCrackDemo}>
+                {t('crackPause')}
+              </button>
+            ) : crackPhase === 'paused' ? (
+              <button type='button' className={cn(winChrome, 'h-7 px-2 text-xs')} onClick={resumeCrackDemo}>
+                {t('crackResume')}
+              </button>
+            ) : (
+              <button
+                type='button'
+                className={cn(winChrome, 'h-7 px-2 text-xs disabled:opacity-40')}
+                disabled={!state || state.won || loading}
+                onClick={startCrackDemo}
+              >
+                {t('crack')}
+              </button>
+            )
+          ) : null}
           {onClose ? (
             <button type='button' className={cn(winChrome, 'h-7 px-2 text-xs')} onClick={onClose}>
               {t('close')}
@@ -512,7 +643,12 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
       </div>
 
       {/* 方向键 */}
-      <div className='shrink-0 px-2 pb-1 flex flex-col items-center gap-1'>
+      <div
+        className={cn(
+          'shrink-0 px-2 pb-1 flex flex-col items-center gap-1',
+          crackPhase !== 'idle' && 'pointer-events-none opacity-50',
+        )}
+      >
         <DpadButton label={t('dirUp')} pressed={heldDir === 'up'} onPress={() => applyMove('up')}>
           ↑
         </DpadButton>
@@ -530,7 +666,13 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
         </DpadButton>
       </div>
 
-      <p className='shrink-0 px-3 pb-1.5 text-[10px] text-muted text-center truncate'>{t('hint')}</p>
+      <p className='shrink-0 px-3 pb-1.5 text-[10px] text-muted text-center truncate'>
+        {crackError === 'unsolvable'
+          ? t('crackFailed')
+          : crackProgress
+            ? t('crackProgress', { step: crackProgress.step, total: crackProgress.total })
+            : t('hint')}
+      </p>
 
       {state?.won ? (
         <div className='absolute inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/60 p-4'>

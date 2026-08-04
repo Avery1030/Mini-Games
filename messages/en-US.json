@@ -943,6 +943,11 @@
     "playAgain": "Play again",
     "prevLevel": "Previous level",
     "nextLevel": "Next level",
-    "close": "Close"
+    "close": "Close",
+    "crack": "Auto-solve",
+    "crackPause": "Pause",
+    "crackResume": "Resume",
+    "crackProgress": "Demo {step}/{total}",
+    "crackFailed": "No solution found (or search timed out)"
   }
 }

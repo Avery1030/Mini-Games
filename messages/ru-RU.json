@@ -943,6 +943,11 @@
     "playAgain": "Ещё раз",
     "prevLevel": "Предыдущий",
     "nextLevel": "Следующий",
-    "close": "Закрыть"
+    "close": "Закрыть",
+    "crack": "Автопроход",
+    "crackPause": "Пауза",
+    "crackResume": "Продолжить",
+    "crackProgress": "Демо {step}/{total}",
+    "crackFailed": "Решение не найдено (или поиск прерван)"
   }
 }

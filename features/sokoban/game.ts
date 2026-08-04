@@ -51,41 +51,67 @@ export function createStateFromLevel(levelId: number, level: LevelData): Sokoban
 export function tryMove(state: SokobanState, direction: Direction): SokobanState {
   if (state.won) return state
 
+  const advanced = advanceMove(state, direction)
+  if (!advanced) return state
+
+  const snapshot: MoveSnapshot = {
+    player: { ...state.player },
+    boxes: state.boxes.map((b) => ({ ...b })),
+  }
+
+  return {
+    ...state,
+    player: advanced.player,
+    boxes: advanced.boxes,
+    moves: state.moves + 1,
+    undoStack: [...state.undoStack, snapshot],
+    won: advanced.won,
+  }
+}
+
+/** 求解用：不计撤销栈，避免 BFS 内存膨胀 */
+export function tryMoveNoHistory(state: SokobanState, direction: Direction): SokobanState | null {
+  if (state.won) return null
+  const advanced = advanceMove(state, direction)
+  if (!advanced) return null
+  return {
+    ...state,
+    player: advanced.player,
+    boxes: advanced.boxes,
+    moves: state.moves + 1,
+    undoStack: state.undoStack,
+    won: advanced.won,
+  }
+}
+
+function advanceMove(
+  state: SokobanState,
+  direction: Direction,
+): { player: CellPos; boxes: CellPos[]; won: boolean } | null {
   const { level, player, boxes } = state
   const d = DIR_DELTA[direction]
   const nx = player.x + d.x
   const ny = player.y + d.y
 
-  if (nx < 0 || ny < 0 || nx >= level.width || ny >= level.height) return state
-  if (isWall(level.walls, nx, ny) || isVoid(level.voids, nx, ny)) return state
-
-  const snapshot: MoveSnapshot = {
-    player: { ...player },
-    boxes: boxes.map((b) => ({ ...b })),
-  }
+  if (nx < 0 || ny < 0 || nx >= level.width || ny >= level.height) return null
+  if (isWall(level.walls, nx, ny) || isVoid(level.voids, nx, ny)) return null
 
   let nextBoxes = boxes
 
   if (hasBox(boxes, nx, ny)) {
     const bx = nx + d.x
     const by = ny + d.y
-    if (bx < 0 || by < 0 || bx >= level.width || by >= level.height) return state
-    if (isWall(level.walls, bx, by) || isVoid(level.voids, bx, by)) return state
-    if (hasBox(boxes, bx, by)) return state
+    if (bx < 0 || by < 0 || bx >= level.width || by >= level.height) return null
+    if (isWall(level.walls, bx, by) || isVoid(level.voids, bx, by)) return null
+    if (hasBox(boxes, bx, by)) return null
 
     nextBoxes = boxes.map((b) => (b.x === nx && b.y === ny ? { x: bx, y: by } : b))
   }
 
-  const nextPlayer = { x: nx, y: ny }
-  const won = isSolved(nextBoxes, level.targets)
-
   return {
-    ...state,
-    player: nextPlayer,
+    player: { x: nx, y: ny },
     boxes: nextBoxes,
-    moves: state.moves + 1,
-    undoStack: [...state.undoStack, snapshot],
-    won,
+    won: isSolved(nextBoxes, level.targets),
   }
 }
 

@@ -943,6 +943,11 @@
     "playAgain": "Nochmal",
     "prevLevel": "Vorheriges Level",
     "nextLevel": "Nächstes Level",
-    "close": "Schließen"
+    "close": "Schließen",
+    "crack": "Auto-Lösung",
+    "crackPause": "Pause",
+    "crackResume": "Weiter",
+    "crackProgress": "Demo {step}/{total}",
+    "crackFailed": "Keine Lösung (oder Suche abgebrochen)"
   }
 }

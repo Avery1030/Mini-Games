@@ -943,6 +943,11 @@
     "playAgain": "再玩一次",
     "prevLevel": "上一关",
     "nextLevel": "下一关",
-    "close": "关闭"
+    "close": "关闭",
+    "crack": "破解通关",
+    "crackPause": "暂停",
+    "crackResume": "继续",
+    "crackProgress": "破解演示 {step}/{total}",
+    "crackFailed": "当前局面无解或搜索超时"
   }
 }

@@ -943,6 +943,11 @@
     "playAgain": "もう一度",
     "prevLevel": "前のステージ",
     "nextLevel": "次のステージ",
-    "close": "閉じる"
+    "close": "閉じる",
+    "crack": "自動クリア",
+    "crackPause": "一時停止",
+    "crackResume": "再開",
+    "crackProgress": "デモ {step}/{total}",
+    "crackFailed": "解なし、または探索タイムアウト"
   }
 }
