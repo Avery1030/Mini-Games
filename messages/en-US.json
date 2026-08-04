@@ -9,6 +9,7 @@
     "tetris": "Tetris",
     "suika": "Suika Game",
     "tileMatch": "Tile Match",
+    "imagePuzzle": "Image Puzzle",
     "document": "Document",
     "log": "Log",
     "notepad": "Notepad",
@@ -583,7 +584,8 @@
       "items": [
         "New mini-game Tile Match: sheep-style layered three-match cards, DOM + state only (no Canvas game engine).",
         "Includes occlusion checks, a 7-slot tray, shuffle / undo items, and win / lose dialogs.",
-        "Added a built-in Games folder on the desktop; Minesweeper, Tetris, Suika, and Tile Match live inside it and no longer appear as separate desktop icons."
+        "Added a built-in Games folder on the desktop; Minesweeper, Tetris, Suika, and Tile Match live inside it and no longer appear as separate desktop icons.",
+        "Added Image Puzzle: sliding puzzle (3×3 / 4×4 / 5×5) with built-in or uploaded images, listed in the Games folder."
       ]
     },
     "2026-08-03": {
@@ -750,6 +752,26 @@
     "lost": "Game Over",
     "lostHint": "The tray is full with no match",
     "playAgain": "Play again"
+  },
+  "imagePuzzle": {
+    "title": "Image Puzzle",
+    "moves": "Moves",
+    "time": "Time",
+    "difficulty": "Difficulty",
+    "shuffle": "Shuffle",
+    "preview": "Preview",
+    "reset": "Reset",
+    "upload": "Upload image",
+    "loading": "Loading image…",
+    "loadFailed": "Failed to load image. Try again or pick another.",
+    "invalidType": "Please choose an image file.",
+    "boardLabel": "Puzzle board",
+    "tileLabel": "Tile {n}",
+    "hint": "Slide tiles next to the blank; misplaced tiles have an amber edge",
+    "won": "Puzzle complete!",
+    "wonHint": "The image has been restored",
+    "playAgain": "Play again",
+    "close": "Close"
   },
   "klineChart": {
     "symbol": "Symbol",
