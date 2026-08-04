@@ -10,6 +10,7 @@
     "suika": "Suika Game",
     "tileMatch": "Tile Match",
     "imagePuzzle": "Image Puzzle",
+    "canvasJigsaw": "Jigsaw",
     "document": "Document",
     "log": "Log",
     "notepad": "Notepad",
@@ -585,7 +586,8 @@
         "New mini-game Tile Match: sheep-style layered three-match cards, DOM + state only (no Canvas game engine).",
         "Includes occlusion checks, a 7-slot tray, shuffle / undo items, and win / lose dialogs.",
         "Added a built-in Games folder on the desktop; Minesweeper, Tetris, Suika, and Tile Match live inside it and no longer appear as separate desktop icons.",
-        "Added Image Puzzle: sliding puzzle (3×3 / 4×4 / 5×5) with built-in or uploaded images, listed in the Games folder."
+        "Added Image Puzzle: sliding puzzle (3×3 / 4×4 / 5×5) with built-in or uploaded images, listed in the Games folder.",
+        "Added Jigsaw: pure Canvas irregular tabbed pieces with drag-and-snap, no third-party game/DnD libraries."
       ]
     },
     "2026-08-03": {
@@ -770,6 +772,28 @@
     "hint": "Slide tiles next to the blank; misplaced tiles have an amber edge",
     "won": "Puzzle complete!",
     "wonHint": "The image has been restored",
+    "playAgain": "Play again",
+    "close": "Close"
+  },
+  "canvasJigsaw": {
+    "title": "Jigsaw",
+    "moves": "Drags",
+    "time": "Time",
+    "difficulty": "Difficulty",
+    "diff_easy": "Easy 3×3",
+    "diff_medium": "Normal 4×4",
+    "diff_hard": "Hard 5×5",
+    "reset": "Scatter",
+    "preview": "Preview",
+    "upload": "Upload image",
+    "defaultImage": "Default image",
+    "loading": "Loading image…",
+    "loadFailed": "Failed to load image. Try again or pick another.",
+    "invalidType": "Please choose an image file.",
+    "boardLabel": "Jigsaw canvas",
+    "hint": "Snap matching neighbors together; merged clusters stay freely draggable",
+    "won": "Jigsaw complete!",
+    "wonHint": "All pieces are joined into one cluster",
     "playAgain": "Play again",
     "close": "Close"
   },
