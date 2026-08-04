@@ -7,7 +7,6 @@ registerBuiltinApp({
   defaultCoordinate: [0, 1],
   width: 360,
   height: 320,
-  titles: { 'zh-CN': '游戏', 'en-US': 'Games' },
   // 延迟加载，避免与各游戏 register 的加载顺序耦合
   loadApp: () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports

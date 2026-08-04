@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import type { Locale } from '@/i18n/config'
 
 /** 内置应用 id（字符串；是否内置由 registry.isBuiltinAppId 判定） */
 export type BuiltinAppId = string
@@ -9,8 +10,8 @@ export type BuiltinAppId = string
  */
 export type DesktopAppId = string
 
-/** 应用标题多语言（注册时写入，优先于 messages.apps.*） */
-export type AppLocale = 'zh-CN' | 'en-US'
+/** 应用标题多语言（与 i18n Locale 对齐） */
+export type AppLocale = Locale
 export type AppTitles = Partial<Record<AppLocale, string>>
 
 export type DesktopCoordinate = [number, number]

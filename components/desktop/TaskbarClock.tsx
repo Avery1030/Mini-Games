@@ -1,31 +1,33 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useShallow } from 'zustand/react/shallow'
 import { useSettingsStore } from '@/store/settings'
 import { closeModal, useModalStore } from '@/components/ui'
 import { winChromePressed, winChromeSunken } from '@/lib/winChrome'
 import { cn } from '@/lib/cn'
+import { intlLocale } from '@/lib/i18n/dateLocales'
 import { CALENDAR_MODAL_ID, openCalendarModal } from './CalendarModal'
 
-function formatClock(formatMode: '12h' | '24h', date: Date): string {
+function formatClock(formatMode: '12h' | '24h', date: Date, locale: string): string {
+  const tag = intlLocale(locale)
   if (formatMode === '24h') {
-    return date.toLocaleTimeString('zh-CN', {
+    return date.toLocaleTimeString(tag, {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
     })
   }
-  return date.toLocaleTimeString('en-US', {
+  return date.toLocaleTimeString(tag, {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
   })
 }
 
-function formatTitle(date: Date): string {
-  return date.toLocaleString('zh-CN', {
+function formatTitle(date: Date, locale: string): string {
+  return date.toLocaleString(intlLocale(locale), {
     year: 'numeric',
     month: 'numeric',
     day: 'numeric',
@@ -41,6 +43,7 @@ function formatTitle(date: Date): string {
  */
 export function TaskbarClock() {
   const t = useTranslations('clock')
+  const locale = useLocale()
   const { show: showClock, clockFormat } = useSettingsStore(
     useShallow((s) => ({
       show: s.showTaskbarClock,
@@ -74,7 +77,7 @@ export function TaskbarClock() {
         'h-7 min-w-[64px] px-2 flex items-center justify-center text-[11px] tabular-nums font-pixel text-on-chrome',
         'cursor-pointer outline-none',
       )}
-      title={now ? formatTitle(now) : undefined}
+      title={now ? formatTitle(now, locale) : undefined}
       aria-haspopup='dialog'
       aria-expanded={calendarOpen}
       aria-label={t('openCalendar')}
@@ -87,7 +90,7 @@ export function TaskbarClock() {
         openCalendarModal(t('calendar'))
       }}
     >
-      {now ? formatClock(clockFormat, now) : '--:--'}
+      {now ? formatClock(clockFormat, now, locale) : '--:--'}
     </button>
   )
 }

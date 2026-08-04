@@ -1,6 +1,6 @@
 'use client'
 
-import { COOKIE_KEY, COOKIE_MAX_AGE, Locale, defaultLocale, locales } from '@/i18n/config'
+import { COOKIE_KEY, COOKIE_MAX_AGE, LOCALE_LABELS, type Locale, locales, matchBrowserLocale } from '@/i18n/config'
 import { useRouter } from '@/i18n/routing'
 import { useLocale, useTranslations } from 'next-intl'
 import { useEffect } from 'react'
@@ -18,11 +18,9 @@ export default function LangSwitch() {
   }
 
   useEffect(() => {
-    const hasCookie = document.cookie.includes(COOKIE_KEY)
+    const hasCookie = document.cookie.split(';').some((c) => c.trim().startsWith(`${COOKIE_KEY}=`))
     if (!hasCookie) {
-      const browserLang = navigator.language
-      const match = locales.find((lang) => lang.startsWith(browserLang.slice(0, 2)))
-      const targetLang = match || defaultLocale
+      const targetLang = matchBrowserLocale(navigator.language || defaultBrowserFallback())
       document.cookie = `${COOKIE_KEY}=${targetLang}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`
       router.refresh()
     }
@@ -31,14 +29,15 @@ export default function LangSwitch() {
   return (
     <Select
       size='sm'
-      className='min-w-[88px]'
+      className='min-w-[108px]'
       aria-label={t('label')}
       value={currentLang}
       onValueChange={(v) => handleSwitch(v as Locale)}
-      options={[
-        { value: 'en-US', label: 'English' },
-        { value: 'zh-CN', label: '简体中文' },
-      ]}
+      options={locales.map((value) => ({ value, label: LOCALE_LABELS[value] }))}
     />
   )
+}
+
+function defaultBrowserFallback(): string {
+  return 'zh-CN'
 }

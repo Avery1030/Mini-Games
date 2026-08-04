@@ -140,7 +140,12 @@ export function resolveDesktopItemTitle(
   const titles = app.titles ?? win?.titles
   const loc = locale as AppLocale | undefined
   const fromTitles =
-    (loc && titles?.[loc]) || titles?.['zh-CN'] || titles?.['en-US'] || undefined
+    (loc && titles?.[loc]) ||
+    titles?.['zh-CN'] ||
+    titles?.['zh-TW'] ||
+    titles?.['en-US'] ||
+    (titles ? Object.values(titles).find((v) => typeof v === 'string' && v.trim()) : undefined) ||
+    undefined
 
   let fromI18n: string | undefined
   if (!app.title?.trim() && !fromTitles) {

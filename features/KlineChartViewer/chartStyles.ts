@@ -17,9 +17,29 @@ export async function ensureKlineLocales() {
     change: '涨跌幅：',
     amplitude: '振幅：',
   } as never)
+  registerLocale('zh-TW', {
+    change: '漲跌幅：',
+    amplitude: '振幅：',
+  } as never)
   registerLocale('en-US', {
     change: 'Change: ',
     amplitude: 'Amplitude: ',
+  } as never)
+  registerLocale('ja-JP', {
+    change: '騰落率：',
+    amplitude: '振幅：',
+  } as never)
+  registerLocale('ru-RU', {
+    change: 'Изм.: ',
+    amplitude: 'Ампл.: ',
+  } as never)
+  registerLocale('de-DE', {
+    change: 'Veränderung: ',
+    amplitude: 'Amplitude: ',
+  } as never)
+  registerLocale('fr-FR', {
+    change: 'Variation : ',
+    amplitude: 'Amplitude : ',
   } as never)
 }
 

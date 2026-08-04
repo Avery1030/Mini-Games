@@ -9,7 +9,6 @@ registerBuiltinApp({
   defaultCoordinate: [0, 1],
   width: 520,
   height: 760,
-  titles: { 'zh-CN': '合成大西瓜', 'en-US': 'Suika Game' },
   showOnDesktop: false,
   showInStartMenu: false,
   chrome: {

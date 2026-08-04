@@ -9,5 +9,4 @@ registerBuiltinApp({
   defaultCoordinate: [1, 3],
   width: 520,
   height: 420,
-  titles: { 'zh-CN': '文档', 'en-US': 'Document' },
 })

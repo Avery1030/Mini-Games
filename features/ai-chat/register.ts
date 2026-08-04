@@ -9,5 +9,4 @@ registerBuiltinApp({
   defaultCoordinate: [3, 3],
   width: 560,
   height: 520,
-  titles: { 'zh-CN': '智聊', 'en-US': 'Zhi Chat' },
 })

@@ -9,7 +9,6 @@ registerBuiltinApp({
   defaultCoordinate: [1, 2],
   width: 560,
   height: 640,
-  titles: { 'zh-CN': '俄罗斯方块', 'en-US': 'Tetris' },
   showOnDesktop: false,
   showInStartMenu: false,
 })

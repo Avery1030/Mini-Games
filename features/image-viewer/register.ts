@@ -9,5 +9,5 @@ registerBuiltinApp({
   defaultCoordinate: [3, 5],
   width: 760,
   height: 560,
-  titles: { 'zh-CN': '图片查看器', 'en-US': 'Image Viewer' },
+
 })

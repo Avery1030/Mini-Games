@@ -9,5 +9,5 @@ registerBuiltinApp({
   defaultCoordinate: [2, 2],
   width: 720,
   height: 560,
-  titles: { 'zh-CN': '画图', 'en-US': 'Paint' },
+
 })

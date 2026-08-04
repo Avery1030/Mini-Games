@@ -299,8 +299,8 @@ store/                    Zustand stores（含 imageViewer、desktopVfs）
 ### 新增内置应用（清单）
 
 1. 在 `features/<name>/` 实现 UI（建议支持 `embedded`）
-2. 新建 `features/<name>/register.ts`，调用一次 `registerBuiltinApp({ id, icon, app|loadApp, titles, ... })`  
-   （请从 `@/lib/desktop/window/defineApp` 导入，避免经 barrel 产生循环依赖）
+2. 新建 `features/<name>/register.ts`，调用一次 `registerBuiltinApp({ id, icon, app|loadApp, ... })`  
+   （请从 `@/lib/desktop/window/defineApp` 导入，避免经 barrel 产生循环依赖；应用显示名写在 `messages.*.apps.<id>`）
 3. 在 `lib/desktop/window/builtins.ts` 增加一行：`import '@/features/<name>/register'`
 4. 按需：`showOnDesktop` / `showInStartMenu`；手机 Dock 改 `MOBILE_DOCK_APP_IDS`
 5. 若有新 localStorage：先改 `lib/storage/keys.ts` + schema，再写 store

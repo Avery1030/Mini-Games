@@ -581,13 +581,15 @@
     "toc": "Versions",
     "footer": "Changelog · {count} entries · Current: {title}",
     "2026-08-04": {
-      "title": "Tile Match & Games folder",
+      "title": "Games hub, puzzles & locales",
       "items": [
-        "New mini-game Tile Match: sheep-style layered three-match cards, DOM + state only (no Canvas game engine).",
-        "Includes occlusion checks, a 7-slot tray, shuffle / undo items, and win / lose dialogs.",
-        "Added a built-in Games folder on the desktop; Minesweeper, Tetris, Suika, and Tile Match live inside it and no longer appear as separate desktop icons.",
-        "Added Image Puzzle: sliding puzzle (3×3 / 4×4 / 5×5) with built-in or uploaded images, listed in the Games folder.",
-        "Added Jigsaw: pure Canvas irregular tabbed pieces with drag-and-snap, no third-party game/DnD libraries."
+        "Added Tile Match (sheep-style layered three-match) and fixed tray/board scale feedback that caused the slot bar to jitter.",
+        "Added a built-in Games folder: Minesweeper, Tetris, Suika, Tile Match, Image Puzzle, and Jigsaw live inside it (no longer separate desktop/Start Menu icons).",
+        "Added Image Puzzle: sliding puzzle (3×3 / 4×4 / 5×5) with built-in or uploaded images.",
+        "Added Jigsaw: pure Canvas tabbed pieces with neighbor relative snap into freely draggable clusters; no third-party DnD/physics libraries.",
+        "Capped the Start Menu Programs submenu at 400px max height (scroll when needed).",
+        "Added Japanese, Traditional Chinese, Russian, German, and French; the taskbar language switcher supports seven locales.",
+        "Built-in app display names come from messages.apps only; register.ts no longer duplicates multilingual titles."
       ]
     },
     "2026-08-03": {

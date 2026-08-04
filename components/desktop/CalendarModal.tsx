@@ -2,29 +2,29 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { DayPicker } from 'react-day-picker'
-import { enUS, zhCN } from 'react-day-picker/locale'
 import { format, isSameDay, startOfDay } from 'date-fns'
-import { enUS as enUSDateFns, zhCN as zhCNDateFns } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Button, openModal } from '@/components/ui'
 import { useSettingsStore } from '@/store/settings'
 import { dateKeyFromDate, useCalendarStore } from '@/store/calendar'
 import { cn } from '@/lib/cn'
+import { dateFnsLocale, dayPickerLocale, intlLocale } from '@/lib/i18n/dateLocales'
 import 'react-day-picker/style.css'
 
 export const CALENDAR_MODAL_ID = 'taskbar-calendar'
 
-function formatLiveClock(formatMode: '12h' | '24h', date: Date): string {
+function formatLiveClock(formatMode: '12h' | '24h', date: Date, locale: string): string {
+  const tag = intlLocale(locale)
   if (formatMode === '24h') {
-    return date.toLocaleTimeString('zh-CN', {
+    return date.toLocaleTimeString(tag, {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
       hour12: false,
     })
   }
-  return date.toLocaleTimeString('en-US', {
+  return date.toLocaleTimeString(tag, {
     hour: 'numeric',
     minute: '2-digit',
     second: '2-digit',
@@ -60,9 +60,9 @@ export function CalendarModalContent() {
     setDraft(notes[selectedKey] ?? '')
   }, [selectedKey, notes])
 
-  const isChinese = locale === 'zh-CN'
-  const calendarLocale = isChinese ? zhCN : enUS
-  const dateLocale = isChinese ? zhCNDateFns : enUSDateFns
+  const isChinese = locale === 'zh-CN' || locale === 'zh-TW'
+  const calendarLocale = dayPickerLocale(locale)
+  const dateLocale = dateFnsLocale(locale)
 
   const notedDates = useMemo(
     () => Object.keys(notes).map((k) => startOfDay(new Date(`${k}T12:00:00`))),
@@ -109,7 +109,7 @@ export function CalendarModalContent() {
         className='px-2 py-1.5 text-center text-[13px] font-bold tabular-nums bg-field text-on-chrome border-2 border-t-chrome-dark border-l-chrome-dark border-r-chrome-light border-b-chrome-light'
         aria-label={t('liveTime')}
       >
-        {formatLiveClock(clockFormat, now)}
+        {formatLiveClock(clockFormat, now, locale)}
       </div>
 
       <div className='flex items-center gap-1.5'>
