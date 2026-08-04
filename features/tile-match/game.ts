@@ -204,7 +204,12 @@ function buildSheepPlacements(count: number, rng: () => number): Array<{ layer: 
 
         const x = originX + c * stepX
         const y = originY + r * stepY
-        if (x < marginX - 2 || y < 2 || x + CARD_WIDTH > BOARD_WIDTH - marginX + 2 || y + CARD_HEIGHT > BOARD_HEIGHT - 2) {
+        if (
+          x < marginX - 2 ||
+          y < 2 ||
+          x + CARD_WIDTH > BOARD_WIDTH - marginX + 2 ||
+          y + CARD_HEIGHT > BOARD_HEIGHT - 2
+        ) {
           continue
         }
         candidates.push({ x, y, score: dist + rng() * 0.04 })

@@ -172,6 +172,7 @@ export function TileMatch({ embedded = false }: TileMatchProps = {}) {
       const next = Math.min(availW / boardSize.width, availH / boardSize.height)
       // 允许放大，也允许略缩小；下限避免过小
       const clamped = Math.max(0.75, Math.min(next, 2.4))
+      if (Math.abs(clamped - boardScaleRef.current) < 0.001) return
       boardScaleRef.current = clamped
       setBoardScale(clamped)
     }
@@ -182,7 +183,6 @@ export function TileMatch({ embedded = false }: TileMatchProps = {}) {
     return () => ro.disconnect()
   }, [boardSize.height, boardSize.width])
 
-  // 卡槽宽度铺满底部可用区域
   useEffect(() => {
     const tray = slotTrayRef.current
     if (!tray) return
@@ -192,16 +192,16 @@ export function TileMatch({ embedded = false }: TileMatchProps = {}) {
       const pad = 12
       const avail = Math.max(0, tray.clientWidth - pad)
       const cell = Math.floor((avail - gap * (SLOT_CAPACITY - 1)) / SLOT_CAPACITY)
-      const w = Math.max(CARD_WIDTH, Math.min(cell, Math.round(CARD_WIDTH * boardScaleRef.current * 1.15)))
+      const w = Math.max(CARD_WIDTH, Math.min(cell, Math.round(CARD_WIDTH * 1.6)))
       const h = Math.round((w / CARD_WIDTH) * CARD_HEIGHT)
-      setSlotSize({ w, h })
+      setSlotSize((prev) => (prev.w === w && prev.h === h ? prev : { w, h }))
     }
 
     update()
     const ro = new ResizeObserver(update)
     ro.observe(tray)
     return () => ro.disconnect()
-  }, [boardScale])
+  }, [])
 
   const restart = useCallback(() => {
     clearTimers()
@@ -375,10 +375,7 @@ export function TileMatch({ embedded = false }: TileMatchProps = {}) {
 
       {/* 棋盘：按可用空间等比缩放 */}
       <div ref={boardHostRef} className='flex-1 min-h-0 flex items-center justify-center px-1 py-1 overflow-hidden'>
-        <div
-          className='relative shrink-0'
-          style={{ width: boardVisualW, height: boardVisualH }}
-        >
+        <div className='relative shrink-0' style={{ width: boardVisualW, height: boardVisualH }}>
           <div
             ref={boardRef}
             className={cn(winChromeSunken, 'absolute left-0 top-0 bg-[#a8c48a] origin-top-left')}
@@ -446,7 +443,7 @@ export function TileMatch({ embedded = false }: TileMatchProps = {}) {
       {/* 卡槽：宽度响应铺满 */}
       <div className='shrink-0 px-2 pb-2 overflow-hidden'>
         <div ref={slotTrayRef} className={cn(winChromeSunken, 'bg-[#a8a8a8] px-1.5 py-2 overflow-hidden')}>
-          <div className='flex items-end justify-center gap-1' style={{ minHeight: slotSize.h }}>
+          <div className='flex items-center justify-center gap-1' style={{ height: slotSize.h }}>
             {Array.from({ length: SLOT_CAPACITY }, (_, i) => {
               const card = slotCards[i]
               return (
