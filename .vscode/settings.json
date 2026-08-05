@@ -1,5 +1,6 @@
 {
   "js/ts.tsdk.path": "node_modules/typescript/lib",
   "js/ts.tsdk.promptToUseWorkspaceVersion": true,
-  "js/ts.validate.enabled": true
+  "js/ts.validate.enabled": true,
+  "prettier.printWidth": 120
 }
