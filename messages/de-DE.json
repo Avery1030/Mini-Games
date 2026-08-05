@@ -24,7 +24,8 @@
     "taskManager": "Task-Manager",
     "imageViewer": "Bildbetrachter",
     "fileExplorer": "Datei-Explorer",
-    "sokoban": "Sokoban"
+    "sokoban": "Sokoban",
+    "match3": "Match-3"
   },
   "desktop": {
     "open": "Öffnen",
@@ -580,6 +581,12 @@
     "clear": "Leeren"
   },
   "changelog": {
+    "2026-08-05": {
+      "title": "Match-3",
+      "items": [
+        "Match-3 hinzugefügt: klassisches Tauschen, Mehrlevel, 4/5-Power-ups, im Ordner Spiele."
+      ]
+    },
     "toc": "Versionen",
     "footer": "Änderungsprotokoll · {count} Einträge · Aktuell: {title}",
     "2026-08-04": {
@@ -951,5 +958,23 @@
     "crackProgress": "Demo {step}/{total}",
     "crackFailed": "Keine Lösung (oder Suche abgebrochen)",
     "reloadLevel": "Level-Konfiguration neu laden"
+  },
+  "match3": {
+    "title": "Match-3",
+    "levelN": "Level {n}",
+    "selectLevel": "Level wählen",
+    "moves": "Züge",
+    "score": "Punkte",
+    "target": "Ziel",
+    "reset": "Reset",
+    "prevLevel": "Vorheriges Level",
+    "nextLevel": "Nächstes Level",
+    "boardLabel": "Match-3-Brett",
+    "hint": "Benachbarte tauschen; Spezial-Kombi. Ziegel durch Nachbar-Clears; harte brauchen 2 Treffer (Riss)",
+    "won": "Geschafft!",
+    "wonHint": "Zielpunktzahl erreicht",
+    "lost": "Verloren",
+    "lostHint": "Keine Züge mehr",
+    "playAgain": "Nochmal"
   }
 }

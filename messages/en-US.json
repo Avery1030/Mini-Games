@@ -24,7 +24,8 @@
     "taskManager": "Task Manager",
     "imageViewer": "Image Viewer",
     "fileExplorer": "File Explorer",
-    "sokoban": "Sokoban"
+    "sokoban": "Sokoban",
+    "match3": "Match-3"
   },
   "desktop": {
     "open": "Open",
@@ -580,6 +581,12 @@
     "clear": "Clear"
   },
   "changelog": {
+    "2026-08-05": {
+      "title": "Match-3",
+      "items": [
+        "Added Match-3: classic swap-and-match, multi-level, 4/5 power-ups, listed in Games."
+      ]
+    },
     "toc": "Versions",
     "footer": "Changelog · {count} entries · Current: {title}",
     "2026-08-04": {
@@ -951,5 +958,23 @@
     "crackProgress": "Demo {step}/{total}",
     "crackFailed": "No solution found (or search timed out)",
     "reloadLevel": "Reload level config"
+  },
+  "match3": {
+    "title": "Match-3",
+    "levelN": "Level {n}",
+    "selectLevel": "Select level",
+    "moves": "Moves",
+    "score": "Score",
+    "target": "Target",
+    "reset": "Reset",
+    "prevLevel": "Previous level",
+    "nextLevel": "Next level",
+    "boardLabel": "Match-3 board",
+    "hint": "Swap adjacent; specials combo. Bricks break from nearby clears; auto-shuffle if no moves",
+    "won": "Level clear!",
+    "wonHint": "Target score reached",
+    "lost": "Failed",
+    "lostHint": "Out of moves before the target",
+    "playAgain": "Try again"
   }
 }

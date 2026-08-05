@@ -24,7 +24,8 @@
     "taskManager": "Gestionnaire des tâches",
     "imageViewer": "Visionneuse d'images",
     "fileExplorer": "Explorateur de fichiers",
-    "sokoban": "Sokoban"
+    "sokoban": "Sokoban",
+    "match3": "Match-3"
   },
   "desktop": {
     "open": "Ouvrir",
@@ -580,6 +581,12 @@
     "clear": "Effacer"
   },
   "changelog": {
+    "2026-08-05": {
+      "title": "Match-3",
+      "items": [
+        "Ajout de Match-3 : échange classique, multi-niveaux, bonus 4/5, dans le dossier Jeux."
+      ]
+    },
     "toc": "Versions",
     "footer": "Journal des modifications · {count} entrées · Actuel : {title}",
     "2026-08-04": {
@@ -951,5 +958,23 @@
     "crackProgress": "Démo {step}/{total}",
     "crackFailed": "Pas de solution (ou recherche interrompue)",
     "reloadLevel": "Recharger la config des niveaux"
+  },
+  "match3": {
+    "title": "Match-3",
+    "levelN": "Niveau {n}",
+    "selectLevel": "Choisir le niveau",
+    "moves": "Coups",
+    "score": "Score",
+    "target": "Objectif",
+    "reset": "Reset",
+    "prevLevel": "Niveau précédent",
+    "nextLevel": "Niveau suivant",
+    "boardLabel": "Plateau Match-3",
+    "hint": "Échangez voisins ; combos spéciaux. Briques cassées par clears voisins ; renforcées = 2 coups (fissure)",
+    "won": "Niveau réussi !",
+    "wonHint": "Objectif atteint",
+    "lost": "Échec",
+    "lostHint": "Plus de coups",
+    "playAgain": "Réessayer"
   }
 }

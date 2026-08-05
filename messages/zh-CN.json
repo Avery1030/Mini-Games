@@ -24,7 +24,8 @@
     "taskManager": "任务管理器",
     "imageViewer": "图片查看器",
     "fileExplorer": "资源管理器",
-    "sokoban": "推箱子"
+    "sokoban": "推箱子",
+    "match3": "消消乐"
   },
   "desktop": {
     "open": "打开",
@@ -580,6 +581,12 @@
     "clear": "清空"
   },
   "changelog": {
+    "2026-08-05": {
+      "title": "消消乐",
+      "items": [
+        "新增小游戏「消消乐」：经典三消、多关卡、4/5 连特殊道具，收录于「游戏」文件夹。"
+      ]
+    },
     "toc": "版本",
     "footer": "更新日志 · 共 {count} 条 · 当前：{title}",
     "2026-08-04": {
@@ -951,5 +958,23 @@
     "crackProgress": "破解演示 {step}/{total}",
     "crackFailed": "当前局面无解或搜索超时",
     "reloadLevel": "重新加载关卡配置"
+  },
+  "match3": {
+    "title": "消消乐",
+    "levelN": "第 {n} 关",
+    "selectLevel": "选择关卡",
+    "moves": "步数",
+    "score": "分数",
+    "target": "目标",
+    "reset": "重置",
+    "prevLevel": "上一关",
+    "nextLevel": "下一关",
+    "boardLabel": "消消乐棋盘",
+    "hint": "点击选中再点相邻交换；道具互碰有加成；砖块需周围消除冲击；无解时自动重排",
+    "won": "过关！",
+    "wonHint": "已达到目标分数",
+    "lost": "失败",
+    "lostHint": "步数用尽且未达目标",
+    "playAgain": "再试一次"
   }
 }

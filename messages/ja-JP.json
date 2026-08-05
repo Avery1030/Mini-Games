@@ -24,7 +24,8 @@
     "taskManager": "タスク マネージャー",
     "imageViewer": "画像ビューア",
     "fileExplorer": "エクスプローラー",
-    "sokoban": "倉庫番"
+    "sokoban": "倉庫番",
+    "match3": "マッチ3"
   },
   "desktop": {
     "open": "開く",
@@ -580,6 +581,12 @@
     "clear": "クリア"
   },
   "changelog": {
+    "2026-08-05": {
+      "title": "マッチ3",
+      "items": [
+        "「マッチ3」を追加：クラシック三消し、複数レベル、4/5 特殊ブロック。ゲームフォルダに収録。"
+      ]
+    },
     "toc": "バージョン",
     "footer": "更新履歴 · {count} 件 · 現在: {title}",
     "2026-08-04": {
@@ -951,5 +958,23 @@
     "crackProgress": "デモ {step}/{total}",
     "crackFailed": "解なし、または探索タイムアウト",
     "reloadLevel": "ステージ設定を再読込"
+  },
+  "match3": {
+    "title": "マッチ3",
+    "levelN": "レベル {n}",
+    "selectLevel": "レベル選択",
+    "moves": "手数",
+    "score": "スコア",
+    "target": "目標",
+    "reset": "リセット",
+    "prevLevel": "前のレベル",
+    "nextLevel": "次のレベル",
+    "boardLabel": "マッチ3盤面",
+    "hint": "隣接と交換。特殊コンボあり。レンガは周囲消去で破壊、強化は2回（ひび割れ）",
+    "won": "クリア！",
+    "wonHint": "目標スコア達成",
+    "lost": "失敗",
+    "lostHint": "手数切れ",
+    "playAgain": "もう一度"
   }
 }
