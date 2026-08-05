@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
-import { ChevronLeft, ChevronRight, RotateCcw, Undo2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, RefreshCw, RotateCcw, Undo2 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { winChrome, winChromePressed, winChromeSunken } from '@/lib/winChrome'
 import { Select } from '@/components/ui'
 import { BOARD, MOVE_ANIM_MS, createStaticLayer, drawSokobanBoard, facingFromDelta, interpolateVisual, setupBoardCanvas, visualFromState, type BoardVisual } from './boardCanvas'
 import { boxOnTarget, createStateFromLevel, resetLevel, tryMove, undoMove } from './game'
-import { fetchAllLevels, type LoadedLevels } from './loadLevels'
+import { fetchAllLevels, reloadAllLevels, type LoadedLevels } from './loadLevels'
 import { CRACK_STEP_MS, ENABLE_CRACK_DEMO, solveMinMoves } from './solver'
 import type { Direction, SokobanState } from './types'
 
@@ -507,6 +507,32 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
     setState((prev) => (prev ? resetLevel(prev) : prev))
   }, [stopCrackDemo])
 
+  const onReloadLevels = useCallback(async () => {
+    if (loading) return
+    stopCrackDemo()
+    setLoading(true)
+    setLoadError(null)
+    try {
+      const bundle = await reloadAllLevels()
+      bundleRef.current = bundle
+      setCatalog(bundle.ids)
+      const prefer = levelId != null && bundle.byId.has(levelId) ? levelId : bundle.ids[0]
+      if (prefer == null) {
+        setLevelId(null)
+        setState(null)
+        return
+      }
+      setLevelId(prefer)
+      setState(createStateFromLevel(prefer, bundle.byId.get(prefer)!))
+      requestAnimationFrame(() => focusGame())
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'loadFailed')
+      setState(null)
+    } finally {
+      setLoading(false)
+    }
+  }, [focusGame, levelId, loading, stopCrackDemo])
+
   const placedCount = useMemo(() => {
     if (!state) return 0
     return state.boxes.filter((b) => boxOnTarget(b, state.level.targets)).length
@@ -526,20 +552,66 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
       )}
       tabIndex={0}
     >
-      {/* 顶栏：状态 + 关卡切换 */}
-      <div className={cn(winChrome, 'mx-2 mt-2 px-2 py-1.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 shrink-0')}>
-        <div className='flex items-center gap-2 shrink-0'>
-          <LcdStat label={t('moves')} value={pad3(state?.moves ?? 0)} />
-          <LcdStat
-            label={t('placed')}
-            value={`${pad3(placedCount).slice(-2)}/${pad3(state?.level.targets.length ?? 0).slice(-2)}`}
-            accent={!!state && placedCount === state.level.targets.length && state.level.targets.length > 0}
-          />
+      {/* 顶栏：状态 / 操作 / 关卡 */}
+      <div className={cn(winChrome, 'mx-2 mt-2 px-2 py-1.5 flex flex-col gap-1.5 shrink-0')}>
+        <div className='flex items-center justify-between gap-2'>
+          <div className='flex items-center gap-2 shrink-0'>
+            <LcdStat label={t('moves')} value={pad3(state?.moves ?? 0)} />
+            <LcdStat
+              label={t('placed')}
+              value={`${pad3(placedCount).slice(-2)}/${pad3(state?.level.targets.length ?? 0).slice(-2)}`}
+              accent={!!state && placedCount === state.level.targets.length && state.level.targets.length > 0}
+            />
+          </div>
+
+          <div className='flex items-center gap-1 shrink-0'>
+            <button
+              type='button'
+              className={cn(winChrome, 'h-7 px-2 inline-flex items-center gap-1 text-xs disabled:opacity-40')}
+              disabled={!state || state.undoStack.length === 0 || state.won || crackPhase !== 'idle'}
+              onClick={onUndo}
+            >
+              <Undo2 size={12} aria-hidden />
+              {t('undo')}
+            </button>
+            <button
+              type='button'
+              className={cn(winChrome, 'h-7 px-2 inline-flex items-center gap-1 text-xs disabled:opacity-40')}
+              disabled={!state || crackPhase !== 'idle'}
+              onClick={onReset}
+            >
+              <RotateCcw size={12} aria-hidden />
+              {t('reset')}
+            </button>
+            {ENABLE_CRACK_DEMO ? (
+              crackPhase === 'playing' ? (
+                <button type='button' className={cn(winChrome, 'h-7 px-2 text-xs')} onClick={pauseCrackDemo}>
+                  {t('crackPause')}
+                </button>
+              ) : crackPhase === 'paused' ? (
+                <button type='button' className={cn(winChrome, 'h-7 px-2 text-xs')} onClick={resumeCrackDemo}>
+                  {t('crackResume')}
+                </button>
+              ) : (
+                <button
+                  type='button'
+                  className={cn(winChrome, 'h-7 px-2 text-xs disabled:opacity-40')}
+                  disabled={!state || state.won || loading}
+                  onClick={startCrackDemo}
+                >
+                  {t('crack')}
+                </button>
+              )
+            ) : null}
+            {onClose ? (
+              <button type='button' className={cn(winChrome, 'h-7 px-2 text-xs')} onClick={onClose}>
+                {t('close')}
+              </button>
+            ) : null}
+          </div>
         </div>
 
-        <div className='hidden sm:block h-7 w-px shrink-0 bg-on-chrome/15' />
-
-        <div className='flex items-center gap-1 shrink-0'>
+        <div className='flex items-center justify-center gap-1'>
           <button
             type='button'
             className={cn(winChrome, 'h-7 w-7 shrink-0 inline-flex items-center justify-center disabled:opacity-40')}
@@ -567,52 +639,16 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
           >
             <ChevronRight size={14} aria-hidden />
           </button>
-        </div>
-
-        <div className='flex items-center gap-1 shrink-0 sm:ml-auto'>
           <button
             type='button'
-            className={cn(winChrome, 'h-7 px-2 inline-flex items-center gap-1 text-xs disabled:opacity-40')}
-            disabled={!state || state.undoStack.length === 0 || state.won || crackPhase !== 'idle'}
-            onClick={onUndo}
+            className={cn(winChrome, 'h-7 w-7 shrink-0 inline-flex items-center justify-center disabled:opacity-40')}
+            disabled={loading || crackPhase !== 'idle'}
+            aria-label={t('reloadLevel')}
+            title={t('reloadLevel')}
+            onClick={() => void onReloadLevels()}
           >
-            <Undo2 size={12} aria-hidden />
-            {t('undo')}
+            <RefreshCw size={14} className={loading ? 'animate-spin' : undefined} aria-hidden />
           </button>
-          <button
-            type='button'
-            className={cn(winChrome, 'h-7 px-2 inline-flex items-center gap-1 text-xs disabled:opacity-40')}
-            disabled={!state}
-            onClick={onReset}
-          >
-            <RotateCcw size={12} aria-hidden />
-            {t('reset')}
-          </button>
-          {ENABLE_CRACK_DEMO ? (
-            crackPhase === 'playing' ? (
-              <button type='button' className={cn(winChrome, 'h-7 px-2 text-xs')} onClick={pauseCrackDemo}>
-                {t('crackPause')}
-              </button>
-            ) : crackPhase === 'paused' ? (
-              <button type='button' className={cn(winChrome, 'h-7 px-2 text-xs')} onClick={resumeCrackDemo}>
-                {t('crackResume')}
-              </button>
-            ) : (
-              <button
-                type='button'
-                className={cn(winChrome, 'h-7 px-2 text-xs disabled:opacity-40')}
-                disabled={!state || state.won || loading}
-                onClick={startCrackDemo}
-              >
-                {t('crack')}
-              </button>
-            )
-          ) : null}
-          {onClose ? (
-            <button type='button' className={cn(winChrome, 'h-7 px-2 text-xs')} onClick={onClose}>
-              {t('close')}
-            </button>
-          ) : null}
         </div>
       </div>
 

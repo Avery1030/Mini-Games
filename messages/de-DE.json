@@ -948,6 +948,7 @@
     "crackPause": "Pause",
     "crackResume": "Weiter",
     "crackProgress": "Demo {step}/{total}",
-    "crackFailed": "Keine Lösung (oder Suche abgebrochen)"
+    "crackFailed": "Keine Lösung (oder Suche abgebrochen)",
+    "reloadLevel": "Level-Konfiguration neu laden"
   }
 }

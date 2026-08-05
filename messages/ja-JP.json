@@ -948,6 +948,7 @@
     "crackPause": "一時停止",
     "crackResume": "再開",
     "crackProgress": "デモ {step}/{total}",
-    "crackFailed": "解なし、または探索タイムアウト"
+    "crackFailed": "解なし、または探索タイムアウト",
+    "reloadLevel": "ステージ設定を再読込"
   }
 }

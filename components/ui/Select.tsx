@@ -71,6 +71,9 @@ export function Select({
   const reactId = useId()
   const listboxId = `${reactId}-listbox`
   const rootRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLUListElement>(null)
+  /** 仅打开 / 键盘导航时滚动；鼠标悬停不滚，避免来回进出抖动 */
+  const scrollModeRef = useRef<'center' | 'nearest' | null>(null)
   const [open, setOpen] = useState(false)
   const [uncontrolled, setUncontrolled] = useState(defaultValue ?? options[0]?.value ?? '')
   const [highlight, setHighlight] = useState<string | null>(null)
@@ -105,6 +108,7 @@ export function Select({
       setPlacement(spaceBelow < 140 ? 'top' : 'bottom')
     }
     setHighlight(value || enabledOptions[0]?.value || null)
+    scrollModeRef.current = 'center'
     setOpen(true)
   }, [disabled, enabledOptions, value])
 
@@ -124,11 +128,36 @@ export function Select({
     }
   }, [open])
 
+  useEffect(() => {
+    if (!open || !highlight) return
+    const mode = scrollModeRef.current
+    if (!mode) return
+    scrollModeRef.current = null
+
+    const list = listRef.current
+    const item = document.getElementById(`${listboxId}-${highlight}`)
+    if (!list || !item) return
+
+    const raf = requestAnimationFrame(() => {
+      if (mode === 'center') {
+        const listRect = list.getBoundingClientRect()
+        const itemRect = item.getBoundingClientRect()
+        const delta =
+          itemRect.top - listRect.top - (list.clientHeight / 2 - itemRect.height / 2)
+        list.scrollTop += delta
+      } else {
+        item.scrollIntoView({ block: 'nearest' })
+      }
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [open, highlight, listboxId])
+
   const moveHighlight = (dir: 1 | -1) => {
     if (!enabledOptions.length) return
     const idx = enabledOptions.findIndex((o) => o.value === highlight)
     const base = idx < 0 ? (dir === 1 ? -1 : 0) : idx
     const next = (base + dir + enabledOptions.length) % enabledOptions.length
+    scrollModeRef.current = 'nearest'
     setHighlight(enabledOptions[next].value)
   }
 
@@ -187,6 +216,7 @@ export function Select({
 
       {open && (
         <ul
+          ref={listRef}
           id={listboxId}
           role='listbox'
           aria-activedescendant={highlight ? `${listboxId}-${highlight}` : undefined}

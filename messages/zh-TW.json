@@ -948,6 +948,7 @@
     "crackPause": "暫停",
     "crackResume": "繼續",
     "crackProgress": "破解演示 {step}/{total}",
-    "crackFailed": "目前局面無解或搜尋逾時"
+    "crackFailed": "目前局面無解或搜尋逾時",
+    "reloadLevel": "重新載入關卡設定"
   }
 }

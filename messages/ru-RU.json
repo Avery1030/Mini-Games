@@ -948,6 +948,7 @@
     "crackPause": "Пауза",
     "crackResume": "Продолжить",
     "crackProgress": "Демо {step}/{total}",
-    "crackFailed": "Решение не найдено (или поиск прерван)"
+    "crackFailed": "Решение не найдено (или поиск прерван)",
+    "reloadLevel": "Перезагрузить конфиг уровней"
   }
 }

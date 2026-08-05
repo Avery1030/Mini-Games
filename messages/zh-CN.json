@@ -948,6 +948,7 @@
     "crackPause": "暂停",
     "crackResume": "继续",
     "crackProgress": "破解演示 {step}/{total}",
-    "crackFailed": "当前局面无解或搜索超时"
+    "crackFailed": "当前局面无解或搜索超时",
+    "reloadLevel": "重新加载关卡配置"
   }
 }

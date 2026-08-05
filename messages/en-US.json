@@ -948,6 +948,7 @@
     "crackPause": "Pause",
     "crackResume": "Resume",
     "crackProgress": "Demo {step}/{total}",
-    "crackFailed": "No solution found (or search timed out)"
+    "crackFailed": "No solution found (or search timed out)",
+    "reloadLevel": "Reload level config"
   }
 }
