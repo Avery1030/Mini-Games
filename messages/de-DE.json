@@ -121,6 +121,7 @@
     "taskbarOpen": "Öffnen",
     "taskbarCloseMenu": "Schließen",
     "taskbarClose": "Fenster schließen",
+    "taskbarCloseOthers": "Andere schließen",
     "taskbarCloseLeft": "Fenster links schließen",
     "taskbarCloseRight": "Fenster rechts schließen",
     "taskbarCloseAll": "Alle Fenster schließen",
@@ -924,7 +925,7 @@
   "sokoban": {
     "title": "Sokoban",
     "moves": "Züge",
-    "placed": "Platziert",
+    "best": "Best",
     "level": "Level",
     "levelN": "Level {n}",
     "undo": "Rückgängig",

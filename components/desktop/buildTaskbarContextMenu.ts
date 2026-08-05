@@ -13,6 +13,7 @@ export type TaskbarContextMenuCtx = {
     restore: string
     close: string
     closeCurrent: string
+    closeOthers: string
     closeLeft: string
     closeRight: string
     closeAll: string
@@ -22,6 +23,7 @@ export type TaskbarContextMenuCtx = {
     open: () => void
     minimize: () => void
     closeCurrent: () => void
+    closeOthers: () => void
     closeLeft: () => void
     closeRight: () => void
     closeAll: () => void
@@ -55,6 +57,12 @@ const TASKBAR_MENU_CONFIG: MenuItemConfig<TaskbarContextMenuCtx>[] = [
         id: 'close-current',
         label: (ctx) => ctx.labels.closeCurrent,
         onSelect: (ctx) => ctx.actions.closeCurrent(),
+      },
+      {
+        id: 'close-others',
+        label: (ctx) => ctx.labels.closeOthers,
+        disabled: (ctx) => ctx.orderedIds.length <= 1,
+        onSelect: (ctx) => ctx.actions.closeOthers(),
       },
       {
         id: 'close-left',

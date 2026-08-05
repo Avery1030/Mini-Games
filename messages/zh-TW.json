@@ -121,6 +121,7 @@
     "taskbarOpen": "開啟",
     "taskbarCloseMenu": "關閉",
     "taskbarClose": "關閉目前",
+    "taskbarCloseOthers": "關閉其他",
     "taskbarCloseLeft": "關閉左側",
     "taskbarCloseRight": "關閉右側",
     "taskbarCloseAll": "關閉所有",
@@ -924,7 +925,7 @@
   "sokoban": {
     "title": "推箱子",
     "moves": "步數",
-    "placed": "就位",
+    "best": "最佳",
     "level": "關卡",
     "levelN": "第 {n} 關",
     "undo": "復原",

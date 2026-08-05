@@ -121,6 +121,7 @@
     "taskbarOpen": "開く",
     "taskbarCloseMenu": "閉じる",
     "taskbarClose": "ウィンドウを閉じる",
+    "taskbarCloseOthers": "他を閉じる",
     "taskbarCloseLeft": "左側のウィンドウを閉じる",
     "taskbarCloseRight": "右側のウィンドウを閉じる",
     "taskbarCloseAll": "すべてのウィンドウを閉じる",
@@ -924,7 +925,7 @@
   "sokoban": {
     "title": "倉庫番",
     "moves": "手数",
-    "placed": "配置",
+    "best": "最短",
     "level": "ステージ",
     "levelN": "ステージ {n}",
     "undo": "戻す",

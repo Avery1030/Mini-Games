@@ -1,5 +1,5 @@
 export { cn } from './cn'
-export { winChrome, winChromePressed, winChromeSunken } from './winChrome'
+export { winChrome, winChromePanel, winChromePressed, winChromeSunken } from './winChrome'
 export {
   appStorage,
   STORAGE_KEYS,

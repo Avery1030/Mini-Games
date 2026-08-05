@@ -4,6 +4,10 @@
 export const winChrome =
   'bg-chrome text-on-chrome border-2 border-t-chrome-light border-l-chrome-light border-r-chrome-dark border-b-chrome-dark hover:bg-chrome-hover active:bg-chrome-active active:border-t-chrome-dark active:border-l-chrome-dark active:border-r-chrome-light active:border-b-chrome-light'
 
+/** 凸起面板（无 hover/active，适合下拉菜单等容器） */
+export const winChromePanel =
+  'bg-chrome text-on-chrome border-2 border-t-chrome-light border-l-chrome-light border-r-chrome-dark border-b-chrome-dark'
+
 /** 按下 / 激活态 */
 export const winChromePressed =
   'bg-chrome-active text-on-chrome border-2 border-t-chrome-dark border-l-chrome-dark border-r-chrome-light border-b-chrome-light'

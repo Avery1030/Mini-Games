@@ -121,6 +121,7 @@
     "taskbarOpen": "Ouvrir",
     "taskbarCloseMenu": "Fermer",
     "taskbarClose": "Fermer la fenêtre",
+    "taskbarCloseOthers": "Fermer les autres",
     "taskbarCloseLeft": "Fermer les fenêtres à gauche",
     "taskbarCloseRight": "Fermer les fenêtres à droite",
     "taskbarCloseAll": "Fermer toutes les fenêtres",
@@ -924,7 +925,7 @@
   "sokoban": {
     "title": "Sokoban",
     "moves": "Coups",
-    "placed": "Placées",
+    "best": "Meilleur",
     "level": "Niveau",
     "levelN": "Niveau {n}",
     "undo": "Annuler",

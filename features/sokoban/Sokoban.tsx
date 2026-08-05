@@ -1,103 +1,24 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { ChevronLeft, ChevronRight, RefreshCw, RotateCcw, Undo2 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
-import { winChrome, winChromePressed, winChromeSunken } from '@/lib/winChrome'
-import { Select } from '@/components/ui'
-import { BOARD, MOVE_ANIM_MS, createStaticLayer, drawSokobanBoard, facingFromDelta, interpolateVisual, setupBoardCanvas, visualFromState, type BoardVisual } from './boardCanvas'
-import { boxOnTarget, createStateFromLevel, resetLevel, tryMove, undoMove } from './game'
+import { winChromeSunken } from '@/lib/winChrome'
+import { BOARD } from './boardCanvas'
+import { createStateFromLevel, resetLevel, tryMove, undoMove } from './game'
 import { fetchAllLevels, reloadAllLevels, type LoadedLevels } from './loadLevels'
-import { CRACK_STEP_MS, ENABLE_CRACK_DEMO, solveMinMoves } from './solver'
+import { Toolbar } from './Toolbar'
+import { CELL_MAX, CELL_MIN, Dpad, keyToDir, MOVE_COOLDOWN_MS } from './uiParts'
+import { useBoardAnim } from './useBoardAnim'
+import { useCrackDemo } from './useCrackDemo'
+import { useMinMoves } from './useMinMoves'
+import { WinDialog } from './WinDialog'
 import type { Direction, SokobanState } from './types'
 
 export interface SokobanProps {
   embedded?: boolean
   onClose?: () => void
-}
-
-const MOVE_COOLDOWN_MS = MOVE_ANIM_MS
-const CELL_MIN = 24
-const CELL_MAX = 48
-
-function keyToDir(key: string): Direction | null {
-  switch (key) {
-    case 'ArrowUp':
-    case 'w':
-    case 'W':
-      return 'up'
-    case 'ArrowDown':
-    case 's':
-    case 'S':
-      return 'down'
-    case 'ArrowLeft':
-    case 'a':
-    case 'A':
-      return 'left'
-    case 'ArrowRight':
-    case 'd':
-    case 'D':
-      return 'right'
-    default:
-      return null
-  }
-}
-
-function pad3(n: number): string {
-  return String(Math.max(0, Math.min(999, n))).padStart(3, '0')
-}
-
-function LcdStat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
-  return (
-    <div className='flex flex-col items-center gap-0.5 min-w-[52px]'>
-      <span className='text-[10px] text-muted leading-none'>{label}</span>
-      <div
-        className={cn(
-          'border-2 border-t-chrome-dark border-l-chrome-dark border-r-chrome-light border-b-chrome-light',
-          'px-1.5 py-0.5 font-mono text-sm tracking-wider tabular-nums leading-none',
-          accent
-            ? 'bg-[#0f2410] text-[#4dff7a] dark:bg-[#0a1f0c] dark:text-[#5dff88]'
-            : 'bg-[#1a1a1a] text-[#ff4040] dark:bg-[#0d0d0d] dark:text-[#ff5555]',
-        )}
-      >
-        {value}
-      </div>
-    </div>
-  )
-}
-
-function DpadButton({
-  label,
-  pressed,
-  onPress,
-  className,
-  children,
-}: {
-  label: string
-  pressed: boolean
-  onPress: () => void
-  className?: string
-  children: ReactNode
-}) {
-  return (
-    <button
-      type='button'
-      aria-label={label}
-      className={cn(
-        pressed ? winChromePressed : winChrome,
-        'h-10 w-11 text-base font-bold select-none touch-manipulation',
-        className,
-      )}
-      onPointerDown={(e) => {
-        e.preventDefault()
-        onPress()
-      }}
-    >
-      {children}
-    </button>
-  )
 }
 
 /**
@@ -110,213 +31,41 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const lastMoveAtRef = useRef(0)
-  const stateRef = useRef<SokobanState | null>(null)
   const bundleRef = useRef<LoadedLevels | null>(null)
-  const visualRef = useRef<BoardVisual | null>(null)
-  const animFromRef = useRef<BoardVisual | null>(null)
-  const animToRef = useRef<BoardVisual | null>(null)
-  const animStartRef = useRef(0)
-  const rafRef = useRef(0)
-  const staticLayerRef = useRef<HTMLCanvasElement | null>(null)
-  const staticKeyRef = useRef('')
-  const levelIdForAnimRef = useRef<number | null>(null)
-  const cellPxRef = useRef(32)
-  const crackPathRef = useRef<Direction[]>([])
-  const crackIndexRef = useRef(0)
-  const crackTimerRef = useRef(0)
-  const crackDemoRef = useRef(false)
 
   const [catalog, setCatalog] = useState<number[]>([])
   const [levelId, setLevelId] = useState<number | null>(null)
   const [state, setState] = useState<SokobanState | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [cellPx, setCellPx] = useState(32)
+  const [cellPx, setCellPx] = useState(CELL_MIN)
   const [heldDir, setHeldDir] = useState<Direction | null>(null)
-  /** idle | playing | paused */
-  const [crackPhase, setCrackPhase] = useState<'idle' | 'playing' | 'paused'>('idle')
-  const [crackProgress, setCrackProgress] = useState<{ step: number; total: number } | null>(null)
-  const [crackError, setCrackError] = useState<string | null>(null)
 
-  stateRef.current = state
-  cellPxRef.current = cellPx
-  crackDemoRef.current = crackPhase === 'playing' || crackPhase === 'paused'
-
-  const paint = useCallback((visual: BoardVisual, level: SokobanState['level'], cell: number) => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = setupBoardCanvas(canvas, level, cell)
-    if (!ctx) return
-
-    const key = `${level.width}x${level.height}:${cell}:${level.map.join('\n')}`
-    if (staticKeyRef.current !== key) {
-      staticLayerRef.current = createStaticLayer(level, cell)
-      staticKeyRef.current = key
-    }
-
-    drawSokobanBoard(ctx, {
-      level,
-      visual,
-      cellPx: cell,
-      staticLayer: staticLayerRef.current,
-    })
-  }, [])
-
-  const stopAnim = useCallback(() => {
-    if (rafRef.current) {
-      cancelAnimationFrame(rafRef.current)
-      rafRef.current = 0
-    }
-  }, [])
-
-  const runAnimFrame = useCallback(() => {
-    const cur = stateRef.current
-    const from = animFromRef.current
-    const to = animToRef.current
-    if (!cur || !from || !to) return
-
-    const elapsed = performance.now() - animStartRef.current
-    const t = Math.min(1, elapsed / MOVE_ANIM_MS)
-    const visual = interpolateVisual(from, to, t)
-    visualRef.current = visual
-    paint(visual, cur.level, cellPxRef.current)
-
-    if (t < 1) {
-      rafRef.current = requestAnimationFrame(runAnimFrame)
-    } else {
-      visualRef.current = to
-      animFromRef.current = null
-      animToRef.current = null
-      rafRef.current = 0
-    }
-  }, [paint])
-
-  const startMoveAnim = useCallback(
-    (next: SokobanState, snap: boolean) => {
-      const prevFacing = visualRef.current?.facing ?? 'down'
-      const facing = snap
-        ? ('down' as const)
-        : visualRef.current
-          ? facingFromDelta(visualRef.current.player, next.player, prevFacing)
-          : prevFacing
-      const target = visualFromState(next.player, next.boxes, next.level.targets, facing)
-      stopAnim()
-
-      if (snap || !visualRef.current) {
-        visualRef.current = target
-        animFromRef.current = null
-        animToRef.current = null
-        paint(target, next.level, cellPxRef.current)
-        return
-      }
-
-      animFromRef.current = visualRef.current
-      animToRef.current = target
-      animStartRef.current = performance.now()
-      rafRef.current = requestAnimationFrame(runAnimFrame)
-    },
-    [paint, runAnimFrame, stopAnim],
+  const { stateRef, syncState, onStateChanged, repaintForCellPx, stopAnim } = useBoardAnim(canvasRef)
+  const {
+    enabled: crackEnabled,
+    crackPhase,
+    crackProgress,
+    crackError,
+    crackDemoRef,
+    startCrackDemo,
+    pauseCrackDemo,
+    resumeCrackDemo,
+    stopCrackDemo,
+  } = useCrackDemo({ stateRef, setState, setHeldDir })
+  const { minMoves, minMovesReady, clearCache: clearMinMovesCache } = useMinMoves(
+    state?.levelId ?? null,
+    state?.level,
   )
 
-  const startMoveAnimRef = useRef(startMoveAnim)
-  startMoveAnimRef.current = startMoveAnim
+  syncState(state, cellPx)
 
-  const clearCrackTimer = useCallback(() => {
-    if (crackTimerRef.current) {
-      window.clearTimeout(crackTimerRef.current)
-      crackTimerRef.current = 0
-    }
-  }, [])
-
-  const stopCrackDemo = useCallback(() => {
-    clearCrackTimer()
-    crackPathRef.current = []
-    crackIndexRef.current = 0
-    setCrackPhase('idle')
-    setCrackProgress(null)
-    setCrackError(null)
-  }, [clearCrackTimer])
-
-  const runCrackStepRef = useRef<() => void>(() => {})
-  runCrackStepRef.current = () => {
-    clearCrackTimer()
-    const path = crackPathRef.current
-    const idx = crackIndexRef.current
-    if (idx >= path.length) {
-      setCrackPhase('idle')
-      setCrackProgress(null)
-      return
-    }
-
-    const dir = path[idx]
-    const cur = stateRef.current
-    if (!cur || cur.won) {
-      stopCrackDemo()
-      return
-    }
-    const next = tryMove(cur, dir)
-    crackIndexRef.current = idx + 1
-    setCrackProgress({ step: idx + 1, total: path.length })
-    setState(next)
-    setHeldDir(dir)
-
-    if (idx + 1 >= path.length || next.won) {
-      crackTimerRef.current = window.setTimeout(() => {
-        setHeldDir(null)
-        setCrackPhase('idle')
-        setCrackProgress(null)
-      }, CRACK_STEP_MS) as unknown as number
-      return
-    }
-
-    crackTimerRef.current = window.setTimeout(() => {
-      setHeldDir(null)
-      runCrackStepRef.current()
-    }, CRACK_STEP_MS) as unknown as number
-  }
-
-  const startCrackDemo = useCallback(() => {
-    if (!ENABLE_CRACK_DEMO) return
-    const cur = stateRef.current
-    if (!cur || cur.won) return
-    setCrackError(null)
-    const path = solveMinMoves(cur)
-    if (path == null) {
-      setCrackError('unsolvable')
-      return
-    }
-    if (path.length === 0) {
-      stopCrackDemo()
-      return
-    }
-    clearCrackTimer()
-    crackPathRef.current = path
-    crackIndexRef.current = 0
-    setCrackProgress({ step: 0, total: path.length })
-    setCrackPhase('playing')
-    runCrackStepRef.current()
-  }, [clearCrackTimer, stopCrackDemo])
-
-  const pauseCrackDemo = useCallback(() => {
-    clearCrackTimer()
-    setHeldDir(null)
-    setCrackPhase('paused')
-  }, [clearCrackTimer])
-
-  const resumeCrackDemo = useCallback(() => {
-    setCrackPhase('playing')
-    runCrackStepRef.current()
-  }, [])
-
-  /** 把焦点从关卡 Select 收回游戏区，避免方向键再次打开下拉 */
   const focusGame = useCallback(() => {
     const root = rootRef.current
     if (!root) return
     if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
       const active = document.activeElement
-      if (active !== root && root.contains(active)) {
-        active.blur()
-      }
+      if (active !== root && root.contains(active)) active.blur()
     }
     root.focus({ preventScroll: true })
   }, [])
@@ -367,47 +116,39 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
     }
   }, [])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (loading) return
     const host = boardHostRef.current
-    if (!host || !state) return
+    if (!host || !stateRef.current) return
 
     const update = () => {
+      const level = stateRef.current?.level
+      if (!level) return
       const pad = 20
       const availW = Math.max(0, host.clientWidth - pad)
       const availH = Math.max(0, host.clientHeight - pad)
-      const byW = Math.floor(availW / state.level.width)
-      const byH = Math.floor(availH / state.level.height)
-      const next = Math.max(CELL_MIN, Math.min(CELL_MAX, Math.min(byW, byH)))
-      setCellPx(next)
+      const byW = Math.floor(availW / level.width)
+      const byH = Math.floor(availH / level.height)
+      const next = Math.max(CELL_MIN, Math.min(CELL_MAX, Math.min(byW, byH) || CELL_MIN))
+      setCellPx((prev) => (prev === next ? prev : next))
     }
 
     update()
     const ro = new ResizeObserver(update)
     ro.observe(host)
     return () => ro.disconnect()
-  }, [state])
+  }, [loading, state?.levelId, state?.level.width, state?.level.height, stateRef])
 
-  // 状态变化 → 过渡 / 换关瞬切
   useEffect(() => {
     if (!state) return
-    const levelChanged = levelIdForAnimRef.current !== state.levelId
-    levelIdForAnimRef.current = state.levelId
-    startMoveAnimRef.current(state, levelChanged)
-  }, [state])
+    onStateChanged(state)
+  }, [state, onStateChanged])
 
-  useEffect(() => () => {
-    stopAnim()
-    clearCrackTimer()
-  }, [stopAnim, clearCrackTimer])
-
-  // cellPx 变化时重建静态层并按当前视觉位置重绘
   useEffect(() => {
-    const cur = stateRef.current
-    const visual = visualRef.current
-    if (!cur || !visual) return
-    staticKeyRef.current = ''
-    paint(visual, cur.level, cellPx)
-  }, [cellPx, paint])
+    repaintForCellPx(cellPx)
+  }, [cellPx, repaintForCellPx])
+
+  useEffect(() => () => stopAnim(), [stopAnim])
 
   const applyMove = useCallback(
     (dir: Direction) => {
@@ -422,7 +163,7 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
       lastMoveAtRef.current = now
       setState(next)
     },
-    [focusGame],
+    [crackDemoRef, focusGame, stateRef],
   )
 
   useEffect(() => {
@@ -443,9 +184,7 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
       if (!dir) return
 
       const ae = document.activeElement
-      if (ae instanceof HTMLElement && ae.getAttribute('aria-expanded') === 'true') {
-        return
-      }
+      if (ae instanceof HTMLElement && ae.getAttribute('aria-expanded') === 'true') return
 
       e.preventDefault()
       e.stopPropagation()
@@ -463,7 +202,7 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
       window.removeEventListener('keydown', onKeyDown, true)
       window.removeEventListener('keyup', onKeyUp)
     }
-  }, [applyMove, focusGame])
+  }, [applyMove, crackDemoRef, focusGame])
 
   useEffect(() => {
     const clear = () => setHeldDir(null)
@@ -500,7 +239,7 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
   const onUndo = useCallback(() => {
     if (crackDemoRef.current) return
     setState((prev) => (prev ? undoMove(prev) : prev))
-  }, [])
+  }, [crackDemoRef])
 
   const onReset = useCallback(() => {
     stopCrackDemo()
@@ -510,6 +249,7 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
   const onReloadLevels = useCallback(async () => {
     if (loading) return
     stopCrackDemo()
+    clearMinMovesCache()
     setLoading(true)
     setLoadError(null)
     try {
@@ -531,17 +271,14 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
     } finally {
       setLoading(false)
     }
-  }, [focusGame, levelId, loading, stopCrackDemo])
+  }, [clearMinMovesCache, focusGame, levelId, loading, stopCrackDemo])
 
-  const placedCount = useMemo(() => {
-    if (!state) return 0
-    return state.boxes.filter((b) => boxOnTarget(b, state.level.targets)).length
-  }, [state])
-
-  const selectOptions = catalog.map((id) => ({
-    value: String(id),
-    label: t('levelN', { n: id }),
-  }))
+  const statusHint =
+    crackError === 'unsolvable'
+      ? t('crackFailed')
+      : crackProgress
+        ? t('crackProgress', { step: crackProgress.step, total: crackProgress.total })
+        : t('hint')
 
   return (
     <div
@@ -552,107 +289,41 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
       )}
       tabIndex={0}
     >
-      {/* 顶栏：状态 / 操作 / 关卡 */}
-      <div className={cn(winChrome, 'mx-2 mt-2 px-2 py-1.5 flex flex-col gap-1.5 shrink-0')}>
-        <div className='flex items-center justify-between gap-2'>
-          <div className='flex items-center gap-2 shrink-0'>
-            <LcdStat label={t('moves')} value={pad3(state?.moves ?? 0)} />
-            <LcdStat
-              label={t('placed')}
-              value={`${pad3(placedCount).slice(-2)}/${pad3(state?.level.targets.length ?? 0).slice(-2)}`}
-              accent={!!state && placedCount === state.level.targets.length && state.level.targets.length > 0}
-            />
-          </div>
+      <Toolbar
+        labels={{
+          moves: t('moves'),
+          best: t('best'),
+          undo: t('undo'),
+          reset: t('reset'),
+          crack: t('crack'),
+          crackPause: t('crackPause'),
+          crackResume: t('crackResume'),
+          close: t('close'),
+          level: t('level'),
+          levelN: (n) => t('levelN', { n }),
+          prevLevel: t('prevLevel'),
+          nextLevel: t('nextLevel'),
+          reloadLevel: t('reloadLevel'),
+        }}
+        state={state}
+        minMoves={minMoves}
+        minMovesReady={minMovesReady}
+        catalog={catalog}
+        levelId={levelId}
+        loading={loading}
+        crackEnabled={crackEnabled}
+        crackPhase={crackPhase}
+        onClose={onClose}
+        onUndo={onUndo}
+        onReset={onReset}
+        onCrackStart={startCrackDemo}
+        onCrackPause={pauseCrackDemo}
+        onCrackResume={resumeCrackDemo}
+        onSelectLevel={onSelectLevel}
+        onAdjacentLevel={goAdjacentLevel}
+        onReloadLevels={() => void onReloadLevels()}
+      />
 
-          <div className='flex items-center gap-1 shrink-0'>
-            <button
-              type='button'
-              className={cn(winChrome, 'h-7 px-2 inline-flex items-center gap-1 text-xs disabled:opacity-40')}
-              disabled={!state || state.undoStack.length === 0 || state.won || crackPhase !== 'idle'}
-              onClick={onUndo}
-            >
-              <Undo2 size={12} aria-hidden />
-              {t('undo')}
-            </button>
-            <button
-              type='button'
-              className={cn(winChrome, 'h-7 px-2 inline-flex items-center gap-1 text-xs disabled:opacity-40')}
-              disabled={!state || crackPhase !== 'idle'}
-              onClick={onReset}
-            >
-              <RotateCcw size={12} aria-hidden />
-              {t('reset')}
-            </button>
-            {ENABLE_CRACK_DEMO ? (
-              crackPhase === 'playing' ? (
-                <button type='button' className={cn(winChrome, 'h-7 px-2 text-xs')} onClick={pauseCrackDemo}>
-                  {t('crackPause')}
-                </button>
-              ) : crackPhase === 'paused' ? (
-                <button type='button' className={cn(winChrome, 'h-7 px-2 text-xs')} onClick={resumeCrackDemo}>
-                  {t('crackResume')}
-                </button>
-              ) : (
-                <button
-                  type='button'
-                  className={cn(winChrome, 'h-7 px-2 text-xs disabled:opacity-40')}
-                  disabled={!state || state.won || loading}
-                  onClick={startCrackDemo}
-                >
-                  {t('crack')}
-                </button>
-              )
-            ) : null}
-            {onClose ? (
-              <button type='button' className={cn(winChrome, 'h-7 px-2 text-xs')} onClick={onClose}>
-                {t('close')}
-              </button>
-            ) : null}
-          </div>
-        </div>
-
-        <div className='flex items-center justify-center gap-1'>
-          <button
-            type='button'
-            className={cn(winChrome, 'h-7 w-7 shrink-0 inline-flex items-center justify-center disabled:opacity-40')}
-            disabled={catalog.length < 2 || loading || crackPhase !== 'idle'}
-            aria-label={t('prevLevel')}
-            onClick={() => goAdjacentLevel(-1)}
-          >
-            <ChevronLeft size={14} aria-hidden />
-          </button>
-          <Select
-            size='md'
-            className='w-[8rem] shrink-0'
-            aria-label={t('level')}
-            value={levelId == null ? '' : String(levelId)}
-            disabled={loading || catalog.length === 0 || crackPhase !== 'idle'}
-            onValueChange={onSelectLevel}
-            options={selectOptions}
-          />
-          <button
-            type='button'
-            className={cn(winChrome, 'h-7 w-7 shrink-0 inline-flex items-center justify-center disabled:opacity-40')}
-            disabled={catalog.length < 2 || loading || crackPhase !== 'idle'}
-            aria-label={t('nextLevel')}
-            onClick={() => goAdjacentLevel(1)}
-          >
-            <ChevronRight size={14} aria-hidden />
-          </button>
-          <button
-            type='button'
-            className={cn(winChrome, 'h-7 w-7 shrink-0 inline-flex items-center justify-center disabled:opacity-40')}
-            disabled={loading || crackPhase !== 'idle'}
-            aria-label={t('reloadLevel')}
-            title={t('reloadLevel')}
-            onClick={() => void onReloadLevels()}
-          >
-            <RefreshCw size={14} className={loading ? 'animate-spin' : undefined} aria-hidden />
-          </button>
-        </div>
-      </div>
-
-      {/* 棋盘（Canvas） */}
       <div ref={boardHostRef} className='flex-1 min-h-0 flex items-center justify-center px-2 py-2 overflow-hidden'>
         {loading ? (
           <p className='text-xs text-muted'>{t('loading')}</p>
@@ -669,86 +340,44 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
             role='application'
             aria-label={t('boardLabel')}
           >
-            <canvas
-              ref={canvasRef}
-              className='block'
-              aria-label={t('player')}
-            />
+            <canvas ref={canvasRef} className='block' aria-label={t('player')} />
           </div>
         ) : null}
       </div>
 
-      {/* 方向键 */}
-      <div
-        className={cn(
-          'shrink-0 px-2 pb-1 flex flex-col items-center gap-1',
-          crackPhase !== 'idle' && 'pointer-events-none opacity-50',
-        )}
-      >
-        <DpadButton label={t('dirUp')} pressed={heldDir === 'up'} onPress={() => applyMove('up')}>
-          ↑
-        </DpadButton>
-        <div className='flex items-center gap-1'>
-          <DpadButton label={t('dirLeft')} pressed={heldDir === 'left'} onPress={() => applyMove('left')}>
-            ←
-          </DpadButton>
-          <div className={cn(winChromePressed, 'h-10 w-11 opacity-60 pointer-events-none')} aria-hidden />
-          <DpadButton label={t('dirRight')} pressed={heldDir === 'right'} onPress={() => applyMove('right')}>
-            →
-          </DpadButton>
-        </div>
-        <DpadButton label={t('dirDown')} pressed={heldDir === 'down'} onPress={() => applyMove('down')}>
-          ↓
-        </DpadButton>
-      </div>
+      <Dpad
+        heldDir={heldDir}
+        disabled={crackPhase !== 'idle'}
+        labels={{
+          up: t('dirUp'),
+          down: t('dirDown'),
+          left: t('dirLeft'),
+          right: t('dirRight'),
+        }}
+        onMove={applyMove}
+      />
 
-      <p className='shrink-0 px-3 pb-1.5 text-[10px] text-muted text-center truncate'>
-        {crackError === 'unsolvable'
-          ? t('crackFailed')
-          : crackProgress
-            ? t('crackProgress', { step: crackProgress.step, total: crackProgress.total })
-            : t('hint')}
-      </p>
+      <p className='shrink-0 px-3 pb-1.5 text-[10px] text-muted text-center truncate'>{statusHint}</p>
 
       {state?.won ? (
-        <div className='absolute inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/60 p-4'>
-          <div
-            className={cn(
-              winChrome,
-              'bg-chrome text-on-chrome px-5 py-4 min-w-[240px] max-w-[90%] text-center shadow-lg',
-            )}
-          >
-            <p className='text-lg font-bold mb-1 text-green-800 dark:text-green-400'>{t('won')}</p>
-            <p className='text-xs text-muted mb-1'>{t('wonHint')}</p>
-            <div className='my-3 flex justify-center gap-3'>
-              <LcdStat label={t('moves')} value={pad3(state.moves)} />
-              <LcdStat
-                label={t('placed')}
-                value={`${pad3(placedCount).slice(-2)}/${pad3(state.level.targets.length).slice(-2)}`}
-                accent
-              />
-            </div>
-            <div className='flex items-center justify-center gap-2 flex-wrap'>
-              <button type='button' className={cn(winChrome, 'px-3 py-1.5 text-sm')} onClick={onReset}>
-                {t('playAgain')}
-              </button>
-              {catalog.length > 1 ? (
-                <button
-                  type='button'
-                  className={cn(winChrome, 'px-3 py-1.5 text-sm font-semibold')}
-                  onClick={() => goAdjacentLevel(1)}
-                >
-                  {t('nextLevel')}
-                </button>
-              ) : null}
-              {onClose ? (
-                <button type='button' className={cn(winChrome, 'px-3 py-1.5 text-sm')} onClick={onClose}>
-                  {t('close')}
-                </button>
-              ) : null}
-            </div>
-          </div>
-        </div>
+        <WinDialog
+          state={state}
+          minMoves={minMoves}
+          minMovesReady={minMovesReady}
+          hasNextLevel={catalog.length > 1}
+          labels={{
+            won: t('won'),
+            wonHint: t('wonHint'),
+            moves: t('moves'),
+            best: t('best'),
+            playAgain: t('playAgain'),
+            nextLevel: t('nextLevel'),
+            close: t('close'),
+          }}
+          onReset={onReset}
+          onNextLevel={() => goAdjacentLevel(1)}
+          onClose={onClose}
+        />
       ) : null}
     </div>
   )

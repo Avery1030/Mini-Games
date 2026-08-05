@@ -121,6 +121,7 @@
     "taskbarOpen": "Открыть",
     "taskbarCloseMenu": "Закрыть",
     "taskbarClose": "Закрыть окно",
+    "taskbarCloseOthers": "Закрыть остальные",
     "taskbarCloseLeft": "Закрыть окна слева",
     "taskbarCloseRight": "Закрыть окна справа",
     "taskbarCloseAll": "Закрыть все окна",
@@ -924,7 +925,7 @@
   "sokoban": {
     "title": "Сокобан",
     "moves": "Ходы",
-    "placed": "На месте",
+    "best": "Рекорд",
     "level": "Уровень",
     "levelN": "Уровень {n}",
     "undo": "Отмена",

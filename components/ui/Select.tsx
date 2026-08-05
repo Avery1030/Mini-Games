@@ -1,17 +1,8 @@
 'use client'
 
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type ReactNode,
-} from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
-import { winChrome, winChromeSunken } from '@/lib/winChrome'
+import { winChrome, winChromePanel, winChromeSunken } from '@/lib/winChrome'
 
 export type SelectSize = 'sm' | 'md'
 
@@ -82,10 +73,7 @@ export function Select({
   const isControlled = valueProp !== undefined
   const value = isControlled ? valueProp : uncontrolled
 
-  const selected = useMemo(
-    () => options.find((o) => o.value === value) ?? null,
-    [options, value],
-  )
+  const selected = useMemo(() => options.find((o) => o.value === value) ?? null, [options, value])
 
   const enabledOptions = useMemo(() => options.filter((o) => !o.disabled), [options])
 
@@ -142,8 +130,7 @@ export function Select({
       if (mode === 'center') {
         const listRect = list.getBoundingClientRect()
         const itemRect = item.getBoundingClientRect()
-        const delta =
-          itemRect.top - listRect.top - (list.clientHeight / 2 - itemRect.height / 2)
+        const delta = itemRect.top - listRect.top - (list.clientHeight / 2 - itemRect.height / 2)
         list.scrollTop += delta
       } else {
         item.scrollIntoView({ block: 'nearest' })
@@ -207,7 +194,7 @@ export function Select({
           className={cn(
             winChrome,
             'shrink-0 w-4 h-4 flex items-center justify-center text-[9px] leading-none',
-            size === 'md' && 'w-[18px] h-[18px] text-[10px]',
+            size === 'md' && 'w-4.5 h-4.5 text-[10px]',
           )}
         >
           ▾
@@ -221,8 +208,8 @@ export function Select({
           role='listbox'
           aria-activedescendant={highlight ? `${listboxId}-${highlight}` : undefined}
           className={cn(
-            winChrome,
-            'absolute z-[1300] left-0 min-w-full w-max max-w-[240px] max-h-48 overflow-y-auto p-0.5',
+            winChromePanel,
+            'absolute z-[1300] left-0 min-w-full w-max max-w-60 max-h-48 overflow-y-auto p-0.5',
             'shadow-[2px_2px_0_rgba(0,0,0,0.35)]',
             placement === 'bottom' ? 'top-full mt-0.5' : 'bottom-full mb-0.5',
             menuClassName,

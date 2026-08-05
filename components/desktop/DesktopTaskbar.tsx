@@ -98,6 +98,7 @@ export function DesktopTaskbar() {
             restore: tWin('restore'),
             close: tWin('taskbarCloseMenu'),
             closeCurrent: tWin('taskbarClose'),
+            closeOthers: tWin('taskbarCloseOthers'),
             closeLeft: tWin('taskbarCloseLeft'),
             closeRight: tWin('taskbarCloseRight'),
             closeAll: tWin('taskbarCloseAll'),
@@ -107,6 +108,11 @@ export function DesktopTaskbar() {
             open: () => openWindow(windowId),
             minimize: () => minimizeWindow(windowId),
             closeCurrent: () => closeWindow(windowId),
+            closeOthers: () => {
+              for (const id of orderedIds) {
+                if (id !== windowId) closeWindow(id)
+              }
+            },
             closeLeft: () => {
               if (idx <= 0) return
               for (const id of orderedIds.slice(0, idx)) closeWindow(id)
