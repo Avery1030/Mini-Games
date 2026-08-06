@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prepare": "husky"
   },
   "dependencies": {
     "@tanstack/react-virtual": "^3.14.8",
@@ -34,7 +35,12 @@
     "@types/three": "^0.185.1",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs}": "eslint --fix"
   }
 }
