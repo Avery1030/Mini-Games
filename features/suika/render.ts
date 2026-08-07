@@ -1,11 +1,6 @@
 import { getFruit } from './fruits'
 import type { SuikaEngine } from './game'
-import {
-  DANGER_LINE_Y,
-  DROP_Y,
-  WORLD_HEIGHT,
-  WORLD_WIDTH,
-} from './physics'
+import { DANGER_LINE_Y, DROP_Y, WORLD_HEIGHT, WORLD_WIDTH } from './physics'
 
 export type CanvasLabels = {
   danger: string
@@ -54,7 +49,13 @@ function drawHLine(
 
 function shadeColor(hex: string, amount: number): string {
   const n = hex.replace('#', '')
-  const full = n.length === 3 ? n.split('').map((c) => c + c).join('') : n
+  const full =
+    n.length === 3
+      ? n
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : n
   const num = Number.parseInt(full, 16)
   if (!Number.isFinite(num)) return hex
   const r = Math.min(255, Math.max(0, ((num >> 16) & 0xff) + amount))
@@ -82,14 +83,7 @@ function drawFruitCircle(
   ctx.fill()
 
   // 球体底色（暗边 → 亮心）
-  const bodyGrad = ctx.createRadialGradient(
-    x - r * 0.32,
-    y - r * 0.38,
-    r * 0.08,
-    x + r * 0.1,
-    y + r * 0.15,
-    r * 1.05,
-  )
+  const bodyGrad = ctx.createRadialGradient(x - r * 0.32, y - r * 0.38, r * 0.08, x + r * 0.1, y + r * 0.15, r * 1.05)
   bodyGrad.addColorStop(0, shadeColor(def.color, 55))
   bodyGrad.addColorStop(0.45, def.color)
   bodyGrad.addColorStop(0.82, shadeColor(def.color, -35))
@@ -121,16 +115,16 @@ function drawFruitCircle(
   ctx.fill()
 
   // 边缘描边
-  ctx.beginPath()
-  ctx.arc(x, y, r - 0.5, 0, Math.PI * 2)
-  ctx.strokeStyle = 'rgba(0,0,0,0.35)'
-  ctx.lineWidth = Math.max(1, r * 0.05)
-  ctx.stroke()
-  ctx.beginPath()
-  ctx.arc(x, y, Math.max(1, r - 1.5), 0, Math.PI * 2)
-  ctx.strokeStyle = 'rgba(255,255,255,0.2)'
-  ctx.lineWidth = Math.max(0.8, r * 0.035)
-  ctx.stroke()
+  // ctx.beginPath()
+  // ctx.arc(x, y, r - 0.5, 0, Math.PI * 2)
+  // ctx.strokeStyle = 'rgba(0,0,0,0.35)'
+  // ctx.lineWidth = Math.max(1, r * 0.05)
+  // ctx.stroke()
+  // ctx.beginPath()
+  // ctx.arc(x, y, Math.max(1, r - 1.5), 0, Math.PI * 2)
+  // ctx.strokeStyle = 'rgba(255,255,255,0.2)'
+  // ctx.lineWidth = Math.max(0.8, r * 0.035)
+  // ctx.stroke()
 
   drawCenteredGlyph(ctx, def.glyph, x, y, r)
 
@@ -201,13 +195,7 @@ function getGlyphVisualOffset(glyph: string, fontSize: number): { ox: number; oy
 }
 
 /** 将 emoji / 文字的视觉中心对齐到圆心 */
-function drawCenteredGlyph(
-  ctx: CanvasRenderingContext2D,
-  glyph: string,
-  cx: number,
-  cy: number,
-  r: number,
-): void {
+function drawCenteredGlyph(ctx: CanvasRenderingContext2D, glyph: string, cx: number, cy: number, r: number): void {
   const fontSize = Math.max(10, Math.floor(r * 1.05))
   const { ox, oy } = getGlyphVisualOffset(glyph, fontSize)
 
@@ -226,11 +214,7 @@ function drawCenteredGlyph(
 /**
  * 将当前引擎状态绘制到 canvas（逻辑坐标系 WORLD_WIDTH × WORLD_HEIGHT）。
  */
-export function drawSuikaFrame(
-  ctx: CanvasRenderingContext2D,
-  engine: SuikaEngine,
-  labels: CanvasLabels,
-): void {
+export function drawSuikaFrame(ctx: CanvasRenderingContext2D, engine: SuikaEngine, labels: CanvasLabels): void {
   ctx.clearRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT)
 
   ctx.fillStyle = '#0f1f0f'
@@ -245,7 +229,10 @@ export function drawSuikaFrame(
   ctx.fillText(labels.danger, WORLD_WIDTH - 6, DANGER_LINE_Y - 3)
 
   // 场上水果（按下→上绘制，投影更自然）
-  const sorted = engine.bodies.filter((b) => !b.removed).slice().sort((a, b) => a.y - b.y)
+  const sorted = engine.bodies
+    .filter((b) => !b.removed)
+    .slice()
+    .sort((a, b) => a.y - b.y)
   for (const b of sorted) drawFruitCircle(ctx, b.x, b.y, b.r, b.level)
 
   // 待投放 + 落点竖直虚线
