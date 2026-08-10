@@ -1,7 +1,7 @@
 'use client'
 
 import { findInterval, findSymbol, OVERLAY_INDICATORS, PANE_INDICATORS, periodToInterval } from '../constants'
-import { applyChartStyles, ensureDrawingOverlaysReady, ensureKlineLocales } from '../chartStyles'
+import { applyChartStyles, ensureKlineLocales } from '../chartStyles'
 import { useEffect, useRef, useState } from 'react'
 import type { Chart, DataLoader } from 'klinecharts'
 import { useKlineChartStore } from '@/store'
@@ -16,7 +16,6 @@ type UseKlineChartOptions = {
 
 /**
  * 图表生命周期：初始化 / 销毁、数据加载、主题语言、品种周期与指标同步。
- * 不包含划线工具状态（见 useDrawingSession）。
  */
 export function useKlineChart({ locale, isDark, loadFailedMessage }: UseKlineChartOptions) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -44,7 +43,6 @@ export function useKlineChart({ locale, isDark, loadFailedMessage }: UseKlineCha
     void (async () => {
       const { init } = await import('klinecharts')
       await ensureKlineLocales()
-      await ensureDrawingOverlaysReady()
       if (cancelled || !containerRef.current) return
 
       const chart = init(containerRef.current, {

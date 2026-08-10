@@ -2,12 +2,8 @@ import { getRequestConfig } from 'next-intl/server'
 import { cookies } from 'next/headers'
 import { locales, defaultLocale, COOKIE_KEY, type Locale } from './config'
 import zhCN from '@/messages/zh-CN.json'
-import zhTW from '@/messages/zh-TW.json'
 import enUS from '@/messages/en-US.json'
 import jaJP from '@/messages/ja-JP.json'
-import ruRU from '@/messages/ru-RU.json'
-import deDE from '@/messages/de-DE.json'
-import frFR from '@/messages/fr-FR.json'
 
 /**
  * 静态导入语言包，避免 Turbopack 对
@@ -15,12 +11,8 @@ import frFR from '@/messages/fr-FR.json'
  */
 const messagesByLocale: Record<Locale, typeof zhCN> = {
   'zh-CN': zhCN,
-  'zh-TW': zhTW,
   'en-US': enUS,
   'ja-JP': jaJP,
-  'ru-RU': ruRU,
-  'de-DE': deDE,
-  'fr-FR': frFR,
 }
 
 export default getRequestConfig(async () => {

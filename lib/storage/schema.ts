@@ -64,7 +64,6 @@ export type KlineChartPersistState = {
   interval: string
   overlays: string[]
   panes: string[]
-  drawingToolbarCollapsed: boolean
 }
 
 /** 壁纸首屏 boot 标记 */
@@ -119,6 +118,9 @@ export type StorageSchema = {
   [STORAGE_KEYS.notepad]: ZustandPersistEnvelope<NotepadPersistState>
   [STORAGE_KEYS.paint]: ZustandPersistEnvelope<PaintPersistState>
   [STORAGE_KEYS.klineChart]: ZustandPersistEnvelope<KlineChartPersistState>
+  [STORAGE_KEYS.sokoban]: ZustandPersistEnvelope<{
+    levels: Record<string, { stars: number; bestMoves: number }>
+  }>
   [STORAGE_KEYS.lock]: ZustandPersistEnvelope<LockPersistState>
   [STORAGE_KEYS.calendar]: ZustandPersistEnvelope<CalendarPersistState>
   [STORAGE_KEYS.desktopItems]: ZustandPersistEnvelope<DesktopItemsPersistState>

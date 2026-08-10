@@ -60,7 +60,7 @@ export function CalendarModalContent() {
     setDraft(notes[selectedKey] ?? '')
   }, [selectedKey, notes])
 
-  const isChinese = locale === 'zh-CN' || locale === 'zh-TW'
+  const isChinese = locale === 'zh-CN'
   const calendarLocale = dayPickerLocale(locale)
   const dateLocale = dateFnsLocale(locale)
 

@@ -27,14 +27,6 @@ const COPY: Record<string, Copy> = {
     retry: '重试',
     lang: 'zh-CN',
   },
-  'zh-TW': {
-    code: '錯誤',
-    title: 'Avery Mini OS',
-    message: '桌面殼遇到嚴重錯誤，無法繼續顯示。\n你可以重試，或返回桌面重新開始。',
-    home: '返回桌面',
-    retry: '重試',
-    lang: 'zh-TW',
-  },
   'en-US': {
     code: 'Error',
     title: 'Avery Mini OS',
@@ -51,40 +43,12 @@ const COPY: Record<string, Copy> = {
     retry: '再試行',
     lang: 'ja-JP',
   },
-  'ru-RU': {
-    code: 'Ошибка',
-    title: 'Avery Mini OS',
-    message: 'В оболочке рабочего стола произошла критическая ошибка.\nМожно повторить попытку или вернуться на рабочий стол.',
-    home: 'На рабочий стол',
-    retry: 'Повторить',
-    lang: 'ru-RU',
-  },
-  'de-DE': {
-    code: 'Fehler',
-    title: 'Avery Mini OS',
-    message: 'Die Desktop-Umgebung ist auf einen schweren Fehler gestoßen.\nSie können es erneut versuchen oder zum Desktop zurückkehren.',
-    home: 'Zum Desktop',
-    retry: 'Erneut versuchen',
-    lang: 'de-DE',
-  },
-  'fr-FR': {
-    code: 'Erreur',
-    title: 'Avery Mini OS',
-    message: "Le bureau a rencontré une erreur critique et ne peut pas continuer.\nVous pouvez réessayer ou revenir au bureau.",
-    home: 'Retour au bureau',
-    retry: 'Réessayer',
-    lang: 'fr-FR',
-  },
 }
 
 function pickCopy(langAttr: string | null | undefined): Copy {
   const raw = (langAttr || '').toLowerCase()
-  if (raw.startsWith('zh-tw') || raw.startsWith('zh-hk') || raw.startsWith('zh-mo')) return COPY['zh-TW']
   if (raw.startsWith('zh')) return COPY['zh-CN']
   if (raw.startsWith('ja')) return COPY['ja-JP']
-  if (raw.startsWith('ru')) return COPY['ru-RU']
-  if (raw.startsWith('de')) return COPY['de-DE']
-  if (raw.startsWith('fr')) return COPY['fr-FR']
   if (raw.startsWith('en')) return COPY['en-US']
   return COPY['zh-CN']
 }

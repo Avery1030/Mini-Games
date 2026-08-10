@@ -17,10 +17,6 @@ export async function ensureKlineLocales() {
     change: '涨跌幅：',
     amplitude: '振幅：',
   } as never)
-  registerLocale('zh-TW', {
-    change: '漲跌幅：',
-    amplitude: '振幅：',
-  } as never)
   registerLocale('en-US', {
     change: 'Change: ',
     amplitude: 'Amplitude: ',
@@ -29,30 +25,6 @@ export async function ensureKlineLocales() {
     change: '騰落率：',
     amplitude: '振幅：',
   } as never)
-  registerLocale('ru-RU', {
-    change: 'Изм.: ',
-    amplitude: 'Ампл.: ',
-  } as never)
-  registerLocale('de-DE', {
-    change: 'Veränderung: ',
-    amplitude: 'Amplitude: ',
-  } as never)
-  registerLocale('fr-FR', {
-    change: 'Variation : ',
-    amplitude: 'Amplitude : ',
-  } as never)
-}
-
-let overlaysReady: Promise<void> | null = null
-
-/** 注册自定义划线 overlay（幂等） */
-export function ensureDrawingOverlaysReady() {
-  if (!overlaysReady) {
-    overlaysReady = import('./registerOverlays').then(({ ensureDrawingOverlays }) =>
-      ensureDrawingOverlays(),
-    )
-  }
-  return overlaysReady
 }
 
 function pct(n: number): string {

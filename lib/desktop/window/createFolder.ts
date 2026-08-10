@@ -142,7 +142,6 @@ export function resolveDesktopItemTitle(
   const fromTitles =
     (loc && titles?.[loc]) ||
     titles?.['zh-CN'] ||
-    titles?.['zh-TW'] ||
     titles?.['en-US'] ||
     (titles ? Object.values(titles).find((v) => typeof v === 'string' && v.trim()) : undefined) ||
     undefined

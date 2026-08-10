@@ -62,7 +62,7 @@ yarn lint    # ESLint
 | 资源管理器 | `fileExplorer`     | 浏览 VFS 绝对路径；图片右键打开 / 设壁纸 / 复制移动 / 移入回收站           |
 | 回收站     | `recycleBin`       | 桌面软删除项 + VFS `/Trash`；还原、永久删除、清空                          |
 | 图片查看器 | `imageViewer`      | VFS `/Pictures` 图库；路径启动；URL 临时预览；删除走 `vfs.trash`           |
-| K 线图表   | `klineChartViewer` | USDT 永续 / TradFi K 线（币安公开接口）、周期与指标、画线工具              |
+| K 线图表   | `klineChartViewer` | USDT 永续 / TradFi K 线（币安公开接口）、周期与指标              |
 | 智聊       | `aiChat`           | SiliconFlow 流式对话；多会话独立 IDB；可导出 `.chat` 到 `/Documents/Chats` |
 | 任务管理器 | `taskManager`      | 查看 / 强制关闭运行中窗口                                                  |
 | 游戏       | `games`            | 游戏集合入口；小游戏本身不单独出现在桌面 / 开始菜单                        |

@@ -1,13 +1,16 @@
 'use client'
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { winChromeSunken } from '@/lib/winChrome'
+import { useSokobanProgressStore } from '@/store'
 import { BOARD } from './boardCanvas'
 import { createStateFromLevel, resetLevel, tryMove, undoMove } from './game'
+import { LevelSelect } from './LevelSelect'
 import { fetchAllLevels, reloadAllLevels, type LoadedLevels } from './loadLevels'
+import { calcStars, type StarCount } from './stars'
 import { Toolbar } from './Toolbar'
 import { CELL_MAX, CELL_MIN, Dpad, keyToDir, MOVE_COOLDOWN_MS } from './uiParts'
 import { useBoardAnim } from './useBoardAnim'
@@ -21,8 +24,10 @@ export interface SokobanProps {
   onClose?: () => void
 }
 
+type Screen = 'select' | 'play'
+
 /**
- * 推箱子：Canvas 棋盘 + 键盘/屏幕方向键，关卡见 levels.ts。
+ * 推箱子：先选关（顺序解锁 + 星级），再进入 Canvas 棋盘。
  */
 export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
   const t = useTranslations('sokoban')
@@ -32,7 +37,9 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
   const rootRef = useRef<HTMLDivElement>(null)
   const lastMoveAtRef = useRef(0)
   const bundleRef = useRef<LoadedLevels | null>(null)
+  const recordedWinKeyRef = useRef<string | null>(null)
 
+  const [screen, setScreen] = useState<Screen>('select')
   const [catalog, setCatalog] = useState<number[]>([])
   const [levelId, setLevelId] = useState<number | null>(null)
   const [state, setState] = useState<SokobanState | null>(null)
@@ -40,6 +47,12 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
   const [loading, setLoading] = useState(true)
   const [cellPx, setCellPx] = useState(CELL_MIN)
   const [heldDir, setHeldDir] = useState<Direction | null>(null)
+  const [winStars, setWinStars] = useState<StarCount>(1)
+
+  const progressLevels = useSokobanProgressStore((s) => s.levels)
+  const recordClear = useSokobanProgressStore((s) => s.recordClear)
+  const isUnlocked = useSokobanProgressStore((s) => s.isUnlocked)
+  const nextUnlockedId = useSokobanProgressStore((s) => s.nextUnlockedId)
 
   const { stateRef, syncState, onStateChanged, repaintForCellPx, stopAnim } = useBoardAnim(canvasRef)
   const {
@@ -53,12 +66,32 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
     resumeCrackDemo,
     stopCrackDemo,
   } = useCrackDemo({ stateRef, setState, setHeldDir })
-  const { minMoves, minMovesReady, clearCache: clearMinMovesCache } = useMinMoves(
-    state?.levelId ?? null,
-    state?.level,
-  )
+  const {
+    minMoves,
+    minMovesReady,
+    clearCache: clearMinMovesCache,
+  } = useMinMoves(screen === 'play' ? (state?.levelId ?? null) : null, screen === 'play' ? state?.level : null)
 
   syncState(state, cellPx)
+
+  const unlockedCatalog = useMemo(
+    () => catalog.filter((id) => isUnlocked(catalog, id)),
+    [catalog, isUnlocked, progressLevels],
+  )
+
+  const levelSelectItems = useMemo(
+    () =>
+      catalog.map((id) => {
+        const prog = progressLevels[String(id)]
+        return {
+          id,
+          unlocked: isUnlocked(catalog, id),
+          stars: prog?.stars ?? 0,
+          bestMoves: prog?.bestMoves ?? null,
+        }
+      }),
+    [catalog, isUnlocked, progressLevels],
+  )
 
   const focusGame = useCallback(() => {
     const root = rootRef.current
@@ -70,22 +103,33 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
     root.focus({ preventScroll: true })
   }, [])
 
+  const backToSelect = useCallback(() => {
+    stopCrackDemo()
+    stopAnim()
+    setScreen('select')
+    setHeldDir(null)
+    recordedWinKeyRef.current = null
+  }, [stopAnim, stopCrackDemo])
+
   const selectLevel = useCallback(
     (id: number) => {
       const bundle = bundleRef.current
       if (!bundle) return
+      if (!isUnlocked(bundle.ids, id)) return
       const level = bundle.byId.get(id)
       if (!level) {
         setLoadError('loadFailed')
         return
       }
       stopCrackDemo()
+      recordedWinKeyRef.current = null
       setLevelId(id)
       setState(createStateFromLevel(id, level))
       setLoadError(null)
+      setScreen('play')
       requestAnimationFrame(() => focusGame())
     },
-    [focusGame, stopCrackDemo],
+    [focusGame, isUnlocked, stopCrackDemo],
   )
 
   useEffect(() => {
@@ -98,11 +142,6 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
         if (cancelled) return
         bundleRef.current = bundle
         setCatalog(bundle.ids)
-        const first = bundle.ids[0]
-        if (first != null) {
-          setLevelId(first)
-          setState(createStateFromLevel(first, bundle.byId.get(first)!))
-        }
       } catch (err) {
         if (cancelled) return
         setLoadError(err instanceof Error ? err.message : 'loadFailed')
@@ -116,8 +155,18 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
     }
   }, [])
 
+  // 通关记星：先按当前最短（可能尚未算出）记一笔以解锁下一关；最短就绪后再刷新星级
+  useEffect(() => {
+    if (screen !== 'play' || !state?.won || levelId == null) return
+    const key = `${levelId}:${state.moves}:${minMovesReady ? String(minMoves) : 'pending'}`
+    if (recordedWinKeyRef.current === key) return
+    recordedWinKeyRef.current = key
+    const stars = recordClear(levelId, state.moves, minMovesReady ? minMoves : null)
+    setWinStars(stars)
+  }, [screen, state?.won, state?.moves, levelId, minMoves, minMovesReady, recordClear])
+
   useLayoutEffect(() => {
-    if (loading) return
+    if (loading || screen !== 'play') return
     const host = boardHostRef.current
     if (!host || !stateRef.current) return
 
@@ -137,21 +186,23 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
     const ro = new ResizeObserver(update)
     ro.observe(host)
     return () => ro.disconnect()
-  }, [loading, state?.levelId, state?.level.width, state?.level.height, stateRef])
+  }, [loading, screen, state?.levelId, state?.level.width, state?.level.height, stateRef])
 
   useEffect(() => {
-    if (!state) return
+    if (screen !== 'play' || !state) return
     onStateChanged(state)
-  }, [state, onStateChanged])
+  }, [screen, state, onStateChanged])
 
   useEffect(() => {
+    if (screen !== 'play') return
     repaintForCellPx(cellPx)
-  }, [cellPx, repaintForCellPx])
+  }, [screen, cellPx, repaintForCellPx])
 
   useEffect(() => () => stopAnim(), [stopAnim])
 
   const applyMove = useCallback(
     (dir: Direction) => {
+      if (screen !== 'play') return
       if (crackDemoRef.current) return
       focusGame()
       const now = Date.now()
@@ -163,10 +214,11 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
       lastMoveAtRef.current = now
       setState(next)
     },
-    [crackDemoRef, focusGame, stateRef],
+    [crackDemoRef, focusGame, screen, stateRef],
   )
 
   useEffect(() => {
+    if (screen !== 'play') return
     const onKeyDown = (e: KeyboardEvent) => {
       if (crackDemoRef.current) {
         if (keyToDir(e.key) || (e.key === 'z' && (e.metaKey || e.ctrlKey))) {
@@ -202,7 +254,7 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
       window.removeEventListener('keydown', onKeyDown, true)
       window.removeEventListener('keyup', onKeyUp)
     }
-  }, [applyMove, crackDemoRef, focusGame])
+  }, [applyMove, crackDemoRef, focusGame, screen])
 
   useEffect(() => {
     const clear = () => setHeldDir(null)
@@ -227,13 +279,13 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
 
   const goAdjacentLevel = useCallback(
     (delta: number) => {
-      if (catalog.length === 0 || levelId == null) return
-      const idx = catalog.indexOf(levelId)
+      if (unlockedCatalog.length === 0 || levelId == null) return
+      const idx = unlockedCatalog.indexOf(levelId)
       if (idx < 0) return
-      const next = catalog[(idx + delta + catalog.length) % catalog.length]
+      const next = unlockedCatalog[idx + delta]
       if (next != null) selectLevel(next)
     },
-    [catalog, levelId, selectLevel],
+    [levelId, selectLevel, unlockedCatalog],
   )
 
   const onUndo = useCallback(() => {
@@ -243,6 +295,7 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
 
   const onReset = useCallback(() => {
     stopCrackDemo()
+    recordedWinKeyRef.current = null
     setState((prev) => (prev ? resetLevel(prev) : prev))
   }, [stopCrackDemo])
 
@@ -256,22 +309,22 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
       const bundle = await reloadAllLevels()
       bundleRef.current = bundle
       setCatalog(bundle.ids)
-      const prefer = levelId != null && bundle.byId.has(levelId) ? levelId : bundle.ids[0]
-      if (prefer == null) {
+      if (screen === 'play' && levelId != null && bundle.byId.has(levelId) && isUnlocked(bundle.ids, levelId)) {
+        setState(createStateFromLevel(levelId, bundle.byId.get(levelId)!))
+        recordedWinKeyRef.current = null
+        requestAnimationFrame(() => focusGame())
+      } else if (screen === 'play') {
+        setScreen('select')
         setLevelId(null)
         setState(null)
-        return
       }
-      setLevelId(prefer)
-      setState(createStateFromLevel(prefer, bundle.byId.get(prefer)!))
-      requestAnimationFrame(() => focusGame())
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'loadFailed')
       setState(null)
     } finally {
       setLoading(false)
     }
-  }, [clearMinMovesCache, focusGame, levelId, loading, stopCrackDemo])
+  }, [clearMinMovesCache, focusGame, isUnlocked, levelId, loading, screen, stopCrackDemo])
 
   const statusHint =
     crackError === 'unsolvable'
@@ -279,6 +332,41 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
       : crackProgress
         ? t('crackProgress', { step: crackProgress.step, total: crackProgress.total })
         : t('hint')
+
+  const canPrev = levelId != null && unlockedCatalog.indexOf(levelId) > 0
+  const canNext =
+    levelId != null &&
+    unlockedCatalog.indexOf(levelId) >= 0 &&
+    unlockedCatalog.indexOf(levelId) < unlockedCatalog.length - 1
+
+  const nextInCatalog =
+    levelId != null && catalog.indexOf(levelId) >= 0 ? (catalog[catalog.indexOf(levelId) + 1] ?? null) : null
+  const canGoNextAfterWin = Boolean(state?.won && nextInCatalog != null)
+
+  if (screen === 'select') {
+    return (
+      <div
+        className={cn(embeddedAppShell(embedded, 'relative flex flex-col bg-chrome text-on-chrome min-h-0'), 'h-full')}
+      >
+        <LevelSelect
+          items={levelSelectItems}
+          loading={loading}
+          loadError={loadError}
+          labels={{
+            title: t('selectTitle'),
+            hint: t('selectHint'),
+            levelN: (n) => t('levelN', { n }),
+            locked: t('locked'),
+            cleared: t('cleared'),
+            loading: t('loading'),
+            loadFailed: t('loadFailed'),
+            bestMoves: t('bestMoves'),
+          }}
+          onPick={selectLevel}
+        />
+      </div>
+    )
+  }
 
   return (
     <div
@@ -304,15 +392,18 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
           prevLevel: t('prevLevel'),
           nextLevel: t('nextLevel'),
           reloadLevel: t('reloadLevel'),
+          levelSelect: t('levelSelect'),
         }}
         state={state}
         minMoves={minMoves}
         minMovesReady={minMovesReady}
-        catalog={catalog}
+        unlockedCatalog={unlockedCatalog}
         levelId={levelId}
         loading={loading}
         crackEnabled={crackEnabled}
         crackPhase={crackPhase}
+        canPrev={canPrev}
+        canNext={canNext}
         onClose={onClose}
         onUndo={onUndo}
         onReset={onReset}
@@ -322,6 +413,7 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
         onSelectLevel={onSelectLevel}
         onAdjacentLevel={goAdjacentLevel}
         onReloadLevels={() => void onReloadLevels()}
+        onLevelSelect={backToSelect}
       />
 
       <div ref={boardHostRef} className='flex-1 min-h-0 flex items-center justify-center px-2 py-2 overflow-hidden'>
@@ -364,18 +456,27 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
           state={state}
           minMoves={minMoves}
           minMovesReady={minMovesReady}
-          hasNextLevel={catalog.length > 1}
+          stars={minMovesReady ? winStars : calcStars(state.moves, minMoves)}
+          hasNextLevel={canGoNextAfterWin || nextUnlockedId(catalog, levelId!) != null}
           labels={{
             won: t('won'),
             wonHint: t('wonHint'),
             moves: t('moves'),
             best: t('best'),
+            stars: t('stars'),
             playAgain: t('playAgain'),
             nextLevel: t('nextLevel'),
+            levelSelect: t('levelSelect'),
             close: t('close'),
           }}
           onReset={onReset}
-          onNextLevel={() => goAdjacentLevel(1)}
+          onNextLevel={() => {
+            if (state && levelId != null) {
+              recordClear(levelId, state.moves, minMovesReady ? minMoves : null)
+            }
+            if (nextInCatalog != null) selectLevel(nextInCatalog)
+          }}
+          onLevelSelect={backToSelect}
           onClose={onClose}
         />
       ) : null}

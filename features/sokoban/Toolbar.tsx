@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, RefreshCw, RotateCcw, Undo2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, LayoutGrid, RefreshCw, RotateCcw, Undo2 } from 'lucide-react'
 import { Select } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { winChrome, winChromePanel } from '@/lib/winChrome'
@@ -20,6 +20,7 @@ type Labels = {
   prevLevel: string
   nextLevel: string
   reloadLevel: string
+  levelSelect: string
 }
 
 type Props = {
@@ -27,11 +28,14 @@ type Props = {
   state: SokobanState | null
   minMoves: number | null
   minMovesReady: boolean
-  catalog: number[]
+  /** 仅含已解锁关卡 */
+  unlockedCatalog: number[]
   levelId: number | null
   loading: boolean
   crackEnabled: boolean
   crackPhase: CrackPhase
+  canPrev: boolean
+  canNext: boolean
   onClose?: () => void
   onUndo: () => void
   onReset: () => void
@@ -41,6 +45,7 @@ type Props = {
   onSelectLevel: (id: string) => void
   onAdjacentLevel: (delta: number) => void
   onReloadLevels: () => void
+  onLevelSelect: () => void
 }
 
 export function Toolbar({
@@ -48,11 +53,13 @@ export function Toolbar({
   state,
   minMoves,
   minMovesReady,
-  catalog,
+  unlockedCatalog,
   levelId,
   loading,
   crackEnabled,
   crackPhase,
+  canPrev,
+  canNext,
   onClose,
   onUndo,
   onReset,
@@ -62,9 +69,10 @@ export function Toolbar({
   onSelectLevel,
   onAdjacentLevel,
   onReloadLevels,
+  onLevelSelect,
 }: Props) {
   const demoBusy = crackPhase !== 'idle'
-  const selectOptions = catalog.map((id) => ({
+  const selectOptions = unlockedCatalog.map((id) => ({
     value: String(id),
     label: labels.levelN(id),
   }))
@@ -85,6 +93,16 @@ export function Toolbar({
           <button
             type='button'
             className={cn(winChrome, 'h-7 px-2 inline-flex items-center gap-1 text-xs disabled:opacity-40')}
+            disabled={demoBusy}
+            onClick={onLevelSelect}
+            title={labels.levelSelect}
+          >
+            <LayoutGrid size={12} aria-hidden />
+            {labels.levelSelect}
+          </button>
+          <button
+            type='button'
+            className={cn(winChrome, 'h-7 px-2 inline-flex items-center gap-1 text-xs disabled:opacity-40')}
             disabled={!state || state.undoStack.length === 0 || state.won || demoBusy}
             onClick={onUndo}
           >
@@ -100,7 +118,7 @@ export function Toolbar({
             <RotateCcw size={12} aria-hidden />
             {labels.reset}
           </button>
-          {crackEnabled ? (
+          {/* {crackEnabled ? (
             crackPhase === 'playing' ? (
               <button type='button' className={cn(winChrome, 'h-7 px-2 text-xs')} onClick={onCrackPause}>
                 {labels.crackPause}
@@ -119,7 +137,7 @@ export function Toolbar({
                 {labels.crack}
               </button>
             )
-          ) : null}
+          ) : null} */}
           {onClose ? (
             <button type='button' className={cn(winChrome, 'h-7 px-2 text-xs')} onClick={onClose}>
               {labels.close}
@@ -132,7 +150,7 @@ export function Toolbar({
         <button
           type='button'
           className={cn(winChrome, 'h-7 w-7 shrink-0 inline-flex items-center justify-center disabled:opacity-40')}
-          disabled={catalog.length < 2 || loading || demoBusy}
+          disabled={!canPrev || loading || demoBusy}
           aria-label={labels.prevLevel}
           onClick={() => onAdjacentLevel(-1)}
         >
@@ -143,14 +161,14 @@ export function Toolbar({
           className='w-[8rem] shrink-0'
           aria-label={labels.level}
           value={levelId == null ? '' : String(levelId)}
-          disabled={loading || catalog.length === 0 || demoBusy}
+          disabled={loading || unlockedCatalog.length === 0 || demoBusy}
           onValueChange={onSelectLevel}
           options={selectOptions}
         />
         <button
           type='button'
           className={cn(winChrome, 'h-7 w-7 shrink-0 inline-flex items-center justify-center disabled:opacity-40')}
-          disabled={catalog.length < 2 || loading || demoBusy}
+          disabled={!canNext || loading || demoBusy}
           aria-label={labels.nextLevel}
           onClick={() => onAdjacentLevel(1)}
         >

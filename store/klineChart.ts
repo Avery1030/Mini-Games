@@ -43,15 +43,12 @@ type KlineChartState = {
   interval: BinanceInterval
   overlays: string[]
   panes: string[]
-  drawingToolbarCollapsed: boolean
   setSymbol: (symbol: string) => void
   setInterval: (interval: BinanceInterval) => void
   toggleOverlay: (name: string) => void
   togglePane: (name: string) => void
   setOverlays: (overlays: string[]) => void
   setPanes: (panes: string[]) => void
-  setDrawingToolbarCollapsed: (collapsed: boolean) => void
-  toggleDrawingToolbarCollapsed: () => void
 }
 
 export const useKlineChartStore = create<KlineChartState>()(
@@ -61,7 +58,6 @@ export const useKlineChartStore = create<KlineChartState>()(
       interval: DEFAULT_INTERVAL.value,
       overlays: [...DEFAULT_OVERLAYS],
       panes: [...DEFAULT_PANES],
-      drawingToolbarCollapsed: false,
 
       setSymbol: (symbol) => set({ symbol: normalizeSymbol(symbol) }),
 
@@ -80,22 +76,16 @@ export const useKlineChartStore = create<KlineChartState>()(
       setOverlays: (overlays) => set({ overlays: normalizeList(overlays, OVERLAY_SET, [...DEFAULT_OVERLAYS]) }),
 
       setPanes: (panes) => set({ panes: normalizeList(panes, PANE_SET, [...DEFAULT_PANES]) }),
-
-      setDrawingToolbarCollapsed: (collapsed) => set({ drawingToolbarCollapsed: collapsed }),
-
-      toggleDrawingToolbarCollapsed: () =>
-        set((state) => ({ drawingToolbarCollapsed: !state.drawingToolbarCollapsed })),
     }),
     {
       name: STORAGE_KEYS.klineChart,
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => appStorage.createStateStorage()),
       partialize: (s) => ({
         symbol: s.symbol,
         interval: s.interval,
         overlays: s.overlays,
         panes: s.panes,
-        drawingToolbarCollapsed: s.drawingToolbarCollapsed,
       }),
       migrate: (persisted) => {
         const raw = (persisted ?? {}) as Partial<KlineChartState>
@@ -104,7 +94,6 @@ export const useKlineChartStore = create<KlineChartState>()(
           interval: normalizeInterval(raw.interval),
           overlays: normalizeList(raw.overlays, OVERLAY_SET, [...DEFAULT_OVERLAYS]),
           panes: normalizeList(raw.panes, PANE_SET, [...DEFAULT_PANES]),
-          drawingToolbarCollapsed: raw.drawingToolbarCollapsed === true,
         }
       },
       merge: (persisted, current) => {
@@ -115,7 +104,6 @@ export const useKlineChartStore = create<KlineChartState>()(
           interval: normalizeInterval(saved?.interval),
           overlays: normalizeList(saved?.overlays, OVERLAY_SET, [...DEFAULT_OVERLAYS]),
           panes: normalizeList(saved?.panes, PANE_SET, [...DEFAULT_PANES]),
-          drawingToolbarCollapsed: saved?.drawingToolbarCollapsed === true,
         }
       },
     },
