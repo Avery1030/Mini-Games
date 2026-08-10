@@ -9,6 +9,7 @@ import { confirmModal, alertModal } from '@/components/ui'
 import { type DesktopAppId } from '@/config/desktop'
 import {
   getDesktopAppDefinitionsSnapshot,
+  getDesktopWindow,
   resolveDesktopItemTitle,
   subscribeDesktopRegistry,
 } from '@/lib/desktop/window'
@@ -239,6 +240,7 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
                     <MenuItem
                       icon={Icon}
                       label={resolveDesktopItemTitle(app, tApps, locale)}
+                      onMouseEnter={() => getDesktopWindow(app.id)?.prefetchApp()}
                       onClick={() => launch(app.id)}
                     />
                   </li>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
@@ -8,6 +8,8 @@ import { Panel } from '@/components/ui'
 import type { DesktopAppId } from '@/config/desktop'
 import {
   getDesktopAppDefinitionsSnapshot,
+  getDesktopWindow,
+  prefetchApps,
   resolveDesktopItemTitle,
   subscribeDesktopRegistry,
 } from '@/lib/desktop/window'
@@ -42,6 +44,11 @@ export function GamesApp({ embedded = false }: GamesAppProps) {
       (d): d is NonNullable<typeof d> => Boolean(d?.app),
     )
   }, [definitions])
+
+  // 打开游戏夹后立刻预热列表内小游戏
+  useEffect(() => {
+    prefetchApps(GAME_APP_IDS)
+  }, [])
 
   const launch = useCallback(
     (id: DesktopAppId) => {
@@ -81,6 +88,7 @@ export function GamesApp({ embedded = false }: GamesAppProps) {
                       'hover:bg-icon-select/30 focus-visible:outline-none focus-visible:bg-icon-select/40',
                       selected && 'bg-icon-select text-icon-select-fg',
                     )}
+                    onPointerEnter={() => getDesktopWindow(game.id)?.prefetchApp()}
                     onClick={() => {
                       setSelectedId(game.id)
                       if (isMobile) launch(game.id)

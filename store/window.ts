@@ -190,6 +190,8 @@ export const useWindowStore = create<WindowStore>()(
       openWindow: (id) => {
         const deskWin = getDesktopWindow(id)
         if (!deskWin?.app) return
+        // 先开始拉 chunk，再进 onBeforeOpen / 设 isOpen，缩短内容区空白
+        deskWin.prefetchApp()
         if (!deskWin.onBeforeOpen()) return
         const { windows, topZIndex, nextOpenOrder } = get()
         const nextZ = getNextZ(windows, topZIndex)

@@ -11,6 +11,7 @@ import { useDesktopStore } from '@/store/desktop'
 import { useWindowStore } from '@/store/window'
 import { useSettingsStore } from '@/store/settings'
 import { useLockStore } from '@/store/lock'
+import { scheduleIdlePrefetchBuiltinApps } from '@/lib/desktop/window'
 
 /** 临时关闭开机动画；改回 true 即可恢复 */
 const BOOT_ANIMATION_ENABLED = true
@@ -108,6 +109,12 @@ export function DesktopShell() {
   }, [storesReady, progress, finish])
 
   const showDesktop = BOOT_ANIMATION_ENABLED ? !booting : storesReady
+
+  // 桌面出现后空闲预热应用 chunk，缩短首次打开等待
+  useEffect(() => {
+    if (!showDesktop) return
+    return scheduleIdlePrefetchBuiltinApps()
+  }, [showDesktop])
 
   return (
     <>

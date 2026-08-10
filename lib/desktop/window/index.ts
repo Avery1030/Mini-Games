@@ -30,7 +30,12 @@ export {
 export {
   defineDesktopApp,
   registerBuiltinApp,
+  registerBuiltinApps,
+  createDeferredApp,
   type RegisterBuiltinAppOptions,
+  type LoadAppFn,
+  type AppComponent,
+  type DeferredApp,
 } from './defineApp'
 export {
   createDesktopFolderWindow,
@@ -43,6 +48,10 @@ export {
   type CreateDesktopTextDocumentOptions,
 } from './createFolder'
 export { FolderWindow, TextDocumentWindow } from './apps'
+export {
+  prefetchApps,
+  scheduleIdlePrefetchBuiltinApps,
+} from './prefetchApps'
 
 /** 加载全部内置应用注册（必须在 createDefaultWindows 等之前执行） */
 import './builtins'

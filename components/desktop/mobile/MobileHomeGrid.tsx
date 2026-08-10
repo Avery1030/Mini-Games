@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { useVisibleDesktopIcons } from '@/components/desktop/DesktopIconsLayer'
 import { useDesktopHydrated } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
-import { resolveDesktopItemTitle } from '@/lib/desktop/window'
+import { getDesktopWindow, resolveDesktopItemTitle } from '@/lib/desktop/window'
 import { cn } from '@/lib/cn'
 import type { DesktopAppId } from '@/config/desktop'
 
@@ -50,6 +50,9 @@ export function MobileHomeGrid({ dockIds = [] }: MobileHomeGridProps) {
               disabled={!canOpen}
               onClick={() => {
                 if (canOpen) openWindow(app.id)
+              }}
+              onPointerEnter={() => {
+                if (canOpen) getDesktopWindow(app.id)?.prefetchApp()
               }}
               className={cn(
                 'flex flex-col items-center gap-1.5 rounded-2xl p-1.5',

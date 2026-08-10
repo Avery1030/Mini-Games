@@ -1,4 +1,4 @@
-import { createElement, type ComponentType } from 'react'
+import { createElement, lazy, Suspense, type ComponentType } from 'react'
 import {
   DEFAULT_WINDOW_CHROME,
   type AppTitles,
@@ -9,13 +9,18 @@ import {
 import { DesktopWindow, type DesktopIconComponent } from './DesktopWindow'
 import { pushBuiltinWindow } from './registry'
 
+export type AppComponent = ComponentType<{ embedded?: boolean }>
+
+/** 打开窗口时再动态 import 应用组件 */
+export type LoadAppFn = () => Promise<AppComponent>
+
 export type RegisterBuiltinAppOptions = {
   id: DesktopAppId
   icon: DesktopIconComponent
   /** 直接挂载的应用组件；与 loadApp 二选一 */
-  app?: ComponentType<{ embedded?: boolean }>
-  /** 延迟加载（打断循环依赖 / 避开 SSR 顶层副作用） */
-  loadApp?: () => ComponentType<{ embedded?: boolean }>
+  app?: AppComponent
+  /** 延迟加载：打开窗口渲染时才 import */
+  loadApp?: LoadAppFn
   defaultCoordinate: DesktopCoordinate
   width?: number
   height?: number
@@ -26,6 +31,59 @@ export type RegisterBuiltinAppOptions = {
   chrome?: Partial<WindowChromeOptions>
   showOnDesktop?: boolean
   showInStartMenu?: boolean
+}
+
+export type DeferredApp = {
+  component: AppComponent
+  /** 提前开始 import（打开前 / 悬停预取） */
+  prefetch: () => void
+}
+
+function AppChunkFallback() {
+  return createElement(
+    'div',
+    {
+      className: 'flex h-full min-h-[8rem] w-full items-center justify-center bg-window-body',
+      role: 'status',
+      'aria-busy': 'true',
+    },
+    createElement('div', {
+      className: 'size-5 animate-spin rounded-full border-2 border-muted border-t-on-chrome',
+    }),
+  )
+}
+
+/** 将异步 load 包成可同步挂到 definition 上的组件（共享 promise + Suspense 占位） */
+export function createDeferredApp(load: LoadAppFn): DeferredApp {
+  let promise: Promise<AppComponent> | null = null
+  let resolved: AppComponent | null = null
+
+  const ensure = () => {
+    if (!promise) {
+      promise = load().then((Comp) => {
+        resolved = Comp
+        return Comp
+      })
+    }
+    return promise
+  }
+
+  const LazyComp = lazy(() => ensure().then((Comp) => ({ default: Comp })))
+
+  return {
+    prefetch: () => {
+      void ensure()
+    },
+    component: function DeferredApp(props: { embedded?: boolean }) {
+      // 预取已完成：同步渲染，跳过 Suspense，打开即显
+      if (resolved) return createElement(resolved, props)
+      return createElement(
+        Suspense,
+        { fallback: createElement(AppChunkFallback) },
+        createElement(LazyComp, props),
+      )
+    },
+  }
 }
 
 /**
@@ -50,21 +108,32 @@ export function defineDesktopApp(opts: RegisterBuiltinAppOptions): DesktopWindow
     readonly title = opts.title
     readonly showOnDesktop = opts.showOnDesktop ?? true
     readonly showInStartMenu = opts.showInStartMenu ?? true
-    private lazyApp: ComponentType<{ embedded?: boolean }> | null = null
+    private deferred: DeferredApp | null = null
 
     override get chrome(): WindowChromeOptions {
       return chromeMerged
     }
 
-    get app(): ComponentType<{ embedded?: boolean }> {
-      if (opts.app) return opts.app
-      if (!this.lazyApp && opts.loadApp) {
-        const Comp = opts.loadApp()
-        this.lazyApp = function LoadedApp(props: { embedded?: boolean }) {
-          return createElement(Comp, { embedded: props.embedded })
-        }
+    private ensureDeferred(): DeferredApp | null {
+      if (opts.app) return null
+      if (!this.deferred && opts.loadApp) {
+        this.deferred = createDeferredApp(opts.loadApp)
       }
-      return this.lazyApp!
+      return this.deferred
+    }
+
+    get app(): AppComponent {
+      if (opts.app) return opts.app
+      return this.ensureDeferred()!.component
+    }
+
+    override prefetchApp(): void {
+      this.ensureDeferred()?.prefetch()
+    }
+
+    override onBeforeOpen(): boolean {
+      this.prefetchApp()
+      return true
     }
   }
 
@@ -72,7 +141,7 @@ export function defineDesktopApp(opts: RegisterBuiltinAppOptions): DesktopWindow
 }
 
 /**
- * 声明式注册内置应用：写 UI + 调用本函数（再在 builtins.ts 加一行 import）即可。
+ * 声明式注册内置应用（统一在 builtins.ts 调用）。
  */
 export function registerBuiltinApp(opts: RegisterBuiltinAppOptions): DesktopWindow {
   const win = defineDesktopApp(opts)
@@ -82,4 +151,9 @@ export function registerBuiltinApp(opts: RegisterBuiltinAppOptions): DesktopWind
     }
   }
   return win
+}
+
+/** 批量注册内置应用 */
+export function registerBuiltinApps(list: readonly RegisterBuiltinAppOptions[]): void {
+  for (const opts of list) registerBuiltinApp(opts)
 }

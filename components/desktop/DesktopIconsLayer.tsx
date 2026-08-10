@@ -14,7 +14,7 @@ import { useDesktopItemsStore } from '@/store/desktopItems'
 import { EMPTY_SELECTION_IDS, useDesktopSelectionStore } from '@/store/desktopSelection'
 import { isDesktopRootItem, sortIdsByCoordinate } from '@/lib/desktop'
 import { CELL_GAP, CELL_SIZE, coordinateToPosition, resolveCoordinate } from '@/lib/desktop'
-import { resolveDesktopItemTitle, allocateDesktopCoordinate } from '@/lib/desktop/window'
+import { resolveDesktopItemTitle, allocateDesktopCoordinate, getDesktopWindow } from '@/lib/desktop/window'
 import { scalePx } from '@/lib/uiScale'
 import { toast } from '@/components/ui'
 import type { DesktopAppId, DesktopAppView, DesktopCoordinate } from '@/config/desktop'
@@ -405,6 +405,7 @@ export function DesktopIconsLayer() {
               isSelected={isSelected}
               fsKind={fsKind}
               onPointerDown={(e) => handleIconPointerDown(app.id, e)}
+              onPointerEnter={() => getDesktopWindow(app.id)?.prefetchApp()}
             />
           )
         })}

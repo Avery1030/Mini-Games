@@ -90,6 +90,7 @@ export function MobileDock({ onOpenRecents, recentsOpen }: MobileDockProps) {
                 if (app.isOpen) handleTaskbarClick(app.id)
                 else openWindow(app.id)
               }}
+              onPointerEnter={() => getDesktopWindow(app.id)?.prefetchApp()}
               className='relative flex size-14 flex-col items-center justify-center rounded-2xl active:scale-95 transition-transform touch-manipulation'
             >
               <span

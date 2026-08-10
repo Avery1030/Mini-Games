@@ -38,6 +38,7 @@ export type DesktopIconProps = {
   /** 多选高亮 */
   isSelected?: boolean
   onPointerDown: (e: React.PointerEvent<HTMLElement>) => void
+  onPointerEnter?: () => void
   /** 用户资源标记，供投放探测 */
   fsKind?: 'folder' | 'textDocument'
 }
@@ -59,6 +60,7 @@ export function DesktopIcon({
   isDropTarget = false,
   isSelected = false,
   onPointerDown,
+  onPointerEnter,
   fsKind,
 }: DesktopIconProps) {
   // 拖拽中保留格点占位（半透明），真正的跟手幽灵由上层 portal 渲染，避免被窗口层挡住
@@ -104,6 +106,7 @@ export function DesktopIcon({
         ...layoutStyle,
       }}
       onPointerDown={onPointerDown}
+      onPointerEnter={onPointerEnter}
     >
       <div
         className={cn(

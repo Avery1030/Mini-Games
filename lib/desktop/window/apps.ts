@@ -2,6 +2,9 @@ import { Folder, FileText } from 'lucide-react'
 import { createElement, type ComponentType } from 'react'
 import type { DesktopAppId, DesktopCoordinate, DesktopItemKind } from '@/config/desktop'
 import { DesktopWindow } from './DesktopWindow'
+import { createDeferredApp, type DeferredApp } from './defineApp'
+
+type AppHost = ComponentType<{ embedded?: boolean }>
 
 /**
  * 桌面文本文档窗口：运行时由 createDesktopTextDocumentWindow 实例化。
@@ -17,7 +20,7 @@ export class TextDocumentWindow extends DesktopWindow {
   readonly showInStartMenu = false
   readonly noteId: string
   title: string
-  private appComponent: ComponentType<{ embedded?: boolean }> | null = null
+  private deferred: DeferredApp | null = null
 
   constructor(opts: { id: DesktopAppId; title: string; noteId: string; coordinate?: DesktopCoordinate }) {
     super()
@@ -27,21 +30,35 @@ export class TextDocumentWindow extends DesktopWindow {
     this.defaultCoordinate = opts.coordinate ?? [1, 1]
   }
 
-  get app(): ComponentType<{ embedded?: boolean }> {
-    if (!this.appComponent) {
+  private ensureDeferred(): DeferredApp {
+    if (!this.deferred) {
       const itemId = this.id
       const noteId = this.noteId
-      this.appComponent = (props: { embedded?: boolean }) => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { TextDocumentApp } = require('@/features/text-document') as typeof import('@/features/text-document')
-        return createElement(TextDocumentApp, {
-          embedded: props.embedded,
-          itemId,
-          noteId,
-        })
-      }
+      this.deferred = createDeferredApp(async () => {
+        const { TextDocumentApp } = await import('@/features/text-document')
+        return function TextDocumentLoaded(props: { embedded?: boolean }) {
+          return createElement(TextDocumentApp, {
+            embedded: props.embedded,
+            itemId,
+            noteId,
+          })
+        }
+      })
     }
-    return this.appComponent
+    return this.deferred
+  }
+
+  get app(): AppHost {
+    return this.ensureDeferred().component
+  }
+
+  override prefetchApp(): void {
+    this.ensureDeferred().prefetch()
+  }
+
+  override onBeforeOpen(): boolean {
+    this.prefetchApp()
+    return true
   }
 
   rename(nextTitle: string) {
@@ -64,7 +81,7 @@ export class FolderWindow extends DesktopWindow {
   readonly kind: DesktopItemKind = 'folder'
   readonly showInStartMenu = false
   title: string
-  private appComponent: ComponentType<{ embedded?: boolean }> | null = null
+  private deferred: DeferredApp | null = null
 
   constructor(opts: { id: DesktopAppId; title: string; coordinate?: DesktopCoordinate }) {
     super()
@@ -73,19 +90,33 @@ export class FolderWindow extends DesktopWindow {
     this.defaultCoordinate = opts.coordinate ?? [1, 1]
   }
 
-  get app(): ComponentType<{ embedded?: boolean }> {
-    if (!this.appComponent) {
+  private ensureDeferred(): DeferredApp {
+    if (!this.deferred) {
       const folderId = this.id
-      this.appComponent = (props: { embedded?: boolean }) => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { FolderApp } = require('@/features/folder') as typeof import('@/features/folder')
-        return createElement(FolderApp, {
-          embedded: props.embedded,
-          folderId,
-        })
-      }
+      this.deferred = createDeferredApp(async () => {
+        const { FolderApp } = await import('@/features/folder')
+        return function FolderLoaded(props: { embedded?: boolean }) {
+          return createElement(FolderApp, {
+            embedded: props.embedded,
+            folderId,
+          })
+        }
+      })
     }
-    return this.appComponent
+    return this.deferred
+  }
+
+  get app(): AppHost {
+    return this.ensureDeferred().component
+  }
+
+  override prefetchApp(): void {
+    this.ensureDeferred().prefetch()
+  }
+
+  override onBeforeOpen(): boolean {
+    this.prefetchApp()
+    return true
   }
 
   rename(nextTitle: string) {

@@ -89,6 +89,9 @@ export abstract class DesktopWindow {
     return DEFAULT_WINDOW_CHROME
   }
 
+  /** 预取懒加载 chunk（打开前调用，避免窗口先白屏） */
+  prefetchApp(): void {}
+
   // —— 生命周期（store 在状态变更前后调用；返回 false 可取消）——
 
   onBeforeOpen(): boolean {

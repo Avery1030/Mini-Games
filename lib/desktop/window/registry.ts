@@ -10,8 +10,8 @@ import { ensureWindowSlot, removeWindowSlot, type DesktopWindow } from './Deskto
 type RegistryListener = () => void
 
 /**
- * 内置窗口列表：由 registerBuiltinApp → pushBuiltinWindow 在模块加载时填充。
- * 新增应用：features/<name>/register.ts + builtins.ts 一行 import。
+ * 内置窗口列表：由 builtins.ts → registerBuiltinApps → pushBuiltinWindow 填充。
+ * 新增应用：在 builtins.ts 追加一条配置即可。
  */
 const builtinWindows: DesktopWindow[] = []
 const builtinIdSet = new Set<string>()

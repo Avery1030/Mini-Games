@@ -1,26 +1,227 @@
 /**
- * 内置应用 side-effect 注册入口。
- * 新增应用：写 features/<name>/register.ts，再在此加一行 import。
+ * 内置应用统一注册表。
+ * 新增应用：在 features/<name>/ 实现 UI，再于此追加一条（显示名写 messages.*.apps.<id>）。
  */
-import '@/features/games/register'
-import '@/features/minesweeper/register'
-import '@/features/tetris/register'
-import '@/features/suika/register'
-import '@/features/tile-match/register'
-import '@/features/image-puzzle/register'
-import '@/features/canvas-jigsaw/register'
-import '@/features/sokoban/register'
-import '@/features/match3/register'
-import '@/features/document/register'
-import '@/features/log/register'
-import '@/features/notepad/register'
-import '@/features/paint/register'
-import '@/features/settings/register'
-import '@/features/calculator/register'
-import '@/features/recycle-bin/register'
-import '@/features/cmd/register'
-import '@/features/KlineChartViewer/register'
-import '@/features/ai-chat/register'
-import '@/features/task-manager/register'
-import '@/features/image-viewer/register'
-import '@/features/file-explorer/register'
+import {
+  AppWindow,
+  BookOpenText,
+  Bot,
+  Box,
+  Calculator,
+  ChartCandlestick,
+  Cherry,
+  FileText,
+  Folder,
+  Gamepad,
+  Gamepad2,
+  HardDrive,
+  ImageIcon,
+  LayoutGrid,
+  Notebook,
+  Palette,
+  Puzzle,
+  Settings,
+  Shapes,
+  Terminal,
+  Trash2,
+} from 'lucide-react'
+import { registerBuiltinApps } from './defineApp'
+
+registerBuiltinApps([
+  {
+    id: 'games',
+    icon: Folder,
+    defaultCoordinate: [0, 1],
+    width: 360,
+    height: 320,
+    loadApp: () => import('@/features/games').then((m) => m.GamesApp),
+  },
+  {
+    id: 'minesweeper',
+    icon: Gamepad,
+    defaultCoordinate: [1, 1],
+    width: 420,
+    height: 560,
+    showOnDesktop: false,
+    showInStartMenu: false,
+    loadApp: () => import('@/features/minesweeper').then((m) => m.Minesweeper),
+  },
+  {
+    id: 'tetris',
+    icon: Gamepad2,
+    defaultCoordinate: [1, 2],
+    width: 560,
+    height: 640,
+    showOnDesktop: false,
+    showInStartMenu: false,
+    loadApp: () => import('@/features/tetris').then((m) => m.Tetris),
+  },
+  {
+    id: 'suika',
+    icon: Cherry,
+    defaultCoordinate: [0, 1],
+    width: 520,
+    height: 760,
+    showOnDesktop: false,
+    showInStartMenu: false,
+    chrome: { resizable: false },
+    loadApp: () => import('@/features/suika').then((m) => m.Suika),
+  },
+  {
+    id: 'tileMatch',
+    icon: LayoutGrid,
+    defaultCoordinate: [0, 2],
+    width: 390,
+    height: 720,
+    showOnDesktop: false,
+    showInStartMenu: false,
+    chrome: { resizable: true },
+    loadApp: () => import('@/features/tile-match').then((m) => m.TileMatch),
+  },
+  {
+    id: 'imagePuzzle',
+    icon: Puzzle,
+    defaultCoordinate: [0, 3],
+    width: 440,
+    height: 620,
+    showOnDesktop: false,
+    showInStartMenu: false,
+    loadApp: () => import('@/features/image-puzzle').then((m) => m.ImagePuzzle),
+  },
+  {
+    id: 'canvasJigsaw',
+    icon: Shapes,
+    defaultCoordinate: [0, 4],
+    width: 520,
+    height: 680,
+    showOnDesktop: false,
+    showInStartMenu: false,
+    loadApp: () => import('@/features/canvas-jigsaw').then((m) => m.CanvasJigsaw),
+  },
+  {
+    id: 'sokoban',
+    icon: Box,
+    defaultCoordinate: [0, 5],
+    width: 440,
+    height: 640,
+    showOnDesktop: false,
+    showInStartMenu: false,
+    loadApp: () => import('@/features/sokoban').then((m) => m.Sokoban),
+  },
+  {
+    id: 'match3',
+    icon: LayoutGrid,
+    defaultCoordinate: [1, 3],
+    width: 420,
+    height: 620,
+    showOnDesktop: false,
+    showInStartMenu: false,
+    loadApp: () => import('@/features/match3').then((m) => m.Match3),
+  },
+  {
+    id: 'document',
+    icon: BookOpenText,
+    defaultCoordinate: [1, 3],
+    width: 520,
+    height: 420,
+    loadApp: () => import('@/features/document').then((m) => m.DocumentApp),
+  },
+  {
+    id: 'log',
+    icon: Notebook,
+    defaultCoordinate: [1, 4],
+    width: 520,
+    height: 420,
+    loadApp: () => import('@/features/log').then((m) => m.LogApp),
+  },
+  {
+    id: 'notepad',
+    icon: FileText,
+    defaultCoordinate: [2, 1],
+    width: 560,
+    height: 460,
+    loadApp: () => import('@/features/notepad').then((m) => m.NotepadApp),
+  },
+  {
+    id: 'paint',
+    icon: Palette,
+    defaultCoordinate: [2, 2],
+    width: 720,
+    height: 560,
+    loadApp: () => import('@/features/paint').then((m) => m.PaintApp),
+  },
+  {
+    id: 'settings',
+    icon: Settings,
+    defaultCoordinate: [2, 3],
+    width: 560,
+    height: 520,
+    loadApp: () => import('@/features/settings').then((m) => m.SettingsApp),
+  },
+  {
+    id: 'calculator',
+    icon: Calculator,
+    defaultCoordinate: [2, 4],
+    width: 320,
+    height: 480,
+    chrome: { resizable: false, maximizable: false },
+    loadApp: () => import('@/features/calculator').then((m) => m.CalculatorApp),
+  },
+  {
+    id: 'recycleBin',
+    icon: Trash2,
+    defaultCoordinate: [1, 5],
+    width: 640,
+    height: 440,
+    showInStartMenu: false,
+    loadApp: () => import('@/features/recycle-bin').then((m) => m.RecycleBinApp),
+  },
+  {
+    id: 'cmd',
+    icon: Terminal,
+    defaultCoordinate: [3, 1],
+    width: 640,
+    height: 400,
+    loadApp: () => import('@/features/cmd').then((m) => m.CmdApp),
+  },
+  {
+    id: 'klineChartViewer',
+    icon: ChartCandlestick,
+    defaultCoordinate: [3, 2],
+    width: 1024,
+    height: 768,
+    loadApp: () => import('@/features/KlineChartViewer').then((m) => m.KlineChartViewer),
+  },
+  {
+    id: 'aiChat',
+    icon: Bot,
+    defaultCoordinate: [3, 3],
+    width: 560,
+    height: 520,
+    loadApp: () => import('@/features/ai-chat').then((m) => m.AiChatApp),
+  },
+  {
+    id: 'taskManager',
+    icon: AppWindow,
+    defaultCoordinate: [3, 4],
+    width: 420,
+    height: 480,
+    loadApp: () => import('@/features/task-manager').then((m) => m.TaskManagerApp),
+  },
+  {
+    id: 'imageViewer',
+    icon: ImageIcon,
+    defaultCoordinate: [3, 5],
+    width: 760,
+    height: 560,
+    loadApp: () => import('@/features/image-viewer').then((m) => m.ImageViewerApp),
+  },
+  {
+    id: 'fileExplorer',
+    icon: HardDrive,
+    defaultCoordinate: [2, 5],
+    width: 560,
+    height: 420,
+    loadApp: () => import('@/features/file-explorer').then((m) => m.FileExplorerApp),
+  },
+])

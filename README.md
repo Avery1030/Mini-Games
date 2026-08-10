@@ -1,8 +1,8 @@
 # Avery Mini Windows Desktop
 
-Windows 95 风格的 Web 桌面（Next.js App Router）：可拖拽图标与窗口、任务栏、开始菜单、锁屏，以及一整套内置应用——设置、文档、日志、记事本、画图、计算器、命令提示符、资源管理器、回收站、图片查看器、K 线图表、智聊、任务管理器，外加扫雷与俄罗斯方块。
+Windows 95 风格的 Web 桌面（Next.js App Router）：可拖拽图标与窗口、任务栏、开始菜单、锁屏，以及一整套内置应用——设置、文档、日志、记事本、画图、计算器、命令提示符、资源管理器、回收站、图片查看器、K 线图表、智聊、任务管理器，外加「游戏」集合（扫雷、俄罗斯方块、西瓜、消消乐、推箱子等）。
 
-气质是「Win95 怀旧壳 + 一点当代网页」：视觉走经典对话框质感；系统偏好与窗口布局在 `localStorage`；**用户文件统一走 VFS（默认 IndexedDB 适配器）**；智聊会话在独立 IndexedDB，不依赖账号体系。
+气质是「Win95 怀旧壳 + 一点当代网页」：视觉走经典对话框质感；系统偏好与窗口布局在 `localStorage`；**用户文件统一走 VFS（默认 IndexedDB 适配器）**；智聊会话在独立 IndexedDB，不依赖账号体系。**内置应用按需动态加载**，首屏不打包全部 feature。
 
 ---
 
@@ -65,8 +65,17 @@ yarn lint    # ESLint
 | K 线图表   | `klineChartViewer` | USDT 永续 / TradFi K 线（币安公开接口）、周期与指标、画线工具              |
 | 智聊       | `aiChat`           | SiliconFlow 流式对话；多会话独立 IDB；可导出 `.chat` 到 `/Documents/Chats` |
 | 任务管理器 | `taskManager`      | 查看 / 强制关闭运行中窗口                                                  |
-| 扫雷       | `minesweeper`      | 经典扫雷                                                                   |
+| 游戏       | `games`            | 游戏集合入口；小游戏本身不单独出现在桌面 / 开始菜单                        |
+| 扫雷       | `minesweeper`      | 经典扫雷（经「游戏」打开）                                                 |
 | 俄罗斯方块 | `tetris`           | 经典俄罗斯方块                                                             |
+| 西瓜游戏   | `suika`            | 合成类小游戏                                                               |
+| 方块消消乐 | `tileMatch`        | 三消类                                                                     |
+| 消消乐     | `match3`           | 三消关卡                                                                   |
+| 图片拼图   | `imagePuzzle`      | 图片拼图                                                                   |
+| 画布拼图   | `canvasJigsaw`     | Canvas 拼图                                                                |
+| 推箱子     | `sokoban`          | 经典推箱子（关卡在 `features/sokoban/levels.ts`）                          |
+
+小游戏收纳列表见 `features/games/ids.ts`（`GAME_APP_IDS`）。
 
 ---
 
@@ -169,9 +178,22 @@ Trash 内节点对外可带 `originalPath`、`trashedAt`。禁止对回收站内
 ### 关键数据流：双击图标 → 窗口出现
 
 1. `DesktopIconsLayer` 双击 → 内置/动态项 `openWindow(id)`；VFS `/Desktop` 文件走 `openVfsFile(path)`
-2. 图片：`useImageViewerStore.openFile(path)` + 打开 `imageViewer`
-3. `DesktopWindowsLayer` 渲染 `WindowsWindow` + `<App embedded />`
-4. 任务栏出现按钮；`useWindowRouteSync` 可选同步 `/window/[slug]`
+2. `openWindow` 先 `prefetchApp()` 开始拉应用 chunk，再设 `isOpen`
+3. 图片：`useImageViewerStore.openFile(path)` + 打开 `imageViewer`
+4. `DesktopWindowsLayer` 渲染 `WindowsWindow` + `<App embedded />`（`loadApp` 未就绪时 Suspense 占位）
+5. 任务栏出现按钮；`useWindowRouteSync` 可选同步 `/window/[slug]`
+
+### 应用懒加载与预取
+
+内置应用 **统一在** `lib/desktop/window/builtins.ts` 注册，**不要**再为每个 feature 建 `register.ts`。
+
+- **注册：** `{ id, icon, loadApp: () => import('@/features/...').then(m => m.X), ... }`
+- **加载：** `defineApp.createDeferredApp` 用动态 `import` + `React.lazy`；`toDefinition` 读 `.app` 时不触发下载，真正挂载窗口才加载
+- **预取：**
+  - 桌面就绪后 `scheduleIdlePrefetchBuiltinApps()`（空闲分批，桌面可见 / 游戏优先，重应用靠后）
+  - 悬停桌面图标、开始菜单项、手机 Dock / 主屏图标时 `prefetchApp()`
+  - 打开「游戏」夹时 `prefetchApps(GAME_APP_IDS)`
+- **已预取：** chunk 在缓存中则同步渲染，跳过 Suspense
 
 ### 循环依赖怎么破
 
@@ -180,13 +202,13 @@ Trash 内节点对外可带 `originalPath`、`trashedAt`。禁止对回收站内
 - `DesktopWindow.ts` 只依赖 `WindowController` **接口**
 - `store/window` 初始化时 `registerWindowController(...)` 注入实现
 - 类上的 `open()` / `close()` 经 `getController()` 委托
-- 部分应用在 `register.ts` 用 **loadApp + lazy** `require` 推迟加载 feature
+- feature 只通过 `loadApp` 的动态 `import()` 进入，避免 `registry ↔ store ↔ feature` 静态环
 - **不要**从 `lib/vfs/index` 再导出会拉 `store/window` 的「打开文件」辅助；放在 `lib/desktop/`
 
 ### 窗口默认尺寸 vs 记忆尺寸
 
 ```
-实际宽高 = runtime.bounds ?? register 时的 width/height ?? 兜底值
+实际宽高 = runtime.bounds ?? builtins 里的 width/height ?? 兜底值
 ```
 
 `useWindowGeometry` 用 `seedRef` **仅在挂载时**读一次。改默认高度后若本地已有该窗 `bounds`，需清该窗记忆或清站点存储后再开。
@@ -206,12 +228,12 @@ components/
   desktop/mobile/         窄屏手机主屏
   ui/                     Win95 通用控件
 config/                   桌面类型与静态配置
-features/                 各应用 UI 与业务（一应用一目录 + register.ts）
+features/                 各应用 UI 与业务（一应用一目录；注册见 builtins.ts）
 hooks/desktop/            桌面交互 hooks
 lib/
   vfs/                    VFS 核心 + IdbAdapter（用户文件唯一入口）
   desktop/                几何、吸附、路由、openVfsFile、vfsFileActions…
-  desktop/window/         DesktopWindow / defineApp / registry / builtins
+  desktop/window/         DesktopWindow / defineApp / registry / builtins / prefetchApps
   idb/                    仅 imageUtils / objectUrl / fetchRemote（无业务库）
   ai-chat/                智聊独立 IDB + .chat 文件
   wallpaper/              壁纸解析 / VFS API / boot
@@ -224,9 +246,9 @@ store/                    Zustand stores（含 imageViewer、desktopVfs）
 
 | 文件                      | 职责                                                                      |
 | ------------------------- | ------------------------------------------------------------------------- |
-| `DesktopShell.tsx`        | 等各 store `_hasHydrated` + 开机动画后再挂桌面；按断点分流                |
+| `DesktopShell.tsx`        | 等各 store `_hasHydrated` + 开机动画后再挂桌面；按断点分流；空闲预热应用 chunk |
 | `WindowsDesktop.tsx`      | 编排图标层 / 窗口层 / 任务栏 / 拖放；右键清空回收站（桌面项 + VFS Trash） |
-| `DesktopIconsLayer.tsx`   | 内置项 + desktopItems + VFS `/Desktop` 图标；双击按类型打开               |
+| `DesktopIconsLayer.tsx`   | 内置项 + desktopItems + VFS `/Desktop` 图标；双击打开；悬停预取           |
 | `DesktopWindowsLayer.tsx` | 已开窗口列表                                                              |
 | `WindowsWindow.tsx`       | 单窗 chrome、焦点盾、几何 / 最小化动画                                    |
 | `DesktopTaskbar.tsx`      | 开始菜单、窗口按钮、时钟、主题 / 语言                                     |
@@ -235,14 +257,15 @@ store/                    Zustand stores（含 imageViewer、desktopVfs）
 
 ### 窗口系统（`lib/desktop/window`）
 
-| 文件                 | 职责                                               |
-| -------------------- | -------------------------------------------------- |
-| `DesktopWindow.ts`   | 抽象基类 + Controller 注入                         |
-| `defineApp.ts`       | `registerBuiltinApp` 声明式注册                    |
-| `builtins.ts`        | side-effect import 各 `features/*/register.ts`     |
-| `apps.ts`            | 仅动态项：`FolderWindow` / `TextDocumentWindow`    |
-| `registry.ts`        | 内置/动态窗口表、snapshot 订阅                     |
-| `createFolder.ts` 等 | 动态文件夹 / 文稿创建时同步 registry + stores      |
+| 文件                 | 职责                                                                  |
+| -------------------- | --------------------------------------------------------------------- |
+| `DesktopWindow.ts`   | 抽象基类 + Controller 注入；`prefetchApp()` 钩子                      |
+| `defineApp.ts`       | `registerBuiltinApp(s)`、`createDeferredApp`（dynamic import + lazy） |
+| `builtins.ts`        | **唯一**内置应用注册表（元数据 + `loadApp`）                          |
+| `prefetchApps.ts`    | 空闲分批预热、`prefetchApps(ids)`                                     |
+| `apps.ts`            | 仅动态项：`FolderWindow` / `TextDocumentWindow`（同样懒加载）         |
+| `registry.ts`        | 内置/动态窗口表、snapshot 订阅                                        |
+| `createFolder.ts` 等 | 动态文件夹 / 文稿创建时同步 registry + stores                         |
 
 相关：
 
@@ -271,6 +294,8 @@ store/                    Zustand stores（含 imageViewer、desktopVfs）
 
 | 目录             | 备注                                                           |
 | ---------------- | -------------------------------------------------------------- |
+| `games/`         | 「游戏」夹 UI；收纳 id 列表 `ids.ts` → `GAME_APP_IDS`          |
+| `sokoban/` 等    | 小游戏；关卡等大数据放 feature 内，随 `loadApp` 按需进包       |
 | `file-explorer/` | VFS 目录浏览 + 图片右键菜单                                    |
 | `image-viewer/`  | `/Pictures` 图库；`fetchImageByPath`；删除 `trashImageApi`     |
 | `recycle-bin/`   | 合并桌面软删除根 + `/Trash`；去重已联动 trash 的笔记           |
@@ -299,14 +324,25 @@ store/                    Zustand stores（含 imageViewer、desktopVfs）
 ### 新增内置应用（清单）
 
 1. 在 `features/<name>/` 实现 UI（建议支持 `embedded`）
-2. 新建 `features/<name>/register.ts`，调用一次 `registerBuiltinApp({ id, icon, app|loadApp, ... })`  
-   （请从 `@/lib/desktop/window/defineApp` 导入，避免经 barrel 产生循环依赖；应用显示名写在 `messages.*.apps.<id>`）
-3. 在 `lib/desktop/window/builtins.ts` 增加一行：`import '@/features/<name>/register'`
-4. 按需：`showOnDesktop` / `showInStartMenu`；手机 Dock 改 `MOBILE_DOCK_APP_IDS`
+2. 在 `lib/desktop/window/builtins.ts` 追加一条配置，**必须**用 `loadApp`，不要静态 `import` feature：
+
+```ts
+{
+  id: 'myApp',
+  icon: SomeIcon,
+  defaultCoordinate: [0, 0],
+  width: 480,
+  height: 360,
+  loadApp: () => import('@/features/my-app').then((m) => m.MyApp),
+}
+```
+
+3. 应用显示名写在 `messages.*.apps.<id>`
+4. 按需：`showOnDesktop` / `showInStartMenu`；手机 Dock 改 `MOBILE_DOCK_APP_IDS`；游戏收纳改 `features/games/ids.ts`（若改游戏列表，同步 `prefetchApps.ts` 里的 `GAME_PREFETCH_IDS`）
 5. 若有新 localStorage：先改 `lib/storage/keys.ts` + schema，再写 store
 6. 若读写用户文件：**只调 `vfs.*`**，不要新建业务 IDB store
 
-**易翻车点：** 静态 import 造成 `registry ↔ store/window ↔ feature` 环时改用 `loadApp`；打开文件辅助勿挂进 `lib/vfs` 桶；改默认尺寸被旧 `bounds` 盖住。
+**易翻车点：** 在 `builtins.ts` 顶层静态 import feature 会拖垮首屏 / 造成循环依赖；打开文件辅助勿挂进 `lib/vfs` 桶；改默认尺寸被旧 `bounds` 盖住。
 
 ### 改持久化 / 修「刷新错乱」
 
