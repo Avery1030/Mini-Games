@@ -45,6 +45,9 @@ export const useSokobanProgressStore = create<SokobanProgressState>()(
       getStars: (levelId) => get().levels[String(levelId)]?.stars ?? 0,
 
       isUnlocked: (catalog, levelId) => {
+        // TODO: 加关卡配置期间临时全开；完成后恢复为「通关上一关才解锁」
+        if (catalog.indexOf(levelId) < 0) return false
+        // return true
         const idx = catalog.indexOf(levelId)
         if (idx < 0) return false
         if (idx === 0) return true
