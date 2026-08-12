@@ -10,4 +10,5 @@ export const GAME_APP_IDS: readonly DesktopAppId[] = [
   'imagePuzzle',
   'canvasJigsaw',
   'sokoban',
+  'sudoku',
 ] as const

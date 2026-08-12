@@ -121,6 +121,20 @@ export type StorageSchema = {
   [STORAGE_KEYS.sokoban]: ZustandPersistEnvelope<{
     levels: Record<string, { stars: number; bestMoves: number }>
   }>
+  [STORAGE_KEYS.sudoku]: ZustandPersistEnvelope<{
+    levels: Record<string, { bestTime: number }>
+    settings: {
+      smartHints: boolean
+      hideUsedDigits: boolean
+      highlightUnique: boolean
+      highlightSameNotes: boolean
+      highlightSameDigits: boolean
+      highlightRegions: boolean
+      selectDigitFirst: boolean
+      autoUndoWrong: boolean
+      autoClearNotes: boolean
+    }
+  }>
   [STORAGE_KEYS.lock]: ZustandPersistEnvelope<LockPersistState>
   [STORAGE_KEYS.calendar]: ZustandPersistEnvelope<CalendarPersistState>
   [STORAGE_KEYS.desktopItems]: ZustandPersistEnvelope<DesktopItemsPersistState>

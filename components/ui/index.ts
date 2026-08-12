@@ -6,6 +6,7 @@ export { SplitPane, type SplitPaneProps } from './SplitPane'
 export { MasterDetail, type MasterDetailProps } from './MasterDetail'
 export { Tab, type TabProps } from './Tab'
 export { Checkbox, type CheckboxProps } from './Checkbox'
+export { Switch, type SwitchProps, type SwitchSize } from './Switch'
 export {
   WinMinimizeIcon,
   WinMaximizeIcon,

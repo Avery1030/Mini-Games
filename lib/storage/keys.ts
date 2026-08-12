@@ -18,6 +18,8 @@ export const STORAGE_KEYS = {
   klineChart: 'desktop-kline-chart',
   /** 推箱子关卡进度（zustand persist） */
   sokoban: 'desktop-sokoban',
+  /** 数独关卡进度（zustand persist） */
+  sudoku: 'desktop-sudoku',
   /** 锁屏状态（zustand persist） */
   lock: 'desktop-lock',
   /** 日历按日备注（zustand persist） */
