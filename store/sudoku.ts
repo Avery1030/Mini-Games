@@ -1,13 +1,13 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { STORAGE_KEYS, appStorage } from '@/lib/storage'
-import { progressKey, type Difficulty } from '@/features/sudoku/types'
+import { progressKey, type Difficulty } from '@/features/games/sudoku/types'
 import {
   DEFAULT_SUDOKU_SETTINGS,
   normalizeSudokuSettings,
   type SudokuSettingKey,
   type SudokuSettings,
-} from '@/features/sudoku/settings'
+} from '@/features/games/sudoku/settings'
 
 export type LevelProgress = {
   /** 历史最短通关用时（秒） */

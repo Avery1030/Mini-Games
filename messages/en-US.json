@@ -582,6 +582,15 @@
     "clear": "Clear"
   },
   "changelog": {
+    "2026-08-12": {
+      "title": "Sudoku & games layout",
+      "items": [
+        "Added Sudoku: multi-difficulty levels, notes/hints/mistake limit, best clear time; listed in Games.",
+        "Sudoku settings for highlights, hide used digits, select-digit-first, auto-undo wrong fills, and auto-clear notes, persisted locally.",
+        "Sudoku step-by-step solving (prev/next with technique reasons) and instant reveal; hide via ENABLE_CRACK_DEMO.",
+        "Moved all mini-game sources under features/games/ alongside the Games hub for easier maintenance."
+      ]
+    },
     "2026-08-05": {
       "title": "Match-3",
       "items": [

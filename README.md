@@ -73,7 +73,7 @@ yarn lint    # ESLint
 | 消消乐     | `match3`           | 三消关卡                                                                   |
 | 图片拼图   | `imagePuzzle`      | 图片拼图                                                                   |
 | 画布拼图   | `canvasJigsaw`     | Canvas 拼图                                                                |
-| 推箱子     | `sokoban`          | 经典推箱子（关卡在 `features/sokoban/levels.ts`）                          |
+| 推箱子     | `sokoban`          | 经典推箱子（关卡在 `features/games/sokoban/levels.ts`）                          |
 
 小游戏收纳列表见 `features/games/ids.ts`（`GAME_APP_IDS`）。
 

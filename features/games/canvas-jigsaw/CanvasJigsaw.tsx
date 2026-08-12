@@ -13,7 +13,7 @@ import { Eye, ImagePlus, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { winChrome, winChromePressed, winChromeSunken } from '@/lib/winChrome'
-import { createDefaultPuzzleImage } from '@/features/image-puzzle/defaultImage'
+import { createDefaultPuzzleImage } from '@/features/games/image-puzzle/defaultImage'
 import { pointInPolygon, toAbsolutePoints } from './geometry'
 import {
   applyNeighborSnap,

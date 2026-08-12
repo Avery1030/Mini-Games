@@ -45,7 +45,7 @@ registerBuiltinApps([
     height: 560,
     showOnDesktop: false,
     showInStartMenu: false,
-    loadApp: () => import('@/features/minesweeper').then((m) => m.Minesweeper),
+    loadApp: () => import('@/features/games/minesweeper').then((m) => m.Minesweeper),
   },
   {
     id: 'tetris',
@@ -55,7 +55,7 @@ registerBuiltinApps([
     height: 640,
     showOnDesktop: false,
     showInStartMenu: false,
-    loadApp: () => import('@/features/tetris').then((m) => m.Tetris),
+    loadApp: () => import('@/features/games/tetris').then((m) => m.Tetris),
   },
   {
     id: 'suika',
@@ -66,7 +66,7 @@ registerBuiltinApps([
     showOnDesktop: false,
     showInStartMenu: false,
     chrome: { resizable: false },
-    loadApp: () => import('@/features/suika').then((m) => m.Suika),
+    loadApp: () => import('@/features/games/suika').then((m) => m.Suika),
   },
   {
     id: 'tileMatch',
@@ -77,7 +77,7 @@ registerBuiltinApps([
     showOnDesktop: false,
     showInStartMenu: false,
     chrome: { resizable: true },
-    loadApp: () => import('@/features/tile-match').then((m) => m.TileMatch),
+    loadApp: () => import('@/features/games/tile-match').then((m) => m.TileMatch),
   },
   {
     id: 'imagePuzzle',
@@ -87,7 +87,7 @@ registerBuiltinApps([
     height: 620,
     showOnDesktop: false,
     showInStartMenu: false,
-    loadApp: () => import('@/features/image-puzzle').then((m) => m.ImagePuzzle),
+    loadApp: () => import('@/features/games/image-puzzle').then((m) => m.ImagePuzzle),
   },
   {
     id: 'canvasJigsaw',
@@ -97,7 +97,7 @@ registerBuiltinApps([
     height: 680,
     showOnDesktop: false,
     showInStartMenu: false,
-    loadApp: () => import('@/features/canvas-jigsaw').then((m) => m.CanvasJigsaw),
+    loadApp: () => import('@/features/games/canvas-jigsaw').then((m) => m.CanvasJigsaw),
   },
   {
     id: 'sokoban',
@@ -107,7 +107,7 @@ registerBuiltinApps([
     height: 640,
     showOnDesktop: false,
     showInStartMenu: false,
-    loadApp: () => import('@/features/sokoban').then((m) => m.Sokoban),
+    loadApp: () => import('@/features/games/sokoban').then((m) => m.Sokoban),
   },
   {
     id: 'sudoku',
@@ -117,7 +117,7 @@ registerBuiltinApps([
     height: 620,
     showOnDesktop: false,
     showInStartMenu: false,
-    loadApp: () => import('@/features/sudoku').then((m) => m.Sudoku),
+    loadApp: () => import('@/features/games/sudoku').then((m) => m.Sudoku),
   },
   {
     id: 'match3',
@@ -127,7 +127,7 @@ registerBuiltinApps([
     height: 620,
     showOnDesktop: false,
     showInStartMenu: false,
-    loadApp: () => import('@/features/match3').then((m) => m.Match3),
+    loadApp: () => import('@/features/games/match3').then((m) => m.Match3),
   },
   {
     id: 'document',

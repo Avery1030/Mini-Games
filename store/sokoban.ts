@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { STORAGE_KEYS, appStorage } from '@/lib/storage'
-import { calcStars, type StarCount } from '@/features/sokoban/stars'
+import { calcStars, type StarCount } from '@/features/games/sokoban/stars'
 
 export type LevelProgress = {
   /** 历史最高星 */
