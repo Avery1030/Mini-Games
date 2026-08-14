@@ -1021,6 +1021,7 @@
     "lostHint": "错误已达上限，再试一次吧",
     "playAgain": "再玩一次",
     "nextLevel": "下一关",
+    "close": "关闭",
     "crack": "破解通关",
     "crackModeInstant": "直接显示答案",
     "crackModeManual": "逐步推导",

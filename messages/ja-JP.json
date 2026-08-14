@@ -1021,6 +1021,7 @@
     "lostHint": "ミス上限に達しました。もう一度挑戦！",
     "playAgain": "もう一度",
     "nextLevel": "次のステージ",
+    "close": "閉じる",
     "crack": "自動クリア",
     "crackModeInstant": "答えを一括表示",
     "crackModeManual": "手順ごとに解く",

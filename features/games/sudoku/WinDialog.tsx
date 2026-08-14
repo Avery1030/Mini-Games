@@ -16,11 +16,13 @@ type Props = {
     playAgain: string
     nextLevel: string
     levelSelect: string
+    close: string
   }
   formatTime: (sec: number) => string
   onReset: () => void
   onNextLevel: () => void
   onLevelSelect: () => void
+  onClose: () => void
 }
 
 export function WinDialog({
@@ -33,18 +35,23 @@ export function WinDialog({
   onReset,
   onNextLevel,
   onLevelSelect,
+  onClose,
 }: Props) {
   const title = mode === 'won' ? labels.won : labels.lost
   const hint = mode === 'won' ? labels.wonHint : labels.lostHint
   const shownBest = bestTime != null ? Math.min(bestTime, elapsed) : elapsed
 
   return (
-    <div className='absolute inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/60 p-4'>
+    <div
+      className='absolute inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/60 p-4'
+      onClick={onClose}
+    >
       <div
         className={cn(
           winChrome,
           'bg-chrome text-on-chrome px-5 py-4 min-w-[240px] max-w-[90%] text-center shadow-lg',
         )}
+        onClick={(e) => e.stopPropagation()}
       >
         <p
           className={cn(
@@ -74,6 +81,9 @@ export function WinDialog({
           ) : null}
           <button type='button' className={cn(winChrome, 'px-3 py-1.5 text-sm')} onClick={onLevelSelect}>
             {labels.levelSelect}
+          </button>
+          <button type='button' className={cn(winChrome, 'px-3 py-1.5 text-sm')} onClick={onClose}>
+            {labels.close}
           </button>
         </div>
       </div>

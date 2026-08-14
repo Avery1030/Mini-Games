@@ -1021,6 +1021,7 @@
     "lostHint": "You reached the mistake limit. Try again!",
     "playAgain": "Play again",
     "nextLevel": "Next level",
+    "close": "Close",
     "crack": "Auto-solve",
     "crackModeInstant": "Reveal final answer",
     "crackModeManual": "Step-by-step",

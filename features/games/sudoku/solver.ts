@@ -4,6 +4,7 @@
 
 import type { CrackReasonKind, CrackStep } from './types'
 
+// 开启破解演示时，请将此项设置为 true，否则默认关闭
 export const ENABLE_CRACK_DEMO = false
 
 const SIZE = 9

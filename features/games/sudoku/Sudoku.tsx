@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
@@ -35,6 +35,7 @@ export function Sudoku({ embedded = false }: SudokuProps = {}) {
   const gameRef = useRef<SudokuGame | null>(null)
   const [lockedDigit, setLockedDigit] = useState<number | null>(null)
   const [hintStep, setHintStep] = useState<CrackStep | null>(null)
+  const [resultDismissed, setResultDismissed] = useState(false)
 
   const {
     enabled: crackEnabled,
@@ -71,6 +72,10 @@ export function Sudoku({ embedded = false }: SudokuProps = {}) {
     resetLevel,
     goNext,
   } = useSudokuSession({ gameRef, stopCrackDemo })
+
+  useEffect(() => {
+    if (state?.status === 'playing') setResultDismissed(false)
+  }, [state?.status])
 
   useSudokuKeyboard({
     screen,
@@ -334,7 +339,7 @@ export function Sudoku({ embedded = false }: SudokuProps = {}) {
         />
       ) : null}
 
-      {(state.status === 'won' || state.status === 'lost') && (
+      {(state.status === 'won' || state.status === 'lost') && !resultDismissed ? (
         <WinDialog
           mode={state.status}
           elapsed={state.elapsed}
@@ -355,12 +360,14 @@ export function Sudoku({ embedded = false }: SudokuProps = {}) {
             playAgain: t('playAgain'),
             nextLevel: t('nextLevel'),
             levelSelect: t('levelSelect'),
+            close: t('close'),
           }}
           onReset={resetLevel}
           onNextLevel={goNext}
           onLevelSelect={backToLevels}
+          onClose={() => setResultDismissed(true)}
         />
-      )}
+      ) : null}
     </div>
   )
 }
