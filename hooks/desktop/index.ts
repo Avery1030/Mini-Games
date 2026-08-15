@@ -1,4 +1,5 @@
 export { useDesktopApps, useDesktopWindowApps, useDesktopHydrated } from './useDesktopApps'
+export { useDesktopDocumentTitle, DesktopDocumentTitle, DESKTOP_DOCUMENT_TITLE } from './useDesktopDocumentTitle'
 export { useDesktopIconDrag, hitDesktopIconAtPoint } from './useDesktopIconDrag'
 export { useMarqueeSelect, MarqueeOverlay } from './useMarqueeSelect'
 export { useFsListSelection } from './useFsListSelection'

@@ -6,7 +6,7 @@ import { MobileDesktop } from './mobile'
 import { BootScreen } from './BootScreen'
 import { LockScreen } from './LockScreen'
 import { Screensaver } from './Screensaver'
-import { useApplyUiScale, useIsMobileViewport, useWindowRouteSync } from '@/hooks/desktop'
+import { DesktopDocumentTitle, useApplyUiScale, useIsMobileViewport, useWindowRouteSync } from '@/hooks/desktop'
 import { useDesktopStore } from '@/store/desktop'
 import { useWindowStore } from '@/store/window'
 import { useSettingsStore } from '@/store/settings'
@@ -118,6 +118,7 @@ export function DesktopShell() {
 
   return (
     <>
+      <DesktopDocumentTitle />
       {showDesktop && (
         <>
           {isMobile ? <MobileDesktop /> : <WindowsDesktop />}
