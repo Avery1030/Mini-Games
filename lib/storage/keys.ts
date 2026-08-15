@@ -26,6 +26,8 @@ export const STORAGE_KEYS = {
   calendar: 'desktop-calendar',
   /** 动态桌面项（文件夹等） */
   desktopItems: 'desktop-items',
+  /** 运行时 IDE 窗口会话（刷新后恢复） */
+  ideSessions: 'desktop-ide-sessions',
 } as const
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS]

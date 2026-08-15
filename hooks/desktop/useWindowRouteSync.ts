@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import type { DesktopAppId, DesktopWindowRuntime } from '@/config/desktop'
-import { getDesktopWindow } from '@/lib/desktop/window'
+import { ensureIdeEditorWindow, getDesktopWindow } from '@/lib/desktop/window'
 import { parseWindowPath, setWindowUrl } from '@/lib/desktop/windowRoute'
 import { useDesktopHydrated } from '@/hooks/desktop/useDesktopApps'
 import { useWindowStore } from '@/store/window'
@@ -47,6 +47,7 @@ export function useWindowRouteSync(enabled: boolean): void {
     applyingFromUrlRef.current = true
     try {
       if (route.type === 'window') {
+        if (route.id.startsWith('ide_')) ensureIdeEditorWindow(route.id)
         const deskWin = getDesktopWindow(route.id)
         if (deskWin?.app) {
           useWindowStore.getState().openWindow(route.id)
@@ -87,6 +88,7 @@ export function useWindowRouteSync(enabled: boolean): void {
       applyingFromUrlRef.current = true
       try {
         if (route.type === 'window') {
+          if (route.id.startsWith('ide_')) ensureIdeEditorWindow(route.id)
           const deskWin = getDesktopWindow(route.id)
           if (deskWin?.app) {
             useWindowStore.getState().openWindow(route.id)

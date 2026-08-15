@@ -2,7 +2,12 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import type { DesktopAppId, DesktopWindowRuntime, WindowBounds } from '@/config/desktop'
 import { DEFAULT_WINDOW_RUNTIME } from '@/config/desktop'
-import { createDefaultWindows, getDesktopWindow, registerWindowController } from '@/lib/desktop/window'
+import {
+  createDefaultWindows,
+  getDesktopWindow,
+  registerWindowController,
+  restorePersistedIdeSessions,
+} from '@/lib/desktop/window'
 import { STORAGE_KEYS, appStorage } from '@/lib/storage'
 
 const WINDOW_Z_BASE = 1000
@@ -129,11 +134,12 @@ function normalizeBounds(raw: unknown): WindowBounds | null {
 }
 
 function mergeWindows(saved?: Partial<Record<DesktopAppId, Partial<DesktopWindowRuntime>>>): WindowsMap {
+  restorePersistedIdeSessions()
   const defaults = createDefaultWindows()
   const known = new Set(Object.keys(defaults))
   const ids = new Set<string>([...known])
   for (const id of Object.keys(saved ?? {})) {
-    if (known.has(id) || id.startsWith('folder_') || id.startsWith('text_')) ids.add(id)
+    if (known.has(id) || id.startsWith('folder_') || id.startsWith('text_') || id.startsWith('ide_')) ids.add(id)
   }
   return Object.fromEntries(
     [...ids].map((id) => {

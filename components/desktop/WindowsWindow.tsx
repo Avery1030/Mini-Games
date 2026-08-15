@@ -244,6 +244,26 @@ export function WindowsWindow({
                 setConsumePointer(true)
                 onFocus?.()
               }}
+              onDragOver={(e) => {
+                const types = Array.from(e.dataTransfer?.types ?? [])
+                if (!types.includes('application/x-vfs-path') && !types.includes('text/plain')) return
+                e.preventDefault()
+                e.dataTransfer.dropEffect = 'copy'
+              }}
+              onDrop={(e) => {
+                const types = Array.from(e.dataTransfer?.types ?? [])
+                if (!types.includes('application/x-vfs-path') && !types.includes('text/plain')) return
+                e.preventDefault()
+                e.stopPropagation()
+                onFocus?.()
+                setConsumePointer(true)
+                const path = (
+                  e.dataTransfer.getData('application/x-vfs-path') || e.dataTransfer.getData('text/plain')
+                ).trim()
+                if (!path.startsWith('/')) return
+                const host = e.currentTarget.parentElement?.querySelector('[data-vfs-drop]')
+                host?.dispatchEvent(new CustomEvent('vfs-drop', { detail: { path }, bubbles: true }))
+              }}
             />
           )}
         </div>

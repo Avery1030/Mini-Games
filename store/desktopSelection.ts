@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { DesktopAppId } from '@/config/desktop'
 import { filterSelectionRoots } from '@/lib/desktop/itemsTree'
 import { useDesktopItemsStore } from '@/store/desktopItems'
+import { isVfsDesktopFileId } from '@/store/desktopVfs'
 
 /** Selector 回退用稳定空数组，避免每次返回新 `[]` 触发无限重渲染 */
 export const EMPTY_SELECTION_IDS: DesktopAppId[] = []
@@ -121,9 +122,11 @@ export const useDesktopSelectionStore = create<DesktopSelectionStore>()((set, ge
     const { selectedIds } = get()
     if (selectedIds.length === 0) return false
     const items = useDesktopItemsStore.getState().items
-    const roots = filterSelectionRoots(items, selectedIds)
-    if (roots.length === 0) return false
-    set({ clipboard: { mode: 'copy', ids: roots } })
+    const itemRoots = filterSelectionRoots(items, selectedIds)
+    const vfsIds = selectedIds.filter((id) => isVfsDesktopFileId(id))
+    const ids = [...new Set([...itemRoots, ...vfsIds])]
+    if (ids.length === 0) return false
+    set({ clipboard: { mode: 'copy', ids } })
     return true
   },
 
@@ -131,9 +134,11 @@ export const useDesktopSelectionStore = create<DesktopSelectionStore>()((set, ge
     const { selectedIds } = get()
     if (selectedIds.length === 0) return false
     const items = useDesktopItemsStore.getState().items
-    const roots = filterSelectionRoots(items, selectedIds)
-    if (roots.length === 0) return false
-    set({ clipboard: { mode: 'cut', ids: roots } })
+    const itemRoots = filterSelectionRoots(items, selectedIds)
+    const vfsIds = selectedIds.filter((id) => isVfsDesktopFileId(id))
+    const ids = [...new Set([...itemRoots, ...vfsIds])]
+    if (ids.length === 0) return false
+    set({ clipboard: { mode: 'cut', ids } })
     return true
   },
 
@@ -141,21 +146,31 @@ export const useDesktopSelectionStore = create<DesktopSelectionStore>()((set, ge
     const clip = get().clipboard
     if (!clip || clip.ids.length === 0) return []
 
+    const vfsIds = clip.ids.filter((id) => isVfsDesktopFileId(id))
+    const itemIds = clip.ids.filter((id) => !isVfsDesktopFileId(id))
     const store = useDesktopItemsStore.getState()
+
+    if (parentId != null) {
+      if (itemIds.length === 0) return []
+      if (clip.mode === 'copy') return store.copyItems(itemIds, parentId)
+      const moved = store.moveItemsIntoFolder(itemIds, parentId)
+      if (moved.length > 0) set({ clipboard: null })
+      return moved
+    }
+
+    const created: DesktopAppId[] = []
     if (clip.mode === 'copy') {
-      const created = await store.copyItems(clip.ids, parentId)
+      if (itemIds.length > 0) created.push(...(await store.copyItems(itemIds, null)))
+      if (vfsIds.length > 0) {
+        const { duplicateDesktopVfsFiles } = await import('@/lib/desktop/vfsFileActions')
+        created.push(...(await duplicateDesktopVfsFiles(vfsIds)))
+      }
       return created
     }
 
-    // cut → move
-    const moved =
-      parentId == null
-        ? store.moveItemsToDesktop(clip.ids)
-        : store.moveItemsIntoFolder(clip.ids, parentId)
-    if (moved.length > 0) {
-      set({ clipboard: null })
-    }
-    return moved
+    if (itemIds.length > 0) created.push(...store.moveItemsToDesktop(itemIds))
+    if (created.length > 0 || vfsIds.length > 0) set({ clipboard: null })
+    return created.length > 0 ? created : vfsIds
   },
 
   isSelected: (id) => get().selectedIds.includes(id),

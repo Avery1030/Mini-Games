@@ -22,6 +22,8 @@ export type {
   CalendarPersistState,
   DesktopItemsPersistState,
   DesktopItemPersist,
+  IdeSessionPersist,
+  IdeSessionsPersistState,
 } from './schema'
 
 export { appStorage } from './local'

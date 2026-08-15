@@ -104,6 +104,16 @@ export type DesktopItemsPersistState = {
   items: DesktopItemPersist[]
 }
 
+export type IdeSessionPersist = {
+  id: string
+  filePath: string | null
+  title: string
+}
+
+export type IdeSessionsPersistState = {
+  sessions: IdeSessionPersist[]
+}
+
 /**
  * 每个 key 对应的「语义值」类型。
  * - theme：纯字符串
@@ -138,6 +148,7 @@ export type StorageSchema = {
   [STORAGE_KEYS.lock]: ZustandPersistEnvelope<LockPersistState>
   [STORAGE_KEYS.calendar]: ZustandPersistEnvelope<CalendarPersistState>
   [STORAGE_KEYS.desktopItems]: ZustandPersistEnvelope<DesktopItemsPersistState>
+  [STORAGE_KEYS.ideSessions]: IdeSessionsPersistState
 }
 
 /** 以 JSON 读写的 key（不含 theme） */

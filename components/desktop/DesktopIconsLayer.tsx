@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useShallow } from 'zustand/react/shallow'
-import { File, FileText, Image as ImageIcon } from 'lucide-react'
+import { File, FileCode, FileText, Image as ImageIcon } from 'lucide-react'
 import { DesktopIcon, ICON_VIS } from './DesktopIcon'
 import { DesktopDragGhost } from './DesktopDragGhost'
 import { useDesktopApps, useDesktopHydrated, useDesktopIconDrag, useMarqueeSelect, MarqueeOverlay } from '@/hooks/desktop'
@@ -20,13 +20,16 @@ import { toast } from '@/components/ui'
 import type { DesktopAppId, DesktopAppView, DesktopCoordinate } from '@/config/desktop'
 import { DEFAULT_WINDOW_RUNTIME } from '@/config/desktop'
 import { isImagePath } from '@/features/image-viewer/api'
+import { isIdeFilePath } from '@/features/ide/languages'
 import { openVfsFile } from '@/lib/desktop/openVfsFile'
+import { duplicateDesktopVfsFiles } from '@/lib/desktop/vfsFileActions'
 import { getExtension, vfs, type FileNode } from '@/lib/vfs'
 import { isVfsDesktopFileId, useDesktopVfsStore } from '@/store/desktopVfs'
 
 function vfsFileIcon(node: FileNode) {
   if (isImagePath(node.path)) return ImageIcon
   if (getExtension(node.path).toLowerCase() === 'txt') return FileText
+  if (isIdeFilePath(node.path)) return FileCode
   return File
 }
 
@@ -197,6 +200,15 @@ export function DesktopIconsLayer() {
         return true
       }
       if (target.type === 'desktop') {
+        if (copy && vfsIds.length > 0) {
+          void duplicateDesktopVfsFiles(vfsIds).then((created) => {
+            if (created.length === 0) toast.warning(td('pasteFail'))
+          })
+          if (itemIds.length === 0) {
+            useDesktopSelectionStore.getState().clear()
+            return true
+          }
+        }
         const needsBringToDesktop = itemIds.some((id) => {
           const item = itemsRef.current.find((i) => i.id === id)
           return Boolean(item && !item.isDeleted && !isDesktopRootItem(item))

@@ -19,14 +19,15 @@ import {
   sortIdsByCoordinate,
   type ArrangeAlign,
 } from '@/lib/desktop'
-import { promptRenameDesktopItem } from './promptRenameDesktopItem'
+import { promptRenameDesktopItem, promptRenameVfsFile } from './promptRenameDesktopItem'
 import { FsDragLayer } from './FsDragLayer'
 import { Desktop3DWallpaper } from './Desktop3DWallpaper'
 import { buildDesktopContextMenu } from './buildDesktopContextMenu'
 import { useSettingsStore } from '@/store/settings'
-import { TRASH_PATH, vfs } from '@/lib/vfs'
+import { TRASH_PATH, getBasename, vfs } from '@/lib/vfs'
 import { isVfsDesktopFileId, useDesktopVfsStore } from '@/store/desktopVfs'
 import { openVfsFile } from '@/lib/desktop/openVfsFile'
+import { renameDesktopVfsFile } from '@/lib/desktop/vfsFileActions'
 
 /**
  * 桌面编排：壁纸 + 图标层 + 窗口层 + 任务栏 + 右键菜单。
@@ -194,7 +195,27 @@ export function WindowsDesktop() {
             openWindow(iconId)
           },
           rename: () => {
-            if (!iconId || !app || (app.kind !== 'folder' && app.kind !== 'textDocument')) return
+            if (!iconId) return
+            if (isVfsDesktopFileId(iconId)) {
+              void (async () => {
+                const next = await promptRenameVfsFile({
+                  currentName: getBasename(iconId),
+                  title: td('renameTitle'),
+                })
+                if (next == null || next === getBasename(iconId)) return
+                try {
+                  await renameDesktopVfsFile(iconId, next)
+                } catch (err) {
+                  toast.warning(
+                    err instanceof Error && err.message === 'duplicate'
+                      ? td('renameDuplicateVfs')
+                      : td('renameInvalidVfs'),
+                  )
+                }
+              })()
+              return
+            }
+            if (!app || (app.kind !== 'folder' && app.kind !== 'textDocument')) return
             void handleRenameItem(iconId, app.kind, resolveDesktopItemTitle(app, tApps, locale))
           },
           copy: () => {

@@ -49,6 +49,17 @@ export {
 } from './createFolder'
 export { FolderWindow, TextDocumentWindow } from './apps'
 export {
+  IdeEditorWindow,
+  HtmlPreviewWindow,
+  spawnIdeEditor,
+  openIdeFile,
+  spawnHtmlPreview,
+  getIdeEditorWindow,
+  getHtmlPreviewWindow,
+  restorePersistedIdeSessions,
+  ensureIdeEditorWindow,
+} from './ideWindows'
+export {
   prefetchApps,
   scheduleIdlePrefetchBuiltinApps,
 } from './prefetchApps'

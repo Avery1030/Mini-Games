@@ -137,13 +137,15 @@ export function registerDesktopWindow(
 }
 
 /** 注销动态窗口（内置不可注销） */
-export function unregisterDesktopWindow(id: DesktopAppId): boolean {
+export function unregisterDesktopWindow(id: DesktopAppId, options?: { close?: boolean }): boolean {
   if (!dynamicWindows.has(id)) return false
   const win = dynamicWindows.get(id)
-  try {
-    win?.close()
-  } catch {
-    // store 未就绪时忽略
+  if (options?.close !== false) {
+    try {
+      win?.close()
+    } catch {
+      // store 未就绪时忽略
+    }
   }
   dynamicWindows.delete(id)
   windowMap.delete(id)

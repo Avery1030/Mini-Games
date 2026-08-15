@@ -145,3 +145,109 @@ function RenameItemForm({
     </div>
   )
 }
+
+export function promptRenameVfsFile(options: { currentName: string; title: string }): Promise<string | null> {
+  const { currentName, title } = options
+  return new Promise((resolve) => {
+    let settled = false
+    const finish = (value: string | null) => {
+      if (settled) return
+      settled = true
+      resolve(value)
+    }
+
+    const id = openModal({
+      title,
+      dismissible: true,
+      showClose: true,
+      widthClassName: 'w-[min(360px,calc(100vw-2rem))]',
+      content: (
+        <RenameVfsForm
+          initialName={currentName}
+          onCancel={() => {
+            finish(null)
+            closeModal(id)
+          }}
+          onConfirm={(name) => {
+            finish(name)
+            closeModal(id)
+          }}
+        />
+      ),
+      onClose: () => finish(null),
+    })
+  })
+}
+
+function RenameVfsForm({
+  initialName,
+  onCancel,
+  onConfirm,
+}: {
+  initialName: string
+  onCancel: () => void
+  onConfirm: (name: string) => void
+}) {
+  const td = useTranslations('desktop')
+  const tm = useTranslations('modal')
+  const [name, setName] = useState(initialName)
+  const [error, setError] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const el = inputRef.current
+    if (!el) return
+    el.focus()
+    const dot = initialName.lastIndexOf('.')
+    if (dot > 0) el.setSelectionRange(0, dot)
+    else el.select()
+  }, [initialName])
+
+  const submit = () => {
+    const trimmed = name.trim()
+    if (!trimmed) {
+      setError(td('renameEmpty'))
+      return
+    }
+    onConfirm(trimmed)
+  }
+
+  return (
+    <div className='space-y-3'>
+      <p className='text-[12px] text-on-chrome'>{td('renameHintVfs')}</p>
+      <div>
+        <label className='block text-[11px] mb-1' htmlFor='desktop-vfs-rename-input'>
+          {td('renameLabel')}
+        </label>
+        <Input
+          ref={inputRef}
+          id='desktop-vfs-rename-input'
+          type='text'
+          autoComplete='off'
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value)
+            if (error) setError(null)
+          }}
+          size='md'
+          tone='field'
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              submit()
+            }
+          }}
+        />
+      </div>
+      {error && <p className='text-[11px] text-[#c00]'>{error}</p>}
+      <div className='flex justify-end gap-2 pt-1'>
+        <Button type='button' size='md' className='px-3' onClick={onCancel}>
+          {tm('cancel')}
+        </Button>
+        <Button type='button' size='md' className='px-3' onClick={submit}>
+          {tm('ok')}
+        </Button>
+      </div>
+    </div>
+  )
+}

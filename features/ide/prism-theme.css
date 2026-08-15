@@ -1,0 +1,131 @@
+.ide-prism .token.comment,
+.ide-prism .token.prolog,
+.ide-prism .token.doctype,
+.ide-prism .token.cdata {
+  color: #008000;
+}
+
+.ide-prism .token.punctuation {
+  color: #444;
+}
+
+.ide-prism .token.property,
+.ide-prism .token.tag,
+.ide-prism .token.constant,
+.ide-prism .token.symbol,
+.ide-prism .token.deleted {
+  color: #000080;
+}
+
+.ide-prism .token.boolean,
+.ide-prism .token.number {
+  color: #0000ff;
+}
+
+.ide-prism .token.selector,
+.ide-prism .token.attr-name,
+.ide-prism .token.string,
+.ide-prism .token.char,
+.ide-prism .token.builtin,
+.ide-prism .token.inserted {
+  color: #800000;
+}
+
+.ide-prism .token.operator,
+.ide-prism .token.entity,
+.ide-prism .token.url,
+.ide-prism .language-css .token.string,
+.ide-prism .style .token.string {
+  color: #9a6e3a;
+}
+
+.ide-prism .token.atrule,
+.ide-prism .token.attr-value,
+.ide-prism .token.keyword {
+  color: #0000cd;
+  font-weight: 600;
+}
+
+.ide-prism .token.function,
+.ide-prism .token.class-name {
+  color: #008080;
+}
+
+.ide-prism .token.regex,
+.ide-prism .token.important,
+.ide-prism .token.variable {
+  color: #a31515;
+}
+
+.dark .ide-prism .token.comment,
+.dark .ide-prism .token.prolog,
+.dark .ide-prism .token.doctype,
+.dark .ide-prism .token.cdata {
+  color: #6a9955;
+}
+
+.dark .ide-prism .token.punctuation {
+  color: #d4d4d4;
+}
+
+.dark .ide-prism .token.property,
+.dark .ide-prism .token.tag,
+.dark .ide-prism .token.constant,
+.dark .ide-prism .token.symbol,
+.dark .ide-prism .token.deleted {
+  color: #9cdcfe;
+}
+
+.dark .ide-prism .token.boolean,
+.dark .ide-prism .token.number {
+  color: #b5cea8;
+}
+
+.dark .ide-prism .token.selector,
+.dark .ide-prism .token.attr-name,
+.dark .ide-prism .token.string,
+.dark .ide-prism .token.char,
+.dark .ide-prism .token.builtin,
+.dark .ide-prism .token.inserted {
+  color: #ce9178;
+}
+
+.dark .ide-prism .token.operator,
+.dark .ide-prism .token.entity,
+.dark .ide-prism .token.url {
+  color: #d4d4d4;
+}
+
+.dark .ide-prism .token.atrule,
+.dark .ide-prism .token.attr-value,
+.dark .ide-prism .token.keyword {
+  color: #569cd6;
+  font-weight: 600;
+}
+
+.dark .ide-prism .token.function,
+.dark .ide-prism .token.class-name {
+  color: #dcdcaa;
+}
+
+.dark .ide-prism .token.regex,
+.dark .ide-prism .token.important,
+.dark .ide-prism .token.variable {
+  color: #d16969;
+}
+
+.ide-search-match,
+.ide-search-current {
+  color: transparent;
+  padding: 0;
+  border-radius: 0;
+  font: inherit;
+}
+
+.ide-search-match {
+  background: rgba(255, 255, 0, 0.55);
+}
+
+.ide-search-current {
+  background: rgba(255, 140, 0, 0.8);
+}

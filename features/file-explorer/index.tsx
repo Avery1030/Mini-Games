@@ -2,15 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from 'react'
 import { useTranslations } from 'next-intl'
-import {
-  ChevronUp,
-  File,
-  FileText,
-  Folder,
-  FolderOpen,
-  Image as ImageIcon,
-  RefreshCw,
-} from 'lucide-react'
+import { ChevronUp, File, FileCode, FileText, Folder, FolderOpen, Image as ImageIcon, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import {
@@ -33,6 +25,7 @@ import {
   type FileNode,
 } from '@/lib/vfs'
 import { isImagePath } from '@/features/image-viewer/api'
+import { isIdeFilePath } from '@/features/ide/languages'
 import { openVfsFile } from '@/lib/desktop/openVfsFile'
 import { copyVfsFileToDesktop, setVfsImageAsWallpaper } from '@/lib/desktop/vfsFileActions'
 import { useDesktopVfsStore } from '@/store/desktopVfs'
@@ -52,6 +45,7 @@ function nodeIcon(node: FileNode) {
   if (node.isDirectory) return Folder
   if (isImagePath(node.path)) return ImageIcon
   if (getExtension(node.path).toLowerCase() === 'txt') return FileText
+  if (isIdeFilePath(node.path)) return FileCode
   return File
 }
 
@@ -376,6 +370,7 @@ export function FileExplorerApp({ embedded = false }: FileExplorerProps = {}) {
                 <li key={node.path}>
                   <button
                     type='button'
+                    draggable={!node.isDirectory}
                     className={cn(
                       'w-full grid grid-cols-[minmax(0,1fr)_5rem] gap-2 items-center px-2 py-1.5 text-left',
                       'hover:bg-icon-select/30',
@@ -384,6 +379,15 @@ export function FileExplorerApp({ embedded = false }: FileExplorerProps = {}) {
                     onClick={() => setSelectedPath(node.path)}
                     onDoubleClick={() => void openNode(node)}
                     onContextMenu={(e) => openContextMenu(e, node)}
+                    onDragStart={(e) => {
+                      if (node.isDirectory) {
+                        e.preventDefault()
+                        return
+                      }
+                      e.dataTransfer.setData('application/x-vfs-path', node.path)
+                      e.dataTransfer.setData('text/plain', node.path)
+                      e.dataTransfer.effectAllowed = 'copy'
+                    }}
                   >
                     <span className='min-w-0 flex items-center gap-2'>
                       <Icon size={14} className='shrink-0' />

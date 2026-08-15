@@ -10,6 +10,7 @@ import {
   Calculator,
   ChartCandlestick,
   Cherry,
+  CodeXml,
   FileText,
   Folder,
   Gamepad,
@@ -27,6 +28,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { registerBuiltinApps } from './defineApp'
+import { spawnIdeEditor } from './ideWindows'
 
 registerBuiltinApps([
   {
@@ -152,6 +154,18 @@ registerBuiltinApps([
     width: 560,
     height: 460,
     loadApp: () => import('@/features/notepad').then((m) => m.NotepadApp),
+  },
+  {
+    id: 'ide',
+    icon: CodeXml,
+    defaultCoordinate: [4, 1],
+    width: 720,
+    height: 520,
+    loadApp: () => import('@/features/ide').then((m) => m.IdeApp),
+    beforeOpen: () => {
+      spawnIdeEditor()?.open()
+      return false
+    },
   },
   {
     id: 'paint',

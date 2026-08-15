@@ -31,6 +31,11 @@ export type RegisterBuiltinAppOptions = {
   chrome?: Partial<WindowChromeOptions>
   showOnDesktop?: boolean
   showInStartMenu?: boolean
+  /**
+   * 打开前钩子；返回 false 可取消打开。
+   * 用于多实例启动器：桌面图标打开时派生新窗口，自身不停留在任务栏。
+   */
+  beforeOpen?: () => boolean
 }
 
 export type DeferredApp = {
@@ -133,6 +138,7 @@ export function defineDesktopApp(opts: RegisterBuiltinAppOptions): DesktopWindow
 
     override onBeforeOpen(): boolean {
       this.prefetchApp()
+      if (opts.beforeOpen) return opts.beforeOpen()
       return true
     }
   }
