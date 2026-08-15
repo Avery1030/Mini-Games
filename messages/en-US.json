@@ -538,6 +538,7 @@
         "Change wallpapers in Settings: presets or your own uploads, stored locally. Prefer originals for a sharp fullscreen look.",
         "Drag the title bar to move a window, drag edges to resize, use — to minimize, □ to maximize, and ✕ to close.",
         "The address bar follows the focused window (e.g. /window/settings) via soft URL updates — no page reload. Refresh or share that URL to reopen the app; Back/Forward also retarget focus.",
+        "The browser tab title also follows the focused window (e.g. “Settings - Avery Mini OS”); it returns to the system name when no window is visible or the desktop is locked.",
         "The taskbar has Start on the left, open windows in the middle, and theme, language, and decorative buttons on the right — the last ones are placeholders for now."
       ]
     },
@@ -555,7 +556,8 @@
         "K-Line Chart: USDT perpetual candles with period and main/sub indicators; market data from Binance public APIs.",
         "Command Prompt: a simple DOS-style terminal to browse desktop/folder paths and open some apps.",
         "Zhi Chat: SiliconFlow streaming chat; API key via .env; session stored in IndexedDB.",
-        "Image Viewer: upload local images or import from a URL; multi-select browsing; files stored in IndexedDB."
+        "Image Viewer: upload local images or import from a URL; multi-select browsing; files stored in IndexedDB.",
+        "Code Editor: multiple windows for HTML / CSS / JS / TS / JSON, with syntax highlighting, find/replace, Emmet, and HTML preview. Files live in the virtual file system and can be opened from File Explorer or the desktop."
       ]
     },
     "changelog": {
@@ -642,6 +644,14 @@
     "clear": "Clear"
   },
   "changelog": {
+    "2026-08-15": {
+      "title": "Code Editor & tab title",
+      "items": [
+        "Added Code Editor: multiple windows for HTML / CSS / JS / TS / JSON; Prism highlighting, find/replace, Emmet (Tab to expand), format on save, and HTML preview.",
+        "Code files live in the virtual file system; open from File Explorer or the desktop; save to Desktop. Unclosed editor windows restore after refresh.",
+        "The browser tab title follows the focused window; it falls back to the system name when no window is visible or the desktop is locked."
+      ]
+    },
     "2026-08-12": {
       "title": "Sudoku & games layout",
       "items": [

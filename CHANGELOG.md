@@ -5,10 +5,16 @@
 维护步骤：
 
 1. 在 `content/changelog.ts` 的 `CHANGELOG_DATES` **最前面**插入新日期  
-2. 在 `messages/zh-CN.json` 与 `messages/en-US.json` 的 `changelog.<date>` 下补充 `title` / `items`  
+2. 在 `messages/zh-CN.json`、`messages/en-US.json` 与 `messages/ja-JP.json` 的 `changelog.<date>` 下补充 `title` / `items`  
 3. 同步更新本文件（可选，方便 GitHub 阅读）
 
 ---
+
+## 2026-08-15 — 代码编辑器与标签页标题
+
+- 新增「代码编辑器」：多窗口编辑 HTML / CSS / JS / TS / JSON；Prism 高亮、查找替换、Emmet（Tab 展开）、保存时格式化、HTML 预览；文件走 VFS，刷新后恢复会话
+- 资源管理器与桌面双击代码文件打开编辑器；可保存到 `/Desktop`
+- 浏览器标签页标题跟随当前聚焦窗口（无可见窗口或锁屏时回到 Avery Mini OS）
 
 ## 2026-08-12 — 数独与游戏目录整理
 

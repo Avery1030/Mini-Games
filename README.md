@@ -1,6 +1,6 @@
 # Avery Mini Windows Desktop
 
-Windows 95 风格的 Web 桌面（Next.js App Router）：可拖拽图标与窗口、任务栏、开始菜单、锁屏，以及一整套内置应用——设置、文档、日志、记事本、画图、计算器、命令提示符、资源管理器、回收站、图片查看器、K 线图表、智聊、任务管理器，外加「游戏」集合（扫雷、俄罗斯方块、西瓜、消消乐、推箱子等）。
+Windows 95 风格的 Web 桌面（Next.js App Router）：可拖拽图标与窗口、任务栏、开始菜单、锁屏，以及一整套内置应用——设置、文档、日志、记事本、代码编辑器、画图、计算器、命令提示符、资源管理器、回收站、图片查看器、K 线图表、智聊、任务管理器，外加「游戏」集合（扫雷、俄罗斯方块、西瓜、消消乐、推箱子、数独等）。
 
 气质是「Win95 怀旧壳 + 一点当代网页」：视觉走经典对话框质感；系统偏好与窗口布局在 `localStorage`；**用户文件统一走 VFS（默认 IndexedDB 适配器）**；智聊会话在独立 IndexedDB，不依赖账号体系。**内置应用按需动态加载**，首屏不打包全部 feature。
 
@@ -41,9 +41,10 @@ yarn lint    # ESLint
 | ----------------- | -------------------------------------------------------------------------------------------- |
 | 桌面图标          | 内置应用 + 动态文件夹/文稿 + **VFS `/Desktop` 文件**；拖拽坐标记忆；右键新建 / 排列 / 回收站 |
 | 文件夹 / 文本文档 | 运行时动态桌面项（`desktopItems`）；文本文档正文在 VFS `/Documents/*.txt`                    |
-| VFS 桌面文件      | `/Desktop` 下列出的文件图标；图片双击打开查看器，`.txt` 打开记事本                           |
+| VFS 桌面文件      | `/Desktop` 下列出的文件图标；图片双击打开查看器，`.txt` 打开记事本，代码文件打开代码编辑器 |
 | 窗口              | 拖拽、缩放、最小化 / 最大化、叠放层级；小窗边缘软吸附；关闭后几何可记忆                      |
 | 窗口路由          | 聚焦窗口同步地址栏 `/window/{应用}`；刷新可重开，浏览器后退 / 前进切换聚焦                   |
+| 标签页标题        | `useDesktopDocumentTitle`：浏览器 `document.title` 跟随当前聚焦窗口；锁屏 / 无可见窗回落系统名 |
 | 任务栏            | 开始菜单、已开窗口按钮与预览、时钟与日历备注、主题切换、语言切换                             |
 | 锁屏              | 本机会话锁屏（密码不跨设备备份）                                                             |
 | 反馈              | 全局 Modal、Toast（成功 / 失败 / 警告）                                                      |
@@ -56,6 +57,7 @@ yarn lint    # ESLint
 | 文档       | `document`         | 应用说明与更新摘要（纯前端文案）                                           |
 | 日志       | `log`              | 按日期查看更新记录                                                         |
 | 记事本     | `notepad`          | 纯文本笔记 CRUD；内容在 VFS `/Documents`                                   |
+| 代码编辑器 | `ide`              | 多窗口编辑 HTML / CSS / JS / TS / JSON；Prism、查找替换、Emmet、HTML 预览；会话可恢复 |
 | 画图       | `paint`            | 画布、调色板、橡皮、形状；PNG 在 VFS `/Pictures/Drawings`                  |
 | 计算器     | `calculator`       | 四则运算、括号、幂、开方与简单内存键；窗口不可缩放                         |
 | 命令提示符 | `cmd`              | DOS 风格终端                                                               |
@@ -73,7 +75,8 @@ yarn lint    # ESLint
 | 消消乐     | `match3`           | 三消关卡                                                                   |
 | 图片拼图   | `imagePuzzle`      | 图片拼图                                                                   |
 | 画布拼图   | `canvasJigsaw`     | Canvas 拼图                                                                |
-| 推箱子     | `sokoban`          | 经典推箱子（关卡在 `features/games/sokoban/levels.ts`）                          |
+| 推箱子     | `sokoban`          | 经典推箱子（关卡在 `features/games/sokoban/levels.ts`）                    |
+| 数独       | `sudoku`           | 多难度、笔记 / 提示 / 设置，收录于「游戏」                                 |
 
 小游戏收纳列表见 `features/games/ids.ts`（`GAME_APP_IDS`）。
 
@@ -87,8 +90,8 @@ yarn lint    # ESLint
 | 样式   | Tailwind CSS 4、CSS 变量主题（配合 `next-themes`）                                    |
 | 状态   | Zustand（`persist` → `localStorage`）                                                 |
 | 文件   | 自研 VFS（`lib/vfs`，默认 IndexedDB 适配器）                                          |
-| 国际化 | next-intl（`zh-CN` / `en-US`）                                                        |
-| 其它   | date-fns、react-day-picker、klinecharts、@tanstack/react-virtual、three、lucide-react |
+| 国际化 | next-intl（`zh-CN` / `en-US` / `ja-JP`）                                              |
+| 其它   | ahooks、date-fns、react-day-picker、klinecharts、prismjs、@tanstack/react-virtual、three、lucide-react |
 
 ---
 
@@ -109,7 +112,7 @@ VFS 核心（lib/vfs/vfs.ts）
 | 路径                 | 用途                                 |
 | -------------------- | ------------------------------------ |
 | `/Desktop`           | 桌面可见文件                         |
-| `/Documents`         | 记事本 `.txt`                        |
+| `/Documents`         | 记事本 `.txt`、代码编辑器源文件      |
 | `/Documents/Chats`   | 智聊 `.chat` 导出                    |
 | `/Pictures`          | 图片查看器图库                       |
 | `/Pictures/Drawings` | 画图作品                             |
@@ -135,7 +138,7 @@ Trash 内节点对外可带 `originalPath`、`trashedAt`。禁止对回收站内
 
 ### 打开文件（避免循环依赖）
 
-按路径打开应用的逻辑在 **`lib/desktop/openVfsFile.ts`**（不放进 `lib/vfs` 桶导出），避免 `vfs → store/window → registry` 环。图片查看器用 Zustand `store/imageViewer` 传递 `filePath`。
+按路径打开应用的逻辑在 **`lib/desktop/openVfsFile.ts`**（不放进 `lib/vfs` 桶导出），避免 `vfs → store/window → registry` 环。图片查看器用 Zustand `store/imageViewer` 传递 `filePath`；代码编辑器用 `openIdeFile`（`lib/desktop/window/ideWindows.ts`）。
 
 ---
 
@@ -181,7 +184,7 @@ Trash 内节点对外可带 `originalPath`、`trashedAt`。禁止对回收站内
 2. `openWindow` 先 `prefetchApp()` 开始拉应用 chunk，再设 `isOpen`
 3. 图片：`useImageViewerStore.openFile(path)` + 打开 `imageViewer`
 4. `DesktopWindowsLayer` 渲染 `WindowsWindow` + `<App embedded />`（`loadApp` 未就绪时 Suspense 占位）
-5. 任务栏出现按钮；`useWindowRouteSync` 可选同步 `/window/[slug]`
+5. 任务栏出现按钮；`useWindowRouteSync` 可选同步 `/window/[slug]`；`DesktopDocumentTitle` 同步浏览器标签页标题
 
 ### 应用懒加载与预取
 
@@ -238,7 +241,7 @@ lib/
   ai-chat/                智聊独立 IDB + .chat 文件
   wallpaper/              壁纸解析 / VFS API / boot
   storage/                localStorage key / schema / 备份
-messages/                 zh-CN.json / en-US.json
+messages/                 zh-CN.json / en-US.json / ja-JP.json
 store/                    Zustand stores（含 imageViewer、desktopVfs）
 ```
 
@@ -246,7 +249,7 @@ store/                    Zustand stores（含 imageViewer、desktopVfs）
 
 | 文件                      | 职责                                                                      |
 | ------------------------- | ------------------------------------------------------------------------- |
-| `DesktopShell.tsx`        | 等各 store `_hasHydrated` + 开机动画后再挂桌面；按断点分流；空闲预热应用 chunk |
+| `DesktopShell.tsx`        | 等各 store `_hasHydrated` + 开机动画后再挂桌面；按断点分流；空闲预热应用 chunk；挂载 `DesktopDocumentTitle` |
 | `WindowsDesktop.tsx`      | 编排图标层 / 窗口层 / 任务栏 / 拖放；右键清空回收站（桌面项 + VFS Trash） |
 | `DesktopIconsLayer.tsx`   | 内置项 + desktopItems + VFS `/Desktop` 图标；双击打开；悬停预取           |
 | `DesktopWindowsLayer.tsx` | 已开窗口列表                                                              |
@@ -264,6 +267,7 @@ store/                    Zustand stores（含 imageViewer、desktopVfs）
 | `builtins.ts`        | **唯一**内置应用注册表（元数据 + `loadApp`）                          |
 | `prefetchApps.ts`    | 空闲分批预热、`prefetchApps(ids)`                                     |
 | `apps.ts`            | 仅动态项：`FolderWindow` / `TextDocumentWindow`（同样懒加载）         |
+| `ideWindows.ts`      | 代码编辑器 / HTML 预览多实例；会话写入 `desktop-ide-sessions`         |
 | `registry.ts`        | 内置/动态窗口表、snapshot 订阅                                        |
 | `createFolder.ts` 等 | 动态文件夹 / 文稿创建时同步 registry + stores                         |
 
@@ -271,7 +275,7 @@ store/                    Zustand stores（含 imageViewer、desktopVfs）
 
 | 文件                            | 职责                               |
 | ------------------------------- | ---------------------------------- |
-| `lib/desktop/openVfsFile.ts`    | 按路径打开查看器 / 记事本          |
+| `lib/desktop/openVfsFile.ts`    | 按路径打开查看器 / 代码编辑器 / 记事本 |
 | `lib/desktop/vfsFileActions.ts` | 设壁纸、复制到 `/Desktop`          |
 | `lib/desktop/itemsTree.ts`      | 桌面虚拟树（移动 / 软删除 / 重名） |
 
@@ -300,6 +304,7 @@ store/                    Zustand stores（含 imageViewer、desktopVfs）
 | `image-viewer/`  | `/Pictures` 图库；`fetchImageByPath`；删除 `trashImageApi`     |
 | `recycle-bin/`   | 合并桌面软删除根 + `/Trash`；去重已联动 trash 的笔记           |
 | `notepad/`       | VFS `/Documents`；`pendingOpen` 支持站外打开                   |
+| `ide/`           | 简易代码编辑器（textarea + Prism，无 Monaco）；Emmet 子集；HTML 预览窗口 |
 | `paint/`         | VFS `/Pictures/Drawings`                                       |
 | `ai-chat/`       | 多会话侧栏；独立 IDB `avery-mini-os-ai-chat`；请求不带历史全文 |
 | `settings/`      | 壁纸上传/导入走 VFS `/Wallpapers`                              |
@@ -393,6 +398,7 @@ store/                    Zustand stores（含 imageViewer、desktopVfs）
 | `desktop-notepad` / `desktop-paint` / `desktop-kline-chart` | 应用偏好                          |
 | `desktop-calendar`                                          | 日历备注                          |
 | `desktop-lock`                                              | 锁屏会话（**不参与**备份）        |
+| `desktop-ide-sessions`                                      | 代码编辑器窗口会话（路径 / 标题） |
 | `desktop-wallpaper-boot`                                    | 首屏壁纸同步标记                  |
 
 备份：设置页 → `lib/storage/backup.ts`。**不含** VFS 文件与智聊 IDB。
@@ -418,7 +424,7 @@ store/                    Zustand stores（含 imageViewer、desktopVfs）
 
 ## 国际化与主题
 
-- 语言：`zh-CN`（默认）、`en-US`；cookie 键 `NEXT_LOCALE`；`localePrefix: 'never'`
+- 语言：`zh-CN`（默认）、`en-US`、`ja-JP`；cookie 键 `NEXT_LOCALE`；`localePrefix: 'never'`
 - 主题：`next-themes` + CSS 变量；Tailwind `dark:` 跟随
 - 应用标题与 `messages.apps`、`BuiltinAppId` 对齐；动态项优先用运行时 `title`
 
