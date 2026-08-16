@@ -5,7 +5,7 @@ import { DayPicker } from 'react-day-picker'
 import { format, isSameDay, startOfDay } from 'date-fns'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
-import { Button, openModal } from '@/components/ui'
+import { Button, openModal, Select, type SelectOption } from '@/components/ui'
 import { useSettingsStore } from '@/store/settings'
 import { dateKeyFromDate, useCalendarStore } from '@/store/calendar'
 import { cn } from '@/lib/cn'
@@ -13,6 +13,24 @@ import { dateFnsLocale, dayPickerLocale, intlLocale } from '@/lib/i18n/dateLocal
 import 'react-day-picker/style.css'
 
 export const CALENDAR_MODAL_ID = 'taskbar-calendar'
+
+function buildYearOptions(centerYear: number): SelectOption[] {
+  const nowYear = new Date().getFullYear()
+  const min = Math.min(centerYear - 50, nowYear - 100)
+  const max = Math.max(centerYear + 50, nowYear + 20)
+  const out: SelectOption[] = []
+  for (let y = min; y <= max; y++) out.push({ value: String(y), label: String(y) })
+  return out
+}
+
+function buildMonthOptions(locale: string, dateLocale: ReturnType<typeof dateFnsLocale>): SelectOption[] {
+  const eastAsian = locale === 'zh-CN' || locale === 'ja-JP'
+  return Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(2000, i, 1)
+    const label = eastAsian ? `${format(d, 'M', { locale: dateLocale })}月` : format(d, 'MMMM', { locale: dateLocale })
+    return { value: String(i), label }
+  })
+}
 
 function formatLiveClock(formatMode: '12h' | '24h', date: Date, locale: string): string {
   const tag = intlLocale(locale)
@@ -64,10 +82,10 @@ export function CalendarModalContent() {
   const calendarLocale = dayPickerLocale(locale)
   const dateLocale = dateFnsLocale(locale)
 
-  const notedDates = useMemo(
-    () => Object.keys(notes).map((k) => startOfDay(new Date(`${k}T12:00:00`))),
-    [notes],
-  )
+  const notedDates = useMemo(() => Object.keys(notes).map((k) => startOfDay(new Date(`${k}T12:00:00`))), [notes])
+
+  const yearOptions = useMemo(() => buildYearOptions(month.getFullYear()), [month])
+  const monthOptions = useMemo(() => buildMonthOptions(locale, dateLocale), [locale, dateLocale])
 
   const dirty = draft.trim() !== savedNote.trim()
 
@@ -112,7 +130,7 @@ export function CalendarModalContent() {
         {formatLiveClock(clockFormat, now, locale)}
       </div>
 
-      <div className='flex items-center gap-1.5'>
+      <div className='flex items-center gap-1'>
         <Button
           size='icon-sm'
           aria-label={t('prevMonth')}
@@ -120,12 +138,24 @@ export function CalendarModalContent() {
         >
           <ChevronLeft size={14} />
         </Button>
-        <div className='flex-1 text-[12px] font-bold tabular-nums text-center min-w-0 truncate'>
-          {t('monthTitle', {
-            year: format(month, 'yyyy', { locale: dateLocale }),
-            month: format(month, isChinese ? 'M' : 'MMMM', { locale: dateLocale }),
-          })}
-        </div>
+        <Select
+          size='sm'
+          className='flex-1 min-w-0'
+          aria-label={t('pickYear')}
+          options={yearOptions}
+          value={String(month.getFullYear())}
+          menuClassName='max-h-40'
+          onValueChange={(v) => setMonth((m) => new Date(Number(v), m.getMonth(), 1))}
+        />
+        <Select
+          size='sm'
+          className='flex-1 min-w-0'
+          aria-label={t('pickMonth')}
+          options={monthOptions}
+          value={String(month.getMonth())}
+          menuClassName='max-h-40'
+          onValueChange={(v) => setMonth((m) => new Date(m.getFullYear(), Number(v), 1))}
+        />
         <Button
           size='icon-sm'
           aria-label={t('nextMonth')}

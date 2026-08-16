@@ -402,6 +402,8 @@
     "note": "Note for this day",
     "notePlaceholder": "Write something… (blur or Save)",
     "save": "Save",
+    "pickYear": "Select year",
+    "pickMonth": "Select month",
     "monthTitle": "{month} {year}",
     "dateFull": "{weekday}, {month} {day}, {year}"
   },

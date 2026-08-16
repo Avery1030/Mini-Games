@@ -402,6 +402,8 @@
     "note": "この日のメモ",
     "notePlaceholder": "メモを書く…（フォーカスを外すか「保存」）",
     "save": "保存",
+    "pickYear": "年を選択",
+    "pickMonth": "月を選択",
     "monthTitle": "{year}年 {month}",
     "dateFull": "{year}年{month}{day}日 {weekday}"
   },
