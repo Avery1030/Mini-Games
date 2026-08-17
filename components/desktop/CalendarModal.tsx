@@ -11,7 +11,6 @@ import { dateKeyFromDate, useCalendarStore } from '@/store/calendar'
 import { cn } from '@/lib/cn'
 import { winChromeSunken } from '@/lib/winChrome'
 import { dateFnsLocale, dayPickerLocale, intlLocale } from '@/lib/i18n/dateLocales'
-import 'react-day-picker/style.css'
 
 export const CALENDAR_MODAL_ID = 'taskbar-calendar'
 
@@ -133,11 +132,19 @@ export function CalendarModalContent() {
   return (
     <div className='font-pixel w-full min-w-0 space-y-2.5' onContextMenu={(e) => e.preventDefault()}>
       <div
-        className={cn(winChromeSunken, 'calendar-led flex min-w-0 items-center justify-between gap-3 px-3 py-2.5')}
+        className={cn(
+          winChromeSunken,
+          'flex min-w-0 items-center justify-between gap-3 px-3 py-2.5',
+          'bg-[#07101f] text-accent dark:bg-[#050a14]',
+          '[text-shadow:0_0_10px_color-mix(in_srgb,var(--accent)_50%,transparent)]',
+          'shadow-[inset_2px_2px_0_rgba(0,0,0,0.55),inset_-1px_-1px_0_rgba(255,255,255,0.08)]',
+        )}
         aria-label={t('liveTime')}
       >
         <div className='flex min-w-0 items-end gap-1.5'>
-          <span className='calendar-led-digits'>{led.time}</span>
+          <span className="font-['Seven_Segmentiments',ui-monospace,monospace] text-[1.55rem] leading-none tracking-[0.08em] tabular-nums">
+            {led.time}
+          </span>
           {led.period ? (
             <span className='mb-0.5 shrink-0 text-[10px] font-bold leading-none opacity-80'>{led.period}</span>
           ) : null}
@@ -204,13 +211,47 @@ export function CalendarModalContent() {
             noted: notedDates,
             weekend: { dayOfWeek: [0, 6] },
           }}
-          className='rdp-win95 w-full min-w-0'
+          className='w-full min-w-0'
           classNames={{
-            root: 'rdp-root rdp-win95-root w-full min-w-0',
+            root: 'relative box-border w-full min-w-0 text-on-chrome',
+            months: 'relative flex w-full max-w-none',
+            month: 'w-full',
+            month_caption: 'hidden',
+            month_grid: 'w-full border-collapse table-fixed',
+            weekday:
+              'h-[1.65rem] w-[calc(100%/7)] px-0 py-1 text-center align-middle text-[10px] font-bold tracking-wide text-muted',
+            day: 'h-[2.15rem] w-[calc(100%/7)] p-px text-center align-middle',
+            day_button: cn(
+              'relative m-0 flex h-full w-full cursor-pointer appearance-none items-center justify-center rounded-none',
+              'border border-transparent bg-transparent p-0 text-[11px] font-semibold leading-none text-on-chrome',
+              'hover:bg-[color-mix(in_srgb,var(--window-title-active)_16%,transparent)]',
+            ),
+            selected: cn(
+              '[&_button]:border-[var(--window-title-active)] [&_button]:bg-[var(--window-title-active)]',
+              '[&_button]:font-extrabold [&_button]:text-[var(--window-title-text)] [&_button]:shadow-none',
+              '[&_button]:hover:bg-[var(--window-title-active)] [&_button]:hover:brightness-110',
+            ),
+            today:
+              '[&:not([data-selected])_button]:font-extrabold [&:not([data-selected])_button]:shadow-[inset_0_0_0_2px_var(--window-title-active)]',
+            focused: cn(
+              '[&:not([data-selected])_button]:outline [&:not([data-selected])_button]:outline-1',
+              '[&:not([data-selected])_button]:outline-dotted [&:not([data-selected])_button]:outline-[var(--text-on-chrome)]',
+              '[&:not([data-selected])_button]:outline-offset-[-3px]',
+            ),
+            outside: 'opacity-[0.38]',
+            disabled: 'opacity-30',
+            hidden: 'invisible',
           }}
           modifiersClassNames={{
-            noted: 'rdp-day-noted',
-            weekend: 'rdp-day-weekend',
+            noted: cn(
+              '[&_button]:after:pointer-events-none [&_button]:after:absolute [&_button]:after:bottom-[3px] [&_button]:after:left-1/2',
+              '[&_button]:after:h-1 [&_button]:after:w-1 [&_button]:after:-translate-x-1/2 [&_button]:after:rounded-full',
+              '[&_button]:after:bg-accent [&_button]:after:content-[""]',
+              '[&_button]:after:shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent-border)_55%,transparent)]',
+              '[&[data-selected]_button]:after:bg-[var(--window-title-text)] [&[data-selected]_button]:after:shadow-none',
+            ),
+            weekend:
+              '[&:not([data-selected])_button]:text-[#b4232c] dark:[&:not([data-selected])_button]:text-[#f0a0a6]',
           }}
         />
       </div>
