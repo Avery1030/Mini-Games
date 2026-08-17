@@ -16,10 +16,12 @@ export type Cell = {
 
 export type Position = { row: number; col: number }
 
+export type GameMessageKey = 'start' | 'playing' | 'won' | 'lost'
+
 export type GameState = {
   board: Cell[][]
   status: GameStatus
-  message: string
+  messageKey: GameMessageKey
   startTime: number | null
   elapsed: number
   remainingMines: number
@@ -340,7 +342,7 @@ function applyAutoFlagMines(board: Cell[][]): void {
 export class MinesweeperGame {
   private board: Cell[][] = []
   private status: GameStatus = 'idle'
-  private message = '点击任意格子开始，一局保证可用逻辑解完。'
+  private messageKey: GameMessageKey = 'start'
   private startTime: number | null = null
   private highlightCells: Position[] = []
   private explodedCell: Position | null = null
@@ -366,7 +368,7 @@ export class MinesweeperGame {
     this.mines = mines
     this.board = createEmptyBoard(rows, cols)
     this.status = 'idle'
-    this.message = '点击任意格子开始，一局保证可用逻辑解完。'
+    this.messageKey = 'start'
     this.startTime = null
     this.highlightCells = []
     this.explodedCell = null
@@ -385,47 +387,6 @@ export class MinesweeperGame {
 
   destroy(): void {
     this.clearTimer()
-  }
-
-  applyLogicStep(): void {
-    if (this.status !== 'playing') return
-    const working = cloneBoard(this.board)
-    const { safe, mines: minePositions } = getDeterministicMoves(working)
-    if (safe.length === 0 && minePositions.length === 0) {
-      this.message = '当前局面已用尽所有确定性推理，理论上这里可能需要猜测。'
-      this.emit()
-      return
-    }
-    let changed = false
-    for (const { row, col } of safe) {
-      const cell = working[row][col]
-      if (!cell.isRevealed && !cell.isMine) {
-        revealFlood(working, row, col)
-        changed = true
-      }
-    }
-    for (const { row, col } of minePositions) {
-      const cell = working[row][col]
-      if (!cell.isFlagged) {
-        cell.isFlagged = true
-        changed = true
-      }
-    }
-    if (!changed) {
-      this.message = '逻辑助手尝试了一步，但局面未发生变化。'
-      this.emit()
-      return
-    }
-    this.board = working
-    const totalSafe = this.rows * this.cols - this.mines
-    if (countRevealedSafe(working) === totalSafe) {
-      this.status = 'won'
-      this.message = '恭喜，无猜通关！'
-      this.clearTimer()
-    } else {
-      this.message = '已自动应用一轮确定性逻辑。'
-    }
-    this.emit()
   }
 
   handleRightClick(row: number, col: number): void {
@@ -460,7 +421,7 @@ export class MinesweeperGame {
         if (n.isMine) {
           n.isRevealed = true
           this.status = 'lost'
-          this.message = '很遗憾，这局还是踩雷了（不过理论上是可以无猜通关的）'
+          this.messageKey = 'lost'
           this.explodedCell = { row: n.row, col: n.col }
           this.board.flat().forEach((c) => {
             if (c.isMine) c.isRevealed = true
@@ -474,10 +435,10 @@ export class MinesweeperGame {
       const totalSafe = this.rows * this.cols - this.mines
       if (countRevealedSafe(this.board) === totalSafe) {
         this.status = 'won'
-        this.message = '恭喜，无猜通关！'
+        this.messageKey = 'won'
         this.clearTimer()
       } else {
-        this.message = '逻辑可解局面已生成，祝你好运！'
+        this.messageKey = 'playing'
       }
       applyAutoFlagMines(this.board)
       this.emit()
@@ -489,7 +450,7 @@ export class MinesweeperGame {
     if (this.status === 'idle') {
       this.board = generateNoGuessBoard(this.rows, this.cols, this.mines, { row, col })
       this.status = 'playing'
-      this.message = '逻辑可解局面已生成，祝你好运！'
+      this.messageKey = 'playing'
       this.startTime = Date.now()
       this.startTimer()
     }
@@ -498,7 +459,7 @@ export class MinesweeperGame {
     if (clicked.isMine) {
       clicked.isRevealed = true
       this.status = 'lost'
-      this.message = '很遗憾，这局还是踩雷了（不过理论上是可以无猜通关的）'
+      this.messageKey = 'lost'
       this.explodedCell = { row, col }
       this.board.flat().forEach((c) => {
         if (c.isMine) c.isRevealed = true
@@ -513,7 +474,7 @@ export class MinesweeperGame {
     const totalSafe = this.rows * this.cols - this.mines
     if (countRevealedSafe(this.board) === totalSafe) {
       this.status = 'won'
-      this.message = '恭喜，无猜通关！'
+      this.messageKey = 'won'
       this.clearTimer()
     }
     this.emit()
@@ -538,7 +499,7 @@ export class MinesweeperGame {
     return {
       board: this.board,
       status: this.status,
-      message: this.message,
+      messageKey: this.messageKey,
       startTime: this.startTime,
       elapsed,
       remainingMines,
@@ -562,7 +523,7 @@ export function getInitialGameState(config: { rows: number; cols: number; mines:
   return {
     board,
     status: 'idle',
-    message: '点击任意格子开始，一局保证可用逻辑解完。',
+    messageKey: 'start',
     startTime: null,
     elapsed: 0,
     remainingMines: config.mines,

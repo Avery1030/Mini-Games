@@ -1150,5 +1150,24 @@
     "noStock": "没有剩余牌可发",
     "lostTitle": "游戏失败",
     "lostHint": "没有有效移动且无法继续发牌。用时 {time}，共 {moves} 步，得分 {score}"
+  },
+  "minesweeper": {
+    "basic": "初级",
+    "intermediate": "中级",
+    "expert": "专家",
+    "fullscreen": "满屏",
+    "custom": "自定义",
+    "cols": "横",
+    "rows": "竖",
+    "mines": "雷",
+    "apply": "确定",
+    "restart": "重新开始",
+    "boardLabel": "扫雷棋盘",
+    "minesLeft": "剩余地雷",
+    "time": "用时",
+    "start": "点击任意格子开始。本局可用逻辑解完。",
+    "playing": "局面可用逻辑解完，祝你好运！",
+    "won": "恭喜，无猜通关！",
+    "lost": "踩到地雷了。这局理论上可以无猜通关。"
   }
 }

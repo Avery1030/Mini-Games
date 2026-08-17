@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { type Difficulty, type GameState, getInitialGameState, PRESETS, MinesweeperGame } from './minesweeper-game'
 
 const CELL_SIZE = 22
@@ -15,12 +16,15 @@ const NUMBER_COLORS: Record<number, string> = {
   8: '#808080',
 }
 
+const DIFFICULTIES: Difficulty[] = ['basic', 'intermediate', 'expert', 'fullscreen', 'custom']
+
 export interface MinesweeperProps {
   /** 嵌入弹窗内时为 true，去掉全屏最小高度 */
   embedded?: boolean
 }
 
 export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
+  const t = useTranslations('minesweeper')
   const [difficulty, setDifficulty] = useState<Difficulty>('basic')
   const [customInputs, setCustomInputs] = useState({ rows: 32, cols: 32, mines: 250 })
 
@@ -48,7 +52,6 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
     return () => window.clearTimeout(t)
   }, [state.highlightCells])
 
-  const game = gameRef.current
   const boardRows = state.board.length
   const boardCols = state.board[0]?.length ?? 0
   const highlightSet = useMemo(
@@ -248,7 +251,7 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
       <div className='flex w-full shrink-0 flex-col items-center gap-2 px-3 pt-3 pb-1'>
         <div className='max-w-full overflow-x-auto'>
           <div className='flex w-max border border-[#808080]'>
-            {(['basic', 'intermediate', 'expert', 'fullscreen', 'custom'] as const).map((d) => (
+            {DIFFICULTIES.map((d) => (
               <button
                 key={d}
                 type='button'
@@ -257,11 +260,7 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
                   difficulty === d ? 'bg-[#c0c0c0] font-medium' : 'bg-[#e0e0e0] hover:bg-[#d0d0d0]'
                 }`}
               >
-                {d === 'basic' && '基础'}
-                {d === 'intermediate' && '中级'}
-                {d === 'expert' && '专家'}
-                {d === 'fullscreen' && '满屏'}
-                {d === 'custom' && '自定义'}
+                {t(d)}
               </button>
             ))}
           </div>
@@ -270,7 +269,7 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
         {difficulty === 'custom' && (
           <div className='flex flex-wrap items-center justify-center gap-2 px-3 py-2 border border-[#808080] bg-[#c0c0c0]'>
             <label className='flex items-center gap-1 text-sm'>
-              横
+              {t('cols')}
               <input
                 type='number'
                 value={customInputs.cols}
@@ -279,7 +278,7 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
               />
             </label>
             <label className='flex items-center gap-1 text-sm'>
-              竖
+              {t('rows')}
               <input
                 type='number'
                 value={customInputs.rows}
@@ -288,7 +287,7 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
               />
             </label>
             <label className='flex items-center gap-1 text-sm'>
-              雷
+              {t('mines')}
               <input
                 type='number'
                 value={customInputs.mines}
@@ -301,7 +300,7 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
               onClick={applyCustom}
               className='px-3 py-1 border border-[#808080] bg-[#e0e0e0] text-sm hover:bg-[#d0d0d0]'
             >
-              确定
+              {t('apply')}
             </button>
           </div>
         )}
@@ -319,6 +318,7 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
               border: '2px solid #9e9e9e',
               boxShadow: 'inset 0 0 4px rgba(0,0,0,0.5)',
             }}
+            aria-label={`${t('minesLeft')} ${state.remainingMines}`}
           >
             {String(state.remainingMines).padStart(3, '0')}
           </div>
@@ -326,7 +326,7 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
             type='button'
             onClick={resetGame}
             className='w-9 h-9 flex items-center justify-center text-2xl border-2 border-t-[#808080] border-l-[#808080] border-r-[#fff] border-b-[#fff] bg-[#c0c0c0] hover:bg-[#d0d0d0] active:border-t-[#fff] active:border-l-[#fff] active:border-r-[#808080] active:border-b-[#808080]'
-            title='重新开始'
+            title={t('restart')}
           >
             {smileyIcon()}
           </button>
@@ -339,6 +339,7 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
               border: '2px solid #9e9e9e',
               boxShadow: 'inset 0 0 4px rgba(0,0,0,0.5)',
             }}
+            aria-label={`${t('time')} ${state.elapsed}`}
           >
             {String(state.elapsed).padStart(3, '0')}
           </div>
@@ -359,6 +360,8 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
             width={boardPixelW}
             height={boardRows * CELL_SIZE}
             className='block'
+            role='img'
+            aria-label={t('boardLabel')}
             onMouseDown={handleCanvasMouseDown}
             onMouseUp={handleCanvasMouseUp}
             onMouseMove={handleCanvasMouseMove}
@@ -368,17 +371,7 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
         </div>
       </div>
 
-      <div className='flex shrink-0 flex-col items-center gap-1 px-3 pt-2 pb-3'>
-        <button
-          type='button'
-          onClick={() => game?.applyLogicStep()}
-          className='px-3 py-1 text-sm border border-[#808080] bg-[#e0e0e0] hover:bg-[#d0d0d0] disabled:opacity-50 disabled:cursor-not-allowed'
-          disabled={state.status !== 'playing'}
-        >
-          逻辑助手（无猜一步）
-        </button>
-        <p className='text-xs text-[#606060] max-w-md text-center'>{state.message}</p>
-      </div>
+      <p className='shrink-0 px-3 pt-2 pb-3 text-center text-xs text-[#606060]'>{t(state.messageKey)}</p>
     </div>
   )
 }

@@ -1150,5 +1150,24 @@
     "noStock": "配る札が残っていません",
     "lostTitle": "失敗",
     "lostHint": "有効な移動もなく、配る札もありません。時間 {time}、{moves} 手、得点 {score}"
+  },
+  "minesweeper": {
+    "basic": "初級",
+    "intermediate": "中級",
+    "expert": "上級",
+    "fullscreen": "全面",
+    "custom": "カスタム",
+    "cols": "幅",
+    "rows": "高さ",
+    "mines": "地雷",
+    "apply": "OK",
+    "restart": "やり直す",
+    "boardLabel": "マインスイーパー盤面",
+    "minesLeft": "残り地雷",
+    "time": "時間",
+    "start": "マスをクリックして開始。この盤面は推理だけで解けます。",
+    "playing": "推理だけで解ける盤面です。がんばって！",
+    "won": "推理だけでクリアしました！",
+    "lost": "地雷を踏みました。この盤面は推理だけで解けるはずです。"
   }
 }

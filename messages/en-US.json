@@ -1150,5 +1150,24 @@
     "noStock": "No cards left to deal",
     "lostTitle": "Game over",
     "lostHint": "No useful moves and no cards left to deal. Time {time}, {moves} moves, score {score}"
+  },
+  "minesweeper": {
+    "basic": "Beginner",
+    "intermediate": "Intermediate",
+    "expert": "Expert",
+    "fullscreen": "Full",
+    "custom": "Custom",
+    "cols": "Width",
+    "rows": "Height",
+    "mines": "Mines",
+    "apply": "OK",
+    "restart": "Restart",
+    "boardLabel": "Minesweeper board",
+    "minesLeft": "Mines left",
+    "time": "Time",
+    "start": "Click any cell to start. This board can be solved without guessing.",
+    "playing": "Solvable without guessing. Good luck!",
+    "won": "You cleared the board without guessing!",
+    "lost": "You hit a mine. This board was solvable without guessing."
   }
 }
