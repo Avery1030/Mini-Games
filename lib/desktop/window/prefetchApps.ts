@@ -12,6 +12,7 @@ const GAME_PREFETCH_IDS: readonly DesktopAppId[] = [
   'canvasJigsaw',
   'sokoban',
   'sudoku',
+  'spider',
 ]
 
 /** 较大依赖，空闲预取时靠后 */

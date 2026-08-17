@@ -27,7 +27,8 @@
     "ide": "代码编辑器",
     "sokoban": "推箱子",
     "sudoku": "数独",
-    "match3": "消消乐"
+    "match3": "消消乐",
+    "spider": "蜘蛛纸牌"
   },
   "desktop": {
     "open": "打开",
@@ -1128,5 +1129,26 @@
     "lost": "失败",
     "lostHint": "步数用尽且未达目标",
     "playAgain": "再试一次"
+  },
+  "spider": {
+    "newGame": "新游戏",
+    "deal": "发牌",
+    "undo": "撤销",
+    "hint": "提示",
+    "difficulty": "难度",
+    "diff1": "初级 · 单花色",
+    "diff2": "中级 · 双花色",
+    "diff3": "高级 · 三花色",
+    "diff4": "专家 · 四花色",
+    "stats": "步数 {moves} · 用时 {time} · 得分 {score}",
+    "boardLabel": "蜘蛛纸牌牌面",
+    "wonTitle": "游戏胜利",
+    "wonHint": "用时 {time}，共 {moves} 步，得分 {score}",
+    "playAgain": "再来一局",
+    "noHint": "当前没有有效移动",
+    "dealBlocked": "发牌前每一列都需要至少一张牌",
+    "noStock": "没有剩余牌可发",
+    "lostTitle": "游戏失败",
+    "lostHint": "没有有效移动且无法继续发牌。用时 {time}，共 {moves} 步，得分 {score}"
   }
 }

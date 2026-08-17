@@ -27,7 +27,8 @@
     "ide": "Code Editor",
     "sokoban": "Sokoban",
     "sudoku": "Sudoku",
-    "match3": "Match-3"
+    "match3": "Match-3",
+    "spider": "Spider Solitaire"
   },
   "desktop": {
     "open": "Open",
@@ -1128,5 +1129,26 @@
     "lost": "Failed",
     "lostHint": "Out of moves before the target",
     "playAgain": "Try again"
+  },
+  "spider": {
+    "newGame": "New game",
+    "deal": "Deal",
+    "undo": "Undo",
+    "hint": "Hint",
+    "difficulty": "Difficulty",
+    "diff1": "Beginner · 1 suit",
+    "diff2": "Intermediate · 2 suits",
+    "diff3": "Advanced · 3 suits",
+    "diff4": "Expert · 4 suits",
+    "stats": "Moves {moves} · Time {time} · Score {score}",
+    "boardLabel": "Spider Solitaire tableau",
+    "wonTitle": "You win",
+    "wonHint": "Time {time}, {moves} moves, score {score}",
+    "playAgain": "Play again",
+    "noHint": "No useful moves right now",
+    "dealBlocked": "Every column needs at least one card before dealing",
+    "noStock": "No cards left to deal",
+    "lostTitle": "Game over",
+    "lostHint": "No useful moves and no cards left to deal. Time {time}, {moves} moves, score {score}"
   }
 }

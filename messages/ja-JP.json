@@ -27,7 +27,8 @@
     "ide": "コードエディタ",
     "sokoban": "倉庫番",
     "sudoku": "数独",
-    "match3": "マッチ3"
+    "match3": "マッチ3",
+    "spider": "スパイダー"
   },
   "desktop": {
     "open": "開く",
@@ -1128,5 +1129,26 @@
     "lost": "失敗",
     "lostHint": "手数切れ",
     "playAgain": "もう一度"
+  },
+  "spider": {
+    "newGame": "新しいゲーム",
+    "deal": "配る",
+    "undo": "元に戻す",
+    "hint": "ヒント",
+    "difficulty": "難易度",
+    "diff1": "初級 · 1スート",
+    "diff2": "中級 · 2スート",
+    "diff3": "上級 · 3スート",
+    "diff4": "エキスパート · 4スート",
+    "stats": "手数 {moves} · 時間 {time} · 得点 {score}",
+    "boardLabel": "スパイダーの場札",
+    "wonTitle": "クリア",
+    "wonHint": "時間 {time}、{moves} 手、得点 {score}",
+    "playAgain": "もう一度",
+    "noHint": "有効な移動がありません",
+    "dealBlocked": "配る前にすべての列に札が必要です",
+    "noStock": "配る札が残っていません",
+    "lostTitle": "失敗",
+    "lostHint": "有効な移動もなく、配る札もありません。時間 {time}、{moves} 手、得点 {score}"
   }
 }
