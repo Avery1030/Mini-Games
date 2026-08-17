@@ -4,7 +4,9 @@
  */
 import {
   AppWindow,
+  Blocks,
   BookOpenText,
+  Bomb,
   Bot,
   Box,
   Calculator,
@@ -14,8 +16,6 @@ import {
   CodeXml,
   FileText,
   Folder,
-  Gamepad,
-  Gamepad2,
   Grid3x3,
   HardDrive,
   ImageIcon,
@@ -42,7 +42,7 @@ registerBuiltinApps([
   },
   {
     id: 'minesweeper',
-    icon: Gamepad,
+    icon: Bomb,
     defaultCoordinate: [1, 1],
     width: 420,
     height: 560,
@@ -52,7 +52,7 @@ registerBuiltinApps([
   },
   {
     id: 'tetris',
-    icon: Gamepad2,
+    icon: Blocks,
     defaultCoordinate: [1, 2],
     width: 560,
     height: 640,
