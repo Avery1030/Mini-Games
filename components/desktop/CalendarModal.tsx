@@ -9,10 +9,13 @@ import { Button, openModal, Select, type SelectOption } from '@/components/ui'
 import { useSettingsStore } from '@/store/settings'
 import { dateKeyFromDate, useCalendarStore } from '@/store/calendar'
 import { cn } from '@/lib/cn'
+import { winChromeSunken } from '@/lib/winChrome'
 import { dateFnsLocale, dayPickerLocale, intlLocale } from '@/lib/i18n/dateLocales'
 import 'react-day-picker/style.css'
 
 export const CALENDAR_MODAL_ID = 'taskbar-calendar'
+
+const NOTE_MAX = 500
 
 function buildYearOptions(centerYear: number): SelectOption[] {
   const nowYear = new Date().getFullYear()
@@ -32,22 +35,20 @@ function buildMonthOptions(locale: string, dateLocale: ReturnType<typeof dateFns
   })
 }
 
-function formatLiveClock(formatMode: '12h' | '24h', date: Date, locale: string): string {
+function formatLedParts(formatMode: '12h' | '24h', date: Date, locale: string) {
   const tag = intlLocale(locale)
-  if (formatMode === '24h') {
-    return date.toLocaleTimeString(tag, {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    })
-  }
-  return date.toLocaleTimeString(tag, {
-    hour: 'numeric',
+  const parts = new Intl.DateTimeFormat(tag, {
+    hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    hour12: true,
-  })
+    hour12: formatMode === '12h',
+  }).formatToParts(date)
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? ''
+  const pad = (value: string) => value.padStart(2, '0')
+  return {
+    time: `${pad(get('hour'))}:${get('minute')}:${get('second')}`,
+    period: get('dayPeriod'),
+  }
 }
 
 /** 日历弹窗主体：选日、今天、实时钟、按日备注 */
@@ -88,6 +89,8 @@ export function CalendarModalContent() {
   const monthOptions = useMemo(() => buildMonthOptions(locale, dateLocale), [locale, dateLocale])
 
   const dirty = draft.trim() !== savedNote.trim()
+  const selectedIsToday = isSameDay(selected, now)
+  const led = formatLedParts(clockFormat, now, locale)
 
   const persistDraftFor = (dateKey: string, text: string) => {
     setNote(dateKey, text)
@@ -121,13 +124,28 @@ export function CalendarModalContent() {
     weekday: format(selected, 'EEEE', { locale: dateLocale }),
   })
 
+  const nowWeekday = format(now, 'EEEE', { locale: dateLocale })
+  const nowDateShort =
+    locale === 'zh-CN' || locale === 'ja-JP'
+      ? format(now, 'yyyy年M月d日', { locale: dateLocale })
+      : format(now, 'MMM d, yyyy', { locale: dateLocale })
+
   return (
-    <div className='font-pixel space-y-2' onContextMenu={(e) => e.preventDefault()}>
+    <div className='font-pixel w-full min-w-0 space-y-2.5' onContextMenu={(e) => e.preventDefault()}>
       <div
-        className='px-2 py-1.5 text-center text-[13px] font-bold tabular-nums bg-field text-on-chrome border-2 border-t-chrome-dark border-l-chrome-dark border-r-chrome-light border-b-chrome-light'
+        className={cn(winChromeSunken, 'calendar-led flex min-w-0 items-center justify-between gap-3 px-3 py-2.5')}
         aria-label={t('liveTime')}
       >
-        {formatLiveClock(clockFormat, now, locale)}
+        <div className='flex min-w-0 items-end gap-1.5'>
+          <span className='calendar-led-digits'>{led.time}</span>
+          {led.period ? (
+            <span className='mb-0.5 shrink-0 text-[10px] font-bold leading-none opacity-80'>{led.period}</span>
+          ) : null}
+        </div>
+        <div className='shrink-0 text-right leading-tight'>
+          <div className='text-[11px] font-bold tracking-wide'>{nowWeekday}</div>
+          <div className='mt-0.5 text-[10px] opacity-80'>{nowDateShort}</div>
+        </div>
       </div>
 
       <div className='flex items-center gap-1'>
@@ -163,85 +181,82 @@ export function CalendarModalContent() {
         >
           <ChevronRight size={14} />
         </Button>
-        <Button size='sm' className='shrink-0 px-2' onClick={goToday}>
+        <Button size='sm' className='shrink-0 px-2 font-bold' onClick={goToday}>
           {t('todayBtn')}
         </Button>
       </div>
 
-      <DayPicker
-        mode='single'
-        locale={calendarLocale}
-        month={month}
-        onMonthChange={setMonth}
-        selected={selected}
-        today={now}
-        onSelect={(d) => {
-          if (!d) return
-          selectDay(d)
-        }}
-        showOutsideDays
-        hideNavigation
-        modifiers={{ noted: notedDates }}
-        className='rdp-win95'
-        classNames={{
-          root: 'rdp-win95-root',
-          months: 'flex flex-col',
-          month: 'w-full',
-          month_caption: 'hidden',
-          month_grid: 'w-full border-collapse',
-          weekdays: 'flex',
-          weekday: 'w-8 h-6 text-[10px] font-bold text-center text-on-chrome opacity-80',
-          week: 'flex',
-          day: 'w-8 h-8 p-0 text-[11px]',
-          day_button:
-            'relative w-8 h-8 m-0 p-0 text-[11px] border border-transparent bg-transparent text-on-chrome cursor-pointer',
-          selected: cn(
-            '!bg-[var(--window-title-active)]',
-            '[&_button]:!bg-[var(--window-title-active)]',
-            '[&_button]:!text-[var(--window-title-text)]',
-            '[&_button]:!border-[var(--window-title-active)]',
-            '[&_button]:font-bold',
-          ),
-          today: cn(
-            '[&_button]:font-bold',
-            '[&_button]:underline',
-            '[&_button]:decoration-2',
-            '[&_button]:decoration-accent',
-            '[&_button]:underline-offset-2',
-          ),
-          outside: 'opacity-40',
-          disabled: 'opacity-30',
-        }}
-        modifiersClassNames={{
-          noted: 'rdp-day-noted',
-        }}
-      />
-
-      <div className='px-2 py-1.5 text-[11px] tabular-nums bg-field text-on-chrome border-2 border-t-chrome-dark border-l-chrome-dark border-r-chrome-light border-b-chrome-light'>
-        {t('selected', { date: dateFull })}
-        {isSameDay(selected, now) ? ` · ${t('isToday')}` : ''}
+      <div className={cn(winChromeSunken, 'w-full min-w-0 bg-field p-1.5')}>
+        <DayPicker
+          mode='single'
+          locale={calendarLocale}
+          month={month}
+          onMonthChange={setMonth}
+          selected={selected}
+          today={now}
+          onSelect={(d) => {
+            if (!d) return
+            selectDay(d)
+          }}
+          showOutsideDays
+          hideNavigation
+          modifiers={{
+            noted: notedDates,
+            weekend: { dayOfWeek: [0, 6] },
+          }}
+          className='rdp-win95 w-full min-w-0'
+          classNames={{
+            root: 'rdp-root rdp-win95-root w-full min-w-0',
+          }}
+          modifiersClassNames={{
+            noted: 'rdp-day-noted',
+            weekend: 'rdp-day-weekend',
+          }}
+        />
       </div>
 
-      <div className='space-y-1.5'>
-        <label className='block text-[11px] font-bold' htmlFor='calendar-day-note'>
+      <div
+        className={cn(
+          winChromeSunken,
+          'flex items-center gap-2 bg-status-bar px-2 py-1.5 text-[11px] leading-snug text-status-bar-fg',
+        )}
+      >
+        <span className='min-w-0 flex-1 truncate tabular-nums text-on-chrome'>{t('selected', { date: dateFull })}</span>
+        {selectedIsToday ? (
+          <span className='shrink-0 border border-accent-border bg-accent px-1 py-px text-[10px] font-bold leading-none text-on-chrome'>
+            {t('isToday')}
+          </span>
+        ) : null}
+      </div>
+
+      <div className='relative pt-1.5'>
+        <label
+          htmlFor='calendar-day-note'
+          className='absolute -top-0.5 left-2 z-[1] bg-chrome px-1 text-[11px] font-bold'
+        >
           {t('note')}
         </label>
-        <textarea
-          id='calendar-day-note'
-          value={draft}
-          onChange={(e) => setDraft(e.target.value.slice(0, 500))}
-          onBlur={saveDraft}
-          placeholder={t('notePlaceholder')}
-          rows={3}
-          className={cn(
-            'w-full resize-none px-2 py-1.5 text-[11px] font-pixel text-on-chrome bg-field outline-none',
-            'border-2 border-t-chrome-dark border-l-chrome-dark border-r-chrome-light border-b-chrome-light',
-          )}
-        />
-        <div className='flex justify-end'>
-          <Button size='sm' className='px-3' disabled={!dirty} onClick={saveDraft}>
-            {t('save')}
-          </Button>
+        <div className={cn(winChromeSunken, 'space-y-1.5 p-2 pt-3')}>
+          <textarea
+            id='calendar-day-note'
+            value={draft}
+            onChange={(e) => setDraft(e.target.value.slice(0, NOTE_MAX))}
+            onBlur={saveDraft}
+            placeholder={t('notePlaceholder')}
+            rows={3}
+            className={cn(
+              'w-full resize-none px-2 py-1.5 text-[11px] font-pixel text-on-chrome bg-field outline-none',
+              winChromeSunken,
+            )}
+          />
+          <div className='flex items-center justify-between gap-2'>
+            <span className='tabular-nums text-[10px] text-muted'>
+              {draft.length}/{NOTE_MAX}
+            </span>
+            <Button size='sm' className='px-3' disabled={!dirty} onClick={saveDraft}>
+              {t('save')}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -254,7 +269,7 @@ export function openCalendarModal(title: string) {
     title,
     dismissible: true,
     showClose: true,
-    widthClassName: 'w-[min(340px,calc(100vw-2rem))]',
+    widthClassName: 'w-[min(372px,calc(100vw-2rem))]',
     content: <CalendarModalContent />,
   })
 }

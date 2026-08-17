@@ -354,16 +354,115 @@ svg.lucide[width='56'] {
   animation: toast-slide-out 240ms cubic-bezier(0.4, 0, 1, 0.4) both;
 }
 
-/* 日历：跟随桌面 chrome，避免默认浅色变量干扰暗色主题 */
+/* 日历：跟随桌面 chrome，铺满弹窗并覆盖 DayPicker 默认圆角/固定宽 */
 .rdp-win95-root {
   --rdp-accent-color: var(--window-title-active);
   --rdp-accent-background-color: color-mix(in srgb, var(--window-title-active) 18%, transparent);
-  --rdp-today-color: var(--accent);
+  --rdp-today-color: inherit;
+  --rdp-day-height: 2.15rem;
+  --rdp-day-width: calc(100% / 7);
+  --rdp-day_button-height: 100%;
+  --rdp-day_button-width: 100%;
+  --rdp-day_button-border-radius: 0;
+  --rdp-day_button-border: 1px solid transparent;
+  --rdp-selected-border: none;
+  --rdp-outside-opacity: 0.38;
+  --rdp-weekday-opacity: 1;
+  --rdp-weekday-padding: 0.28rem 0;
+  --rdp-animation_duration: 0s;
+  width: 100%;
   color: var(--text-on-chrome);
 }
 
-/* 有备注的日期：格子底部小圆点 */
-.rdp-win95 .rdp-day-noted button::after {
+.rdp-win95-root .rdp-months,
+.rdp-win95-root .rdp-month,
+.rdp-win95-root .rdp-month_grid {
+  width: 100%;
+  max-width: none;
+}
+
+.rdp-win95-root .rdp-month_caption {
+  display: none;
+}
+
+.rdp-win95-root .rdp-month_grid {
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.rdp-win95-root .rdp-weekday {
+  height: 1.65rem;
+  width: calc(100% / 7);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  opacity: 1;
+  vertical-align: middle;
+}
+
+.rdp-win95-root .rdp-day {
+  width: calc(100% / 7);
+  height: var(--rdp-day-height);
+  padding: 1px;
+  vertical-align: middle;
+}
+
+.rdp-win95-root .rdp-day_button {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-on-chrome);
+}
+
+.rdp-win95-root .rdp-day_button:hover {
+  background: color-mix(in srgb, var(--window-title-active) 16%, transparent);
+}
+
+.rdp-win95-root .rdp-focused:not(.rdp-selected) .rdp-day_button {
+  outline: 1px dotted var(--text-on-chrome);
+  outline-offset: -3px;
+}
+
+.rdp-win95-root .rdp-today:not(.rdp-selected) .rdp-day_button {
+  box-shadow: inset 0 0 0 2px var(--window-title-active);
+  font-weight: 800;
+}
+
+.rdp-win95-root .rdp-selected {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.rdp-win95-root .rdp-selected .rdp-day_button,
+.rdp-win95-root .rdp-selected.rdp-today .rdp-day_button {
+  background: var(--window-title-active);
+  color: var(--window-title-text);
+  border-color: var(--window-title-active);
+  font-weight: 800;
+  box-shadow: none;
+}
+
+.rdp-win95-root .rdp-selected .rdp-day_button:hover {
+  background: var(--window-title-active);
+  filter: brightness(1.12);
+}
+
+.rdp-win95-root .rdp-day-weekend:not(.rdp-selected) .rdp-day_button {
+  color: #b4232c;
+}
+
+.dark .rdp-win95-root .rdp-day-weekend:not(.rdp-selected) .rdp-day_button {
+  color: #f0a0a6;
+}
+
+.rdp-win95 .rdp-day-noted .rdp-day_button::after {
   content: '';
   position: absolute;
   left: 50%;
@@ -373,10 +472,34 @@ svg.lucide[width='56'] {
   margin-left: -2px;
   border-radius: 50%;
   background: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-border) 55%, transparent);
 }
-.rdp-win95 .rdp-selected.rdp-day-noted button::after,
-.rdp-win95 .rdp-day-noted.rdp-selected button::after {
+
+.rdp-win95 .rdp-selected.rdp-day-noted .rdp-day_button::after,
+.rdp-win95 .rdp-day-noted.rdp-selected .rdp-day_button::after {
   background: var(--window-title-text);
+  box-shadow: none;
+}
+
+.calendar-led {
+  background: #07101f;
+  color: var(--accent);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 50%, transparent);
+  box-shadow:
+    inset 2px 2px 0 rgba(0, 0, 0, 0.55),
+    inset -1px -1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.dark .calendar-led {
+  background: #050a14;
+}
+
+.calendar-led-digits {
+  font-family: 'Seven Segmentiments', ui-monospace, monospace;
+  font-size: 1.55rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ========== Avery Mini OS 全局滚动条 ========== */

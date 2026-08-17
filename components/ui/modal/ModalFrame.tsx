@@ -59,7 +59,7 @@ export function ModalFrame({
         className={cn(
           winChrome,
           'relative flex flex-col shadow-[4px_4px_0_rgba(0,0,0,0.35)] font-pixel',
-          'hover:bg-chrome',
+          'hover:bg-chrome box-border min-w-0 max-w-full shrink-0',
           widthClassName,
         )}
       >
