@@ -1,6 +1,7 @@
 import {
   COLS,
   COMPLETE_BONUS,
+  COMPLETE_RUNS,
   DEAL_SIZE,
   RUN_LEN,
   START_SCORE,
@@ -75,10 +76,10 @@ function recomputeScore(moves: number, completed: number): number {
 }
 
 function copiesForDifficulty(difficulty: Difficulty): number[] {
-  if (difficulty === 1) return [8]
-  if (difficulty === 2) return [4, 4]
-  if (difficulty === 3) return [3, 3, 2]
-  return [2, 2, 2, 2]
+  if (difficulty === 1) return [12]
+  if (difficulty === 2) return [6, 6]
+  if (difficulty === 3) return [4, 4, 4]
+  return [3, 3, 3, 3]
 }
 
 /**
@@ -149,7 +150,7 @@ export function newGame(difficulty: Difficulty, seed = Date.now()): SpiderState 
   const tableau: Card[][] = Array.from({ length: COLS }, () => [])
   for (let round = 0; round < 6; round++) {
     for (let col = 0; col < COLS; col++) {
-      if (round === 5 && col >= 4) continue
+      if (round === 5 && col >= 6) continue
       const card = deck.pop()
       if (!card) throw new Error('deck underflow')
       tableau[col]!.push(card)
@@ -234,19 +235,14 @@ export function collectCompleted(state: SpiderState): { state: SpiderState; runs
       start = findCompleteRunStart(col)
     }
   }
-  next.won = next.completed.length === 8
+  next.won = next.completed.length === COMPLETE_RUNS
   next.lost = false
   next.score = recomputeScore(next.moves, next.completed.length)
   if (!next.won) next.lost = !hasUsefulMove(next) && !canDeal(next)
   return { state: next, runs }
 }
 
-export function placeMove(
-  state: SpiderState,
-  fromCol: number,
-  fromIndex: number,
-  toCol: number,
-): SpiderState | null {
+export function placeMove(state: SpiderState, fromCol: number, fromIndex: number, toCol: number): SpiderState | null {
   if (state.won || state.lost) return null
   if (fromCol === toCol) return null
   const src = state.tableau[fromCol]
@@ -269,12 +265,7 @@ export function placeMove(
   return next
 }
 
-export function applyMove(
-  state: SpiderState,
-  fromCol: number,
-  fromIndex: number,
-  toCol: number,
-): SpiderState | null {
+export function applyMove(state: SpiderState, fromCol: number, fromIndex: number, toCol: number): SpiderState | null {
   const placed = placeMove(state, fromCol, fromIndex, toCol)
   if (!placed) return null
   const { state: next } = collectCompleted(placed)
@@ -311,12 +302,7 @@ export function applyDeal(state: SpiderState): SpiderState | null {
   return next
 }
 
-export function isUsefulMove(
-  state: SpiderState,
-  fromCol: number,
-  fromIndex: number,
-  toCol: number,
-): boolean {
+export function isUsefulMove(state: SpiderState, fromCol: number, fromIndex: number, toCol: number): boolean {
   if (fromCol === toCol) return false
   const src = state.tableau[fromCol]
   const dest = state.tableau[toCol]

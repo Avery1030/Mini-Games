@@ -29,7 +29,7 @@ import {
   setupHiDpiCanvas,
   type Layout,
 } from './render'
-import { COLS, DIFFICULTIES, type Card, type Difficulty, type HintMove, type SpiderState } from './types'
+import { COLS, DEAL_SIZE, DIFFICULTIES, type Card, type Difficulty, type HintMove, type SpiderState } from './types'
 
 export type SpiderProps = {
   embedded?: boolean
@@ -475,7 +475,7 @@ export function Spider({ embedded = false }: SpiderProps) {
     const cur = stateRef.current
     const layout = layoutRef.current
     if (!canDeal(cur)) {
-      toast.warning(t(cur.stock.length < 10 ? 'noStock' : 'dealBlocked'))
+      toast.warning(t(cur.stock.length < DEAL_SIZE ? 'noStock' : 'dealBlocked'))
       return
     }
     const placed = placeDeal(cur)
@@ -654,7 +654,7 @@ export function Spider({ embedded = false }: SpiderProps) {
     if (pending) handleClick(pending.col, pending.pack)
   }
 
-  const dealsLeft = Math.floor(state.stock.length / 10)
+  const dealsLeft = Math.floor(state.stock.length / DEAL_SIZE)
   const locked = busy || state.won || state.lost
 
   return (

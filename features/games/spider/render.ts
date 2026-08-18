@@ -1,5 +1,5 @@
 import { canPick } from './game'
-import { COLS, type Card, type HintMove, type SpiderState, type Suit } from './types'
+import { COLS, DEAL_SIZE, type Card, type HintMove, type SpiderState, type Suit } from './types'
 
 export type Rect = { x: number; y: number; w: number; h: number }
 
@@ -380,7 +380,7 @@ export function drawSpider(ctx: CanvasRenderingContext2D, state: SpiderState, la
     ctx.setLineDash([])
   }
 
-  const dealsLeft = Math.floor(Math.max(0, state.stock.length - (extras.stockPending ?? 0)) / 10)
+  const dealsLeft = Math.floor(Math.max(0, state.stock.length - (extras.stockPending ?? 0)) / DEAL_SIZE)
   const stockCardW = Math.min(cardW, 34)
   const stockCardH = Math.min(cardH, 48)
   const stockY = layout.stock.y - stockCardH + layout.stock.h

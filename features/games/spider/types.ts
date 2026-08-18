@@ -31,7 +31,9 @@ export type HintMove = {
 
 export const COLS = 10
 export const RUN_LEN = 13
-export const TOTAL_CARDS = 104
+/** 完整 A–K 组数（也是通关所需收牌次数） */
+export const COMPLETE_RUNS = 12
+export const TOTAL_CARDS = COMPLETE_RUNS * RUN_LEN
 export const DEAL_SIZE = 10
 export const START_SCORE = 500
 export const COMPLETE_BONUS = 100
