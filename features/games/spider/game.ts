@@ -81,21 +81,66 @@ function copiesForDifficulty(difficulty: Difficulty): number[] {
   return [2, 2, 2, 2]
 }
 
+/**
+ * Build the deck from blocks of 13 (one of each rank), so every rank
+ * appears once per block. Small rotations/swaps add randomness without
+ * long droughts or heavy same-rank clumps from a pure shuffle.
+ */
+function distributeBalanced(byRank: Card[][], rng: () => number): Card[] {
+  const copies = byRank[0]!.length
+  const rankOrder = byRank.map((_, i) => i)
+  shuffle(rankOrder, rng)
+
+  const blocks: Card[][] = []
+  for (let copy = 0; copy < copies; copy++) {
+    const block = rankOrder.map((ri) => byRank[ri]![copy]!)
+    const rot = Math.floor(rng() * RUN_LEN)
+    const rotated = block.slice(rot).concat(block.slice(0, rot))
+    // A few adjacent swaps keep local variety without breaking even spread.
+    const swaps = 2 + Math.floor(rng() * 3)
+    for (let s = 0; s < swaps; s++) {
+      const i = Math.floor(rng() * (RUN_LEN - 1))
+      const tmp = rotated[i]!
+      rotated[i] = rotated[i + 1]!
+      rotated[i + 1] = tmp
+    }
+    blocks.push(rotated)
+  }
+
+  // Avoid same-rank touching across block boundaries.
+  for (let b = 1; b < blocks.length; b++) {
+    const prev = blocks[b - 1]!
+    const cur = blocks[b]!
+    const lastRank = prev[prev.length - 1]!.rank
+    if (cur[0]!.rank !== lastRank) continue
+    for (let i = 1; i < cur.length; i++) {
+      if (cur[i]!.rank === lastRank) continue
+      if (i + 1 < cur.length && cur[i + 1]!.rank === lastRank) continue
+      const tmp = cur[0]!
+      cur[0] = cur[i]!
+      cur[i] = tmp
+      break
+    }
+  }
+
+  return blocks.flat()
+}
+
 function buildDeck(difficulty: Difficulty, rng: () => number): Card[] {
   const copies = copiesForDifficulty(difficulty)
-  const deck: Card[] = []
+  const byRank: Card[][] = Array.from({ length: 13 }, () => [])
   let id = 0
   for (let s = 0; s < copies.length; s++) {
     const suit = SUITS[s]!
     const n = copies[s]!
     for (let copy = 0; copy < n; copy++) {
       for (let rank = 1; rank <= 13; rank++) {
-        deck.push({ id: id++, suit, rank: rank as Rank, faceUp: false })
+        byRank[rank - 1]!.push({ id: id++, suit, rank: rank as Rank, faceUp: false })
       }
     }
   }
-  shuffle(deck, rng)
-  return deck
+  for (const pile of byRank) shuffle(pile, rng)
+  return distributeBalanced(byRank, rng)
 }
 
 export function newGame(difficulty: Difficulty, seed = Date.now()): SpiderState {
