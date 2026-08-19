@@ -35,7 +35,7 @@ function shuffle<T>(arr: T[], rng: () => number): void {
   }
 }
 
-export function cloneCards(cards: readonly Card[]): Card[] {
+function cloneCards(cards: readonly Card[]): Card[] {
   return cards.map((c) => ({ ...c }))
 }
 
@@ -52,11 +52,11 @@ export function cloneState(state: SpiderState): SpiderState {
   }
 }
 
-export function cardCount(state: SpiderState): number {
+function cardCount(state: SpiderState): number {
   return state.tableau.reduce((n, col) => n + col.length, 0) + state.stock.length + state.completed.length * RUN_LEN
 }
 
-export function inventoryOk(state: SpiderState): boolean {
+function inventoryOk(state: SpiderState): boolean {
   const ids = new Set<number>()
   for (const col of state.tableau) {
     for (const card of col) {
@@ -174,7 +174,7 @@ export function newGame(difficulty: Difficulty, seed = Date.now()): SpiderState 
   return state
 }
 
-export function isSameSuitRun(cards: readonly Card[]): boolean {
+function isSameSuitRun(cards: readonly Card[]): boolean {
   if (cards.length === 0) return false
   if (cards.some((c) => !c.faceUp)) return false
   for (let i = 1; i < cards.length; i++) {
@@ -191,7 +191,7 @@ export function canPick(col: readonly Card[], fromIndex: number): boolean {
   return isSameSuitRun(col.slice(fromIndex))
 }
 
-export function canDrop(moving: readonly Card[], dest: readonly Card[]): boolean {
+function canDrop(moving: readonly Card[], dest: readonly Card[]): boolean {
   if (moving.length === 0) return false
   if (dest.length === 0) return true
   const top = dest[dest.length - 1]
@@ -206,7 +206,7 @@ export type CollectedRun = {
   suit: Suit
 }
 
-export function findCompleteRunStart(col: readonly Card[]): number | null {
+function findCompleteRunStart(col: readonly Card[]): number | null {
   if (col.length < RUN_LEN) return null
   const start = col.length - RUN_LEN
   const run = col.slice(start)
@@ -265,14 +265,6 @@ export function placeMove(state: SpiderState, fromCol: number, fromIndex: number
   return next
 }
 
-export function applyMove(state: SpiderState, fromCol: number, fromIndex: number, toCol: number): SpiderState | null {
-  const placed = placeMove(state, fromCol, fromIndex, toCol)
-  if (!placed) return null
-  const { state: next } = collectCompleted(placed)
-  if (!inventoryOk(next)) return null
-  return next
-}
-
 export function canDeal(state: SpiderState): boolean {
   if (state.won || state.lost) return false
   if (state.stock.length < DEAL_SIZE) return false
@@ -294,15 +286,7 @@ export function placeDeal(state: SpiderState): SpiderState | null {
   return next
 }
 
-export function applyDeal(state: SpiderState): SpiderState | null {
-  const placed = placeDeal(state)
-  if (!placed) return null
-  const { state: next } = collectCompleted(placed)
-  if (!inventoryOk(next)) return null
-  return next
-}
-
-export function isUsefulMove(state: SpiderState, fromCol: number, fromIndex: number, toCol: number): boolean {
+function isUsefulMove(state: SpiderState, fromCol: number, fromIndex: number, toCol: number): boolean {
   if (fromCol === toCol) return false
   const src = state.tableau[fromCol]
   const dest = state.tableau[toCol]
@@ -325,7 +309,7 @@ export function isUsefulMove(state: SpiderState, fromCol: number, fromIndex: num
   return true
 }
 
-export function hasUsefulMove(state: SpiderState): boolean {
+function hasUsefulMove(state: SpiderState): boolean {
   return findHint(state) != null
 }
 

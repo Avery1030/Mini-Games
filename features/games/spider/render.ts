@@ -39,7 +39,7 @@ export function setupHiDpiCanvas(
 export function computeLayout(cssW: number, cssH: number): Layout {
   const padX = 8
   const padT = 6
-  const footer = 40
+  const footer = 52
   const usableW = Math.max(220, cssW - padX * 2)
   const usableH = Math.max(180, cssH - padT - footer)
   const gap = Math.max(2, Math.min(8, usableW * 0.006))
@@ -48,6 +48,12 @@ export function computeLayout(cssW: number, cssH: number): Layout {
   const faceDownDy = Math.max(4, cardH * 0.11)
   const faceUpDy = Math.max(14, cardH * 0.26)
   const colX = Array.from({ length: COLS }, (_, i) => padX + i * (cardW + gap))
+  const miniW = Math.min(cardW, 34)
+  const footerY = cssH - footer + 4
+  const footerH = Math.max(22, footer - 8)
+  // 与经典蜘蛛一致：左下发牌堆，右下收牌区
+  const stockStackW = miniW + 9 * 7
+  const foundStackW = miniW + 11 * 10
   return {
     cssW,
     cssH,
@@ -58,17 +64,45 @@ export function computeLayout(cssW: number, cssH: number): Layout {
     colX,
     tableauY: padT,
     stock: {
-      x: cssW - padX - cardW * 1.35,
-      y: cssH - footer + 4,
-      w: cardW * 1.35,
-      h: Math.max(22, footer - 8),
+      x: padX,
+      y: footerY,
+      w: Math.max(stockStackW, cardW * 1.35),
+      h: footerH,
     },
     foundations: {
-      x: padX,
-      y: cssH - footer + 4,
-      w: cardW * 2.2,
-      h: Math.max(22, footer - 8),
+      x: cssW - padX - Math.max(foundStackW, cardW * 2.2),
+      y: footerY,
+      w: Math.max(foundStackW, cardW * 2.2),
+      h: footerH,
     },
+  }
+}
+
+/** 下方发牌/收牌小牌尺寸（与绘制一致） */
+function footerCardSize(layout: Layout): { w: number; h: number } {
+  return { w: Math.min(layout.cardW, 34), h: Math.min(layout.cardH, 48) }
+}
+
+/** 发牌堆顶牌矩形；dealsLeft 为剩余可发次数 */
+export function stockTopRect(layout: Layout, dealsLeft: number): Rect {
+  const { w, h } = footerCardSize(layout)
+  const i = Math.max(0, dealsLeft - 1)
+  return {
+    x: layout.stock.x + i * 7,
+    y: layout.stock.y - h + layout.stock.h,
+    w,
+    h,
+  }
+}
+
+/** 第 index 组已完成收牌的矩形 */
+export function foundationRect(layout: Layout, index: number): Rect {
+  const { w, h } = footerCardSize(layout)
+  return {
+    x: layout.foundations.x + index * 10,
+    y: layout.foundations.y - h + layout.foundations.h,
+    w,
+    h,
   }
 }
 
@@ -78,12 +112,12 @@ function pileYScale(col: readonly Card[], layout: Layout): number {
   for (let i = 0; i < col.length - 1; i++) {
     extra += col[i]?.faceUp ? layout.faceUpDy : layout.faceDownDy
   }
-  const maxH = Math.max(layout.cardH + 8, layout.cssH - layout.tableauY - 44)
+  const maxH = Math.max(layout.cardH + 8, layout.cssH - layout.tableauY - 56)
   if (extra + layout.cardH <= maxH) return 1
   return Math.max(0.32, (maxH - layout.cardH) / extra)
 }
 
-export function columnCardY(col: readonly Card[], index: number, layout: Layout): number {
+function columnCardY(col: readonly Card[], index: number, layout: Layout): number {
   const scale = pileYScale(col, layout)
   let y = layout.tableauY
   for (let i = 0; i < index; i++) {
@@ -123,8 +157,13 @@ export function hitTestCard(
 }
 
 export function hitTestStock(layout: Layout, x: number, y: number): boolean {
-  const s = layout.stock
-  return x >= s.x && x <= s.x + s.w && y >= s.y && y <= s.y + s.h
+  const r = stockTopRect(layout, 1)
+  // 覆盖整叠发牌区与 footer 热区
+  const x0 = layout.stock.x
+  const x1 = layout.stock.x + layout.stock.w
+  const y0 = Math.min(r.y, layout.stock.y)
+  const y1 = layout.stock.y + layout.stock.h
+  return x >= x0 && x <= x1 && y >= y0 && y <= y1
 }
 
 /** 点到某列牌面、空列占位或列宽范围内的空白，返回列号 */
@@ -182,7 +221,14 @@ function suitColor(suit: Suit): string {
   return isRedSuit(suit) ? '#e31c23' : '#111111'
 }
 
-function drawSuit(ctx: CanvasRenderingContext2D, suit: Suit, cx: number, cy: number, s: number, color = suitColor(suit)) {
+function drawSuit(
+  ctx: CanvasRenderingContext2D,
+  suit: Suit,
+  cx: number,
+  cy: number,
+  s: number,
+  color = suitColor(suit),
+) {
   ctx.save()
   ctx.fillStyle = color
   ctx.font = `${Math.max(8, s * 1.78)}px "Times New Roman", "STIX Two Text", "Apple Symbols", "Segoe UI Symbol", serif`
@@ -200,7 +246,7 @@ function rankLabel(rank: number): string {
   return String(rank)
 }
 
-export function drawCardBack(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+function drawCardBack(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
   roundRect(ctx, x, y, w, h, 5)
   ctx.fillStyle = '#0d5c4c'
   ctx.fill()
@@ -236,9 +282,9 @@ export function drawCardBack(ctx: CanvasRenderingContext2D, x: number, y: number
   drawSuit(ctx, 'spades', x + w / 2, y + h / 2, Math.min(w, h) * 0.22, '#062e26')
 }
 
-export type Highlight = false | 'hint' | 'active'
+type Highlight = false | 'hint' | 'active'
 
-export function drawCardFace(
+function drawCardFace(
   ctx: CanvasRenderingContext2D,
   card: Card,
   x: number,
@@ -285,7 +331,7 @@ export function drawCardFace(
   ctx.textBaseline = 'alphabetic'
 }
 
-export function drawCard(
+function drawCard(
   ctx: CanvasRenderingContext2D,
   card: Card,
   x: number,
@@ -308,11 +354,62 @@ export function drawCard(
 export type DrawExtras = {
   hiddenIds: ReadonlySet<number>
   ghost?: { cards: Card[]; x: number; y: number }
-  flights?: { card: Card; x: number; y: number; scale?: number }[]
+  flights?: { card: Card; x: number; y: number; scale?: number; faceUp?: boolean }[]
   hint?: HintMove | null
   active?: { col: number; index: number } | null
   flip?: { id: number; scaleX: number; showFace: boolean }
   stockPending?: number
+}
+
+let logoImage: HTMLImageElement | null = null
+let logoLoadStarted = false
+const logoReadyListeners: Array<() => void> = []
+
+/** 预加载背景蜘蛛 Logo（透明 PNG，无蛛网） */
+export function preloadSpiderLogo(): void {
+  if (typeof Image === 'undefined' || logoLoadStarted) return
+  logoLoadStarted = true
+  const img = new Image()
+  img.decoding = 'async'
+  img.onload = () => {
+    logoImage = img
+    while (logoReadyListeners.length) logoReadyListeners.shift()?.()
+  }
+  img.onerror = () => {
+    logoLoadStarted = false
+  }
+  img.src = '/games/spider-logo.png'
+}
+
+export function onSpiderLogoReady(fn: () => void): () => void {
+  if (logoImage?.complete) {
+    fn()
+    return () => {}
+  }
+  logoReadyListeners.push(fn)
+  return () => {
+    const i = logoReadyListeners.indexOf(fn)
+    if (i >= 0) logoReadyListeners.splice(i, 1)
+  }
+}
+
+function drawGameLogo(ctx: CanvasRenderingContext2D, layout: Layout) {
+  preloadSpiderLogo()
+  const img = logoImage
+  if (!img?.complete || img.naturalWidth <= 0) return
+
+  const maxW = Math.min(layout.cssW * 0.42, 280)
+  const maxH = Math.min(layout.cssH * 0.42, 220)
+  const scale = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight)
+  const w = img.naturalWidth * scale
+  const h = img.naturalHeight * scale
+  const x = (layout.cssW - w) / 2
+  const y = layout.cssH * 0.42 - h / 2
+
+  ctx.save()
+  ctx.globalAlpha = 0.22
+  ctx.drawImage(img, x, y, w, h)
+  ctx.restore()
 }
 
 export function drawSpider(ctx: CanvasRenderingContext2D, state: SpiderState, layout: Layout, extras: DrawExtras) {
@@ -322,6 +419,8 @@ export function drawSpider(ctx: CanvasRenderingContext2D, state: SpiderState, la
   ctx.fillRect(0, 0, cssW, cssH)
   ctx.fillStyle = 'rgba(0,0,0,0.08)'
   for (let i = 0; i < cssW; i += 8) ctx.fillRect(i, 0, 4, cssH)
+
+  drawGameLogo(ctx, layout)
 
   const hintIds = new Set<number>()
   if (extras.hint) {
@@ -381,8 +480,7 @@ export function drawSpider(ctx: CanvasRenderingContext2D, state: SpiderState, la
   }
 
   const dealsLeft = Math.floor(Math.max(0, state.stock.length - (extras.stockPending ?? 0)) / DEAL_SIZE)
-  const stockCardW = Math.min(cardW, 34)
-  const stockCardH = Math.min(cardH, 48)
+  const { w: stockCardW, h: stockCardH } = footerCardSize(layout)
   const stockY = layout.stock.y - stockCardH + layout.stock.h
   if (dealsLeft === 0) {
     roundRect(ctx, layout.stock.x, stockY, stockCardW, stockCardH, 5)
@@ -394,18 +492,19 @@ export function drawSpider(ctx: CanvasRenderingContext2D, state: SpiderState, la
     drawCardBack(ctx, layout.stock.x + i * 7, stockY, stockCardW, stockCardH)
   }
 
+  const { w: foundW, h: foundH } = footerCardSize(layout)
+  if (state.completed.length === 0) {
+    const slot = foundationRect(layout, 0)
+    roundRect(ctx, slot.x, slot.y, foundW, foundH, 5)
+    ctx.strokeStyle = 'rgba(255,255,255,0.28)'
+    ctx.lineWidth = 1.5
+    ctx.stroke()
+  }
   for (let i = 0; i < state.completed.length; i++) {
     const suit: Suit = state.completed[i]!
-    const fx = layout.foundations.x + i * 10
+    const slot = foundationRect(layout, i)
     const dummy: Card = { id: -1 - i, suit, rank: 1, faceUp: true }
-    drawCardFace(
-      ctx,
-      dummy,
-      fx,
-      layout.foundations.y - cardH + layout.foundations.h,
-      Math.min(cardW, 34),
-      Math.min(cardH, 48),
-    )
+    drawCardFace(ctx, dummy, slot.x, slot.y, foundW, foundH)
   }
 
   if (extras.ghost) {
@@ -420,7 +519,8 @@ export function drawSpider(ctx: CanvasRenderingContext2D, state: SpiderState, la
   if (extras.flights) {
     for (const f of extras.flights) {
       const s = f.scale ?? 1
-      drawCard(ctx, f.card, f.x, f.y, cardW * s, cardH * s, false, 1, true)
+      const faceUp = f.faceUp ?? true
+      drawCard(ctx, f.card, f.x, f.y, cardW * s, cardH * s, false, 1, faceUp)
     }
   }
 }

@@ -7,6 +7,27 @@ import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { winChromeSunken } from '@/lib/winChrome'
 import {
+  COLLECT_CARD_MS,
+  COLLECT_RUN_GAP,
+  COLLECT_STAGGER,
+  DEAL_CARD_MS,
+  DEAL_STAGGER,
+  DRAG_PX,
+  FLIP_MS,
+  SNAP_MS,
+  UNDO_CARD_MS,
+  buildUndoFlights,
+  createFlightBatch,
+  flippedIdAfter,
+  formatTime,
+  easeOut,
+  isUndoDeal,
+  newlyFlippedId,
+  sampleFlights,
+  type Flight,
+  type FlightBatch,
+} from './anim'
+import {
   canDeal,
   cloneState,
   collectCompleted,
@@ -22,13 +43,18 @@ import {
   computeLayout,
   drawSpider,
   dropColumnAt,
+  foundationRect,
   hitTestCard,
   hitTestColumn,
   hitTestStock,
+  onSpiderLogoReady,
   pickupFromHit,
+  preloadSpiderLogo,
   setupHiDpiCanvas,
+  stockTopRect,
   type Layout,
 } from './render'
+import { playShuffleSound } from './sound'
 import { COLS, DEAL_SIZE, DIFFICULTIES, type Card, type Difficulty, type HintMove, type SpiderState } from './types'
 
 export type SpiderProps = {
@@ -37,14 +63,6 @@ export type SpiderProps = {
 
 const WIN_MODAL_ID = 'spider-win'
 const LOSE_MODAL_ID = 'spider-lose'
-const SNAP_MS = 220
-const FLIP_MS = 200
-const DEAL_CARD_MS = 320
-const DEAL_STAGGER = 42
-const COLLECT_CARD_MS = 420
-const COLLECT_STAGGER = 18
-const COLLECT_RUN_GAP = 160
-const DRAG_PX = 8
 
 type DragPack = {
   col: number
@@ -64,36 +82,6 @@ type PendingPointer = {
 }
 
 type Selection = { col: number; index: number }
-
-function formatTime(sec: number): string {
-  const m = Math.floor(sec / 60)
-  const s = sec % 60
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-}
-
-function easeOut(t: number): number {
-  const u = Math.min(1, Math.max(0, t))
-  return 1 - (1 - u) * (1 - u)
-}
-
-function flippedIdAfter(cur: SpiderState, fromCol: number, fromIndex: number): number | undefined {
-  const uncovered = fromIndex > 0 ? cur.tableau[fromCol]?.[fromIndex - 1] : undefined
-  return uncovered && !uncovered.faceUp ? uncovered.id : undefined
-}
-
-function newlyFlippedId(before: SpiderState, after: SpiderState): number | undefined {
-  const faceUp = new Set<number>()
-  for (const col of after.tableau) {
-    for (const card of col) {
-      if (card.faceUp) faceUp.add(card.id)
-    }
-  }
-  for (const col of before.tableau) {
-    for (const card of col) {
-      if (!card.faceUp && faceUp.has(card.id)) return card.id
-    }
-  }
-}
 
 export function Spider({ embedded = false }: SpiderProps) {
   const t = useTranslations('spider')
@@ -123,18 +111,7 @@ export function Spider({ embedded = false }: SpiderProps) {
     start: number
     onDone: () => void
   } | null>(null)
-  const dealRef = useRef<{
-    flights: { card: Card; x0: number; y0: number; x1: number; y1: number; delay: number }[]
-    start: number
-    total: number
-    onDone: () => void
-  } | null>(null)
-  const collectRef = useRef<{
-    flights: { card: Card; x0: number; y0: number; x1: number; y1: number; delay: number }[]
-    start: number
-    total: number
-    onDone: () => void
-  } | null>(null)
+  const batchRef = useRef<FlightBatch | null>(null)
   const flipRef = useRef<{ id: number; start: number } | null>(null)
   const rafRef = useRef(0)
   const winShownRef = useRef(false)
@@ -144,23 +121,29 @@ export function Spider({ embedded = false }: SpiderProps) {
   stateRef.current = state
   selectedRef.current = selected
 
+  const animating = () =>
+    Boolean(animRef.current || flipRef.current || dragRef.current || batchRef.current)
+
   const pushUndo = useCallback((prev: SpiderState) => {
     setUndoStack((stack) => [...stack, cloneState(prev)])
+  }, [])
+
+  const clearTransient = useCallback(() => {
+    window.cancelAnimationFrame(rafRef.current)
+    rafRef.current = 0
+    dragRef.current = null
+    pendingRef.current = null
+    animRef.current = null
+    batchRef.current = null
+    flipRef.current = null
+    ghostRef.current = null
   }, [])
 
   const restart = useCallback(
     (nextDiff = difficulty) => {
       genRef.current += 1
-      window.cancelAnimationFrame(rafRef.current)
-      rafRef.current = 0
+      clearTransient()
       winShownRef.current = false
-      dragRef.current = null
-      pendingRef.current = null
-      animRef.current = null
-      dealRef.current = null
-      collectRef.current = null
-      flipRef.current = null
-      ghostRef.current = null
       closeModal(WIN_MODAL_ID)
       closeModal(LOSE_MODAL_ID)
       setDifficulty(nextDiff)
@@ -172,7 +155,7 @@ export function Spider({ embedded = false }: SpiderProps) {
       setSelected(null)
       setBusy(false)
     },
-    [difficulty],
+    [clearTransient, difficulty],
   )
 
   const paint = useCallback(() => {
@@ -186,57 +169,39 @@ export function Spider({ embedded = false }: SpiderProps) {
     if (!ctx) return
     const layout = computeLayout(w, h)
     layoutRef.current = layout
-    const drag = dragRef.current
+
     const hidden = new Set<number>()
     let ghost: { cards: Card[]; x: number; y: number } | undefined
+    const drag = dragRef.current
     if (drag && ghostRef.current) {
       for (const c of drag.cards) hidden.add(c.id)
       ghost = { cards: drag.cards, x: ghostRef.current.x, y: ghostRef.current.y }
     }
+
     const anim = animRef.current
     if (anim) {
-      const t0 = easeOut((performance.now() - anim.start) / SNAP_MS)
+      const p = easeOut((performance.now() - anim.start) / SNAP_MS)
       for (const c of anim.cards) hidden.add(c.id)
       ghost = {
         cards: anim.cards,
-        x: anim.x0 + (anim.x1 - anim.x0) * t0,
-        y: anim.y0 + (anim.y1 - anim.y0) * t0,
+        x: anim.x0 + (anim.x1 - anim.x0) * p,
+        y: anim.y0 + (anim.y1 - anim.y0) * p,
       }
     }
-    const flights: { card: Card; x: number; y: number; scale?: number }[] = []
-    const now = performance.now()
-    const deal = dealRef.current
-    if (deal) {
-      for (const f of deal.flights) {
-        hidden.add(f.card.id)
-        const p = easeOut((now - deal.start - f.delay) / DEAL_CARD_MS)
-        flights.push({
-          card: f.card,
-          x: f.x0 + (f.x1 - f.x0) * p,
-          y: f.y0 + (f.y1 - f.y0) * p,
-        })
-      }
+
+    const batch = batchRef.current
+    const flights = batch ? sampleFlights(batch, performance.now(), DEAL_CARD_MS) : []
+    if (batch) {
+      for (const f of batch.flights) hidden.add(f.card.id)
     }
-    const collect = collectRef.current
-    if (collect) {
-      const mini = Math.min(layout.cardW, 34) / layout.cardW
-      for (const f of collect.flights) {
-        hidden.add(f.card.id)
-        const p = easeOut((now - collect.start - f.delay) / COLLECT_CARD_MS)
-        flights.push({
-          card: f.card,
-          x: f.x0 + (f.x1 - f.x0) * p,
-          y: f.y0 + (f.y1 - f.y0) * p,
-          scale: 1 - p * (1 - mini),
-        })
-      }
-    }
+
     let flip: { id: number; scaleX: number; showFace: boolean } | undefined
     if (flipRef.current) {
       const p = Math.min(1, (performance.now() - flipRef.current.start) / FLIP_MS)
       const scaleX = p < 0.5 ? 1 - p * 2 : p * 2 - 1
       flip = { id: flipRef.current.id, scaleX: Math.max(0.04, scaleX), showFace: p >= 0.5 }
     }
+
     drawSpider(ctx, stateRef.current, layout, {
       hiddenIds: hidden,
       ghost,
@@ -244,15 +209,12 @@ export function Spider({ embedded = false }: SpiderProps) {
       hint,
       active: selectedRef.current,
       flip,
-      stockPending: deal ? deal.flights.length : 0,
+      stockPending: batch?.stockPending ?? 0,
     })
   }, [hint])
 
   const paintRef = useRef(paint)
   paintRef.current = paint
-
-  const looping = () =>
-    Boolean(animRef.current || flipRef.current || dragRef.current || dealRef.current || collectRef.current)
 
   const kickLoop = useCallback(() => {
     if (rafRef.current) return
@@ -260,30 +222,42 @@ export function Spider({ embedded = false }: SpiderProps) {
       const now = performance.now()
       const anim = animRef.current
       const flip = flipRef.current
-      const deal = dealRef.current
-      const collect = collectRef.current
+      const batch = batchRef.current
       if (anim && now - anim.start >= SNAP_MS) {
         const done = anim.onDone
         animRef.current = null
         done()
       }
       if (flip && now - flip.start >= FLIP_MS) flipRef.current = null
-      if (deal && now - deal.start >= deal.total) {
-        const done = deal.onDone
-        dealRef.current = null
-        done()
-      }
-      if (collect && now - collect.start >= collect.total) {
-        const done = collect.onDone
-        collectRef.current = null
+      if (batch && now - batch.start >= batch.total) {
+        const done = batch.onDone
+        batchRef.current = null
         done()
       }
       paintRef.current()
-      if (looping()) rafRef.current = window.requestAnimationFrame(loop)
+      if (animating()) rafRef.current = window.requestAnimationFrame(loop)
       else rafRef.current = 0
     }
     rafRef.current = window.requestAnimationFrame(loop)
   }, [])
+
+  const startBatch = useCallback(
+    (flights: Flight[], onDone: () => void, opts?: { stockPending?: number; total?: number; fallbackDuration?: number }) => {
+      const gen = genRef.current
+      setBusy(true)
+      batchRef.current = createFlightBatch(
+        flights,
+        () => {
+          setBusy(false)
+          if (genRef.current !== gen) return
+          onDone()
+        },
+        opts,
+      )
+      kickLoop()
+    },
+    [kickLoop],
+  )
 
   useEffect(() => {
     const wrap = wrapRef.current
@@ -293,6 +267,11 @@ export function Spider({ embedded = false }: SpiderProps) {
     paint()
     return () => ro.disconnect()
   }, [paint])
+
+  useEffect(() => {
+    preloadSpiderLogo()
+    return onSpiderLogoReady(() => paintRef.current())
+  }, [])
 
   useEffect(() => {
     paint()
@@ -339,17 +318,10 @@ export function Spider({ embedded = false }: SpiderProps) {
 
   useEffect(() => {
     return () => {
-      window.cancelAnimationFrame(rafRef.current)
-      rafRef.current = 0
-      animRef.current = null
-      dealRef.current = null
-      collectRef.current = null
-      flipRef.current = null
-      dragRef.current = null
-      pendingRef.current = null
+      clearTransient()
       window.clearTimeout(hintTimerRef.current)
     }
-  }, [])
+  }, [clearTransient])
 
   const commit = useCallback(
     (next: SpiderState, prev: SpiderState, flippedId?: number) => {
@@ -375,36 +347,32 @@ export function Spider({ embedded = false }: SpiderProps) {
         onDone()
         return
       }
-      const destH = Math.min(layout.cardH, 48)
-      const flights: { card: Card; x0: number; y0: number; x1: number; y1: number; delay: number }[] = []
-      let total = 0
+      const mini = foundationRect(layout, 0).w / layout.cardW
+      const flights: Flight[] = []
       runs.forEach((run, ri) => {
         const pile = placed.tableau[run.col] ?? []
-        const x1 = layout.foundations.x + (placed.completed.length + ri) * 10
-        const y1 = layout.foundations.y - destH + layout.foundations.h
+        const dest = foundationRect(layout, placed.completed.length + ri)
         run.cards.forEach((card, i) => {
           const idx = pile.findIndex((c) => c.id === card.id)
-          const r = idx >= 0 ? cardRect(pile, run.col, idx, layout) : { x: x1, y: y1 }
-          const delay = ri * COLLECT_RUN_GAP + i * COLLECT_STAGGER
-          flights.push({ card, x0: r.x, y0: r.y, x1, y1, delay })
-          total = Math.max(total, delay + COLLECT_CARD_MS)
+          const r = idx >= 0 ? cardRect(pile, run.col, idx, layout) : { x: dest.x, y: dest.y }
+          flights.push({
+            card,
+            x0: r.x,
+            y0: r.y,
+            x1: dest.x,
+            y1: dest.y,
+            delay: ri * COLLECT_RUN_GAP + i * COLLECT_STAGGER,
+            scale0: 1,
+            scale1: mini,
+            faceUp: true,
+            duration: COLLECT_CARD_MS,
+          })
         })
       })
-      const gen = genRef.current
-      setBusy(true)
-      collectRef.current = {
-        flights,
-        start: performance.now(),
-        total,
-        onDone: () => {
-          setBusy(false)
-          if (genRef.current !== gen) return
-          onDone()
-        },
-      }
-      kickLoop()
+      playShuffleSound()
+      startBatch(flights, onDone, { fallbackDuration: COLLECT_CARD_MS })
     },
-    [kickLoop],
+    [startBatch],
   )
 
   const finishAction = useCallback(
@@ -424,8 +392,7 @@ export function Spider({ embedded = false }: SpiderProps) {
         kickLoop()
       }
       playCollect(placed, runs, () => {
-        const uncover = newlyFlippedId(placed, next)
-        commit(next, prev, uncover)
+        commit(next, prev, newlyFlippedId(placed, next))
       })
     },
     [commit, kickLoop, playCollect],
@@ -471,7 +438,7 @@ export function Spider({ embedded = false }: SpiderProps) {
   )
 
   const tryDeal = useCallback(() => {
-    if (dealRef.current || animRef.current || collectRef.current) return
+    if (animating()) return
     const cur = stateRef.current
     const layout = layoutRef.current
     if (!canDeal(cur)) {
@@ -485,37 +452,34 @@ export function Spider({ embedded = false }: SpiderProps) {
       return
     }
 
-    const stockCardH = Math.min(layout.cardH, 48)
-    const x0 = layout.stock.x
-    const y0 = layout.stock.y - stockCardH + layout.stock.h
-    const flights = Array.from({ length: COLS }, (_, col) => {
+    const dealsLeft = Math.floor(cur.stock.length / DEAL_SIZE)
+    const from = stockTopRect(layout, dealsLeft)
+    const mini = from.w / layout.cardW
+    const flights: Flight[] = Array.from({ length: COLS }, (_, col) => {
       const card = cur.stock[cur.stock.length - 1 - col]
       const dest = cur.tableau[col] ?? []
       return {
         card: card!,
-        x0,
-        y0,
+        x0: from.x,
+        y0: from.y,
         x1: layout.colX[col] ?? 0,
         y1: cardRect(dest, col, dest.length, layout).y,
         delay: col * DEAL_STAGGER,
+        scale0: mini,
+        scale1: 1,
+        faceUp: true,
+        duration: DEAL_CARD_MS,
       }
     }).filter((f) => f.card)
 
-    const gen = genRef.current
-    setBusy(true)
     setSelected(null)
-    dealRef.current = {
-      flights,
-      start: performance.now(),
+    playShuffleSound()
+    startBatch(flights, () => finishAction(placed, cur), {
+      stockPending: flights.length,
       total: DEAL_CARD_MS + DEAL_STAGGER * (COLS - 1),
-      onDone: () => {
-        setBusy(false)
-        if (genRef.current !== gen) return
-        finishAction(placed, cur)
-      },
-    }
-    kickLoop()
-  }, [finishAction, kickLoop, t])
+      fallbackDuration: DEAL_CARD_MS,
+    })
+  }, [finishAction, startBatch, t])
 
   const tryHint = useCallback(() => {
     const found = findHint(stateRef.current)
@@ -530,22 +494,44 @@ export function Spider({ embedded = false }: SpiderProps) {
   }, [t])
 
   const undo = useCallback(() => {
-    if (dealRef.current || animRef.current || collectRef.current) return
-    setUndoStack((stack) => {
-      if (stack.length === 0) return stack
-      const prev = stack[stack.length - 1]
-      if (prev) {
-        winShownRef.current = false
-        closeModal(WIN_MODAL_ID)
-        closeModal(LOSE_MODAL_ID)
-        setState(cloneState(prev))
-        setRunning(!prev.won && !prev.lost)
-        setHint(null)
-        setSelected(null)
-      }
-      return stack.slice(0, -1)
-    })
-  }, [])
+    if (animating() || busy) return
+    if (undoStack.length === 0) return
+    const prev = undoStack[undoStack.length - 1]
+    if (!prev) return
+
+    const cur = stateRef.current
+    const layout = layoutRef.current
+    const applyPrev = () => {
+      winShownRef.current = false
+      closeModal(WIN_MODAL_ID)
+      closeModal(LOSE_MODAL_ID)
+      const next = cloneState(prev)
+      stateRef.current = next
+      setState(next)
+      setUndoStack((s) => s.slice(0, -1))
+      setRunning(!prev.won && !prev.lost)
+      setHint(null)
+      setSelected(null)
+      setBusy(false)
+    }
+
+    if (!layout) {
+      applyPrev()
+      return
+    }
+
+    const flights = buildUndoFlights(cur, prev, layout)
+    if (flights.length === 0) {
+      applyPrev()
+      return
+    }
+
+    if (isUndoDeal(cur, prev, flights)) playShuffleSound()
+
+    setSelected(null)
+    setHint(null)
+    startBatch(flights, applyPrev, { fallbackDuration: UNDO_CARD_MS })
+  }, [busy, startBatch, undoStack])
 
   const toCanvasPoint = (e: React.PointerEvent | PointerEvent) => {
     const canvas = canvasRef.current
@@ -573,7 +559,7 @@ export function Spider({ embedded = false }: SpiderProps) {
   }
 
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (stateRef.current.won || stateRef.current.lost || animRef.current || dealRef.current || collectRef.current) return
+    if (stateRef.current.won || stateRef.current.lost || animating()) return
     const layout = layoutRef.current
     if (!layout) return
     const p = toCanvasPoint(e)
