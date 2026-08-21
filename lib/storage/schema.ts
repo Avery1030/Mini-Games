@@ -145,6 +145,12 @@ export type StorageSchema = {
       autoClearNotes: boolean
     }
   }>
+  [STORAGE_KEYS.spider]: ZustandPersistEnvelope<{
+    difficulty: 1 | 2 | 3 | 4
+    state: unknown
+    undoStack: unknown[]
+    elapsed: number
+  }>
   [STORAGE_KEYS.lock]: ZustandPersistEnvelope<LockPersistState>
   [STORAGE_KEYS.calendar]: ZustandPersistEnvelope<CalendarPersistState>
   [STORAGE_KEYS.desktopItems]: ZustandPersistEnvelope<DesktopItemsPersistState>

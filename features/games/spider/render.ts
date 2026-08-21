@@ -1,5 +1,5 @@
 import { canPick } from './game'
-import { COLS, DEAL_SIZE, type Card, type HintMove, type SpiderState, type Suit } from './types'
+import { COLS, DEAL_SIZE, type Card, type SpiderState, type Suit } from './types'
 
 export type Rect = { x: number; y: number; w: number; h: number }
 
@@ -51,7 +51,7 @@ export function computeLayout(cssW: number, cssH: number): Layout {
   const miniW = Math.min(cardW, 34)
   const footerY = cssH - footer + 4
   const footerH = Math.max(22, footer - 8)
-  // 与经典蜘蛛一致：左下发牌堆，右下收牌区
+  // 左下收牌区，右下发牌堆
   const stockStackW = miniW + 9 * 7
   const foundStackW = miniW + 11 * 10
   return {
@@ -64,13 +64,13 @@ export function computeLayout(cssW: number, cssH: number): Layout {
     colX,
     tableauY: padT,
     stock: {
-      x: padX,
+      x: cssW - padX - Math.max(stockStackW, cardW * 1.35),
       y: footerY,
       w: Math.max(stockStackW, cardW * 1.35),
       h: footerH,
     },
     foundations: {
-      x: cssW - padX - Math.max(foundStackW, cardW * 2.2),
+      x: padX,
       y: footerY,
       w: Math.max(foundStackW, cardW * 2.2),
       h: footerH,
@@ -282,7 +282,7 @@ function drawCardBack(ctx: CanvasRenderingContext2D, x: number, y: number, w: nu
   drawSuit(ctx, 'spades', x + w / 2, y + h / 2, Math.min(w, h) * 0.22, '#062e26')
 }
 
-type Highlight = false | 'hint' | 'active'
+type Highlight = false | 'active'
 
 function drawCardFace(
   ctx: CanvasRenderingContext2D,
@@ -297,7 +297,7 @@ function drawCardFace(
   ctx.fillStyle = highlight === 'active' ? '#fffceb' : '#fbfaf4'
   ctx.fill()
   ctx.lineWidth = highlight ? 2.6 : 1.25
-  ctx.strokeStyle = highlight === 'active' ? '#ffe14a' : highlight === 'hint' ? '#f5c542' : '#2a2a2a'
+  ctx.strokeStyle = highlight === 'active' ? '#ffe14a' : '#2a2a2a'
   ctx.stroke()
   ctx.strokeStyle = 'rgba(0,0,0,0.08)'
   ctx.lineWidth = 1
@@ -355,7 +355,6 @@ export type DrawExtras = {
   hiddenIds: ReadonlySet<number>
   ghost?: { cards: Card[]; x: number; y: number }
   flights?: { card: Card; x: number; y: number; scale?: number; faceUp?: boolean }[]
-  hint?: HintMove | null
   active?: { col: number; index: number } | null
   flip?: { id: number; scaleX: number; showFace: boolean }
   stockPending?: number
@@ -422,14 +421,6 @@ export function drawSpider(ctx: CanvasRenderingContext2D, state: SpiderState, la
 
   drawGameLogo(ctx, layout)
 
-  const hintIds = new Set<number>()
-  if (extras.hint) {
-    const col = state.tableau[extras.hint.fromCol] ?? []
-    for (let i = extras.hint.fromIndex; i < col.length; i++) {
-      const id = col[i]?.id
-      if (id != null) hintIds.add(id)
-    }
-  }
   const activeIds = new Set<number>()
   if (extras.active) {
     const col = state.tableau[extras.active.col] ?? []
@@ -453,7 +444,7 @@ export function drawSpider(ctx: CanvasRenderingContext2D, state: SpiderState, la
       if (extras.hiddenIds.has(card.id)) continue
       const r = cardRect(pile, c, i, layout)
       const flipping = extras.flip?.id === card.id
-      const mark: Highlight = activeIds.has(card.id) ? 'active' : hintIds.has(card.id) ? 'hint' : false
+      const mark: Highlight = activeIds.has(card.id) ? 'active' : false
       drawCard(
         ctx,
         card,
@@ -466,17 +457,6 @@ export function drawSpider(ctx: CanvasRenderingContext2D, state: SpiderState, la
         flipping ? extras.flip!.showFace : card.faceUp,
       )
     }
-  }
-
-  if (extras.hint) {
-    const dest = state.tableau[extras.hint.toCol] ?? []
-    const slot = cardRect(dest, extras.hint.toCol, dest.length, layout)
-    roundRect(ctx, slot.x - 2, slot.y - 2, slot.w + 4, slot.h + 4, 6)
-    ctx.strokeStyle = '#f5c542'
-    ctx.setLineDash([5, 4])
-    ctx.lineWidth = 2
-    ctx.stroke()
-    ctx.setLineDash([])
   }
 
   const dealsLeft = Math.floor(Math.max(0, state.stock.length - (extras.stockPending ?? 0)) / DEAL_SIZE)

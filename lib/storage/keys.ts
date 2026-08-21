@@ -20,6 +20,8 @@ export const STORAGE_KEYS = {
   sokoban: 'desktop-sokoban',
   /** 数独关卡进度（zustand persist） */
   sudoku: 'desktop-sudoku',
+  /** 蜘蛛纸牌进行中对局（zustand persist） */
+  spider: 'desktop-spider',
   /** 锁屏状态（zustand persist） */
   lock: 'desktop-lock',
   /** 日历按日备注（zustand persist） */

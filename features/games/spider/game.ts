@@ -313,7 +313,7 @@ function hasUsefulMove(state: SpiderState): boolean {
   return findHint(state) != null
 }
 
-export function findHint(state: SpiderState): HintMove | null {
+function findHint(state: SpiderState): HintMove | null {
   if (state.won || state.lost) return null
   const cols = state.tableau
   let fallback: HintMove | null = null
