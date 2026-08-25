@@ -294,10 +294,10 @@ function drawCardFace(
   highlight: Highlight = false,
 ) {
   roundRect(ctx, x, y, w, h, 5)
-  ctx.fillStyle = highlight === 'active' ? '#fffceb' : '#fbfaf4'
+  ctx.fillStyle = highlight === 'active' ? '#eef6ff' : '#fbfaf4'
   ctx.fill()
   ctx.lineWidth = highlight ? 2.6 : 1.25
-  ctx.strokeStyle = highlight === 'active' ? '#ffe14a' : '#2a2a2a'
+  ctx.strokeStyle = highlight === 'active' ? '#4da3ff' : '#2a2a2a'
   ctx.stroke()
   ctx.strokeStyle = 'rgba(0,0,0,0.08)'
   ctx.lineWidth = 1

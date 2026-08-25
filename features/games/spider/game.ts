@@ -238,7 +238,7 @@ export function collectCompleted(state: SpiderState): { state: SpiderState; runs
   next.won = next.completed.length === COMPLETE_RUNS
   next.lost = false
   next.score = recomputeScore(next.moves, next.completed.length)
-  if (!next.won) next.lost = !hasUsefulMove(next) && !canDeal(next)
+  if (!next.won) next.lost = !hasLegalMove(next) && !canDeal(next)
   return { state: next, runs }
 }
 
@@ -286,6 +286,22 @@ export function placeDeal(state: SpiderState): SpiderState | null {
   return next
 }
 
+function hasLegalMove(state: SpiderState): boolean {
+  for (let fromCol = 0; fromCol < COLS; fromCol++) {
+    const src = state.tableau[fromCol]!
+    for (let fromIndex = 0; fromIndex < src.length; fromIndex++) {
+      if (!canPick(src, fromIndex)) continue
+      const moving = src.slice(fromIndex)
+      for (let toCol = 0; toCol < COLS; toCol++) {
+        if (fromCol === toCol) continue
+        if (canDrop(moving, state.tableau[toCol]!)) return true
+      }
+    }
+  }
+  return false
+}
+
+/** 提示用：排除无意义重排，优先同花接龙 / 翻牌 / 为发牌填空列 */
 function isUsefulMove(state: SpiderState, fromCol: number, fromIndex: number, toCol: number): boolean {
   if (fromCol === toCol) return false
   const src = state.tableau[fromCol]
@@ -309,11 +325,7 @@ function isUsefulMove(state: SpiderState, fromCol: number, fromIndex: number, to
   return true
 }
 
-function hasUsefulMove(state: SpiderState): boolean {
-  return findHint(state) != null
-}
-
-function findHint(state: SpiderState): HintMove | null {
+export function findHint(state: SpiderState): HintMove | null {
   if (state.won || state.lost) return null
   const cols = state.tableau
   let fallback: HintMove | null = null

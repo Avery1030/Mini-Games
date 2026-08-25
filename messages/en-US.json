@@ -1149,7 +1149,7 @@
     "dealBlocked": "Every column needs at least one card before dealing",
     "noStock": "No cards left to deal",
     "lostTitle": "Game over",
-    "lostHint": "No useful moves and no cards left to deal. Time {time}, {moves} moves, score {score}"
+    "lostHint": "No legal moves and no cards left to deal. Time {time}, {moves} moves, score {score}"
   },
   "minesweeper": {
     "basic": "Beginner",
