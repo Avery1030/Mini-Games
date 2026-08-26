@@ -1,11 +1,22 @@
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getLocale } from 'next-intl/server'
 import { ThemeProvider } from 'next-themes'
-import { ModalHost, ToastHost } from '@/components/ui'
+import { ModalHost, ToastHost, type ModalHostLabels } from '@/components/ui'
 import { STORAGE_KEYS } from '@/lib/storage'
 import './globals.css'
 
 const THEME_STORAGE_KEY = STORAGE_KEYS.theme
+
+function modalLabelsFromMessages(messages: unknown): ModalHostLabels | undefined {
+  if (!messages || typeof messages !== 'object' || !('modal' in messages)) return undefined
+  const modal = (messages as { modal?: unknown }).modal
+  if (!modal || typeof modal !== 'object') return undefined
+  const rec = modal as Record<string, unknown>
+  if (typeof rec.ok !== 'string' || typeof rec.cancel !== 'string' || typeof rec.title !== 'string') {
+    return undefined
+  }
+  return { ok: rec.ok, cancel: rec.cancel, title: rec.title }
+}
 
 export default async function RootLayout({
   children,
@@ -14,6 +25,7 @@ export default async function RootLayout({
 }>) {
   const messages = await getMessages()
   const locale = await getLocale()
+  const modalLabels = modalLabelsFromMessages(messages)
 
   return (
     <html suppressHydrationWarning lang={locale}>
@@ -43,7 +55,7 @@ export default async function RootLayout({
             storageKey={THEME_STORAGE_KEY}
           >
             {children}
-            <ModalHost />
+            <ModalHost labels={modalLabels} />
             <ToastHost />
           </ThemeProvider>
         </NextIntlClientProvider>

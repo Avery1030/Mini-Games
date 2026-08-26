@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { Checkbox, Panel, Select } from '@/components/ui'
-import { useTaskbarSettings } from '@/hooks/settings'
+import { useTaskbarSettings } from '@/features/settings/hooks'
 import { patchSettings } from '@/store/settings'
 
 export function TaskbarSection() {

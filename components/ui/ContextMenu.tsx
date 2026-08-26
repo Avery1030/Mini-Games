@@ -3,8 +3,8 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronRight } from 'lucide-react'
-import { cn } from '@/lib/cn'
-import { winChrome } from '@/lib/winChrome'
+import { cn } from './cn'
+import { winChrome } from './theme'
 
 export type ContextMenuItem = {
   id: string
@@ -24,15 +24,23 @@ export type ContextMenuState = {
 export interface ContextMenuProps {
   menu: ContextMenuState | null
   onClose: () => void
+  /** 贴底预留（如任务栏高度）；由调用方注入 */
+  safeBottom?: number
 }
 
 const MENU_MIN_WIDTH = 140
 /** 高于任务栏(9000) / 开始菜单(10000)，避免被底栏盖住 */
 const MENU_Z = 11000
-/** 任务栏高度约 48px，贴底打开时预留，菜单整体上移 */
-const TASKBAR_SAFE = 48
 
-function SubMenu({ items, onClose }: { items: ContextMenuItem[]; onClose: () => void }) {
+function SubMenu({
+  items,
+  onClose,
+  safeBottom,
+}: {
+  items: ContextMenuItem[]
+  onClose: () => void
+  safeBottom: number
+}) {
   const ref = useRef<HTMLUListElement>(null)
   const [alignBottom, setAlignBottom] = useState(false)
 
@@ -42,15 +50,16 @@ function SubMenu({ items, onClose }: { items: ContextMenuItem[]; onClose: () => 
     if (!el || !parent) return
     const parentRect = parent.getBoundingClientRect()
     const h = el.offsetHeight
-    const bottomLimit = window.innerHeight - TASKBAR_SAFE - 4
+    const bottomLimit = window.innerHeight - safeBottom - 4
     setAlignBottom(parentRect.top + h > bottomLimit)
-  }, [items])
+  }, [items, safeBottom])
 
   return (
     <MenuList
       listRef={ref}
       items={items}
       onClose={onClose}
+      safeBottom={safeBottom}
       className={cn('absolute left-full z-[1] ml-[-2px]', alignBottom ? 'bottom-0 top-auto' : 'top-0')}
     />
   )
@@ -59,12 +68,14 @@ function SubMenu({ items, onClose }: { items: ContextMenuItem[]; onClose: () => 
 function MenuList({
   items,
   onClose,
+  safeBottom,
   className,
   style,
   listRef,
 }: {
   items: ContextMenuItem[]
   onClose: () => void
+  safeBottom: number
   className?: string
   style?: CSSProperties
   listRef?: RefObject<HTMLUListElement | null>
@@ -116,7 +127,9 @@ function MenuList({
               {hasChildren ? <ChevronRight size={14} className='shrink-0 opacity-80' aria-hidden /> : null}
             </button>
 
-            {hasChildren && open && item.children ? <SubMenu items={item.children} onClose={onClose} /> : null}
+            {hasChildren && open && item.children ? (
+              <SubMenu items={item.children} onClose={onClose} safeBottom={safeBottom} />
+            ) : null}
           </li>
         )
       })}
@@ -128,7 +141,7 @@ function MenuList({
  * Win95 风格右键菜单：凸起面板，禁用项变灰不可点；支持一级子菜单。
  * 通过 portal 挂到 body，避免落在带 transform 的窗口内导致 fixed 定位偏移。
  */
-export function ContextMenu({ menu, onClose }: ContextMenuProps) {
+export function ContextMenu({ menu, onClose, safeBottom = 0 }: ContextMenuProps) {
   const ref = useRef<HTMLUListElement>(null)
   const [pos, setPos] = useState({ left: 0, top: 0 })
   const [mounted, setMounted] = useState(false)
@@ -144,12 +157,11 @@ export function ContextMenu({ menu, onClose }: ContextMenuProps) {
     const h = el?.offsetHeight ?? 72
     const pad = 4
     const maxLeft = window.innerWidth - w - pad
-    const bottomLimit = window.innerHeight - TASKBAR_SAFE - pad
+    const bottomLimit = window.innerHeight - safeBottom - pad
     const spaceBelow = bottomLimit - menu.y
     const spaceAbove = menu.y - pad
 
     let left = menu.x
-    // 贴任务栏 / 底部空间不够时向上展开（Win95 任务栏菜单同款）
     let top = menu.y
     if (h > spaceBelow && spaceAbove >= h) {
       top = menu.y - h
@@ -160,7 +172,7 @@ export function ContextMenu({ menu, onClose }: ContextMenuProps) {
     left = Math.max(pad, Math.min(left, maxLeft))
     top = Math.max(pad, Math.min(top, Math.max(pad, bottomLimit - h)))
     setPos({ left, top })
-  }, [menu])
+  }, [menu, safeBottom])
 
   useEffect(() => {
     if (!menu) return
@@ -170,8 +182,6 @@ export function ContextMenu({ menu, onClose }: ContextMenuProps) {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
     }
-    // 下一帧再监听，避免本次右键立刻关掉。
-    // 用 pointerdown：桌面框选/图标拖在 pointerdown 上 preventDefault 会抑制 mousedown。
     const t = window.setTimeout(() => {
       document.addEventListener('pointerdown', onPointer, true)
       document.addEventListener('keydown', onKey)
@@ -190,6 +200,7 @@ export function ContextMenu({ menu, onClose }: ContextMenuProps) {
       listRef={ref}
       items={menu.items}
       onClose={onClose}
+      safeBottom={safeBottom}
       className='fixed select-none'
       style={{ left: pos.left, top: pos.top, zIndex: MENU_Z }}
     />,

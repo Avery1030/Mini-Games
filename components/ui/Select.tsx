@@ -1,8 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
-import { cn } from '@/lib/cn'
-import { winChrome, winChromePanel, winChromeSunken } from '@/lib/winChrome'
+import { cn } from './cn'
+import { winChrome, winChromePanel, winChromeSunken } from './theme'
 
 export type SelectSize = 'sm' | 'md'
 

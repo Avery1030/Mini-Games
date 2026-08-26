@@ -29,9 +29,9 @@ async function rehydrateAllStores(): Promise<void> {
     import('@/store/desktopItems'),
     import('@/store/window'),
     import('@/store/settings'),
-    import('@/store/notepad'),
-    import('@/store/paint'),
-    import('@/store/klineChart'),
+    import('@/features/notepad/store'),
+    import('@/features/paint/store'),
+    import('@/features/kline-chart/store'),
     import('@/store/calendar'),
   ])
 

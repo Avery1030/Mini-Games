@@ -1,6 +1,6 @@
 import { type HTMLAttributes, type ReactNode } from 'react'
-import { cn } from '@/lib/cn'
-import { winChromeSunken } from '@/lib/winChrome'
+import { cn } from './cn'
+import { winChromeSunken } from './theme'
 
 export interface PanelProps extends HTMLAttributes<HTMLDivElement> {
   children?: ReactNode

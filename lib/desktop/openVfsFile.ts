@@ -1,8 +1,8 @@
 import { getExtension, vfs } from '@/lib/vfs'
 import { isImagePath } from '@/features/image-viewer/api'
 import { isIdeExplorerOpenPath } from '@/features/ide/languages'
-import { useImageViewerStore } from '@/store/imageViewer'
-import { useNotepadStore } from '@/store/notepad'
+import { useImageViewerStore } from '@/features/image-viewer/store'
+import { useNotepadStore } from '@/features/notepad/store'
 import { requestOpenNote } from '@/features/notepad/pendingOpen'
 import { openIdeFile } from '@/lib/desktop/window/ideWindows'
 

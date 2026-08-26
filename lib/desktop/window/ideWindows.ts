@@ -80,11 +80,11 @@ export class IdeEditorWindow extends DesktopWindow {
   readonly id: DesktopAppId
   readonly icon = CodeXml
   readonly defaultCoordinate: DesktopCoordinate = [4, 1]
-  readonly width = 720
-  readonly height = 520
-  readonly showInStartMenu = false
-  readonly showOnDesktop = false
-  title: string
+  override readonly width = 720
+  override readonly height = 520
+  override readonly showInStartMenu = false
+  override readonly showOnDesktop = false
+  override title: string
   filePath: string | null
   dirty = false
   readonly windowKind = 'ide-editor' as const
@@ -202,12 +202,12 @@ export class HtmlPreviewWindow extends DesktopWindow {
   readonly id: DesktopAppId
   readonly icon = Globe
   readonly defaultCoordinate: DesktopCoordinate = [5, 1]
-  readonly width = 640
-  readonly height = 480
-  readonly showInStartMenu = false
-  readonly showOnDesktop = false
+  override readonly width = 640
+  override readonly height = 480
+  override readonly showInStartMenu = false
+  override readonly showOnDesktop = false
   readonly windowKind = 'html-preview' as const
-  title: string
+  override title: string
   html: string
   revision = 0
   private deferred: DeferredApp | null = null

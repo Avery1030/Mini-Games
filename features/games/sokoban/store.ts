@@ -13,17 +13,22 @@ export type LevelProgress = {
 type SokobanProgressState = {
   /** key = levelId 字符串 */
   levels: Record<string, LevelProgress>
+}
+
+interface SokobanProgressActions {
   recordClear: (levelId: number, moves: number, minMoves: number | null) => StarCount
   getStars: (levelId: number) => number
   isUnlocked: (catalog: number[], levelId: number) => boolean
   nextUnlockedId: (catalog: number[], levelId: number) => number | null
 }
 
+export type SokobanProgressStore = SokobanProgressState & SokobanProgressActions
+
 function isCleared(levels: Record<string, LevelProgress>, levelId: number): boolean {
   return (levels[String(levelId)]?.stars ?? 0) >= 1
 }
 
-export const useSokobanProgressStore = create<SokobanProgressState>()(
+export const useSokobanProgressStore = create<SokobanProgressStore>()(
   persist(
     (set, get) => ({
       levels: {},

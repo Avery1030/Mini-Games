@@ -4,7 +4,7 @@ import { findInterval, findSymbol, OVERLAY_INDICATORS, PANE_INDICATORS, periodTo
 import { applyChartStyles, ensureKlineLocales } from '../chartStyles'
 import { useEffect, useRef, useState } from 'react'
 import type { Chart, DataLoader } from 'klinecharts'
-import { useKlineChartStore } from '@/store'
+import { useKlineChartStore } from '../store'
 import { fetchBarsForLoader, subscribeBinanceKline } from '../binance'
 import { syncCandleOverlay, syncPaneIndicator } from '../indicators'
 

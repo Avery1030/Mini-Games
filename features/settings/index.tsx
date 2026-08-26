@@ -14,7 +14,7 @@ import {
   type WallpaperId,
 } from '@/config/wallpapers'
 import { useSettingsStore } from '@/store/settings'
-import { useWallpaperSettings } from '@/hooks/settings'
+import { useWallpaperSettings } from '@/features/settings/hooks'
 import {
   importWallpaperImageFromUrl,
   listWallpaperImages,
@@ -52,6 +52,7 @@ function draftFromSettings(
 export function SettingsApp({ embedded = false }: SettingsProps = {}) {
   const t = useTranslations('settings')
   const tw = useTranslations('wallpapers')
+  const tm = useTranslations('mobile')
   const isMobile = useIsMobileViewport()
   const [section, setSection] = useState<SectionId>('display')
   /** 窄屏默认先看分区列表；桌面端忽略此状态 */
@@ -231,6 +232,8 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
           minSize={88}
           maxSize={200}
           storageKey='split:settings'
+          isMobile={isMobile}
+          backLabel={tm('backToList')}
           detailOpen={detailOpen}
           onDetailOpenChange={setDetailOpen}
           detailTitle={t(`sections.${section}`)}

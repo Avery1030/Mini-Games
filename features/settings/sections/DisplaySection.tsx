@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { Button, Input, Panel } from '@/components/ui'
 import { WALLPAPERS, WALLPAPER_FIT_MODES, type WallpaperFitMode } from '@/config/wallpapers'
-import { useResolvedMediaUrl } from '@/hooks/useResolvedMediaUrl'
+import { useResolvedMediaUrl } from '@/features/wallpaper'
 import type { WallpaperAsset } from '@/lib/wallpaper'
 import type { WallpaperDraft } from '../types'
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
-import { useSudokuProgressStore } from '@/store'
+import { useSudokuProgressStore } from './store'
 import { getLevel, loadAllLevels } from './parseLevel'
 import { SudokuGame } from './sudoku-game'
 import type { Difficulty, SudokuState } from './types'

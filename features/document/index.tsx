@@ -21,6 +21,7 @@ const DOC_CHANGELOG_PREVIEW = 3
 export function DocumentApp({ embedded = false }: DocumentProps = {}) {
   const t = useTranslations('docs')
   const tc = useTranslations('changelog')
+  const tNav = useTranslations('mobile')
   const locale = useLocale()
   const isMobile = useIsMobileViewport()
   const [activeId, setActiveId] = useState<DocId>('welcome')
@@ -43,6 +44,8 @@ export function DocumentApp({ embedded = false }: DocumentProps = {}) {
           minSize={96}
           maxSize={240}
           storageKey='split:document'
+          isMobile={isMobile}
+          backLabel={tNav('backToList')}
           detailOpen={detailOpen}
           onDetailOpenChange={setDetailOpen}
           detailTitle={title}

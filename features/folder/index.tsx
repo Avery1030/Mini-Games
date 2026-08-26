@@ -11,6 +11,7 @@ import { useDesktopItemsStore, type DesktopItemRecord } from '@/store/desktopIte
 import { useDesktopSelectionStore } from '@/store/desktopSelection'
 import { useFsDragStore } from '@/store/fsDrag'
 import { getChildren } from '@/lib/desktop/itemsTree'
+import { TASKBAR_H } from '@/lib/desktop/windowGeometry'
 import { useWindowStore } from '@/store/window'
 import { useFsListSelection } from '@/hooks/desktop/useFsListSelection'
 import { useInlineItemRename } from '@/hooks/desktop/useInlineItemRename'
@@ -335,7 +336,7 @@ export function FolderApp({ embedded = false, folderTitle, folderId }: FolderApp
       </div>
 
       <MarqueeOverlay rect={marqueeRect} />
-      <ContextMenu menu={contextMenu} onClose={() => setContextMenu(null)} />
+      <ContextMenu menu={contextMenu} onClose={() => setContextMenu(null)} safeBottom={TASKBAR_H} />
     </div>
   )
 }

@@ -27,6 +27,7 @@ import {
 import { isImagePath } from '@/features/image-viewer/api'
 import { isIdeFilePath } from '@/features/ide/languages'
 import { openVfsFile } from '@/lib/desktop/openVfsFile'
+import { TASKBAR_H } from '@/lib/desktop/windowGeometry'
 import { copyVfsFileToDesktop, setVfsImageAsWallpaper } from '@/lib/desktop/vfsFileActions'
 import { useDesktopVfsStore } from '@/store/desktopVfs'
 
@@ -413,7 +414,7 @@ export function FileExplorerApp({ embedded = false }: FileExplorerProps = {}) {
         {t('status', { path: cwd, count: nodes.length })}
       </div>
 
-      <ContextMenu menu={contextMenu} onClose={() => setContextMenu(null)} />
+      <ContextMenu menu={contextMenu} onClose={() => setContextMenu(null)} safeBottom={TASKBAR_H} />
     </div>
   )
 }

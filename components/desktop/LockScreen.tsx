@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { winChrome } from '@/lib/winChrome'
 import { Button, Input } from '@/components/ui'
-import { useDesktopWallpaper } from '@/hooks/desktop'
+import { useDesktopWallpaper } from '@/features/wallpaper'
 import { useLockStore } from '@/store/lock'
 import { toast } from '../ui'
 

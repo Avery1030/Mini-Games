@@ -9,7 +9,7 @@ import { Button, toast } from '@/components/ui'
 import type { DesktopAppId } from '@/config/desktop'
 import { NoteEditor } from '@/features/notepad/NoteEditor'
 import { fetchNote, updateNoteApi } from '@/features/notepad/api'
-import { useNotepadStore } from '@/store/notepad'
+import { useNotepadStore } from '@/features/notepad/store'
 import { useDesktopItemsStore } from '@/store/desktopItems'
 import { getDesktopWindow } from '@/lib/desktop/window'
 

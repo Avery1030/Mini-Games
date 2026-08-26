@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { ChevronLeft, ChevronRight, FolderOpen, Link2, Trash2 } from 'lucide-react'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { Button, Input, MasterDetail, modal, toast } from '@/components/ui'
+import { useIsMobileViewport } from '@/hooks/desktop'
 import {
   fetchImageByPath,
   fetchImageList,
@@ -16,7 +17,7 @@ import { ImagePreviewCarousel, type SlideDirection } from './ImagePreviewCarouse
 import { ImageSidebar } from './ImageSidebar'
 import type { ImageItem } from './types'
 import { cn } from '@/lib/cn'
-import { useImageViewerStore } from '@/store/imageViewer'
+import { useImageViewerStore } from '@/features/image-viewer/store'
 
 const SLIDE_LOCK_MS = 280
 
@@ -32,6 +33,8 @@ type PendingAction = 'upload' | 'import' | 'delete' | null
 export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
   const t = useTranslations('imageViewer')
   const tm = useTranslations('modal')
+  const tNav = useTranslations('mobile')
+  const isMobile = useIsMobileViewport()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [detailOpen, setDetailOpen] = useState(true)
 
@@ -376,6 +379,8 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
         minSize={160}
         maxSize={320}
         storageKey='split:image-viewer'
+        isMobile={isMobile}
+        backLabel={tNav('backToList')}
         detailOpen={detailOpen}
         onDetailOpenChange={setDetailOpen}
         detailTitle={urlPreview ? t('footerUrlPreview') : activeImage?.title}

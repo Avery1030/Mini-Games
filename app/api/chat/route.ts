@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { AI_CHAT_SYSTEM_PROMPT, proxyChatSseStream } from '@/lib/ai-chat'
+import { AI_CHAT_SYSTEM_PROMPT, proxyChatSseStream } from '@/features/ai-chat/lib'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

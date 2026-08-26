@@ -2,9 +2,7 @@
 
 import { Children, type ReactNode } from 'react'
 import { ChevronLeft } from 'lucide-react'
-import { useTranslations } from 'next-intl'
-import { cn } from '@/lib/cn'
-import { useIsMobileViewport } from '@/hooks/desktop'
+import { cn } from './cn'
 import { SplitPane, type SplitPaneProps } from './SplitPane'
 
 export type MasterDetailProps = {
@@ -16,9 +14,11 @@ export type MasterDetailProps = {
    */
   detailOpen: boolean
   onDetailOpenChange: (open: boolean) => void
+  /** 是否按窄屏互斥布局渲染；由调用方注入，组件不读视口 */
+  isMobile: boolean
   /** 窄屏详情顶栏标题 */
   detailTitle?: string
-  /** 窄屏返回按钮文案；默认用 mobile.backToList */
+  /** 窄屏返回按钮文案 */
   backLabel?: string
   /** 是否显示窄屏详情顶栏（返回列表） */
   showMobileBack?: boolean
@@ -33,8 +33,9 @@ export function MasterDetail({
   children,
   detailOpen,
   onDetailOpenChange,
+  isMobile,
   detailTitle,
-  backLabel,
+  backLabel = 'Back',
   showMobileBack = true,
   className,
   defaultSize,
@@ -43,8 +44,6 @@ export function MasterDetail({
   storageKey,
   handleLabel,
 }: MasterDetailProps) {
-  const t = useTranslations('mobile')
-  const isMobile = useIsMobileViewport()
   const items = Children.toArray(children)
   const master = items[0] ?? null
   const detail = items[1] ?? null
@@ -79,7 +78,7 @@ export function MasterDetail({
                 onClick={() => onDetailOpenChange(false)}
               >
                 <ChevronLeft className='size-4 shrink-0' strokeWidth={2.25} aria-hidden />
-                <span className='truncate'>{backLabel ?? t('backToList')}</span>
+                <span className='truncate'>{backLabel}</span>
               </button>
               {detailTitle ? (
                 <span className='min-w-0 flex-1 truncate pr-2 text-right text-[11px] text-muted'>

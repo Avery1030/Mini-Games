@@ -227,7 +227,7 @@ registerBuiltinApps([
     defaultCoordinate: [3, 2],
     width: 1024,
     height: 768,
-    loadApp: () => import('@/features/KlineChartViewer').then((m) => m.KlineChartViewer),
+    loadApp: () => import('@/features/kline-chart').then((m) => m.KlineChartViewer),
   },
   {
     id: 'aiChat',

@@ -6,7 +6,7 @@ import { Button, Select, closeModal, confirmModal, openModal, toast } from '@/co
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { winChromeSunken } from '@/lib/winChrome'
-import { useSpiderStore } from '@/store/spider'
+import { useSpiderStore } from '@/features/games/spider/store'
 import {
   COLLECT_CARD_MS,
   COLLECT_RUN_GAP,

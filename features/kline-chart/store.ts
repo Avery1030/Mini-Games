@@ -11,7 +11,7 @@ import {
   PANE_INDICATORS,
   SYMBOLS,
   type BinanceInterval,
-} from '@/features/KlineChartViewer/constants'
+} from './constants'
 
 const SYMBOL_SET = new Set(SYMBOLS.map((s) => s.ticker))
 const INTERVAL_SET = new Set(INTERVALS.map((i) => i.value))
@@ -38,11 +38,14 @@ function toggleInList(list: string[], name: string): string[] {
   return list.includes(name) ? list.filter((n) => n !== name) : [...list, name]
 }
 
-type KlineChartState = {
+interface KlineChartState {
   symbol: string
   interval: BinanceInterval
   overlays: string[]
   panes: string[]
+}
+
+interface KlineChartActions {
   setSymbol: (symbol: string) => void
   setInterval: (interval: BinanceInterval) => void
   toggleOverlay: (name: string) => void
@@ -51,7 +54,9 @@ type KlineChartState = {
   setPanes: (panes: string[]) => void
 }
 
-export const useKlineChartStore = create<KlineChartState>()(
+export type KlineChartStore = KlineChartState & KlineChartActions
+
+export const useKlineChartStore = create<KlineChartStore>()(
   persist(
     (set) => ({
       symbol: DEFAULT_SYMBOL.ticker,

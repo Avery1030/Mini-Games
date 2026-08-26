@@ -1,18 +1,20 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { STORAGE_KEYS, appStorage } from '@/lib/storage'
-import { cloneState, newGame } from '@/features/games/spider/game'
-import type { Difficulty, SpiderState } from '@/features/games/spider/types'
+import { cloneState, newGame } from './game'
+import type { Difficulty, SpiderState } from './types'
 
 const MAX_UNDO = 40
 
-export type SpiderSessionState = {
+export type SpiderPersistState = {
   difficulty: Difficulty
   /** null 表示尚未开局（水合后 ensureGame 会补齐） */
   state: SpiderState | null
   undoStack: SpiderState[]
   elapsed: number
+}
 
+interface SpiderActions {
   ensureGame: () => SpiderState
   setDifficulty: (d: Difficulty) => void
   setGameState: (state: SpiderState) => void
@@ -22,7 +24,9 @@ export type SpiderSessionState = {
   restart: (difficulty?: Difficulty) => void
 }
 
-export const useSpiderStore = create<SpiderSessionState>()(
+export type SpiderStore = SpiderPersistState & SpiderActions
+
+export const useSpiderStore = create<SpiderStore>()(
   persist(
     (set, get) => ({
       difficulty: 2,
@@ -73,7 +77,7 @@ export const useSpiderStore = create<SpiderSessionState>()(
       name: STORAGE_KEYS.spider,
       version: 1,
       storage: createJSONStorage(() => appStorage.createStateStorage()),
-      partialize: (s) => ({
+      partialize: (s): SpiderPersistState => ({
         difficulty: s.difficulty,
         state: s.state,
         undoStack: s.undoStack.slice(-MAX_UNDO),

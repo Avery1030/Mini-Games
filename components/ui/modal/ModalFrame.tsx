@@ -1,10 +1,10 @@
 'use client'
 
 import { type ReactNode } from 'react'
-import { cn } from '@/lib/cn'
-import { Button } from '@/components/ui/Button'
-import { WinCloseIcon } from '@/components/ui/WindowChromeIcons'
-import { winChrome } from '@/lib/winChrome'
+import { cn } from '../cn'
+import { Button } from '../Button'
+import { WinCloseIcon } from '../WindowChromeIcons'
+import { winChrome } from '../theme'
 import type { ModalAction } from './types'
 
 export interface ModalFrameProps {

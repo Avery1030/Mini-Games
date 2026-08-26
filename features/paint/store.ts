@@ -4,18 +4,23 @@ import { STORAGE_KEYS, appStorage } from '@/lib/storage'
 
 export type PaintTool = 'brush' | 'eraser' | 'line' | 'rect' | 'ellipse'
 
-type PaintState = {
+interface PaintState {
   lastDrawingId: string | null
   tool: PaintTool
   color: string
   brushSize: number
+}
+
+interface PaintActions {
   setLastDrawingId: (id: string | null) => void
   setTool: (tool: PaintTool) => void
   setColor: (color: string) => void
   setBrushSize: (size: number) => void
 }
 
-export const usePaintStore = create<PaintState>()(
+export type PaintStore = PaintState & PaintActions
+
+export const usePaintStore = create<PaintStore>()(
   persist(
     (set) => ({
       lastDrawingId: null,

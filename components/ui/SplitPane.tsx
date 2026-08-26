@@ -1,7 +1,7 @@
 'use client'
 
 import { Children, useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react'
-import { cn } from '@/lib/cn'
+import { cn } from './cn'
 import { isClient } from '@/lib/env'
 
 export type SplitPaneProps = {

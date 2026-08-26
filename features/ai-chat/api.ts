@@ -15,7 +15,7 @@ import {
   type AiChatHistoryPage,
   type AiChatMessage,
   type AiChatSessionMeta,
-} from '@/lib/ai-chat'
+} from '@/features/ai-chat/lib'
 import type { UiMessage } from './types'
 
 export type { AiChatSessionMeta }

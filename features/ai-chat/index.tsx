@@ -19,6 +19,7 @@ export type { AiChatProps } from './types'
  */
 export const AiChatApp = memo(function AiChatApp({ embedded = false }: AiChatProps = {}) {
   const t = useTranslations('aiChat')
+  const tm = useTranslations('mobile')
   const isMobile = useIsMobileViewport()
   const [detailOpen, setDetailOpen] = useState(true)
   const {
@@ -62,6 +63,8 @@ export const AiChatApp = memo(function AiChatApp({ embedded = false }: AiChatPro
           minSize={110}
           maxSize={220}
           storageKey='split:ai-chat'
+          isMobile={isMobile}
+          backLabel={tm('backToList')}
           detailOpen={detailOpen}
           onDetailOpenChange={setDetailOpen}
           detailTitle={activeTitle}

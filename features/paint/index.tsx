@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { Button, Input, MasterDetail, Panel, modal } from '@/components/ui'
 import { useIsMobileViewport } from '@/hooks/desktop'
-import { usePaintStore } from '@/store/paint'
+import { usePaintStore } from '@/features/paint/store'
 import {
   createDrawingApi,
   deleteDrawingApi,
@@ -26,6 +26,7 @@ export interface PaintProps {
 export function PaintApp({ embedded = false }: PaintProps = {}) {
   const t = useTranslations('paint')
   const tm = useTranslations('modal')
+  const tNav = useTranslations('mobile')
   const isMobile = useIsMobileViewport()
   const [detailOpen, setDetailOpen] = useState(true)
   const lastDrawingId = usePaintStore((s) => s.lastDrawingId)
@@ -265,6 +266,8 @@ export function PaintApp({ embedded = false }: PaintProps = {}) {
           minSize={120}
           maxSize={300}
           storageKey='split:paint'
+          isMobile={isMobile}
+          backLabel={tNav('backToList')}
           detailOpen={detailOpen}
           onDetailOpenChange={setDetailOpen}
           detailTitle={title || t('untitled')}

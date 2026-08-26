@@ -24,6 +24,7 @@ import { useDesktopApps, useDesktopHydrated, useTaskbarReorder } from '@/hooks/d
 import { useWindowStore } from '@/store/window'
 import { resolveDesktopItemTitle } from '@/lib/desktop/window'
 import { ContextMenu, type ContextMenuState } from '@/components/ui'
+import { TASKBAR_H } from '@/lib/desktop/windowGeometry'
 import type { DesktopAppId } from '@/config/desktop'
 
 const SCROLL_STEP = 160
@@ -297,7 +298,7 @@ export function DesktopTaskbar() {
         </div>
       </div>
 
-      <ContextMenu menu={contextMenu} onClose={closeContextMenu} />
+      <ContextMenu menu={contextMenu} onClose={closeContextMenu} safeBottom={TASKBAR_H} />
     </footer>
   )
 }

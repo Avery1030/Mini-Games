@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl'
 import { useTheme } from 'next-themes'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
-import { useKlineChartStore } from '@/store'
+import { useKlineChartStore } from './store'
 import { useKlineChart } from './hooks/useKlineChart'
 import { Toolbar } from './Toolbar'
 

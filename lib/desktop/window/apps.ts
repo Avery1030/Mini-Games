@@ -14,12 +14,12 @@ export class TextDocumentWindow extends DesktopWindow {
   readonly id: DesktopAppId
   readonly icon = FileText
   readonly defaultCoordinate: DesktopCoordinate
-  readonly width = 560
-  readonly height = 460
-  readonly kind: DesktopItemKind = 'textDocument'
-  readonly showInStartMenu = false
+  override readonly width = 560
+  override readonly height = 460
+  override readonly kind: DesktopItemKind = 'textDocument'
+  override readonly showInStartMenu = false
   readonly noteId: string
-  title: string
+  override title: string
   private deferred: DeferredApp | null = null
 
   constructor(opts: { id: DesktopAppId; title: string; noteId: string; coordinate?: DesktopCoordinate }) {
@@ -76,11 +76,11 @@ export class FolderWindow extends DesktopWindow {
   readonly id: DesktopAppId
   readonly icon = Folder
   readonly defaultCoordinate: DesktopCoordinate
-  readonly width = 480
-  readonly height = 360
-  readonly kind: DesktopItemKind = 'folder'
-  readonly showInStartMenu = false
-  title: string
+  override readonly width = 480
+  override readonly height = 360
+  override readonly kind: DesktopItemKind = 'folder'
+  override readonly showInStartMenu = false
+  override title: string
   private deferred: DeferredApp | null = null
 
   constructor(opts: { id: DesktopAppId; title: string; coordinate?: DesktopCoordinate }) {

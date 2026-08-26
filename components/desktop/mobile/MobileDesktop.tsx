@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useDesktopWallpaper } from '@/hooks/desktop'
+import { useDesktopWallpaper } from '@/features/wallpaper'
 import { MobileStatusBar } from './MobileStatusBar'
 import { MobileHomeGrid } from './MobileHomeGrid'
 import { MobileDock, MOBILE_DOCK_APP_IDS } from './MobileDock'

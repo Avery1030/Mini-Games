@@ -1,4 +1,4 @@
-import type { AiChatAttachment } from '@/lib/ai-chat'
+import type { AiChatAttachment } from '@/features/ai-chat/lib'
 
 export type AiChatProps = {
   embedded?: boolean

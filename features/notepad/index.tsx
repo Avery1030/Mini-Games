@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { MasterDetail, modal, toast } from '@/components/ui'
 import { useIsMobileViewport } from '@/hooks/desktop'
-import { useNotepadStore } from '@/store/notepad'
+import { useNotepadStore } from '@/features/notepad/store'
 import { createNoteApi, deleteNoteApi, fetchNote, fetchNoteList, updateNoteApi } from './api'
 import { NoteEditor } from './NoteEditor'
 import { NoteSidebar } from './NoteSidebar'
@@ -20,6 +20,7 @@ export interface NotepadProps {
 export function NotepadApp({ embedded = false }: NotepadProps = {}) {
   const t = useTranslations('notepad')
   const tm = useTranslations('modal')
+  const tNav = useTranslations('mobile')
   const isMobile = useIsMobileViewport()
   const [detailOpen, setDetailOpen] = useState(true)
   const lastNoteId = useNotepadStore((s) => s.lastNoteId)
@@ -220,6 +221,8 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
           minSize={120}
           maxSize={320}
           storageKey='split:notepad'
+          isMobile={isMobile}
+          backLabel={tNav('backToList')}
           detailOpen={detailOpen}
           onDetailOpenChange={setDetailOpen}
           detailTitle={title || t('untitled')}

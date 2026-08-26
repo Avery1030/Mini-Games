@@ -1,0 +1,78 @@
+---
+# 项目基础上下文
+project_name: win95‑web‑desktop
+tech_stack:
+  - Next.js App Router (typescript)
+  - React 19
+  - TailwindCSS
+  - Canvas2D 小游戏
+  - i18n国际化
+  - 状态管理 store
+project_description: 仿Windows95网页桌面side‑project，包含窗口系统、VFS虚拟文件系统、一批单机Canvas小游戏、虚拟宠物、电子书阅读器。未来会将components/ui剥离为独立开源跨端UI库。
+
+# 全局强制规则
+global_rules:
+  - 禁止删除、大规模重写现有业务逻辑，优先增量修改；重构前先输出迁移方案，不要直接覆盖代码。
+  - 严格使用TypeScript，禁止any，尽量补全类型；优先interface/type定义，不使用// @ts‑ignore。
+  - 不随意新增npm依赖，新增包必须先说明理由。
+  - App Router路由文件夹（app/**/*）路由结构禁止随意改动。
+  - 代码尽量最小化，拒绝冗余AI样板代码。
+  - 遇到复杂逻辑，先输出思路，再写代码。
+
+# 目录架构强制约束（最重要，防止AI乱放文件）
+directory_spec:
+  app: Next.js路由层，只放页面、layout、api，业务逻辑不要写在这里。
+  components/ui: 【通用无业务UI组件】按钮、弹窗、窗口、右键菜单，与桌面业务解耦，未来抽离独立UI库，禁止写业务state、业务hook。
+  components/desktop: 本项目专属桌面业务组件，强绑定桌面系统。
+  features: 业务模块目录，每个业务一个子文件夹。
+    example: features/games 游戏合集；features/vfs 虚拟文件系统；features/pet虚拟宠物；每个模块内部自带 components / hooks / types。
+  hooks: 仅存放**全局通用hooks**；业务模块专属hooks，必须放到对应features/xxx/hooks，不要堆到根hooks。
+  lib: 纯工具函数、通用类型、VFS底层逻辑，无React组件，无业务状态。
+  store: 全局状态，按slice拆分，完善ts类型。
+  config: 静态配置，关卡数据、桌面配置、壁纸配置。
+  i18n: 国际化翻译。
+  public: 静态资源。
+
+# 编码风格约定
+code_style:
+  naming:
+    component: PascalCase 例: GameBoard.tsx
+    hook: useXxx camelCase
+    util: camelCase
+    type/interface: PascalCase
+  file_organize:
+    - 一个组件一个文件；类型尽量抽到同目录 types.ts
+    - 业务逻辑和UI渲染分离，组件尽量薄
+  import_order:
+    1. react / next 内置包
+    2. 第三方库
+    3. @/lib 工具、类型
+    4. @/hooks 通用hooks
+    5. @/components UI组件
+    6. 相对路径业务模块
+  canvas_game:
+    - 小游戏优先原生Canvas2D，不随便引入游戏库
+    - 关卡配置放到config，使用模板字符串定义地图，不要硬编码写死在组件内
+
+# 业务特殊约束
+business_constraint:
+  - 开发小游戏：游戏逻辑放在features/games，游戏组件不要直接丢components；关卡json/字符串配置放在config。
+  - VFS虚拟文件系统核心逻辑放在lib/vfs，业务组件放在features/vfs。
+  - components/ui组件不能耦合本项目业务store，props驱动，为后续剥离UI库做准备。
+
+# AI输出行为规则
+output_rules:
+  - 修改现有代码时，优先给出diff片段，不要直接输出完整大文件。
+  - 目录重构：先输出目录树 + 文件迁移清单，确认后再生成代码。
+  - 涉及重大架构改动，先输出方案，等待确认，不要直接写代码。
+  - 需要新增组件，先确认存放路径，遵守上面目录规范。
+  - 写demo时不要混入业务逻辑。
+
+# 禁止行为
+forbidden:
+  - ❌ 不要把业务hooks全部丢根hooks目录
+  - ❌ 不要把业务组件写到components/ui
+  - ❌ 不要随意改动app下路由文件夹名字
+  - ❌ 不要滥用any，不要随便加 @ts‑ignore
+  - ❌ 不要大规模重写已有已经跑通的游戏、窗口逻辑
+  - ❌ 不要自动引入matter‑js、phaser等第三方游戏库，除非用户明确要求

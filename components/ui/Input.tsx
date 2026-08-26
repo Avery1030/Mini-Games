@@ -1,6 +1,6 @@
 import { forwardRef, type InputHTMLAttributes } from 'react'
-import { cn } from '@/lib/cn'
-import { winChromeSunken } from '@/lib/winChrome'
+import { cn } from './cn'
+import { winChromeSunken } from './theme'
 
 export type InputSize = 'sm' | 'md'
 export type InputTone = 'chrome' | 'field' | 'dark'

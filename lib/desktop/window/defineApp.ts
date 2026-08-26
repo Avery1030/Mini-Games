@@ -107,12 +107,12 @@ export function defineDesktopApp(opts: RegisterBuiltinAppOptions): DesktopWindow
     readonly id = opts.id
     readonly icon = opts.icon
     readonly defaultCoordinate = opts.defaultCoordinate
-    readonly width = opts.width ?? 400
-    readonly height = opts.height ?? 320
-    readonly titles = opts.titles
-    readonly title = opts.title
-    readonly showOnDesktop = opts.showOnDesktop ?? true
-    readonly showInStartMenu = opts.showInStartMenu ?? true
+    override readonly width = opts.width ?? 400
+    override readonly height = opts.height ?? 320
+    override readonly titles = opts.titles
+    override readonly title = opts.title
+    override readonly showOnDesktop = opts.showOnDesktop ?? true
+    override readonly showInStartMenu = opts.showInStartMenu ?? true
     private deferred: DeferredApp | null = null
 
     override get chrome(): WindowChromeOptions {

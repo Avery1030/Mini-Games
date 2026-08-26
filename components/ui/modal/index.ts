@@ -1,7 +1,7 @@
 export type { ModalAction, ModalCloseReason, ModalEntry, OpenModalOptions, ConfirmOptions, AlertOptions } from './types'
 export { useModalStore, modalZIndex } from './store'
 export { ModalFrame } from './ModalFrame'
-export { ModalHost } from './ModalHost'
+export { ModalHost, type ModalHostLabels } from './ModalHost'
 export {
   modal,
   openModal,

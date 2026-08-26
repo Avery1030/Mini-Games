@@ -6,22 +6,17 @@ import { DesktopIconsLayer, useVisibleDesktopIcons } from './DesktopIconsLayer'
 import { DesktopWindowsLayer } from './DesktopWindowsLayer'
 import { DesktopTaskbar } from './DesktopTaskbar'
 import { ContextMenu, modal, toast, type ContextMenuState } from '@/components/ui'
+import { TASKBAR_H } from '@/lib/desktop/windowGeometry'
 import type { DesktopAppId } from '@/config/desktop'
-import { useDesktopWallpaper } from '@/hooks/desktop'
+import { Desktop3DWallpaper, useDesktopWallpaper } from '@/features/wallpaper'
 import { useWindowStore } from '@/store/window'
 import { useDesktopStore } from '@/store/desktop'
 import { useDesktopItemsStore } from '@/store/desktopItems'
 import { useDesktopSelectionStore } from '@/store/desktopSelection'
 import { resolveDesktopItemTitle } from '@/lib/desktop/window'
-import {
-  CELL_STEP,
-  pointerToCoordinate,
-  sortIdsByCoordinate,
-  type ArrangeAlign,
-} from '@/lib/desktop'
+import { CELL_STEP, pointerToCoordinate, sortIdsByCoordinate, type ArrangeAlign } from '@/lib/desktop'
 import { promptRenameDesktopItem, promptRenameVfsFile } from './promptRenameDesktopItem'
 import { FsDragLayer } from './FsDragLayer'
-import { Desktop3DWallpaper } from './Desktop3DWallpaper'
 import { buildDesktopContextMenu } from './buildDesktopContextMenu'
 import { useSettingsStore } from '@/store/settings'
 import { TRASH_PATH, getBasename, vfs } from '@/lib/vfs'
@@ -63,11 +58,7 @@ export function WindowsDesktop() {
     rearrangeIcons(ids, { maxRows, maxCols, align })
   }
 
-  const handleRenameItem = async (
-    itemId: DesktopAppId,
-    kind: 'folder' | 'textDocument',
-    currentTitle: string,
-  ) => {
+  const handleRenameItem = async (itemId: DesktopAppId, kind: 'folder' | 'textDocument', currentTitle: string) => {
     const item = useDesktopItemsStore.getState().items.find((i) => i.id === itemId)
     const next = await promptRenameDesktopItem({
       currentName: currentTitle,
@@ -106,9 +97,7 @@ export function WindowsDesktop() {
     toast.success(tRecycle('emptied', { count: n + vfsCount }))
   }
 
-  const handleCreateTextDocument = async (
-    coordinate: ReturnType<typeof pointerToCoordinate> | null,
-  ) => {
+  const handleCreateTextDocument = async (coordinate: ReturnType<typeof pointerToCoordinate> | null) => {
     const record = await createTextDocument({
       title: td('newTextDocumentName'),
       coordinate: coordinate ?? undefined,
@@ -284,20 +273,15 @@ export function WindowsDesktop() {
 
   return (
     <div className='min-h-screen flex flex-col select-none font-pixel text-on-desktop' style={desktopBgStyle}>
-      <div
-        className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem]'
-        onContextMenu={handleDesktopContextMenu}
-      >
-        {wallpaper3dEnabled && wallpaper3dPath ? (
-          <Desktop3DWallpaper path={wallpaper3dPath} enabled />
-        ) : null}
+      <div className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem]' onContextMenu={handleDesktopContextMenu}>
+        {wallpaper3dEnabled && wallpaper3dPath ? <Desktop3DWallpaper path={wallpaper3dPath} enabled /> : null}
         <DesktopIconsLayer />
         <DesktopWindowsLayer />
         <FsDragLayer />
       </div>
 
       <DesktopTaskbar />
-      <ContextMenu menu={contextMenu} onClose={closeContextMenu} />
+      <ContextMenu menu={contextMenu} onClose={closeContextMenu} safeBottom={TASKBAR_H} />
     </div>
   )
 }

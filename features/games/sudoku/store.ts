@@ -18,12 +18,17 @@ type SudokuProgressState = {
   /** key = `${difficulty}:${levelId}` */
   levels: Record<string, LevelProgress>
   settings: SudokuSettings
+}
+
+interface SudokuProgressActions {
   recordClear: (difficulty: Difficulty, levelId: number, elapsedSec: number) => void
   setSetting: <K extends SudokuSettingKey>(key: K, value: SudokuSettings[K]) => void
   isUnlocked: (difficulty: Difficulty, catalog: number[], levelId: number) => boolean
 }
 
-export const useSudokuProgressStore = create<SudokuProgressState>()(
+export type SudokuProgressStore = SudokuProgressState & SudokuProgressActions
+
+export const useSudokuProgressStore = create<SudokuProgressStore>()(
   persist(
     (set, get) => ({
       levels: {},

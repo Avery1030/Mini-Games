@@ -2,16 +2,21 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { STORAGE_KEYS, appStorage } from '@/lib/storage'
 
-type NotepadState = {
+interface NotepadState {
   /** 上次打开的笔记 id（用于恢复） */
   lastNoteId: string | null
   /** 是否自动换行 */
   wordWrap: boolean
+}
+
+interface NotepadActions {
   setLastNoteId: (id: string | null) => void
   setWordWrap: (value: boolean) => void
 }
 
-export const useNotepadStore = create<NotepadState>()(
+export type NotepadStore = NotepadState & NotepadActions
+
+export const useNotepadStore = create<NotepadStore>()(
   persist(
     (set) => ({
       lastNoteId: null,

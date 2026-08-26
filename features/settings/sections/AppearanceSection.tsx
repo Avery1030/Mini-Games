@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Checkbox, Panel, Select } from '@/components/ui'
 import { UI_SCALE_OPTIONS, uiScalePercent, type UiScale } from '@/lib/uiScale'
-import { useAppearanceSettings } from '@/hooks/settings'
+import { useAppearanceSettings } from '@/features/settings/hooks'
 import {
   SCREENSAVER_IDLE_OPTIONS,
   patchSettings,

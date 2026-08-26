@@ -1,28 +1,39 @@
 'use client'
 
 import { useEffect, type ReactNode } from 'react'
-import { useTranslations } from 'next-intl'
 import { ModalFrame } from './ModalFrame'
 import { modalZIndex, useModalStore } from './store'
+
+export type ModalHostLabels = {
+  ok: string
+  cancel: string
+  title: string
+}
+
+const DEFAULT_LABELS: ModalHostLabels = {
+  ok: 'OK',
+  cancel: 'Cancel',
+  title: 'Message',
+}
 
 function resolveActionLabel(
   id: string,
   label: ReactNode | undefined,
-  t: (key: string) => string,
+  labels: ModalHostLabels,
 ): ReactNode {
   if (label != null && label !== '') return label
-  if (id === 'confirm' || id === 'ok') return t('ok')
-  if (id === 'cancel') return t('cancel')
+  if (id === 'confirm' || id === 'ok') return labels.ok
+  if (id === 'cancel') return labels.cancel
   return id
 }
 
 /**
  * 根级宿主：渲染 Modal 栈。放在 layout / 桌面根节点一次即可。
+ * 默认按钮文案由 labels 注入，组件不依赖 i18n。
  */
-export function ModalHost() {
+export function ModalHost({ labels = DEFAULT_LABELS }: { labels?: ModalHostLabels }) {
   const stack = useModalStore((s) => s.stack)
   const remove = useModalStore((s) => s.remove)
-  const t = useTranslations('modal')
 
   useEffect(() => {
     if (stack.length === 0) return
@@ -35,7 +46,6 @@ export function ModalHost() {
         remove(top.id, 'dismiss')
         return
       }
-      // 确认框：Esc 视为取消
       if (top.actions?.some((a) => a.id === 'cancel')) {
         remove(top.id, 'action', 'cancel')
       }
@@ -61,13 +71,13 @@ export function ModalHost() {
         const isTop = index === stack.length - 1
         const actions = entry.actions?.map((a) => ({
           ...a,
-          label: resolveActionLabel(a.id, a.label, t),
+          label: resolveActionLabel(a.id, a.label, labels),
         }))
 
         return (
           <ModalFrame
             key={entry.id}
-            title={entry.title ?? t('title')}
+            title={entry.title ?? labels.title}
             titleId={`${entry.id}-title`}
             actions={actions}
             showClose={entry.showClose !== false}

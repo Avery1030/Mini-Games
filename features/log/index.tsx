@@ -14,6 +14,7 @@ export interface LogProps {
 
 export function LogApp({ embedded = false }: LogProps = {}) {
   const t = useTranslations('changelog')
+  const tNav = useTranslations('mobile')
   const locale = useLocale()
   const isMobile = useIsMobileViewport()
   const [activeId, setActiveId] = useState<ChangelogDateId>(CHANGELOG_DATES[0])
@@ -36,6 +37,8 @@ export function LogApp({ embedded = false }: LogProps = {}) {
           minSize={110}
           maxSize={280}
           storageKey='split:log'
+          isMobile={isMobile}
+          backLabel={tNav('backToList')}
           detailOpen={detailOpen}
           onDetailOpenChange={setDetailOpen}
           detailTitle={title}

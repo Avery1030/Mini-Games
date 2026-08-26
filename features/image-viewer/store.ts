@@ -1,11 +1,14 @@
 import { create } from 'zustand'
 import { normalizePath, vfs } from '@/lib/vfs'
 
-type ImageViewerLaunchState = {
+interface ImageViewerLaunchState {
   /** 待打开的 VFS 绝对路径 */
   pendingFilePath: string | null
   /** 递增以通知已打开的查看器重新加载 */
   openEpoch: number
+}
+
+interface ImageViewerLaunchActions {
   /**
    * 打开图片查看器并传入 VFS 文件路径。
    * 已打开时通过 openEpoch 通知重新加载。
@@ -17,11 +20,13 @@ type ImageViewerLaunchState = {
   consumePendingFilePath: () => string | null
 }
 
+export type ImageViewerStore = ImageViewerLaunchState & ImageViewerLaunchActions
+
 /**
  * 图片查看器启动总线：桌面 / 资源管理器 / 回收站通过 filePath 打开预览。
  * 故意不静态 import window store，避免与 registry 循环依赖。
  */
-export const useImageViewerStore = create<ImageViewerLaunchState>((set, get) => ({
+export const useImageViewerStore = create<ImageViewerStore>((set, get) => ({
   pendingFilePath: null,
   openEpoch: 0,
 

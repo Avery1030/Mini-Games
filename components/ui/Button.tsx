@@ -1,7 +1,7 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { Loader2 } from 'lucide-react'
-import { cn } from '@/lib/cn'
-import { winChrome, winChromePressed } from '@/lib/winChrome'
+import { cn } from './cn'
+import { winChrome, winChromePressed } from './theme'
 
 export type ButtonVariant = 'raised' | 'pressed' | 'title'
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon-sm' | 'icon' | 'icon-lg'

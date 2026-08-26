@@ -10,12 +10,13 @@ import { TRASH_PATH, getExtension, isVfsError, vfs, type FileNode } from '@/lib/
 import { useDesktopItemsStore, type DesktopItemRecord } from '@/store/desktopItems'
 import { useDesktopSelectionStore } from '@/store/desktopSelection'
 import { useWindowStore } from '@/store/window'
-import { useNotepadStore } from '@/store/notepad'
+import { useNotepadStore } from '@/features/notepad/store'
 import { getRecycleBinRoots } from '@/lib/desktop/itemsTree'
+import { TASKBAR_H } from '@/lib/desktop/windowGeometry'
 import { formatItemDisplayName } from '@/lib/desktop/fileTypes'
 import { useFsListSelection } from '@/hooks/desktop/useFsListSelection'
 import { requestOpenNote } from '@/features/notepad/pendingOpen'
-import { useImageViewerStore } from '@/store/imageViewer'
+import { useImageViewerStore } from '@/features/image-viewer/store'
 import { cn } from '@/lib/cn'
 
 export type RecycleBinAppProps = {
@@ -544,7 +545,7 @@ export function RecycleBinApp({ embedded = false }: RecycleBinAppProps) {
       </div>
 
       <MarqueeOverlay rect={marqueeRect} />
-      <ContextMenu menu={contextMenu} onClose={() => setContextMenu(null)} />
+      <ContextMenu menu={contextMenu} onClose={() => setContextMenu(null)} safeBottom={TASKBAR_H} />
     </div>
   )
 }
