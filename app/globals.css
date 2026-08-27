@@ -146,6 +146,13 @@
   --scrollbar-hatch: rgba(0, 0, 0, 0.35);
 }
 
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 body {
   background: #1a2a29;
 }

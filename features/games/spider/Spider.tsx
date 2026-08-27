@@ -664,7 +664,7 @@ export function Spider({ embedded = false }: SpiderProps) {
 
   if (!hydrated || !state) {
     return (
-      <div className={cn(embeddedAppShell(embedded, 'flex min-h-0 flex-col bg-window text-on-chrome font-pixel'))}>
+      <div className={cn(embeddedAppShell(embedded, 'flex min-h-0 min-w-0 flex-col overflow-hidden bg-window text-on-chrome font-pixel'))}>
         <div className={cn(winChromeSunken, 'relative m-2 min-h-0 flex-1 overflow-hidden bg-[#0a6b3c]')} />
       </div>
     )
@@ -674,8 +674,8 @@ export function Spider({ embedded = false }: SpiderProps) {
   const locked = busy || state.won || state.lost
 
   return (
-    <div className={cn(embeddedAppShell(embedded, 'flex min-h-0 flex-col bg-window text-on-chrome font-pixel'))}>
-      <div className='flex shrink-0 flex-wrap items-center gap-1.5 border-b border-chrome-dark px-2 py-1.5'>
+    <div className={cn(embeddedAppShell(embedded, 'flex min-h-0 min-w-0 flex-col overflow-hidden bg-window text-on-chrome font-pixel'))}>
+      <div className='flex min-w-0 shrink-0 flex-wrap items-center gap-1.5 border-b border-chrome-dark px-2 py-1.5'>
         <Button size='sm' className='px-2' onClick={() => void confirmRestart()}>
           {t('newGame')}
         </Button>
@@ -698,7 +698,7 @@ export function Spider({ embedded = false }: SpiderProps) {
             restart(next)
           }}
         />
-        <span className='ml-auto tabular-nums text-[11px] text-muted'>
+        <span className='ml-auto min-w-0 truncate tabular-nums text-[11px] text-muted'>
           {t('stats', { moves: state.moves, time: formatTime(elapsed), score: scoreWithTimeBonus(state, elapsed) })}
         </span>
       </div>

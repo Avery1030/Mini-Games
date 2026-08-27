@@ -272,7 +272,10 @@ export function WindowsDesktop() {
   }
 
   return (
-    <div className='min-h-screen flex flex-col select-none font-pixel text-on-desktop' style={desktopBgStyle}>
+    <div
+      className='flex h-[100dvh] w-full flex-col overflow-hidden select-none font-pixel text-on-desktop'
+      style={desktopBgStyle}
+    >
       <div className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem]' onContextMenu={handleDesktopContextMenu}>
         {wallpaper3dEnabled && wallpaper3dPath ? <Desktop3DWallpaper path={wallpaper3dPath} enabled /> : null}
         <DesktopIconsLayer />

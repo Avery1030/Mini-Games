@@ -17,7 +17,7 @@ export function MobileDesktop() {
 
   return (
     <div
-      className='flex h-[100dvh] min-h-screen w-screen flex-col overflow-hidden select-none'
+      className='flex h-[100dvh] w-full flex-col overflow-hidden select-none'
       style={desktopBgStyle}
       data-mobile-desktop
     >

@@ -6,6 +6,7 @@ import {
   MIN_HEIGHT,
   MIN_WIDTH,
   createWindowSeed,
+  fitRectToWorkArea,
   maximizedSize,
   type ResizeEdge,
   type WindowSeed,
@@ -121,6 +122,32 @@ export function useWindowGeometry({
     return () => window.removeEventListener('resize', sync)
   }, [maximized])
 
+  // 普通窗口超出工作区时收回，避免小屏出现页面滚动条
+  useEffect(() => {
+    if (maximized) return
+    const fit = () => {
+      const next = fitRectToWorkArea({
+        x: positionRef.current.x,
+        y: positionRef.current.y,
+        width: sizeRef.current.width,
+        height: sizeRef.current.height,
+      })
+      if (
+        next.x === positionRef.current.x &&
+        next.y === positionRef.current.y &&
+        next.width === sizeRef.current.width &&
+        next.height === sizeRef.current.height
+      ) {
+        return
+      }
+      setPosition({ x: next.x, y: next.y })
+      setSize({ width: next.width, height: next.height })
+    }
+    fit()
+    window.addEventListener('resize', fit)
+    return () => window.removeEventListener('resize', fit)
+  }, [maximized])
+
   const handleTitleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (!draggable || e.button !== 0 || maximized) return
@@ -203,8 +230,9 @@ export function useWindowGeometry({
         newTop = top + (height - h)
         newHeight = h
       }
-      setPosition({ x: newLeft, y: newTop })
-      setSize({ width: newWidth, height: newHeight })
+      const fitted = fitRectToWorkArea({ x: newLeft, y: newTop, width: newWidth, height: newHeight })
+      setPosition({ x: fitted.x, y: fitted.y })
+      setSize({ width: fitted.width, height: fitted.height })
     }
     const onUp = () => {
       setResizing(null)

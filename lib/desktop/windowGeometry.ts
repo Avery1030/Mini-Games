@@ -28,9 +28,16 @@ export type MinAnim = 'shown' | 'hiding' | 'hidden' | 'showing'
 
 export function maximizedSize() {
   if (isServer) return { width: 800, height: 600 }
+  const area = workAreaSize()
+  return { width: area.width, height: area.height }
+}
+
+/** 任务栏以上的可用工作区（不含任务栏） */
+export function workAreaSize() {
+  if (isServer) return { width: 800, height: 600 }
   return {
     width: window.innerWidth,
-    height: Math.max(240, window.innerHeight - TASKBAR_H),
+    height: Math.max(MIN_HEIGHT, window.innerHeight - TASKBAR_H),
   }
 }
 
@@ -43,6 +50,19 @@ export function clampBounds(b: { x: number; y: number; width: number; height: nu
   }
 }
 
+/** 把窗口限制在工作区内，避免小屏撑出页面滚动条 */
+export function fitRectToWorkArea(b: { x: number; y: number; width: number; height: number }) {
+  const area = workAreaSize()
+  const width = Math.min(Math.max(MIN_WIDTH, b.width), area.width)
+  const height = Math.min(Math.max(MIN_HEIGHT, b.height), area.height)
+  return {
+    x: Math.min(Math.max(0, b.x), Math.max(0, area.width - width)),
+    y: Math.min(Math.max(0, b.y), Math.max(0, area.height - height)),
+    width,
+    height,
+  }
+}
+
 export function createWindowSeed(opts: {
   rememberedBounds?: WindowBounds | null
   defaultPosition?: { x: number; y: number }
@@ -52,7 +72,7 @@ export function createWindowSeed(opts: {
 }): WindowSeed {
   const { rememberedBounds, defaultPosition, defaultMaximized = false, width, height } = opts
   if (rememberedBounds) {
-    const normal = clampBounds(rememberedBounds)
+    const normal = isServer ? clampBounds(rememberedBounds) : fitRectToWorkArea(clampBounds(rememberedBounds))
     return {
       position: { x: normal.x, y: normal.y },
       size: { width: normal.width, height: normal.height },
@@ -67,9 +87,21 @@ export function createWindowSeed(opts: {
           x: Math.max(20, (window.innerWidth - width) / 2),
           y: Math.max(20, (window.innerHeight - height) / 2 - 40),
         })
-  return {
+  const raw = {
     position: pos,
     size: { width, height },
+    maximized: defaultMaximized,
+  }
+  if (isServer) return raw
+  const fitted = fitRectToWorkArea({
+    x: raw.position.x,
+    y: raw.position.y,
+    width: raw.size.width,
+    height: raw.size.height,
+  })
+  return {
+    position: { x: fitted.x, y: fitted.y },
+    size: { width: fitted.width, height: fitted.height },
     maximized: defaultMaximized,
   }
 }
