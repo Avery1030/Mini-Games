@@ -150,6 +150,11 @@ export type StorageSchema = {
     state: unknown
     undoStack: unknown[]
     elapsed: number
+    records: Record<
+      '1' | '2' | '3' | '4',
+      Array<{ elapsed: number; moves: number; score: number; at: number }>
+    >
+    winLogged: boolean
   }>
   [STORAGE_KEYS.lock]: ZustandPersistEnvelope<LockPersistState>
   [STORAGE_KEYS.calendar]: ZustandPersistEnvelope<CalendarPersistState>

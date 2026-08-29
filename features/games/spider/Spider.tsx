@@ -53,6 +53,7 @@ import {
   stockTopRect,
   type Layout,
 } from './render'
+import { RecordsModalBody, WinRecordsBody } from './RecordsPanel'
 import { playShuffleSound } from './sound'
 import { COLS, DEAL_SIZE, DIFFICULTIES, type Card, type Difficulty, type SpiderState } from './types'
 
@@ -62,6 +63,7 @@ export type SpiderProps = {
 
 const WIN_MODAL_ID = 'spider-win'
 const LOSE_MODAL_ID = 'spider-lose'
+const RECORDS_MODAL_ID = 'spider-records'
 
 type DragPack = {
   col: number
@@ -165,6 +167,7 @@ export function Spider({ embedded = false }: SpiderProps) {
       winShownRef.current = false
       closeModal(WIN_MODAL_ID)
       closeModal(LOSE_MODAL_ID)
+      closeModal(RECORDS_MODAL_ID)
       useSpiderStore.getState().restart(nextDiff)
       setRunning(false)
       setSelected(null)
@@ -323,10 +326,24 @@ export function Spider({ embedded = false }: SpiderProps) {
     if (state.won) {
       winShownRef.current = true
       const score = scoreWithTimeBonus(state, elapsed)
+      const result = useSpiderStore.getState().recordWin({
+        difficulty: state.difficulty,
+        elapsed,
+        moves: state.moves,
+        score,
+      })
+      const records = result?.records ?? useSpiderStore.getState().records[state.difficulty] ?? []
       openModal({
         id: WIN_MODAL_ID,
         title: t('wonTitle'),
-        content: t('wonHint', { time: formatTime(elapsed), moves: state.moves, score }),
+        content: (
+          <WinRecordsBody
+            hint={t('wonHint', { time: formatTime(elapsed), moves: state.moves, score })}
+            rank={result ? result.rank : undefined}
+            records={records}
+            highlightAt={result?.current.at}
+          />
+        ),
         dismissible: true,
         showClose: true,
         actions: [{ id: 'again', label: t('playAgain'), primary: true }],
@@ -531,6 +548,7 @@ export function Spider({ embedded = false }: SpiderProps) {
       const next = cloneState(prev)
       setGameState(next)
       useSpiderStore.getState().setUndoStack((s) => s.slice(0, -1))
+      if (cur?.won) useSpiderStore.getState().clearWinLogged()
       setRunning(!prev.won && !prev.lost)
       setSelected(null)
       setBusy(false)
@@ -684,6 +702,22 @@ export function Spider({ embedded = false }: SpiderProps) {
         </Button>
         <Button size='sm' className='px-2' disabled={busy || state.won || undoStack.length === 0} onClick={undo}>
           {t('undo')}
+        </Button>
+        <Button
+          size='sm'
+          className='px-2'
+          onClick={() => {
+            closeModal(RECORDS_MODAL_ID)
+            openModal({
+              id: RECORDS_MODAL_ID,
+              title: t('recordsTitle'),
+              content: <RecordsModalBody initialDifficulty={difficulty} />,
+              dismissible: true,
+              showClose: true,
+            })
+          }}
+        >
+          {t('records')}
         </Button>
         <Select
           size='sm'

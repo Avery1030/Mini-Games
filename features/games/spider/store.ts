@@ -2,7 +2,8 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { STORAGE_KEYS, appStorage } from '@/lib/storage'
 import { cloneState, newGame } from './game'
-import type { Difficulty, SpiderState } from './types'
+import { emptyRecords, insertRecord, normalizeRecords, type RecordWinResult, type SpiderRecordsMap } from './records'
+import type { Difficulty, SpiderState, SpiderTimeRecord } from './types'
 
 const MAX_UNDO = 40
 
@@ -12,6 +13,9 @@ export type SpiderPersistState = {
   state: SpiderState | null
   undoStack: SpiderState[]
   elapsed: number
+  records: SpiderRecordsMap
+  /** 本局胜利是否已写入排行榜，避免重开已通关对局重复入榜 */
+  winLogged: boolean
 }
 
 interface SpiderActions {
@@ -22,9 +26,23 @@ interface SpiderActions {
   pushUndo: (prev: SpiderState) => void
   setElapsed: (sec: number | ((prev: number) => number)) => void
   restart: (difficulty?: Difficulty) => void
+  recordWin: (entry: { difficulty: Difficulty; elapsed: number; moves: number; score: number }) => RecordWinResult | null
+  /** 撤销通关后允许再次入榜 */
+  clearWinLogged: () => void
 }
 
 export type SpiderStore = SpiderPersistState & SpiderActions
+
+function persistSlice(s: SpiderStore): SpiderPersistState {
+  return {
+    difficulty: s.difficulty,
+    state: s.state,
+    undoStack: s.undoStack.slice(-MAX_UNDO),
+    elapsed: s.elapsed,
+    records: s.records,
+    winLogged: s.winLogged,
+  }
+}
 
 export const useSpiderStore = create<SpiderStore>()(
   persist(
@@ -33,6 +51,8 @@ export const useSpiderStore = create<SpiderStore>()(
       state: null,
       undoStack: [],
       elapsed: 0,
+      records: emptyRecords(),
+      winLogged: false,
 
       ensureGame: () => {
         const cur = get().state
@@ -40,7 +60,7 @@ export const useSpiderStore = create<SpiderStore>()(
 
         const difficulty = get().difficulty
         const state = newGame(difficulty)
-        set({ state, undoStack: [], elapsed: 0, difficulty })
+        set({ state, undoStack: [], elapsed: 0, difficulty, winLogged: false })
         return state
       },
 
@@ -70,19 +90,45 @@ export const useSpiderStore = create<SpiderStore>()(
           state: newGame(difficulty),
           undoStack: [],
           elapsed: 0,
+          winLogged: false,
         })
       },
+
+      recordWin: (entry) => {
+        if (get().winLogged) return null
+        const next: SpiderTimeRecord = {
+          elapsed: Math.max(0, Math.floor(entry.elapsed)),
+          moves: Math.max(0, Math.floor(entry.moves)),
+          score: Math.max(0, Math.floor(entry.score)),
+          at: Date.now(),
+        }
+        const prev = get().records[entry.difficulty] ?? []
+        const result = insertRecord(prev, next)
+        set((s) => ({
+          winLogged: true,
+          records: { ...s.records, [entry.difficulty]: result.records },
+        }))
+        return result
+      },
+
+      clearWinLogged: () => set({ winLogged: false }),
     }),
     {
       name: STORAGE_KEYS.spider,
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => appStorage.createStateStorage()),
-      partialize: (s): SpiderPersistState => ({
-        difficulty: s.difficulty,
-        state: s.state,
-        undoStack: s.undoStack.slice(-MAX_UNDO),
-        elapsed: s.elapsed,
-      }),
+      partialize: persistSlice,
+      migrate: (persisted) => {
+        const raw = (persisted ?? {}) as Partial<SpiderPersistState>
+        return {
+          difficulty: raw.difficulty === 1 || raw.difficulty === 2 || raw.difficulty === 3 || raw.difficulty === 4 ? raw.difficulty : 2,
+          state: raw.state ?? null,
+          undoStack: Array.isArray(raw.undoStack) ? raw.undoStack : [],
+          elapsed: typeof raw.elapsed === 'number' ? raw.elapsed : 0,
+          records: normalizeRecords(raw.records),
+          winLogged: Boolean(raw.winLogged),
+        }
+      },
     },
   ),
 )
