@@ -4,7 +4,7 @@ import { type ReactNode } from 'react'
 import { cn } from '../cn'
 import { Button } from '../Button'
 import { WinCloseIcon } from '../WindowChromeIcons'
-import { winChrome } from '../theme'
+import { winChromePanel } from '../theme'
 import type { ModalAction } from './types'
 
 export interface ModalFrameProps {
@@ -57,9 +57,9 @@ export function ModalFrame({
         aria-modal='true'
         aria-labelledby={title != null ? titleId : undefined}
         className={cn(
-          winChrome,
+          winChromePanel,
           'relative flex flex-col shadow-[4px_4px_0_rgba(0,0,0,0.35)] font-pixel',
-          'hover:bg-chrome box-border min-w-0 max-w-full shrink-0',
+          'box-border min-w-0 max-w-full shrink-0',
           widthClassName,
         )}
       >

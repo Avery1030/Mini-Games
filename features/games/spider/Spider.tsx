@@ -336,9 +336,12 @@ export function Spider({ embedded = false }: SpiderProps) {
       openModal({
         id: WIN_MODAL_ID,
         title: t('wonTitle'),
+        widthClassName: 'w-[min(380px,calc(100vw-2rem))]',
         content: (
           <WinRecordsBody
-            hint={t('wonHint', { time: formatTime(elapsed), moves: state.moves, score })}
+            elapsed={elapsed}
+            moves={state.moves}
+            score={score}
             rank={result ? result.rank : undefined}
             records={records}
             highlightAt={result?.current.at}
@@ -711,6 +714,7 @@ export function Spider({ embedded = false }: SpiderProps) {
             openModal({
               id: RECORDS_MODAL_ID,
               title: t('recordsTitle'),
+              widthClassName: 'w-[min(380px,calc(100vw-2rem))]',
               content: <RecordsModalBody initialDifficulty={difficulty} />,
               dismissible: true,
               showClose: true,
