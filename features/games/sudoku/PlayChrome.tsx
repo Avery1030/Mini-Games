@@ -1,7 +1,7 @@
 import { ChevronLeft, Pause, Play, Settings } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { winChrome, winChromePanel } from '@/lib/winChrome'
-import { MAX_MISTAKES, formatElapsed } from './sudoku-game'
+import { formatElapsed } from './sudoku-game'
 
 type HeaderProps = {
   title: string
@@ -73,9 +73,7 @@ export function StatusBar({
       <span className='font-medium'>{difficultyLabel}</span>
       <span>
         {mistakesLabel}
-        <span className='font-semibold text-green-800 dark:text-green-400'>
-          {mistakes}/{MAX_MISTAKES}
-        </span>
+        <span className='font-semibold text-green-800 dark:text-green-400'>{mistakes}</span>
       </span>
       <div className='flex items-center gap-1.5 tabular-nums font-medium'>
         <span>{formatElapsed(elapsed)}</span>

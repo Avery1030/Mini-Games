@@ -1036,7 +1036,6 @@
       "highlightSameNotes": "同じメモを強調",
       "highlightSameDigits": "同じ数字を強調",
       "highlightRegions": "領域を強調",
-      "selectDigitFirst": "数字を先に選択",
       "autoUndoWrong": "誤入力を自動取消",
       "autoClearNotes": "メモを自動削除"
     },
@@ -1047,7 +1046,6 @@
       "highlightSameNotes": "数字マス選択時、同じ数字のメモを強調",
       "highlightSameDigits": "数字マス選択時、同じ数字を強調",
       "highlightRegions": "選択マスの行・列・ブロックを強調",
-      "selectDigitFirst": "数字をロックしてからマスをタップして入力",
       "autoUndoWrong": "答えと違う入力は自動で取り消します",
       "autoClearNotes": "正解入力後、周囲メモからその数字を削除"
     },

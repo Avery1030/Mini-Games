@@ -19,7 +19,6 @@ export function buildSettingsPanelLabels(t: SudokuT): SettingsPanelLabels {
       highlightSameNotes: { title: t('opt.highlightSameNotes'), desc: t('optDesc.highlightSameNotes') },
       highlightSameDigits: { title: t('opt.highlightSameDigits'), desc: t('optDesc.highlightSameDigits') },
       highlightRegions: { title: t('opt.highlightRegions'), desc: t('optDesc.highlightRegions') },
-      selectDigitFirst: { title: t('opt.selectDigitFirst'), desc: t('optDesc.selectDigitFirst') },
       autoUndoWrong: { title: t('opt.autoUndoWrong'), desc: t('optDesc.autoUndoWrong') },
       autoClearNotes: { title: t('opt.autoClearNotes'), desc: t('optDesc.autoClearNotes') },
     },

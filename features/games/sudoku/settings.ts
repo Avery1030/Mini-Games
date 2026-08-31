@@ -13,8 +13,6 @@ export type SudokuSettings = {
   highlightSameDigits: boolean
   /** 突出选中格所在行、列、宫 */
   highlightRegions: boolean
-  /** 先点数字锁定，再点格子填入 */
-  selectDigitFirst: boolean
   /** 填错后自动撤回该格 */
   autoUndoWrong: boolean
   /** 正确填入后自动清除同区域笔记中的该数字 */
@@ -30,7 +28,6 @@ export const DEFAULT_SUDOKU_SETTINGS: SudokuSettings = {
   highlightSameNotes: true,
   highlightSameDigits: true,
   highlightRegions: true,
-  selectDigitFirst: false,
   autoUndoWrong: false,
   autoClearNotes: true,
 }
@@ -42,7 +39,6 @@ export const SUDOKU_SETTING_KEYS: readonly SudokuSettingKey[] = [
   'highlightSameNotes',
   'highlightSameDigits',
   'highlightRegions',
-  'selectDigitFirst',
   'autoUndoWrong',
   'autoClearNotes',
 ] as const

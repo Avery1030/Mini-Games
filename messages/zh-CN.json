@@ -1036,7 +1036,6 @@
       "highlightSameNotes": "突出相同笔记",
       "highlightSameDigits": "突出显示相同数字",
       "highlightRegions": "突出显示区域",
-      "selectDigitFirst": "选数在先",
       "autoUndoWrong": "自动撤销错误填入",
       "autoClearNotes": "自动删除笔记"
     },
@@ -1047,7 +1046,6 @@
       "highlightSameNotes": "选中带数字的格子时，突出显示相同数字的笔记",
       "highlightSameDigits": "选中带数字的格子时，突出显示相同数字",
       "highlightRegions": "突出显示选中格所在的行、列和小九宫",
-      "selectDigitFirst": "先点击数字锁定，再点击方格填入",
       "autoUndoWrong": "与答案不一致的数字填入后将被自动撤销",
       "autoClearNotes": "正确填入后，自动清除同行、列、宫笔记中的该数字"
     },

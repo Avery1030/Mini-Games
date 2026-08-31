@@ -10,8 +10,6 @@ const BOX = 3
 
 /** 每关提示可用次数 */
 export const MAX_HINTS = 3
-/** 每关允许失误次数 */
-export const MAX_MISTAKES = 3
 
 type Snapshot = {
   board: Cell[][]
@@ -314,11 +312,7 @@ export class SudokuGame {
 
     if (digit !== this.solution[row]![col]!) {
       this.mistakes++
-      if (this.mistakes >= MAX_MISTAKES) {
-        this.status = 'lost'
-        this.clearTimer()
-      } else if (opts?.autoUndoWrong) {
-        // 计一次失误后撤回该格，保留 mistakes
+      if (opts?.autoUndoWrong) {
         cell.value = 0
       }
       this.emit()

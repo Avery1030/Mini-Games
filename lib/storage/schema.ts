@@ -140,7 +140,6 @@ export type StorageSchema = {
       highlightSameNotes: boolean
       highlightSameDigits: boolean
       highlightRegions: boolean
-      selectDigitFirst: boolean
       autoUndoWrong: boolean
       autoClearNotes: boolean
     }

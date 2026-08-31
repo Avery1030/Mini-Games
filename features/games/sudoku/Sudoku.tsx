@@ -33,7 +33,6 @@ export function Sudoku({ embedded = false }: SudokuProps = {}) {
   const setSetting = useSudokuProgressStore((s) => s.setSetting)
 
   const gameRef = useRef<Nullable<SudokuGame>>(null)
-  const [lockedDigit, setLockedDigit] = useState<Nullable<number>>(null)
   const [hintStep, setHintStep] = useState<Nullable<CrackStep>>(null)
   const [resultDismissed, setResultDismissed] = useState(false)
 
@@ -86,7 +85,6 @@ export function Sudoku({ embedded = false }: SudokuProps = {}) {
     stepCrack,
     stepCrackBack,
     stopCrackDemo,
-    setLockedDigit,
   })
 
   const shell = cn(embeddedAppShell(embedded, 'relative flex flex-col bg-chrome text-on-chrome min-h-0'), 'h-full')
@@ -166,24 +164,8 @@ export function Sudoku({ embedded = false }: SudokuProps = {}) {
     setHintStep(null)
   }
 
-  const onDigitPadClick = (d: number) => {
-    if (settings.selectDigitFirst) {
-      setLockedDigit((prev) => (prev === d ? null : d))
-      return
-    }
-    fillDigit(d)
-  }
-
   const onCellClick = (r: number, c: number) => {
-    const game = gameRef.current
-    if (!game) return
-    if (settings.selectDigitFirst && lockedDigit != null && !state.notesMode) {
-      game.selectCell(r, c)
-      game.setValue(lockedDigit, fillOpts)
-      setHintStep(null)
-      return
-    }
-    game.selectCell(r, c)
+    gameRef.current?.selectCell(r, c)
   }
 
   const applyHint = () => {
@@ -296,11 +278,9 @@ export function Sudoku({ embedded = false }: SudokuProps = {}) {
       <DigitPad
         digitCounts={digitCounts}
         hideUsedDigits={settings.hideUsedDigits}
-        selectDigitFirst={settings.selectDigitFirst}
-        lockedDigit={lockedDigit}
         inputLocked={inputLocked}
         won={state.status === 'won'}
-        onDigitClick={onDigitPadClick}
+        onDigitClick={fillDigit}
       />
 
       {state.paused && state.status === 'playing' && !settingsOpen ? (

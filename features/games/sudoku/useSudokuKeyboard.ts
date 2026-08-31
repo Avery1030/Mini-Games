@@ -1,4 +1,4 @@
-import { useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from 'react'
+import { useEffect, type MutableRefObject } from 'react'
 import type { SudokuSettings } from './settings'
 import type { SudokuGame } from './sudoku-game'
 import type { Position } from './types'
@@ -13,7 +13,6 @@ type Options = {
   stepCrack: () => void
   stepCrackBack: () => void
   stopCrackDemo: () => void
-  setLockedDigit: Dispatch<SetStateAction<Nullable<number>>>
 }
 
 /** 对局键盘快捷键 */
@@ -26,7 +25,6 @@ export function useSudokuKeyboard({
   stepCrack,
   stepCrackBack,
   stopCrackDemo,
-  setLockedDigit,
 }: Options) {
   useEffect(() => {
     if (screen !== 'play') return
@@ -59,10 +57,6 @@ export function useSudokuKeyboard({
       if (e.key >= '1' && e.key <= '9') {
         e.preventDefault()
         const digit = Number(e.key)
-        if (settings.selectDigitFirst) {
-          setLockedDigit((prev) => (prev === digit ? null : digit))
-          return
-        }
         game.setValue(digit, {
           autoClearNotes: settings.autoClearNotes,
           autoUndoWrong: settings.autoUndoWrong,
@@ -106,6 +100,5 @@ export function useSudokuKeyboard({
     stopCrackDemo,
     settings,
     gameRef,
-    setLockedDigit,
   ])
 }

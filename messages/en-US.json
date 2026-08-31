@@ -1036,7 +1036,6 @@
       "highlightSameNotes": "Highlight same notes",
       "highlightSameDigits": "Highlight same numbers",
       "highlightRegions": "Highlight regions",
-      "selectDigitFirst": "Select number first",
       "autoUndoWrong": "Auto-undo wrong fills",
       "autoClearNotes": "Auto-clear notes"
     },
@@ -1047,7 +1046,6 @@
       "highlightSameNotes": "When a digit cell is selected, highlight matching notes",
       "highlightSameDigits": "When a digit cell is selected, highlight the same digits",
       "highlightRegions": "Highlight the selected cell’s row, column, and box",
-      "selectDigitFirst": "Lock a number first, then tap a cell to fill it",
       "autoUndoWrong": "Incorrect digits are automatically undone after entry",
       "autoClearNotes": "After a correct fill, remove that digit from peer notes"
     },

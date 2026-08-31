@@ -60,7 +60,7 @@ export const useSudokuProgressStore = create<SudokuProgressStore>()(
     }),
     {
       name: STORAGE_KEYS.sudoku,
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => appStorage.createStateStorage()),
       partialize: (s) => ({ levels: s.levels, settings: s.settings }),
       migrate: (persisted) => {
