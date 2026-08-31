@@ -43,15 +43,15 @@ export function ImagePuzzle({ embedded = false, onClose }: ImagePuzzleProps = {}
   const [state, setState] = useState<PuzzleState>(() => createInitialState(3))
   const [imageSrc, setImageSrc] = useState('')
   const [imageStatus, setImageStatus] = useState<ImageStatus>('loading')
-  const [imageError, setImageError] = useState<string | null>(null)
+  const [imageError, setImageError] = useState<Nullable<string>>(null)
   const [boardPx, setBoardPx] = useState(280)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [tick, setTick] = useState(0)
 
   const boardHostRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const objectUrlRef = useRef<string | null>(null)
-  const timerRef = useRef<number | null>(null)
+  const objectUrlRef = useRef<Nullable<string>>(null)
+  const timerRef = useRef<Nullable<number>>(null)
 
   const clearObjectUrl = useCallback(() => {
     if (objectUrlRef.current) {

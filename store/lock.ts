@@ -6,7 +6,7 @@ import { hashLockPassword, verifyLockPassword } from '@/lib/lockPassword'
 interface LockState {
   isLocked: boolean
   /** 本次锁屏的临时密码哈希；解锁后清空 */
-  sessionHash: string | null
+  sessionHash: Nullable<string>
   _hasHydrated: boolean
 }
 

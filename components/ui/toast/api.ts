@@ -1,5 +1,5 @@
 import { useToastStore } from './store'
-import type { ToastOptions, ToastType } from './types'
+import { ToastType, type ToastOptions } from './types'
 
 const DEFAULT_DURATION = 3_000
 
@@ -16,7 +16,7 @@ export function showToast(options: ToastOptions): string {
   const id = options.id ?? nextId()
   useToastStore.getState().push({
     id,
-    type: options.type ?? 'success',
+    type: options.type ?? ToastType.Success,
     message: options.message,
     duration: options.duration === undefined ? DEFAULT_DURATION : options.duration,
     createdAt: Date.now(),
@@ -39,9 +39,9 @@ function typed(type: ToastType) {
 
 /** 便于统一导入的命名空间 */
 export const toast = Object.assign(showToast, {
-  success: typed('success'),
-  error: typed('error'),
-  warning: typed('warning'),
+  success: typed(ToastType.Success),
+  error: typed(ToastType.Error),
+  warning: typed(ToastType.Warning),
   dismiss: dismissToast,
   clear: clearToasts,
 })

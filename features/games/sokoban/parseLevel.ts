@@ -70,7 +70,7 @@ function parseMapStrings(map: string[]): {
   const walls: CellPos[] = []
   const boxes: CellPos[] = []
   const targets: CellPos[] = []
-  let playerStart: CellPos | null = null
+  let playerStart: Nullable<CellPos> = null
   const wallGrid = Array.from({ length: height }, () => Array<boolean>(width).fill(false))
 
   for (let y = 0; y < height; y++) {

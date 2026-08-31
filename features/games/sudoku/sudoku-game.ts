@@ -15,7 +15,7 @@ export const MAX_MISTAKES = 3
 
 type Snapshot = {
   board: Cell[][]
-  selected: Position | null
+  selected: Nullable<Position>
   notesMode: boolean
   moves: number
   mistakes: number
@@ -86,7 +86,7 @@ function sameBox(a: Position, b: Position): boolean {
   return Math.floor(a.row / BOX) === Math.floor(b.row / BOX) && Math.floor(a.col / BOX) === Math.floor(b.col / BOX)
 }
 
-export function isPeer(selected: Position | null, row: number, col: number): boolean {
+export function isPeer(selected: Nullable<Position>, row: number, col: number): boolean {
   if (!selected) return false
   if (selected.row === row && selected.col === col) return false
   return selected.row === row || selected.col === col || sameBox(selected, { row, col })
@@ -143,10 +143,10 @@ export class SudokuGame {
   private board: Cell[][]
   private solution: number[][]
   private status: GameStatus = 'playing'
-  private selected: Position | null = null
+  private selected: Nullable<Position> = null
   private notesMode = false
   private paused = false
-  private startTime: number | null = null
+  private startTime: Nullable<number> = null
   /** 当前计时段开始时已累计的秒数 */
   private elapsedBase = 0
   private moves = 0
@@ -336,11 +336,11 @@ export class SudokuGame {
     this.emit()
   }
 
-  applyHint(opts?: { smart?: boolean; autoClearNotes?: boolean }): CrackStep | null {
+  applyHint(opts?: { smart?: boolean; autoClearNotes?: boolean }): Nullable<CrackStep> {
     if (this.paused || this.status !== 'playing') return null
     if (this.hintsUsed >= MAX_HINTS) return null
 
-    let step: CrackStep | null = null
+    let step: Nullable<CrackStep> = null
     if (opts?.smart) {
       step = findHintStep(boardToGrid(this.board), this.solution)
     }

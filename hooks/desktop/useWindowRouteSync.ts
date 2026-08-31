@@ -9,7 +9,7 @@ import { useWindowStore } from '@/store/window'
 
 function getFocusedWindowId(
   windows: Record<string, DesktopWindowRuntime>,
-): DesktopAppId | null {
+): Nullable<DesktopAppId> {
   for (const [id, w] of Object.entries(windows)) {
     if (w.isOpen && !w.minimized && w.active) return id as DesktopAppId
   }

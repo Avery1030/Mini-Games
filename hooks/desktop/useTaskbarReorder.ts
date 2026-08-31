@@ -33,7 +33,7 @@ type DragSession = {
 
 export type UseTaskbarReorderOptions = {
   items: TaskbarReorderItem[]
-  listRef: RefObject<HTMLElement | null>
+  listRef: RefObject<Nullable<HTMLElement>>
   onReorder: (orderedIds: DesktopAppId[]) => void
   onClick: (id: DesktopAppId) => void
 }
@@ -61,8 +61,8 @@ export function useTaskbarReorder({ items, listRef, onReorder, onClick }: UseTas
   const onClickRef = useRef(onClick)
   onClickRef.current = onClick
 
-  const sessionRef = useRef<DragSession | null>(null)
-  const [session, setSession] = useState<DragSession | null>(null)
+  const sessionRef = useRef<Nullable<DragSession>>(null)
+  const [session, setSession] = useState<Nullable<DragSession>>(null)
   const firstLeftsRef = useRef<Map<DesktopAppId, number>>(new Map())
 
   const baseOrder = items.map((i) => i.id)
@@ -225,7 +225,7 @@ export function useTaskbarReorder({ items, listRef, onReorder, onClick }: UseTas
 
   const onPointerDown = useCallback((id: DesktopAppId, e: ReactPointerEvent) => {
     if (e.button !== 0) return
-    const target = (e.currentTarget as HTMLElement).closest('[data-taskbar-app-id]') as HTMLElement | null
+    const target = (e.currentTarget as HTMLElement).closest('[data-taskbar-app-id]') as Nullable<HTMLElement>
     if (!target) return
     e.preventDefault()
     const order = itemsRef.current.map((i) => i.id)

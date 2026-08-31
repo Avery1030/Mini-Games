@@ -19,21 +19,21 @@ export interface DisplaySectionProps {
   models: WallpaperAsset[]
   loadingList: boolean
   uploading: boolean
-  uploadError: string | null
+  uploadError: Nullable<string>
   importUrl: string
-  importError: string | null
-  imageInputRef: RefObject<HTMLInputElement | null>
-  modelInputRef: RefObject<HTMLInputElement | null>
+  importError: Nullable<string>
+  imageInputRef: RefObject<Nullable<HTMLInputElement>>
+  modelInputRef: RefObject<Nullable<HTMLInputElement>>
   onDraftChange: (draft: WallpaperDraft) => void
   onFitChange: (fit: WallpaperFitMode) => void
-  onPickImage: (files: FileList | null) => void
-  onPickModel: (files: FileList | null) => void
+  onPickImage: (files: Nullable<FileList>) => void
+  onPickModel: (files: Nullable<FileList>) => void
   onImportLink: () => void
   onImportUrlChange: (url: string) => void
   onRemoveAsset: (path: string) => void
   onApply: () => void
-  activeImagePath: string | null
-  activeModelPath: string | null
+  activeImagePath: Nullable<string>
+  activeModelPath: Nullable<string>
 }
 
 function ImageTile({

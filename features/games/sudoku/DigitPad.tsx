@@ -15,7 +15,7 @@ type Props = {
   digitCounts: number[]
   hideUsedDigits: boolean
   selectDigitFirst: boolean
-  lockedDigit: number | null
+  lockedDigit: Nullable<number>
   inputLocked: boolean
   won: boolean
   onDigitClick: (digit: number) => void

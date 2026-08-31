@@ -30,8 +30,8 @@ export function isPublicWallpaperSrc(src: unknown): boolean {
  * - http(s) / 本会话 live blob / data:image → 原样或校验后返回
  */
 export async function resolveWallpaperDisplayUrl(
-  src: string | null | undefined,
-): Promise<string | null> {
+  src: Nullable<string> | undefined,
+): Promise<Nullable<string>> {
   if (!src) return null
 
   if (src.startsWith('blob:')) return isLiveObjectUrl(src) ? src : null
@@ -57,8 +57,8 @@ export async function resolveWallpaperDisplayUrl(
 
 /** 预览缩略图：图片生成 JPEG thumb；模型/其它回退到原图解析 */
 export async function resolveWallpaperThumbUrl(
-  src: string | null | undefined,
-): Promise<string | null> {
+  src: Nullable<string> | undefined,
+): Promise<Nullable<string>> {
   if (!src) return null
   if (isPublicWallpaperSrc(src) || src.startsWith('http://') || src.startsWith('https://')) {
     return src

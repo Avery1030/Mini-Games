@@ -51,7 +51,7 @@ export function TaskbarClock() {
     })),
   )
   const calendarOpen = useModalStore((s) => s.stack.some((m) => m.id === CALENDAR_MODAL_ID))
-  const [now, setNow] = useState<Date | null>(null)
+  const [now, setNow] = useState<Nullable<Date>>(null)
 
   useEffect(() => {
     if (!showClock) {

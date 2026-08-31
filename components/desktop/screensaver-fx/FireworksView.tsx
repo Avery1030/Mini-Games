@@ -53,7 +53,7 @@ export function FireworksView({ preview = false, className }: FireworksViewProps
 }
 
 /** 向烟花 iframe 转发 Esc（由屏保壳处理） */
-export function postFireworksEsc(iframe: HTMLIFrameElement | null) {
+export function postFireworksEsc(iframe: Nullable<HTMLIFrameElement>) {
   try {
     iframe?.contentWindow?.postMessage({ type: 'avery-fireworks-esc' }, '*')
   } catch {

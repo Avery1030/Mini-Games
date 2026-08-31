@@ -39,7 +39,7 @@ export function rectsIntersect(
 export function hitIdsInMarquee(
   rect: MarqueeRect,
   opts: {
-    root?: ParentNode | null
+    root?: Nullable<ParentNode>
     attr?: string
     allowedIds?: ReadonlySet<DesktopAppId>
   } = {},
@@ -50,7 +50,7 @@ export function hitIdsInMarquee(
   const hit: DesktopAppId[] = []
   for (const node of nodes) {
     const el = node as HTMLElement
-    const id = el.getAttribute(attr) as DesktopAppId | null
+    const id = el.getAttribute(attr) as Nullable<DesktopAppId>
     if (!id) continue
     if (opts.allowedIds && !opts.allowedIds.has(id)) continue
     const r = el.getBoundingClientRect()

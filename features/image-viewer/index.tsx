@@ -25,7 +25,7 @@ export type ImageViewerProps = {
   embedded?: boolean
 }
 
-type PendingAction = 'upload' | 'import' | 'delete' | null
+type PendingAction = Nullable<'upload' | 'import' | 'delete'>
 
 /**
  * 图片查看器：VFS `/Pictures` 图库 + 路径启动预览；URL 仅临时预览（不写入 VFS）。
@@ -40,11 +40,11 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
 
   const [images, setImages] = useState<ImageItem[]>([])
   const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [activeId, setActiveId] = useState<string | null>(null)
+  const [activeId, setActiveId] = useState<Nullable<string>>(null)
   const [listLoading, setListLoading] = useState(true)
   const [pending, setPending] = useState<PendingAction>(null)
   const [urlInput, setUrlInput] = useState('')
-  const [urlPreview, setUrlPreview] = useState<string | null>(null)
+  const [urlPreview, setUrlPreview] = useState<Nullable<string>>(null)
   const [slideDir, setSlideDir] = useState<SlideDirection>(0)
   const slideLockRef = useRef(false)
 
@@ -193,7 +193,7 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
     setActiveId(id)
   }
 
-  const handleUpload = async (fileList: FileList | null) => {
+  const handleUpload = async (fileList: Nullable<FileList>) => {
     if (!fileList?.length) return
     const files = Array.from(fileList).filter(
       (f) => f.type.startsWith('image/') || /\.(jpe?g|png|gif|webp|bmp)$/i.test(f.name),

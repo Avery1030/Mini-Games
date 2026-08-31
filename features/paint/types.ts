@@ -46,5 +46,5 @@ export type DrawingMeta = {
 }
 
 export type DrawingDetail = DrawingMeta & {
-  imageUrl: string | null
+  imageUrl: Nullable<string>
 }

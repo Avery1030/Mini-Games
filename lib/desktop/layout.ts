@@ -161,7 +161,7 @@ export function diffCoordinates(
 
 export function resolveCoordinate(
   app: CoordApp,
-  preview: Map<DesktopAppId, DesktopCoordinate> | null,
+  preview: Nullable<Map<DesktopAppId, DesktopCoordinate>>,
 ): DesktopCoordinate {
   return preview?.get(app.id) ?? app.coordinate
 }

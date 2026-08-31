@@ -6,9 +6,9 @@ import type { Direction, SokobanState } from './types'
 export type CrackPhase = 'idle' | 'playing' | 'paused'
 
 type Options = {
-  stateRef: MutableRefObject<SokobanState | null>
-  setState: Dispatch<SetStateAction<SokobanState | null>>
-  setHeldDir: Dispatch<SetStateAction<Direction | null>>
+  stateRef: MutableRefObject<Nullable<SokobanState>>
+  setState: Dispatch<SetStateAction<Nullable<SokobanState>>>
+  setHeldDir: Dispatch<SetStateAction<Nullable<Direction>>>
 }
 
 /** 破解通关演示：最短路径按步播放 */
@@ -19,8 +19,8 @@ export function useCrackDemo({ stateRef, setState, setHeldDir }: Options) {
   const crackDemoRef = useRef(false)
 
   const [crackPhase, setCrackPhase] = useState<CrackPhase>('idle')
-  const [crackProgress, setCrackProgress] = useState<{ step: number; total: number } | null>(null)
-  const [crackError, setCrackError] = useState<string | null>(null)
+  const [crackProgress, setCrackProgress] = useState<Nullable<{ step: number; total: number }>>(null)
+  const [crackError, setCrackError] = useState<Nullable<string>>(null)
 
   crackDemoRef.current = crackPhase === 'playing' || crackPhase === 'paused'
 

@@ -26,7 +26,7 @@ function fileExt(ext: ImageExt): string {
   return ext === 'jpg' ? 'jpg' : ext
 }
 
-function nodeKind(node: FileNode): WallpaperAssetKind | null {
+function nodeKind(node: FileNode): Nullable<WallpaperAssetKind> {
   if (node.isDirectory) return null
   const ext = getExtension(node.path).toLowerCase()
   if (ext === 'glb' || ext === 'gltf') return 'model'
@@ -34,7 +34,7 @@ function nodeKind(node: FileNode): WallpaperAssetKind | null {
   return null
 }
 
-function toAsset(node: FileNode): WallpaperAsset | null {
+function toAsset(node: FileNode): Nullable<WallpaperAsset> {
   const kind = nodeKind(node)
   if (!kind) return null
   return {
@@ -49,7 +49,7 @@ function toAsset(node: FileNode): WallpaperAsset | null {
   }
 }
 
-function assertNotInUse(path: string, activePaths: ReadonlyArray<string | null | undefined>): void {
+function assertNotInUse(path: string, activePaths: ReadonlyArray<Nullable<string> | undefined>): void {
   const normalized = path
   for (const active of activePaths) {
     if (active && active === normalized) {
@@ -154,7 +154,7 @@ export async function uploadWallpaperModel(file: File): Promise<WallpaperAsset> 
  */
 export async function trashWallpaper(
   path: string,
-  activePaths: ReadonlyArray<string | null | undefined>,
+  activePaths: ReadonlyArray<Nullable<string> | undefined>,
 ): Promise<void> {
   assertNotInUse(path, activePaths)
   try {

@@ -17,7 +17,7 @@ export type ToolbarProps = {
   overlays: string[]
   panes: string[]
   loading?: boolean
-  error?: string | null
+  error?: Nullable<string>
   onSymbolChange: (ticker: string) => void
   onIntervalChange: (interval: BinanceInterval) => void
   onToggleOverlay: (name: string) => void

@@ -47,7 +47,7 @@ export function DesktopTaskbar() {
   const reorderTaskbarWindows = useWindowStore((s) => s.reorderTaskbarWindows)
   const toggleMinimizeAllWindows = useWindowStore((s) => s.toggleMinimizeAllWindows)
   const [startMenuOpen, setStartMenuOpen] = useState(false)
-  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
+  const [contextMenu, setContextMenu] = useState<Nullable<ContextMenuState>>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const [overflow, setOverflow] = useState(false)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
@@ -181,7 +181,7 @@ export function DesktopTaskbar() {
 
   /** 双击任务栏空白（非开始/窗口按钮/托盘）→ 显示桌面切换 */
   const onTaskbarBlankDoubleClick = (e: ReactMouseEvent<HTMLElement>) => {
-    const el = e.target as Element | null
+    const el = e.target as Nullable<Element>
     if (!el) return
     if (el.closest('[data-taskbar-app-id], [data-start-menu-root], a, button, input, [data-taskbar-tray]')) {
       return

@@ -1,8 +1,18 @@
 /** 《数独》类型 */
 
-export type Difficulty = 'easy' | 'medium' | 'hard' | 'expert'
+export enum Difficulty {
+  Easy = 'easy',
+  Medium = 'medium',
+  Hard = 'hard',
+  Expert = 'expert',
+}
 
-export const DIFFICULTIES: readonly Difficulty[] = ['easy', 'medium', 'hard', 'expert'] as const
+export const DIFFICULTIES: readonly Difficulty[] = [
+  Difficulty.Easy,
+  Difficulty.Medium,
+  Difficulty.Hard,
+  Difficulty.Expert,
+]
 
 /**
  * 关卡条目（写在 levels.ts，按难度分表）。
@@ -62,11 +72,11 @@ export type SudokuState = {
   board: Cell[][]
   solution: number[][]
   status: GameStatus
-  selected: Position | null
+  selected: Nullable<Position>
   highlightDigit: number
   notesMode: boolean
   paused: boolean
-  startTime: number | null
+  startTime: Nullable<number>
   elapsed: number
   /** 填数次数（含填错） */
   moves: number

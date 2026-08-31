@@ -39,10 +39,10 @@ export function PaintApp({ embedded = false }: PaintProps = {}) {
   const setBrushSize = usePaintStore((s) => s.setBrushSize)
 
   const canvasRef = useRef<DrawingCanvasHandle>(null)
-  const activeIdRef = useRef<string | null>(null)
+  const activeIdRef = useRef<Nullable<string>>(null)
 
   const [drawings, setDrawings] = useState<DrawingMeta[]>([])
-  const [activeId, setActiveId] = useState<string | null>(null)
+  const [activeId, setActiveId] = useState<Nullable<string>>(null)
   const [title, setTitle] = useState('')
   const [savedTitle, setSavedTitle] = useState('')
   const [dirty, setDirty] = useState(false)
@@ -50,8 +50,8 @@ export function PaintApp({ embedded = false }: PaintProps = {}) {
   const [listLoading, setListLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [status, setStatus] = useState<string | null>(null)
+  const [error, setError] = useState<Nullable<string>>(null)
+  const [status, setStatus] = useState<Nullable<string>>(null)
 
   activeIdRef.current = activeId
   const titleDirty = activeId != null && title !== savedTitle
@@ -74,7 +74,7 @@ export function PaintApp({ embedded = false }: PaintProps = {}) {
   }, [])
 
   const applyDrawing = useCallback(
-    async (drawing: { id: string; title: string; imageUrl: string | null }) => {
+    async (drawing: { id: string; title: string; imageUrl: Nullable<string> }) => {
       setActiveId(drawing.id)
       setTitle(drawing.title)
       setSavedTitle(drawing.title)

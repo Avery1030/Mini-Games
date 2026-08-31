@@ -6,7 +6,7 @@ import type { CrackMode, CrackStep } from './types'
 export type CrackPhase = 'idle' | 'manual'
 
 type Options = {
-  gameRef: MutableRefObject<SudokuGame | null>
+  gameRef: MutableRefObject<Nullable<SudokuGame>>
 }
 
 /** 破解通关：直接出答案，或手动逐步推导（附依据，可前进/后退） */
@@ -16,9 +16,9 @@ export function useCrackDemo({ gameRef }: Options) {
   const crackDemoRef = useRef(false)
 
   const [crackPhase, setCrackPhase] = useState<CrackPhase>('idle')
-  const [crackProgress, setCrackProgress] = useState<{ step: number; total: number } | null>(null)
-  const [lastStep, setLastStep] = useState<CrackStep | null>(null)
-  const [crackError, setCrackError] = useState<string | null>(null)
+  const [crackProgress, setCrackProgress] = useState<Nullable<{ step: number; total: number }>>(null)
+  const [lastStep, setLastStep] = useState<Nullable<CrackStep>>(null)
+  const [crackError, setCrackError] = useState<Nullable<string>>(null)
 
   crackDemoRef.current = crackPhase === 'manual'
 

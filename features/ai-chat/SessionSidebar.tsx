@@ -8,7 +8,7 @@ import { cn } from '@/lib/cn'
 
 export type SessionSidebarProps = {
   sessions: AiChatSessionMeta[]
-  activeSessionId: string | null
+  activeSessionId: Nullable<string>
   streaming: boolean
   onNew: () => void
   onSelect: (id: string) => void

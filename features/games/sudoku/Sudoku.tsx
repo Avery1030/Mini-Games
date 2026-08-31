@@ -17,7 +17,7 @@ import { SudokuToolbar } from './SudokuToolbar'
 import { buildSettingsPanelLabels } from './settingsLabels'
 import { MAX_HINTS, SudokuGame, formatElapsed } from './sudoku-game'
 import type { CrackMode, CrackStep } from './types'
-import { progressKey } from './types'
+import { Difficulty, progressKey } from './types'
 import { useCrackDemo } from './useCrackDemo'
 import { useSudokuKeyboard } from './useSudokuKeyboard'
 import { useSudokuSession } from './useSudokuSession'
@@ -32,9 +32,9 @@ export function Sudoku({ embedded = false }: SudokuProps = {}) {
   const settings = useSudokuProgressStore((s) => s.settings)
   const setSetting = useSudokuProgressStore((s) => s.setSetting)
 
-  const gameRef = useRef<SudokuGame | null>(null)
-  const [lockedDigit, setLockedDigit] = useState<number | null>(null)
-  const [hintStep, setHintStep] = useState<CrackStep | null>(null)
+  const gameRef = useRef<Nullable<SudokuGame>>(null)
+  const [lockedDigit, setLockedDigit] = useState<Nullable<number>>(null)
+  const [hintStep, setHintStep] = useState<Nullable<CrackStep>>(null)
   const [resultDismissed, setResultDismissed] = useState(false)
 
   const {
@@ -102,16 +102,16 @@ export function Sudoku({ embedded = false }: SudokuProps = {}) {
             levels: t('levels'),
             cleared: t('cleared'),
             difficulty: {
-              easy: t('difficulty.easy'),
-              medium: t('difficulty.medium'),
-              hard: t('difficulty.hard'),
-              expert: t('difficulty.expert'),
+              [Difficulty.Easy]: t('difficulty.easy'),
+              [Difficulty.Medium]: t('difficulty.medium'),
+              [Difficulty.Hard]: t('difficulty.hard'),
+              [Difficulty.Expert]: t('difficulty.expert'),
             },
             difficultyHint: {
-              easy: t('difficultyDesc.easy'),
-              medium: t('difficultyDesc.medium'),
-              hard: t('difficultyDesc.hard'),
-              expert: t('difficultyDesc.expert'),
+              [Difficulty.Easy]: t('difficultyDesc.easy'),
+              [Difficulty.Medium]: t('difficultyDesc.medium'),
+              [Difficulty.Hard]: t('difficultyDesc.hard'),
+              [Difficulty.Expert]: t('difficultyDesc.expert'),
             },
           }}
           onPick={pickDifficulty}

@@ -1,7 +1,7 @@
 import { HttpError } from '@/lib/http'
 
 /** 经服务端代理拉取外链图片（绕过 CORS），不落盘 */
-export async function fetchRemoteImageBlob(url: string): Promise<{ blob: Blob; contentType: string | null }> {
+export async function fetchRemoteImageBlob(url: string): Promise<{ blob: Blob; contentType: Nullable<string> }> {
   const res = await fetch('/api/proxy-image', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

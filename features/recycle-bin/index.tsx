@@ -109,7 +109,7 @@ export function RecycleBinApp({ embedded = false }: RecycleBinAppProps) {
 
   const [vfsNodes, setVfsNodes] = useState<FileNode[]>([])
   const [loading, setLoading] = useState(true)
-  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
+  const [contextMenu, setContextMenu] = useState<Nullable<ContextMenuState>>(null)
 
   const refreshVfs = useCallback(async () => {
     const list = await vfs.readDir(TRASH_PATH)

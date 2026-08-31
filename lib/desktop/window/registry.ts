@@ -84,7 +84,7 @@ type DesktopCoordController = {
   removeCoordinate: (id: DesktopAppId) => void
 }
 
-let coordController: DesktopCoordController | null = null
+let coordController: Nullable<DesktopCoordController> = null
 
 export function registerDesktopCoordController(next: DesktopCoordController) {
   coordController = next

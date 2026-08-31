@@ -19,11 +19,11 @@ export type CmdRunResult = {
   /** 清屏 */
   clear?: boolean
   /** 更新后的当前目录（folder id；null = 桌面根） */
-  cwd?: DesktopAppId | null
+  cwd?: Nullable<DesktopAppId>
 }
 
 type CmdContext = {
-  cwd: DesktopAppId | null
+  cwd: Nullable<DesktopAppId>
   t: (key: string, values?: Record<string, string | number>) => string
 }
 
@@ -47,7 +47,7 @@ function sys(text: string): CmdLine {
 }
 
 /** 当前路径显示：C:\Desktop\Foo\Bar */
-export function formatCmdPath(items: DesktopItemRecord[], cwd: DesktopAppId | null, desktopLabel: string): string {
+export function formatCmdPath(items: DesktopItemRecord[], cwd: Nullable<DesktopAppId>, desktopLabel: string): string {
   if (cwd == null) return `C:\\${desktopLabel}`
   const parts: string[] = []
   let current = items.find((i) => i.id === cwd && !i.isDeleted)
@@ -66,7 +66,7 @@ export function formatCmdPath(items: DesktopItemRecord[], cwd: DesktopAppId | nu
 /** 在同级中按主名 / 显示名（含后缀）查找项目 */
 function findChildByName(
   items: DesktopItemRecord[],
-  parentId: DesktopAppId | null,
+  parentId: Nullable<DesktopAppId>,
   seg: string,
   opts?: { foldersOnly?: boolean },
 ): DesktopItemRecord | 'ambiguous' | undefined {

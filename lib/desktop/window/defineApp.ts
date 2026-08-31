@@ -1,8 +1,8 @@
 import { createElement, lazy, Suspense, type ComponentType } from 'react'
 import {
   DEFAULT_WINDOW_CHROME,
+  BuiltinAppId,
   type AppTitles,
-  type DesktopAppId,
   type DesktopCoordinate,
   type WindowChromeOptions,
 } from '@/config/desktop'
@@ -15,7 +15,7 @@ export type AppComponent = ComponentType<{ embedded?: boolean }>
 export type LoadAppFn = () => Promise<AppComponent>
 
 export type RegisterBuiltinAppOptions = {
-  id: DesktopAppId
+  id: BuiltinAppId
   icon: DesktopIconComponent
   /** 直接挂载的应用组件；与 loadApp 二选一 */
   app?: AppComponent
@@ -60,8 +60,8 @@ function AppChunkFallback() {
 
 /** 将异步 load 包成可同步挂到 definition 上的组件（共享 promise + Suspense 占位） */
 export function createDeferredApp(load: LoadAppFn): DeferredApp {
-  let promise: Promise<AppComponent> | null = null
-  let resolved: AppComponent | null = null
+  let promise: Nullable<Promise<AppComponent>> = null
+  let resolved: Nullable<AppComponent> = null
 
   const ensure = () => {
     if (!promise) {
@@ -113,13 +113,13 @@ export function defineDesktopApp(opts: RegisterBuiltinAppOptions): DesktopWindow
     override readonly title = opts.title
     override readonly showOnDesktop = opts.showOnDesktop ?? true
     override readonly showInStartMenu = opts.showInStartMenu ?? true
-    private deferred: DeferredApp | null = null
+    private deferred: Nullable<DeferredApp> = null
 
     override get chrome(): WindowChromeOptions {
       return chromeMerged
     }
 
-    private ensureDeferred(): DeferredApp | null {
+    private ensureDeferred(): Nullable<DeferredApp> {
       if (opts.app) return null
       if (!this.deferred && opts.loadApp) {
         this.deferred = createDeferredApp(opts.loadApp)

@@ -1,6 +1,6 @@
 # Avery Mini Windows Desktop
 
-Windows 95 风格的 Web 桌面（Next.js App Router）：可拖拽图标与窗口、任务栏、开始菜单、锁屏，以及一整套内置应用——设置、文档、日志、记事本、代码编辑器、画图、计算器、命令提示符、资源管理器、回收站、图片查看器、K 线图表、智聊、任务管理器，外加「游戏」集合（扫雷、俄罗斯方块、西瓜、消消乐、推箱子、数独等）。
+Windows 95 风格的 Web 桌面（Next.js App Router）：可拖拽图标与窗口、任务栏、开始菜单、锁屏，以及一整套内置应用——设置、文档、日志、记事本、代码编辑器、画图、计算器、命令提示符、资源管理器、回收站、图片查看器、K 线图表、智聊、任务管理器，外加「游戏」集合（扫雷、俄罗斯方块、西瓜、推箱子、数独等）。
 
 气质是「Win95 怀旧壳 + 一点当代网页」：视觉走经典对话框质感；系统偏好与窗口布局在 `localStorage`；**用户文件统一走 VFS（默认 IndexedDB 适配器）**；智聊会话在独立 IndexedDB，不依赖账号体系。**内置应用按需动态加载**，首屏不打包全部 feature。
 
@@ -71,8 +71,6 @@ yarn lint    # ESLint
 | 扫雷       | `minesweeper`      | 经典扫雷（经「游戏」打开）                                                 |
 | 俄罗斯方块 | `tetris`           | 经典俄罗斯方块                                                             |
 | 西瓜游戏   | `suika`            | 合成类小游戏                                                               |
-| 方块消消乐 | `tileMatch`        | 三消类                                                                     |
-| 消消乐     | `match3`           | 三消关卡                                                                   |
 | 图片拼图   | `imagePuzzle`      | 图片拼图                                                                   |
 | 画布拼图   | `canvasJigsaw`     | Canvas 拼图                                                                |
 | 推箱子     | `sokoban`          | 经典推箱子（关卡在 `features/games/sokoban/levels.ts`）                    |
@@ -343,7 +341,7 @@ store/                    Zustand stores（含 imageViewer、desktopVfs）
 ```
 
 3. 应用显示名写在 `messages.*.apps.<id>`
-4. 按需：`showOnDesktop` / `showInStartMenu`；手机 Dock 改 `MOBILE_DOCK_APP_IDS`；游戏收纳改 `features/games/ids.ts`（若改游戏列表，同步 `prefetchApps.ts` 里的 `GAME_PREFETCH_IDS`）
+4. 按需：`showOnDesktop` / `showInStartMenu`；手机 Dock 改 `MOBILE_DOCK_APP_IDS`；游戏收纳改 `features/games/ids.ts`（`GAME_APP_IDS`，预取会自动跟上）
 5. 若有新 localStorage：先改 `lib/storage/keys.ts` + schema，再写 store
 6. 若读写用户文件：**只调 `vfs.*`**，不要新建业务 IDB store
 

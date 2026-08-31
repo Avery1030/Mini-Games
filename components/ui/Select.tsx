@@ -64,10 +64,10 @@ export function Select({
   const rootRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
   /** 仅打开 / 键盘导航时滚动；鼠标悬停不滚，避免来回进出抖动 */
-  const scrollModeRef = useRef<'center' | 'nearest' | null>(null)
+  const scrollModeRef = useRef<Nullable<'center' | 'nearest'>>(null)
   const [open, setOpen] = useState(false)
   const [uncontrolled, setUncontrolled] = useState(defaultValue ?? options[0]?.value ?? '')
-  const [highlight, setHighlight] = useState<string | null>(null)
+  const [highlight, setHighlight] = useState<Nullable<string>>(null)
   const [placement, setPlacement] = useState<'bottom' | 'top'>('bottom')
 
   const isControlled = valueProp !== undefined

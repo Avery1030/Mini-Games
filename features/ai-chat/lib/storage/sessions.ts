@@ -23,7 +23,7 @@ export async function listSessions(): Promise<AiChatSessionMeta[]> {
   return (rows as AiChatSessionMeta[]).sort((a, b) => b.updatedAt - a.updatedAt)
 }
 
-export async function getSession(id: string): Promise<AiChatSessionMeta | null> {
+export async function getSession(id: string): Promise<Nullable<AiChatSessionMeta>> {
   if (!id) return null
   const db = await openAiChatIdb()
   const row = await reqToPromise(
@@ -57,7 +57,7 @@ export async function createSession(input?: { title?: string; id?: string }): Pr
 export async function updateSessionMeta(
   id: string,
   patch: Partial<Pick<AiChatSessionMeta, 'title' | 'updatedAt' | 'messageCount'>>,
-): Promise<AiChatSessionMeta | null> {
+): Promise<Nullable<AiChatSessionMeta>> {
   const prev = await getSession(id)
   if (!prev) return null
   const next: AiChatSessionMeta = {
@@ -101,7 +101,7 @@ export async function deleteSession(id: string): Promise<boolean> {
   return true
 }
 
-export async function getActiveSessionId(): Promise<string | null> {
+export async function getActiveSessionId(): Promise<Nullable<string>> {
   const db = await openAiChatIdb()
   const row = (await reqToPromise(
     db.transaction(AI_CHAT_STORES.meta, 'readonly').objectStore(AI_CHAT_STORES.meta).get(META_ACTIVE_KEY),
@@ -109,7 +109,7 @@ export async function getActiveSessionId(): Promise<string | null> {
   return typeof row?.value === 'string' && row.value ? row.value : null
 }
 
-export async function setActiveSessionId(id: string | null): Promise<void> {
+export async function setActiveSessionId(id: Nullable<string>): Promise<void> {
   const db = await openAiChatIdb()
   const tx = db.transaction(AI_CHAT_STORES.meta, 'readwrite')
   const store = tx.objectStore(AI_CHAT_STORES.meta)

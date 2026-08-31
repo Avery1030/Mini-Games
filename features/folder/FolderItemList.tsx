@@ -16,15 +16,15 @@ export const FS_LIST_GRAB_X = 18
 export const FS_LIST_GRAB_Y = 14
 
 export type FolderItemListProps = {
-  listRef: React.RefObject<HTMLDivElement | null>
+  listRef: React.RefObject<Nullable<HTMLDivElement>>
   folderId: DesktopAppId
   listLabel: string
   emptyText: string
   items: DesktopItemRecord[]
   selectedIds: DesktopAppId[]
-  editingId: DesktopAppId | null
+  editingId: Nullable<DesktopAppId>
   editValue: string
-  editInputRef: React.RefObject<HTMLInputElement | null>
+  editInputRef: React.RefObject<Nullable<HTMLInputElement>>
   onListBlankPointerDown: (e: React.PointerEvent) => void
   onEnsureScope: () => void
   onItemClick: (child: DesktopItemRecord, e: React.MouseEvent) => void

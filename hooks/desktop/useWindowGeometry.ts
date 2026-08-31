@@ -18,7 +18,7 @@ type Size = { width: number; height: number }
 
 type UseWindowGeometryOptions = {
   windowId?: string
-  rememberedBounds?: WindowBounds | null
+  rememberedBounds?: Nullable<WindowBounds>
   defaultPosition?: Point
   defaultMaximized?: boolean
   width: number
@@ -44,7 +44,7 @@ export function useWindowGeometry({
   onClose,
   onMinimize,
 }: UseWindowGeometryOptions) {
-  const seedRef = useRef<WindowSeed | null>(null)
+  const seedRef = useRef<Nullable<WindowSeed>>(null)
   if (!seedRef.current) {
     seedRef.current = createWindowSeed({
       rememberedBounds,
@@ -64,7 +64,7 @@ export function useWindowGeometry({
   const beforeMaximizeRef = useRef({ position: seed.position, size: seed.size })
 
   const [isDragging, setIsDragging] = useState(false)
-  const [resizing, setResizing] = useState<ResizeEdge | null>(null)
+  const [resizing, setResizing] = useState<Nullable<ResizeEdge>>(null)
   const dragOffset = useRef({ x: 0, y: 0 })
   const snapSession = useRef<SnapSession>(createSnapSession())
   const resizeStart = useRef({ x: 0, y: 0, left: 0, top: 0, width: 0, height: 0 })

@@ -22,7 +22,7 @@ function formatTime(formatMode: '12h' | '24h', date: Date): string {
 /** 手机状态栏：时间 + 装饰性信号/电量 */
 export function MobileStatusBar() {
   const clockFormat = useSettingsStore((s) => s.clockFormat)
-  const [now, setNow] = useState<Date | null>(null)
+  const [now, setNow] = useState<Nullable<Date>>(null)
 
   useEffect(() => {
     setNow(new Date())

@@ -10,7 +10,7 @@ import { EmojiPicker } from './EmojiPicker'
 import { insertAtCursor } from './utils'
 
 export type ChatComposerProps = {
-  inputRef: RefObject<HTMLTextAreaElement | null>
+  inputRef: RefObject<Nullable<HTMLTextAreaElement>>
   streaming: boolean
   /** 会话被清空时递增，用于重置输入与表情面板 */
   sessionEpoch: number

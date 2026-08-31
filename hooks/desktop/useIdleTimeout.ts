@@ -38,7 +38,7 @@ export function useIdleTimeout({
   useEffect(() => {
     if (!enabled || timeoutMs <= 0) return
 
-    let timer: number | null = null
+    let timer: Nullable<number> = null
 
     const clear = () => {
       if (timer != null) {

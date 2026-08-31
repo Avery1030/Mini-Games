@@ -13,7 +13,7 @@ export type DockPose = {
 }
 
 /** 按 app id 查找任务栏按钮矩形 */
-export function queryTaskbarAppButton(id: string): HTMLElement | null {
+export function queryTaskbarAppButton(id: string): Nullable<HTMLElement> {
   if (isServer) return null
   return document.querySelector(`[${TASKBAR_ATTR}="${CSS.escape(id)}"]`)
 }
@@ -22,7 +22,7 @@ export function queryTaskbarAppButton(id: string): HTMLElement | null {
  * 计算窗口飞向/飞出任务栏按钮时的 translate + scale
  *（transform-origin: center center，left/top 仍为 0）
  */
-export function getDockPoseForWindow(appId: string, winWidth: number, winHeight: number): DockPose | null {
+export function getDockPoseForWindow(appId: string, winWidth: number, winHeight: number): Nullable<DockPose> {
   const el = queryTaskbarAppButton(appId)
   const w = Math.max(1, winWidth)
   const h = Math.max(1, winHeight)

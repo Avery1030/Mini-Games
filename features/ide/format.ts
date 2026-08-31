@@ -338,14 +338,14 @@ const VOID_TAGS = new Set([
 
 type EmbedKind = 'css' | 'js'
 
-function matchOpenEmbed(line: string): { kind: EmbedKind; open: string; rest: string } | null {
+function matchOpenEmbed(line: string): Nullable<{ kind: EmbedKind; open: string; rest: string }> {
   const m = line.match(/^<(style|script)\b([^>]*)>(.*)$/i)
   if (!m) return null
   const kind: EmbedKind = m[1]!.toLowerCase() === 'style' ? 'css' : 'js'
   return { kind, open: `<${m[1]}${m[2]}>`, rest: m[3] ?? '' }
 }
 
-function matchCloseEmbed(line: string, kind: EmbedKind): { before: string; close: string } | null {
+function matchCloseEmbed(line: string, kind: EmbedKind): Nullable<{ before: string; close: string }> {
   const name = kind === 'css' ? 'style' : 'script'
   const m = line.match(new RegExp(`^(.*?)(</${name}\\s*>)$`, 'i'))
   if (!m) return null
@@ -362,7 +362,7 @@ function formatMarkup(text: string): FormatResult {
   const lines = normalizeNewlines(text).split('\n')
   const out: string[] = []
   let indent = 0
-  let embed: { kind: EmbedKind; base: number; buf: string[] } | null = null
+  let embed: Nullable<{ kind: EmbedKind; base: number; buf: string[] }> = null
 
   const flushEmbed = () => {
     if (!embed) return

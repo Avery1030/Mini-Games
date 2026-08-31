@@ -103,7 +103,7 @@ export type ManagedWebSocketOptions = {
    */
   heartbeatTimeout?: number
   /** 心跳载荷；函数返回 null 表示本轮跳过 */
-  heartbeatPayload?: WebSocketSendData | (() => WebSocketSendData | null)
+  heartbeatPayload?: WebSocketSendData | (() => Nullable<WebSocketSendData>)
   /**
    * 任意 `message` 是否刷新看门狗。
    * `false` 时仅 `touch()` 可刷新（标准 Ping-Pong）。
@@ -137,7 +137,7 @@ export type ManagedWebSocketOptions = {
    * 冲刷前合并队列（依赖业务协议）。
    * 返回单条、多条或 `null`（全部丢弃）。未提供则逐条发送。
    */
-  mergeQueuedMessages?: (items: WebSocketSendData[]) => WebSocketSendData | WebSocketSendData[] | null
+  mergeQueuedMessages?: (items: WebSocketSendData[]) => Nullable<WebSocketSendData | WebSocketSendData[]>
   onQueueOverflow?: (dropped: WebSocketSendData) => void
 
   // —— 消息管道 ——
@@ -145,7 +145,7 @@ export type ManagedWebSocketOptions = {
    * 入站消息中间件：可做节流 / 去重 / 采样。
    * 返回 `false` / `null` / `undefined` 表示丢弃，不调用 `onMessage`。
    */
-  transformMessage?: (ev: MessageEvent) => MessageEvent | false | null | undefined
+  transformMessage?: (ev: MessageEvent) => Nullable<MessageEvent | false> | undefined
 
   // —— 重连 ——
   /** @default true */
@@ -199,7 +199,7 @@ export type ManagedWebSocket = {
   touch: () => void
   /** 立即重连（节流 + epoch 防护） */
   reconnectNow: () => void
-  getSocket: () => WebSocket | null
+  getSocket: () => Nullable<WebSocket>
   getReadyState: () => number
   getStatus: () => ConnectionStatus
   getQueueLength: () => number
@@ -255,7 +255,7 @@ export function createManagedWebSocket(options: ManagedWebSocketOptions): Manage
   const listenNetwork = options.listenNetwork !== false
   const listenVisibility = options.listenVisibility !== false
 
-  let socket: WebSocket | null = null
+  let socket: Nullable<WebSocket> = null
   let connectEpoch = 0
   let urlIndex = 0
   let attempt = 0
@@ -269,11 +269,11 @@ export function createManagedWebSocket(options: ManagedWebSocketOptions): Manage
   let lastActivityAt = 0
   const sendQueue: QueuedMessage[] = []
 
-  let reconnectTimer: ReturnType<typeof setTimeout> | null = null
-  let reconnectNowTimer: ReturnType<typeof setTimeout> | null = null
-  let heartbeatTimer: ReturnType<typeof setInterval> | null = null
-  let watchdogTimer: ReturnType<typeof setTimeout> | null = null
-  let flushTimer: ReturnType<typeof setTimeout> | null = null
+  let reconnectTimer: Nullable<ReturnType<typeof setTimeout>> = null
+  let reconnectNowTimer: Nullable<ReturnType<typeof setTimeout>> = null
+  let heartbeatTimer: Nullable<ReturnType<typeof setInterval>> = null
+  let watchdogTimer: Nullable<ReturnType<typeof setTimeout>> = null
+  let flushTimer: Nullable<ReturnType<typeof setTimeout>> = null
   let flushInFlight = false
 
   const log = (level: WebSocketLogLevel, event: WebSocketLogEvent, detail?: unknown) => {
@@ -414,7 +414,7 @@ export function createManagedWebSocket(options: ManagedWebSocketOptions): Manage
     // 批量合并（一次性取出当前快照）
     if (options.mergeQueuedMessages) {
       const batch = sendQueue.splice(0, sendQueue.length).map((q) => q.data)
-      let merged: WebSocketSendData | WebSocketSendData[] | null
+      let merged: Nullable<WebSocketSendData | WebSocketSendData[]>
       try {
         merged = options.mergeQueuedMessages(batch)
       } catch (err) {
@@ -540,7 +540,7 @@ export function createManagedWebSocket(options: ManagedWebSocketOptions): Manage
     }, heartbeatInterval)
   }
 
-  const discardSocket = (ws: WebSocket | null) => {
+  const discardSocket = (ws: Nullable<WebSocket>) => {
     if (!ws) return
     detachSocket(ws)
     try {
@@ -671,7 +671,7 @@ export function createManagedWebSocket(options: ManagedWebSocketOptions): Manage
       if (epoch !== connectEpoch || socket !== next) return
       if (resetWatchdogOnAnyMessage) armWatchdog()
 
-      let outgoing: MessageEvent | false | null | undefined = ev
+      let outgoing: Nullable<MessageEvent | false> | undefined = ev
       if (options.transformMessage) {
         try {
           outgoing = options.transformMessage(ev)

@@ -123,7 +123,7 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
     const onPointer = (e: MouseEvent) => {
       const target = e.target as Node
       if (rootRef.current?.contains(target)) return
-      if ((e.target as HTMLElement | null)?.closest?.('[data-start-menu-root]')) return
+      if ((e.target as Nullable<HTMLElement>)?.closest?.('[data-start-menu-root]')) return
       onClose()
     }
     const onKey = (e: KeyboardEvent) => {

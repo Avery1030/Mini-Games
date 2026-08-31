@@ -22,7 +22,7 @@ export type ContextMenuState = {
 }
 
 export interface ContextMenuProps {
-  menu: ContextMenuState | null
+  menu: Nullable<ContextMenuState>
   onClose: () => void
   /** 贴底预留（如任务栏高度）；由调用方注入 */
   safeBottom?: number
@@ -46,7 +46,7 @@ function SubMenu({
 
   useLayoutEffect(() => {
     const el = ref.current
-    const parent = el?.offsetParent as HTMLElement | null
+    const parent = el?.offsetParent as Nullable<HTMLElement>
     if (!el || !parent) return
     const parentRect = parent.getBoundingClientRect()
     const h = el.offsetHeight
@@ -78,9 +78,9 @@ function MenuList({
   safeBottom: number
   className?: string
   style?: CSSProperties
-  listRef?: RefObject<HTMLUListElement | null>
+  listRef?: RefObject<Nullable<HTMLUListElement>>
 }) {
-  const [openChildId, setOpenChildId] = useState<string | null>(null)
+  const [openChildId, setOpenChildId] = useState<Nullable<string>>(null)
 
   return (
     <ul

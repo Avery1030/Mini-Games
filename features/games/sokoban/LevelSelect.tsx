@@ -9,13 +9,13 @@ export type LevelSelectItem = {
   id: number
   unlocked: boolean
   stars: number
-  bestMoves: number | null
+  bestMoves: Nullable<number>
 }
 
 type Props = {
   items: LevelSelectItem[]
   loading: boolean
-  loadError: string | null
+  loadError: Nullable<string>
   labels: {
     title: string
     hint: string

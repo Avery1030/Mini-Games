@@ -2,7 +2,7 @@
 
 type OpenListener = (id: string) => void
 
-let pendingNoteId: string | null = null
+let pendingNoteId: Nullable<string> = null
 const listeners = new Set<OpenListener>()
 
 export function requestOpenNote(id: string): void {
@@ -15,7 +15,7 @@ export function requestOpenNote(id: string): void {
   pendingNoteId = id
 }
 
-export function takePendingOpenNote(): string | null {
+export function takePendingOpenNote(): Nullable<string> {
   const id = pendingNoteId
   pendingNoteId = null
   return id

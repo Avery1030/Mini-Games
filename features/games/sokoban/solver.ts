@@ -98,7 +98,7 @@ type SearchNode = {
  * 从当前局面 BFS 求最少移动步数的方向序列；无解或超限则返回 null。
  * 已通关返回空数组。
  */
-export function solveMinMoves(state: SokobanState): Direction[] | null {
+export function solveMinMoves(state: SokobanState): Nullable<Direction[]> {
   if (state.won) return []
   const result = solveSync(state)
   return result
@@ -108,12 +108,12 @@ export function solveMinMoves(state: SokobanState): Direction[] | null {
 export function solveMinMovesAsync(
   state: SokobanState,
   opts?: { signal?: AbortSignal },
-): Promise<Direction[] | null> {
+): Promise<Nullable<Direction[]>> {
   if (state.won) return Promise.resolve([])
   return solveChunked(state, opts?.signal)
 }
 
-function solveSync(state: SokobanState): Direction[] | null {
+function solveSync(state: SokobanState): Nullable<Direction[]> {
   const ctx = buildContext(state.level)
   const startPlayer = idx(ctx.width, state.player.x, state.player.y)
   const startBoxes = boxesToMask(ctx.width, state.boxes)
@@ -174,7 +174,7 @@ function solveSync(state: SokobanState): Direction[] | null {
   return null
 }
 
-function solveChunked(state: SokobanState, signal?: AbortSignal): Promise<Direction[] | null> {
+function solveChunked(state: SokobanState, signal?: AbortSignal): Promise<Nullable<Direction[]>> {
   return new Promise((resolve) => {
     const ctx = buildContext(state.level)
     const startPlayer = idx(ctx.width, state.player.x, state.player.y)

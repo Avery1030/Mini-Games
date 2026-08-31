@@ -1,5 +1,5 @@
 import { canPick } from './game'
-import { COLS, DEAL_SIZE, type Card, type SpiderState, type Suit } from './types'
+import { COLS, DEAL_SIZE, Suit, type Card, type SpiderState } from './types'
 
 export type Rect = { x: number; y: number; w: number; h: number }
 
@@ -20,7 +20,7 @@ export function setupHiDpiCanvas(
   canvas: HTMLCanvasElement,
   cssW: number,
   cssH: number,
-): CanvasRenderingContext2D | null {
+): Nullable<CanvasRenderingContext2D> {
   const dpr = typeof window !== 'undefined' ? Math.min(2, window.devicePixelRatio || 1) : 1
   const needW = Math.max(1, Math.round(cssW * dpr))
   const needH = Math.max(1, Math.round(cssH * dpr))
@@ -141,7 +141,7 @@ export function hitTestCard(
   x: number,
   y: number,
   hiddenIds: ReadonlySet<number>,
-): { col: number; index: number } | null {
+): Nullable<{ col: number; index: number }> {
   for (let col = 0; col < COLS; col++) {
     const pile = state.tableau[col] ?? []
     for (let i = pile.length - 1; i >= 0; i--) {
@@ -167,7 +167,7 @@ export function hitTestStock(layout: Layout, x: number, y: number): boolean {
 }
 
 /** 点到某列牌面、空列占位或列宽范围内的空白，返回列号 */
-export function hitTestColumn(state: SpiderState, layout: Layout, x: number, y: number): number | null {
+export function hitTestColumn(state: SpiderState, layout: Layout, x: number, y: number): Nullable<number> {
   const cardHit = hitTestCard(state, layout, x, y, new Set())
   if (cardHit) return cardHit.col
   for (let col = 0; col < COLS; col++) {
@@ -207,14 +207,14 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 }
 
 const SUIT_GLYPH: Record<Suit, string> = {
-  spades: '\u2660',
-  hearts: '\u2665',
-  diamonds: '\u2666',
-  clubs: '\u2663',
+  [Suit.Spades]: '\u2660',
+  [Suit.Hearts]: '\u2665',
+  [Suit.Diamonds]: '\u2666',
+  [Suit.Clubs]: '\u2663',
 }
 
 function isRedSuit(suit: Suit): boolean {
-  return suit === 'hearts' || suit === 'diamonds'
+  return suit === Suit.Hearts || suit === Suit.Diamonds
 }
 
 function suitColor(suit: Suit): string {
@@ -279,7 +279,7 @@ function drawCardBack(ctx: CanvasRenderingContext2D, x: number, y: number, w: nu
   roundRect(ctx, x + 5, y + 5, w - 10, h - 10, 2)
   ctx.stroke()
 
-  drawSuit(ctx, 'spades', x + w / 2, y + h / 2, Math.min(w, h) * 0.22, '#062e26')
+  drawSuit(ctx, Suit.Spades, x + w / 2, y + h / 2, Math.min(w, h) * 0.22, '#062e26')
 }
 
 type Highlight = false | 'active'
@@ -355,12 +355,12 @@ export type DrawExtras = {
   hiddenIds: ReadonlySet<number>
   ghost?: { cards: Card[]; x: number; y: number }
   flights?: { card: Card; x: number; y: number; scale?: number; faceUp?: boolean }[]
-  active?: { col: number; index: number } | null
+  active?: Nullable<{ col: number; index: number }>
   flip?: { id: number; scaleX: number; showFace: boolean }
   stockPending?: number
 }
 
-let logoImage: HTMLImageElement | null = null
+let logoImage: Nullable<HTMLImageElement> = null
 let logoLoadStarted = false
 const logoReadyListeners: Array<() => void> = []
 
@@ -508,7 +508,7 @@ export function drawSpider(ctx: CanvasRenderingContext2D, state: SpiderState, la
 export function pickupFromHit(
   state: SpiderState,
   hit: { col: number; index: number },
-): { col: number; index: number; cards: Card[] } | null {
+): Nullable<{ col: number; index: number; cards: Card[] }> {
   const pile = state.tableau[hit.col]
   if (!pile) return null
   if (!canPick(pile, hit.index)) return null

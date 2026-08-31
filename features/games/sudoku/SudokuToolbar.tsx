@@ -24,10 +24,10 @@ type Props = {
     crackStop: string
     crackManualHint: string
   }
-  statusText: string | null
-  reasonText: string | null
+  statusText: Nullable<string>
+  reasonText: Nullable<string>
   showManualHint: boolean
-  hintReasonText: string | null
+  hintReasonText: Nullable<string>
   onErase: () => void
   onUndo: () => void
   onToggleNotes: () => void

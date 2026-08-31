@@ -1,26 +1,17 @@
-import type { DesktopAppId } from '@/config/desktop'
+import { GAME_APP_IDS } from '@/features/games/ids'
+import { BuiltinAppId, type DesktopAppId } from '@/config/desktop'
 import { DESKTOP_WINDOWS, getDesktopWindow } from './registry'
 
-/** 与 features/games/ids 对齐：游戏夹内应用（预取优先级） */
-const GAME_PREFETCH_IDS: readonly DesktopAppId[] = [
-  'minesweeper',
-  'tetris',
-  'suika',
-  'tileMatch',
-  'match3',
-  'imagePuzzle',
-  'canvasJigsaw',
-  'sokoban',
-  'sudoku',
-  'spider',
-]
-
 /** 较大依赖，空闲预取时靠后 */
-const HEAVY_PREFETCH_IDS = new Set<DesktopAppId>(['klineChartViewer', 'aiChat', 'paint'])
+const HEAVY_PREFETCH_IDS = new Set<DesktopAppId>([
+  BuiltinAppId.KlineChartViewer,
+  BuiltinAppId.AiChat,
+  BuiltinAppId.Paint,
+])
 
 /** 空闲预取优先级：桌面可见 → 游戏 → 开始菜单 → 其余（重应用靠后） */
 function prioritizedBuiltinIds(): DesktopAppId[] {
-  const gameSet = new Set<DesktopAppId>(GAME_PREFETCH_IDS)
+  const gameSet = new Set<DesktopAppId>(GAME_APP_IDS)
 
   const scored = DESKTOP_WINDOWS.map((w) => {
     let score = 3

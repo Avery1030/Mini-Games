@@ -10,7 +10,7 @@ const DEFAULT_DURATION = 2000
  */
 export function useCopyClipboard(duration = DEFAULT_DURATION) {
   const [isCopied, setIsCopied] = useState(false)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const timerRef = useRef<Nullable<ReturnType<typeof setTimeout>>>(null)
 
   useEffect(() => {
     return () => {

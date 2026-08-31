@@ -1,14 +1,38 @@
 import type { ComponentType } from 'react'
 import type { Locale } from '@/i18n/config'
 
-/** 内置应用 id（字符串；是否内置由 registry.isBuiltinAppId 判定） */
-export type BuiltinAppId = string
+/** 内置应用 id（与 builtins 注册表一一对应） */
+export enum BuiltinAppId {
+  Games = 'games',
+  Minesweeper = 'minesweeper',
+  Tetris = 'tetris',
+  Suika = 'suika',
+  ImagePuzzle = 'imagePuzzle',
+  CanvasJigsaw = 'canvasJigsaw',
+  Sokoban = 'sokoban',
+  Sudoku = 'sudoku',
+  Spider = 'spider',
+  Document = 'document',
+  Log = 'log',
+  Notepad = 'notepad',
+  Ide = 'ide',
+  Paint = 'paint',
+  Settings = 'settings',
+  Calculator = 'calculator',
+  RecycleBin = 'recycleBin',
+  Cmd = 'cmd',
+  KlineChartViewer = 'klineChartViewer',
+  AiChat = 'aiChat',
+  TaskManager = 'taskManager',
+  ImageViewer = 'imageViewer',
+  FileExplorer = 'fileExplorer',
+}
 
 /**
  * 桌面图标 / 窗口 id。
- * 内置为已注册的 app id；动态项（如文件夹）为运行时字符串（folder_xxx）。
+ * 内置为 BuiltinAppId；动态项（如文件夹）为运行时字符串（folder_xxx）。
  */
-export type DesktopAppId = string
+export type DesktopAppId = BuiltinAppId | string
 
 /** 应用标题多语言（与 i18n Locale 对齐） */
 export type AppLocale = Locale
@@ -72,7 +96,7 @@ export interface DesktopWindowRuntime {
   /** 任务栏从左到右顺序：越大越靠右（越晚打开）；关闭为 0 */
   openOrder: number
   /** 上次打开的位置与尺寸；关闭后保留，供下次恢复 */
-  bounds: WindowBounds | null
+  bounds: Nullable<WindowBounds>
 }
 
 /** UI 合并视图：定义 + 坐标 + 窗口状态 */

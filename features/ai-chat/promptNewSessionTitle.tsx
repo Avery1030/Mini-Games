@@ -12,13 +12,13 @@ type PromptSessionTitleOptions = {
 /**
  * 新建 / 重命名会话：弹窗输入名称；确认返回标题，取消/关闭返回 null。
  */
-export function promptSessionTitle(options: PromptSessionTitleOptions): Promise<string | null> {
+export function promptSessionTitle(options: PromptSessionTitleOptions): Promise<Nullable<string>> {
   const defaultTitle = options.defaultTitle ?? ''
   const mode = options.mode
 
   return new Promise((resolve) => {
     let settled = false
-    const finish = (value: string | null) => {
+    const finish = (value: Nullable<string>) => {
       if (settled) return
       settled = true
       resolve(value)
@@ -66,7 +66,7 @@ function SessionTitleForm({
 }) {
   const t = useTranslations('aiChat')
   const [name, setName] = useState(initialName)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<Nullable<string>>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {

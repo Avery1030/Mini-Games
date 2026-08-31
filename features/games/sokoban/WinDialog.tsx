@@ -6,7 +6,7 @@ import type { SokobanState } from './types'
 
 type Props = {
   state: SokobanState
-  minMoves: number | null
+  minMoves: Nullable<number>
   minMovesReady: boolean
   stars: StarCount
   hasNextLevel: boolean

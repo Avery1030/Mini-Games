@@ -16,10 +16,10 @@ type SokobanProgressState = {
 }
 
 interface SokobanProgressActions {
-  recordClear: (levelId: number, moves: number, minMoves: number | null) => StarCount
+  recordClear: (levelId: number, moves: number, minMoves: Nullable<number>) => StarCount
   getStars: (levelId: number) => number
   isUnlocked: (catalog: number[], levelId: number) => boolean
-  nextUnlockedId: (catalog: number[], levelId: number) => number | null
+  nextUnlockedId: (catalog: number[], levelId: number) => Nullable<number>
 }
 
 export type SokobanProgressStore = SokobanProgressState & SokobanProgressActions

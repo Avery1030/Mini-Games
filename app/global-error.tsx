@@ -45,7 +45,7 @@ const COPY: Record<string, Copy> = {
   },
 }
 
-function pickCopy(langAttr: string | null | undefined): Copy {
+function pickCopy(langAttr: Nullable<string> | undefined): Copy {
   const raw = (langAttr || '').toLowerCase()
   if (raw.startsWith('zh')) return COPY['zh-CN']
   if (raw.startsWith('ja')) return COPY['ja-JP']

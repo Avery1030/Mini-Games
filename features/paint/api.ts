@@ -64,7 +64,7 @@ function contentToBlob(content: ArrayBuffer): Blob {
   return new Blob([content], { type: 'image/png' })
 }
 
-function objectUrlFor(id: string, content: ArrayBuffer | null): string | null {
+function objectUrlFor(id: string, content: Nullable<ArrayBuffer>): Nullable<string> {
   if (!content || content.byteLength === 0) return null
   const key = cacheKey(id)
   return getCachedObjectUrl(key) ?? rememberObjectUrl(key, contentToBlob(content))
@@ -80,7 +80,7 @@ function toMeta(node: FileNode, hasImage: boolean): DrawingMeta {
   }
 }
 
-function toDetail(node: FileNode, content: ArrayBuffer | null): DrawingDetail {
+function toDetail(node: FileNode, content: Nullable<ArrayBuffer>): DrawingDetail {
   const hasImage = Boolean(content && content.byteLength > 0)
   return {
     ...toMeta(node, hasImage),

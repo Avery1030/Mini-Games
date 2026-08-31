@@ -49,7 +49,7 @@ export function MessageList({
   const stickToBottomRef = useRef(true)
   const prevCountRef = useRef(0)
   const prevFirstIdRef = useRef<string | undefined>(undefined)
-  const pendingRestoreRef = useRef<{ scrollTop: number; scrollHeight: number } | null>(null)
+  const pendingRestoreRef = useRef<Nullable<{ scrollTop: number; scrollHeight: number }>>(null)
   const loadOlderLockRef = useRef(false)
 
   const firstId = messages[0]?.id

@@ -38,7 +38,7 @@ export function proxyChatSseStream(
 
       try {
         const json = JSON.parse(payload) as {
-          choices?: Array<{ delta?: { content?: string | null } }>
+          choices?: Array<{ delta?: { content?: Nullable<string> } }>
         }
         const piece = json.choices?.[0]?.delta?.content
         if (typeof piece === 'string' && piece.length > 0) {

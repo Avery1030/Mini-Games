@@ -19,13 +19,13 @@ type UseKlineChartOptions = {
  */
 export function useKlineChart({ locale, isDark, loadFailedMessage }: UseKlineChartOptions) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const chartRef = useRef<Chart | null>(null)
+  const chartRef = useRef<Nullable<Chart>>(null)
   const requestIdRef = useRef(0)
   const subStopsRef = useRef(new Map<string, () => void>())
 
   const [ready, setReady] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<Nullable<string>>(null)
 
   const symbol = useKlineChartStore((s) => s.symbol)
   const interval = useKlineChartStore((s) => s.interval)
@@ -37,7 +37,7 @@ export function useKlineChart({ locale, isDark, loadFailedMessage }: UseKlineCha
     if (!el) return
 
     let cancelled = false
-    let resizeObserver: ResizeObserver | null = null
+    let resizeObserver: Nullable<ResizeObserver> = null
     const stops = subStopsRef.current
 
     void (async () => {

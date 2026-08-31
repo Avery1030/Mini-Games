@@ -7,7 +7,7 @@ export type LoadedLevels = {
   byId: Map<number, LevelData>
 }
 
-let cache: LoadedLevels | null = null
+let cache: Nullable<LoadedLevels> = null
 
 function parseLevels(entries: readonly LevelJsonEntry[]): LoadedLevels {
   if (!Array.isArray(entries) || entries.length === 0) {

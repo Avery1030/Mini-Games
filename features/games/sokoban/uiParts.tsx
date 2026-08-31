@@ -8,7 +8,7 @@ export const MOVE_COOLDOWN_MS = MOVE_ANIM_MS
 export const CELL_MIN = 24
 export const CELL_MAX = 48
 
-export function keyToDir(key: string): Direction | null {
+export function keyToDir(key: string): Nullable<Direction> {
   switch (key) {
     case 'ArrowUp':
     case 'w':
@@ -35,7 +35,7 @@ export function pad3(n: number): string {
   return String(Math.max(0, Math.min(999, n))).padStart(3, '0')
 }
 
-export function formatBest(ready: boolean, minMoves: number | null): string {
+export function formatBest(ready: boolean, minMoves: Nullable<number>): string {
   if (!ready) return '···'
   if (minMoves == null) return '---'
   return pad3(minMoves)
@@ -98,7 +98,7 @@ export function Dpad({
   labels,
   onMove,
 }: {
-  heldDir: Direction | null
+  heldDir: Nullable<Direction>
   disabled?: boolean
   labels: { up: string; down: string; left: string; right: string }
   onMove: (dir: Direction) => void

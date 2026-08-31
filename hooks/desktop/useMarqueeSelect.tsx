@@ -18,7 +18,7 @@ type MarqueeSession = {
 type UseMarqueeSelectOptions = {
   /** 可被框选的 id（如仅用户资源） */
   selectableIds: DesktopAppId[]
-  scopeRoot?: React.RefObject<HTMLElement | null>
+  scopeRoot?: React.RefObject<Nullable<HTMLElement>>
   itemAttr?: string
   onSelect: (ids: DesktopAppId[], opts: { additive: boolean }) => void
   onClear?: () => void
@@ -34,8 +34,8 @@ export function useMarqueeSelect({
   onSelect,
   onClear,
 }: UseMarqueeSelectOptions) {
-  const [rect, setRect] = useState<MarqueeRect | null>(null)
-  const sessionRef = useRef<MarqueeSession | null>(null)
+  const [rect, setRect] = useState<Nullable<MarqueeRect>>(null)
+  const sessionRef = useRef<Nullable<MarqueeSession>>(null)
   const selectableRef = useRef(selectableIds)
   selectableRef.current = selectableIds
   const onSelectRef = useRef(onSelect)
@@ -108,7 +108,7 @@ export function useMarqueeSelect({
   const handleBlankPointerDown = useCallback(
     (e: ReactPointerEvent, baseIds: DesktopAppId[] = []) => {
       if (e.button !== 0) return
-      const target = e.target as Element | null
+      const target = e.target as Nullable<Element>
       // 点在可选条目上时不启动框选（交给条目拖拽/点击）
       if (target?.closest?.(`[${itemAttr}]`)) return
       e.preventDefault()
@@ -127,7 +127,7 @@ export function useMarqueeSelect({
   return { marqueeRect: rect, handleBlankPointerDown }
 }
 
-export function MarqueeOverlay({ rect }: { rect: MarqueeRect | null }) {
+export function MarqueeOverlay({ rect }: { rect: Nullable<MarqueeRect> }) {
   if (!rect || (rect.width < 2 && rect.height < 2)) return null
   if (isServer) return null
   return createPortal(

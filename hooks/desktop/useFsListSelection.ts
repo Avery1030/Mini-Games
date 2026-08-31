@@ -97,7 +97,7 @@ export function useFsListSelection({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const el = e.target as HTMLElement | null
+      const el = e.target as Nullable<HTMLElement>
       if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return
       const cur = useDesktopSelectionStore.getState()
       if (!scopeMatches(cur.scope, scope)) return

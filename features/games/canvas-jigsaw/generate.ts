@@ -194,7 +194,7 @@ export function applyNeighborSnap(pieces: readonly Piece[], movedGroupId: string
     const moving = current.filter((p) => p.groupId === movedGroupId)
     if (moving.length === 0) break
 
-    let best: { err: number; dx: number; dy: number; otherGroupId: string } | null = null
+    let best: Nullable<{ err: number; dx: number; dy: number; otherGroupId: string }> = null
 
     for (const p of moving) {
       for (const nid of p.neighborIds) {

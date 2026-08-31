@@ -15,7 +15,7 @@ export type SystemErrorScreenProps = {
   retryLabel?: string
   onRetry?: () => void
   /** 可选技术细节（digest / message） */
-  detail?: string | null
+  detail?: Nullable<string>
   /** 图标变体 */
   variant?: 'notFound' | 'error'
 }

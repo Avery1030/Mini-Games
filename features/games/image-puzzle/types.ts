@@ -21,9 +21,9 @@ export type PuzzleState = {
   moves: number
   status: PuzzleStatus
   /** 首次有效移动的时间戳；未开始为 null */
-  startedAt: number | null
+  startedAt: Nullable<number>
   /** 通关耗时（秒）；未通关为 null */
-  elapsedSec: number | null
+  elapsedSec: Nullable<number>
 }
 
 export const PUZZLE_SIZES: readonly PuzzleSize[] = [3, 4, 5] as const

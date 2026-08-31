@@ -6,14 +6,14 @@ import type { SudokuScreen } from './useSudokuSession'
 
 type Options = {
   screen: SudokuScreen
-  gameRef: MutableRefObject<SudokuGame | null>
+  gameRef: MutableRefObject<Nullable<SudokuGame>>
   settings: SudokuSettings
-  selected: Position | null | undefined
+  selected: Nullable<Position> | undefined
   crackDemoRef: MutableRefObject<boolean>
   stepCrack: () => void
   stepCrackBack: () => void
   stopCrackDemo: () => void
-  setLockedDigit: Dispatch<SetStateAction<number | null>>
+  setLockedDigit: Dispatch<SetStateAction<Nullable<number>>>
 }
 
 /** 对局键盘快捷键 */

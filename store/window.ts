@@ -17,7 +17,7 @@ type WindowsMap = Record<DesktopAppId, DesktopWindowRuntime>
 /** 批量最小化前的可见窗口快照（内存态） */
 type ShowDesktopSnapshot = {
   visibleIds: DesktopAppId[]
-  activeId: DesktopAppId | null
+  activeId: Nullable<DesktopAppId>
 }
 
 interface WindowState {
@@ -29,7 +29,7 @@ interface WindowState {
    * 任务栏「显示桌面」快照：记录批量最小化前仍可见的窗口。
    * 不入 persist；有快照且当前无可见窗时，再次 toggle 会还原。
    */
-  showDesktopSnapshot: ShowDesktopSnapshot | null
+  showDesktopSnapshot: Nullable<ShowDesktopSnapshot>
   _hasHydrated: boolean
 }
 
@@ -113,7 +113,7 @@ function getNextZ(windows: WindowsMap, topZIndex: number): number {
   return Math.max(topZIndex, maxOpenZ) + 1
 }
 
-function normalizeBounds(raw: unknown): WindowBounds | null {
+function normalizeBounds(raw: unknown): Nullable<WindowBounds> {
   if (!raw || typeof raw !== 'object') return null
   const b = raw as Partial<WindowBounds>
   if (

@@ -22,7 +22,7 @@ export type GameState = {
   board: Cell[][]
   status: GameStatus
   messageKey: GameMessageKey
-  startTime: number | null
+  startTime: Nullable<number>
   elapsed: number
   remainingMines: number
   rows: number
@@ -30,7 +30,7 @@ export type GameState = {
   mines: number
   totalSafe: number
   highlightCells: Position[]
-  explodedCell: Position | null
+  explodedCell: Nullable<Position>
 }
 
 type DeterministicMoves = { safe: Position[]; mines: Position[] }
@@ -40,13 +40,19 @@ const MAX_SEARCH_NODES = 80_000
 const FIRST_CLICK_MAX_MS = 400
 const CHECK_DEADLINE_EVERY_NODES = 5000
 
-export type Difficulty = 'basic' | 'intermediate' | 'expert' | 'fullscreen' | 'custom'
+export enum Difficulty {
+  Basic = 'basic',
+  Intermediate = 'intermediate',
+  Expert = 'expert',
+  Fullscreen = 'fullscreen',
+  Custom = 'custom',
+}
 
-export const PRESETS: Record<Exclude<Difficulty, 'custom'>, { rows: number; cols: number; mines: number }> = {
-  basic: { rows: 9, cols: 9, mines: 10 },
-  intermediate: { rows: 16, cols: 16, mines: 40 },
-  expert: { rows: 16, cols: 30, mines: 99 },
-  fullscreen: { rows: 32, cols: 32, mines: 250 },
+export const PRESETS: Record<Exclude<Difficulty, Difficulty.Custom>, { rows: number; cols: number; mines: number }> = {
+  [Difficulty.Basic]: { rows: 9, cols: 9, mines: 10 },
+  [Difficulty.Intermediate]: { rows: 16, cols: 16, mines: 40 },
+  [Difficulty.Expert]: { rows: 16, cols: 30, mines: 99 },
+  [Difficulty.Fullscreen]: { rows: 32, cols: 32, mines: 250 },
 }
 
 function createEmptyBoard(rows: number, cols: number): Cell[][] {
@@ -294,7 +300,7 @@ function generateNoGuessBoard(
       if (inBounds(rows, cols, r, c)) forbidden.add(`${r},${c}`)
     }
   }
-  let lastBoard: Cell[][] | null = null
+  let lastBoard: Nullable<Cell[][]> = null
   const deadline = Date.now() + deadlineMs
   for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++) {
     if (Date.now() > deadline) break
@@ -343,9 +349,9 @@ export class MinesweeperGame {
   private board: Cell[][] = []
   private status: GameStatus = 'idle'
   private messageKey: GameMessageKey = 'start'
-  private startTime: number | null = null
+  private startTime: Nullable<number> = null
   private highlightCells: Position[] = []
-  private explodedCell: Position | null = null
+  private explodedCell: Nullable<Position> = null
   private rows: number
   private cols: number
   private mines: number

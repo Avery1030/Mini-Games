@@ -60,7 +60,7 @@ function MiniFruit({ level, size }: { level: number; size: number }) {
  */
 export function Suika({ embedded = false }: SuikaProps = {}) {
   const t = useTranslations('suika')
-  const engineRef = useRef<SuikaEngine | null>(null)
+  const engineRef = useRef<Nullable<SuikaEngine>>(null)
   if (!engineRef.current) engineRef.current = new SuikaEngine()
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -203,8 +203,8 @@ export function Suika({ embedded = false }: SuikaProps = {}) {
   }, [syncHud])
 
   useEffect(() => {
-    const isTypingTarget = (target: EventTarget | null) => {
-      const el = target as HTMLElement | null
+    const isTypingTarget = (target: Nullable<EventTarget>) => {
+      const el = target as Nullable<HTMLElement>
       const tag = el?.tagName
       return tag === 'INPUT' || tag === 'TEXTAREA' || !!el?.isContentEditable
     }

@@ -19,9 +19,9 @@ export type FsClipboard = {
 
 type DesktopSelectionState = {
   selectedIds: DesktopAppId[]
-  anchorId: DesktopAppId | null
+  anchorId: Nullable<DesktopAppId>
   scope: SelectionScope
-  clipboard: FsClipboard | null
+  clipboard: Nullable<FsClipboard>
 }
 
 type DesktopSelectionActions = {
@@ -32,10 +32,10 @@ type DesktopSelectionActions = {
   selectRange: (orderedIds: DesktopAppId[], toId: DesktopAppId, scope: SelectionScope) => void
   /** 点击项时：若已在选区则保留多选；否则改为单选 */
   prepareDragSelection: (id: DesktopAppId, scope: SelectionScope) => DesktopAppId[]
-  setSelection: (ids: DesktopAppId[], scope: SelectionScope, anchorId?: DesktopAppId | null) => void
+  setSelection: (ids: DesktopAppId[], scope: SelectionScope, anchorId?: Nullable<DesktopAppId>) => void
   copySelection: () => boolean
   cutSelection: () => boolean
-  pasteInto: (parentId: DesktopAppId | null) => Promise<DesktopAppId[]>
+  pasteInto: (parentId: Nullable<DesktopAppId>) => Promise<DesktopAppId[]>
   isSelected: (id: DesktopAppId) => boolean
 }
 

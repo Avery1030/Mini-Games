@@ -12,17 +12,17 @@ import {
 import type { LevelData, SokobanState } from './types'
 
 /** Canvas 绘制与移动过渡 */
-export function useBoardAnim(canvasRef: RefObject<HTMLCanvasElement | null>) {
-  const visualRef = useRef<BoardVisual | null>(null)
-  const animFromRef = useRef<BoardVisual | null>(null)
-  const animToRef = useRef<BoardVisual | null>(null)
+export function useBoardAnim(canvasRef: RefObject<Nullable<HTMLCanvasElement>>) {
+  const visualRef = useRef<Nullable<BoardVisual>>(null)
+  const animFromRef = useRef<Nullable<BoardVisual>>(null)
+  const animToRef = useRef<Nullable<BoardVisual>>(null)
   const animStartRef = useRef(0)
   const rafRef = useRef(0)
-  const staticLayerRef = useRef<HTMLCanvasElement | null>(null)
+  const staticLayerRef = useRef<Nullable<HTMLCanvasElement>>(null)
   const staticKeyRef = useRef('')
-  const levelIdForAnimRef = useRef<number | null>(null)
+  const levelIdForAnimRef = useRef<Nullable<number>>(null)
   const cellPxRef = useRef(32)
-  const stateRef = useRef<SokobanState | null>(null)
+  const stateRef = useRef<Nullable<SokobanState>>(null)
 
   const paint = useCallback((visual: BoardVisual, level: LevelData, cell: number) => {
     const canvas = canvasRef.current
@@ -103,7 +103,7 @@ export function useBoardAnim(canvasRef: RefObject<HTMLCanvasElement | null>) {
   const startMoveAnimRef = useRef(startMoveAnim)
   startMoveAnimRef.current = startMoveAnim
 
-  const syncState = useCallback((state: SokobanState | null, cellPx: number) => {
+  const syncState = useCallback((state: Nullable<SokobanState>, cellPx: number) => {
     stateRef.current = state
     cellPxRef.current = cellPx
   }, [])

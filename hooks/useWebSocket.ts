@@ -75,7 +75,7 @@ export function useWebSocket(options: UseWebSocketOptions) {
   const [readyState, setReadyState] = useState<number>(WebSocket.CLOSED)
   const [status, setStatus] = useState<ConnectionStatus>('idle')
   const [queueLength, setQueueLength] = useState(0)
-  const clientRef = useRef<ManagedWebSocket | null>(null)
+  const clientRef = useRef<Nullable<ManagedWebSocket>>(null)
 
   const onOpenRef = useRef(onOpen)
   const onMessageRef = useRef(onMessage)

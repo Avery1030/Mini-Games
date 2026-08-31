@@ -36,8 +36,8 @@ export type SuikaSnapshot = {
   nextLevel: FruitLevel
   aimX: number
   dropLocked: boolean
-  pendingLevel: FruitLevel | null
-  mergeFlash: MergeEvent | null
+  pendingLevel: Nullable<FruitLevel>
+  mergeFlash: Nullable<MergeEvent>
   watermelonCount: number
 }
 
@@ -74,12 +74,12 @@ export class SuikaEngine {
   status: GameStatus = 'ready'
   nextLevel: FruitLevel = 0
   aimX = WORLD_WIDTH / 2
-  pendingLevel: FruitLevel | null = 0
+  pendingLevel: Nullable<FruitLevel> = 0
   dropCooldown = 0
   private nextId = 1
   /** 越线累计秒数（引擎级，不依赖单果静止） */
   private dangerTimer = 0
-  mergeFlash: MergeEvent | null = null
+  mergeFlash: Nullable<MergeEvent> = null
   private mergeFlashTtl = 0
   private pendingMerges: MergeEvent[] = []
   watermelonCount = 0

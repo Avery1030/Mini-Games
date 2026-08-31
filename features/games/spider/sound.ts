@@ -4,10 +4,10 @@ type AudioWindow = typeof window & {
   webkitAudioContext?: typeof AudioContext
 }
 
-let sharedCtx: AudioContext | null = null
-let noiseBuffer: AudioBuffer | null = null
+let sharedCtx: Nullable<AudioContext> = null
+let noiseBuffer: Nullable<AudioBuffer> = null
 
-function getAudioContext(): AudioContext | null {
+function getAudioContext(): Nullable<AudioContext> {
   if (isServer) return null
   const AudioCtx = window.AudioContext || (window as AudioWindow).webkitAudioContext
   if (!AudioCtx) return null

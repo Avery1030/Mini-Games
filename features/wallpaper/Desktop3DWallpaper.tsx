@@ -20,7 +20,7 @@ export function Desktop3DWallpaper({ path, enabled }: Desktop3DWallpaperProps) {
     if (!enabled || !path || !mountRef.current) return
 
     let disposed = false
-    let renderer: import('three').WebGLRenderer | null = null
+    let renderer: Nullable<import('three').WebGLRenderer> = null
     let frame = 0
     const mount = mountRef.current
 

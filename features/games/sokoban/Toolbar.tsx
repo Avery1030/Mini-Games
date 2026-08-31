@@ -25,12 +25,12 @@ type Labels = {
 
 type Props = {
   labels: Labels
-  state: SokobanState | null
-  minMoves: number | null
+  state: Nullable<SokobanState>
+  minMoves: Nullable<number>
   minMovesReady: boolean
   /** 仅含已解锁关卡 */
   unlockedCatalog: number[]
-  levelId: number | null
+  levelId: Nullable<number>
   loading: boolean
   crackEnabled: boolean
   crackPhase: CrackPhase

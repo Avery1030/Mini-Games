@@ -41,15 +41,15 @@ type CreateItemOpts = {
   coordinate?: DesktopCoordinate
   open?: boolean
   /** 父文件夹；null/缺省 = 桌面根 */
-  parentId?: DesktopAppId | null
+  parentId?: Nullable<DesktopAppId>
   /** 文本文档初始内容（复制用） */
   content?: string
 }
 
 type DesktopItemsActions = {
   setHasHydrated: (value: boolean) => void
-  createFolder: (opts?: CreateItemOpts) => DesktopItemRecord | null
-  createTextDocument: (opts?: CreateItemOpts) => Promise<DesktopItemRecord | null>
+  createFolder: (opts?: CreateItemOpts) => Nullable<DesktopItemRecord>
+  createTextDocument: (opts?: CreateItemOpts) => Promise<Nullable<DesktopItemRecord>>
   renameItem: (id: DesktopAppId, title: string) => Promise<boolean>
   setItemTitle: (id: DesktopAppId, title: string) => boolean
   renameFolder: (id: DesktopAppId, title: string) => void
@@ -67,7 +67,7 @@ type DesktopItemsActions = {
   moveItemsToDesktop: (ids: DesktopAppId[], preferCoordinate?: DesktopCoordinate) => DesktopAppId[]
   moveItemsToRecycleBin: (ids: DesktopAppId[]) => DesktopAppId[]
   /** 深拷贝到目标目录（null = 桌面）；返回新建根 id */
-  copyItems: (ids: DesktopAppId[], targetParentId: DesktopAppId | null) => Promise<DesktopAppId[]>
+  copyItems: (ids: DesktopAppId[], targetParentId: Nullable<DesktopAppId>) => Promise<DesktopAppId[]>
   restoreItemsFromRecycleBin: (ids: DesktopAppId[]) => DesktopAppId[]
   purgeItemsFromRecycleBin: (ids: DesktopAppId[]) => Promise<DesktopAppId[]>
 }
@@ -77,7 +77,7 @@ export type DesktopItemsStore = DesktopItemsState & DesktopItemsActions
 function siblingTitlesOf(
   items: DesktopItemRecord[],
   kind: DesktopResourceKind,
-  parentId: DesktopAppId | null,
+  parentId: Nullable<DesktopAppId>,
 ): string[] {
   return getChildren(items, parentId)
     .filter((i) => i.kind === kind)
@@ -139,7 +139,7 @@ function restoreItemWindows(items: DesktopItemRecord[]) {
   }
 }
 
-function normalizeItem(raw: Partial<DesktopItemRecord> & { id: string; title: string }): DesktopItemRecord | null {
+function normalizeItem(raw: Partial<DesktopItemRecord> & { id: string; title: string }): Nullable<DesktopItemRecord> {
   const kind: DesktopResourceKind =
     raw.kind === 'textDocument' ? 'textDocument' : 'folder'
   if (kind === 'textDocument' && typeof raw.noteId !== 'string') return null
@@ -601,8 +601,8 @@ export const useDesktopItemsStore = create<DesktopItemsStore>()(
 
         const copyOne = async (
           sourceId: DesktopAppId,
-          parentId: DesktopAppId | null,
-        ): Promise<DesktopAppId | null> => {
+          parentId: Nullable<DesktopAppId>,
+        ): Promise<Nullable<DesktopAppId>> => {
           const src = snapshot.find((i) => i.id === sourceId && !i.isDeleted)
           if (!src) return null
 

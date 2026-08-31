@@ -4,7 +4,7 @@ export type IdeReadOk = { ok: true; path: string; text: string }
 export type IdeReadErr = { ok: false; reason: 'notFound' | 'binary' | 'directory' | 'failed'; message: string }
 export type IdeReadResult = IdeReadOk | IdeReadErr
 
-function decodeTextContent(content: FileContent): string | null {
+function decodeTextContent(content: FileContent): Nullable<string> {
   if (typeof content === 'string') {
     if (content.includes('\0')) return null
     return content

@@ -39,7 +39,7 @@ function readFormatOnSavePref(): boolean {
 export type IdeAppProps = {
   embedded?: boolean
   windowId?: string
-  initialPath?: string | null
+  initialPath?: Nullable<string>
 }
 
 function untitledName(t: (key: string) => string) {
@@ -51,10 +51,10 @@ export function IdeApp({ embedded = false, windowId, initialPath = null }: IdeAp
   const tm = useTranslations('modal')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const contentRef = useRef('')
-  const pathRef = useRef<string | null>(null)
+  const pathRef = useRef<Nullable<string>>(null)
   const savedRef = useRef('')
 
-  const [path, setPath] = useState<string | null>(null)
+  const [path, setPath] = useState<Nullable<string>>(null)
   const [content, setContent] = useState('')
   const [savedContent, setSavedContent] = useState('')
   const [cursor, setCursor] = useState({ line: 1, col: 1 })
@@ -76,7 +76,7 @@ export function IdeApp({ embedded = false, windowId, initialPath = null }: IdeAp
   savedRef.current = savedContent
 
   const syncWindowMeta = useCallback(
-    (nextPath: string | null, nextDirty: boolean) => {
+    (nextPath: Nullable<string>, nextDirty: boolean) => {
       if (!windowId) return
       getIdeEditorWindow(windowId)?.setFileMeta(nextPath, nextDirty, t('untitled'))
     },
@@ -98,7 +98,7 @@ export function IdeApp({ embedded = false, windowId, initialPath = null }: IdeAp
   }, [path, dirty, syncWindowMeta])
 
   const applyLoaded = useCallback(
-    (nextPath: string | null, text: string, resetHistory = true) => {
+    (nextPath: Nullable<string>, text: string, resetHistory = true) => {
       setPath(nextPath)
       setContent(text)
       setSavedContent(text)

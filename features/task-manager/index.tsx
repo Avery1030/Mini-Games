@@ -44,7 +44,7 @@ export function TaskManagerApp({ embedded = false }: TaskManagerAppProps) {
   )
 
   const [tab, setTab] = useState<TabId>('applications')
-  const [selectedId, setSelectedId] = useState<DesktopAppId | null>(null)
+  const [selectedId, setSelectedId] = useState<Nullable<DesktopAppId>>(null)
 
   const running = useMemo((): RunningRow[] => {
     if (!hasHydrated) return []

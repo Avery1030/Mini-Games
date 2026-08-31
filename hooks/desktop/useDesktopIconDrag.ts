@@ -44,7 +44,7 @@ export type FsDropResult = {
 
 type UseDesktopIconDragOptions = {
   apps: CoordApp[]
-  desktopRef: RefObject<HTMLDivElement | null>
+  desktopRef: RefObject<Nullable<HTMLDivElement>>
   onOpen: (id: DesktopAppId) => void
   onCommit: (updates: Array<{ id: DesktopAppId; coordinate: DesktopCoordinate }>) => void
   resolveDragIds?: (id: DesktopAppId) => DesktopAppId[]
@@ -56,11 +56,11 @@ type UseDesktopIconDragOptions = {
   onDragStart?: (ids: DesktopAppId[]) => void
 }
 
-export function hitDesktopIconAtPoint(clientX: number, clientY: number, ignoreId?: DesktopAppId): DesktopAppId | null {
+export function hitDesktopIconAtPoint(clientX: number, clientY: number, ignoreId?: DesktopAppId): Nullable<DesktopAppId> {
   if (isServer) return null
   const els = document.elementsFromPoint(clientX, clientY)
   for (const el of els) {
-    const host = (el as Element).closest?.('[data-desktop-icon]') as HTMLElement | null
+    const host = (el as Element).closest?.('[data-desktop-icon]') as Nullable<HTMLElement>
     if (!host) continue
     const id = host.dataset.desktopIcon as DesktopAppId | undefined
     if (!id || id === ignoreId) continue
@@ -82,7 +82,7 @@ export function useDesktopIconDrag({
 }: UseDesktopIconDragOptions) {
   const appsRef = useRef(apps)
   appsRef.current = apps
-  const sessionRef = useRef<DragSession | null>(null)
+  const sessionRef = useRef<Nullable<DragSession>>(null)
   const onOpenRef = useRef(onOpen)
   onOpenRef.current = onOpen
   const onCommitRef = useRef(onCommit)
@@ -98,12 +98,12 @@ export function useDesktopIconDrag({
   const onDragStartRef = useRef(onDragStart)
   onDragStartRef.current = onDragStart
 
-  const [draggingId, setDraggingId] = useState<DesktopAppId | null>(null)
+  const [draggingId, setDraggingId] = useState<Nullable<DesktopAppId>>(null)
   const [draggingIds, setDraggingIds] = useState<DesktopAppId[]>([])
-  const [dragPixel, setDragPixel] = useState<{ left: number; top: number } | null>(null)
-  const [previewCoords, setPreviewCoords] = useState<Map<DesktopAppId, DesktopCoordinate> | null>(null)
-  const [dropTargetId, setDropTargetId] = useState<DesktopAppId | null>(null)
-  const lastClickRef = useRef<{ id: DesktopAppId; time: number } | null>(null)
+  const [dragPixel, setDragPixel] = useState<Nullable<{ left: number; top: number }>>(null)
+  const [previewCoords, setPreviewCoords] = useState<Nullable<Map<DesktopAppId, DesktopCoordinate>>>(null)
+  const [dropTargetId, setDropTargetId] = useState<Nullable<DesktopAppId>>(null)
+  const lastClickRef = useRef<Nullable<{ id: DesktopAppId; time: number }>>(null)
 
   const desktopLocalFromViewport = useCallback(
     (viewportLeft: number, viewportTop: number) => {

@@ -10,7 +10,7 @@ export type DesktopItemRecord = {
   /** textDocument：关联的记事本 note id */
   noteId?: string
   /** null = 桌面根；否则为父文件夹 id */
-  parentId?: DesktopAppId | null
+  parentId?: Nullable<DesktopAppId>
   /** 软删除标记：true 时不在桌面显示，出现在回收站 */
   isDeleted?: boolean
   deletedAt?: number

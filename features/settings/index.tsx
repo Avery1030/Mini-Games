@@ -33,9 +33,9 @@ export interface SettingsProps {
 
 function draftFromSettings(
   wallpaperId: WallpaperId,
-  wallpaperPath: string | null,
+  wallpaperPath: Nullable<string>,
   wallpaper3dEnabled: boolean,
-  wallpaper3dPath: string | null,
+  wallpaper3dPath: Nullable<string>,
 ): WallpaperDraft {
   if (wallpaper3dEnabled && wallpaper3dPath) {
     return { kind: 'model', path: wallpaper3dPath }
@@ -63,9 +63,9 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
   const imageInputRef = useRef<HTMLInputElement>(null)
   const modelInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [uploadError, setUploadError] = useState<Nullable<string>>(null)
   const [importUrl, setImportUrl] = useState('')
-  const [importError, setImportError] = useState<string | null>(null)
+  const [importError, setImportError] = useState<Nullable<string>>(null)
   const [images, setImages] = useState<WallpaperAsset[]>([])
   const [models, setModels] = useState<WallpaperAsset[]>([])
   const [loadingList, setLoadingList] = useState(true)
@@ -111,7 +111,7 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
     return !wallpaper3dEnabled || wallpaper3dPath !== draft.path
   }, [draft, fit, wallpaperId, wallpaperPath, wallpaperFit, wallpaper3dEnabled, wallpaper3dPath])
 
-  const onPickImage = async (files: FileList | null) => {
+  const onPickImage = async (files: Nullable<FileList>) => {
     const file = files?.[0]
     if (!file) return
     setUploading(true)
@@ -128,7 +128,7 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
     }
   }
 
-  const onPickModel = async (files: FileList | null) => {
+  const onPickModel = async (files: Nullable<FileList>) => {
     const file = files?.[0]
     if (!file) return
     setUploading(true)

@@ -153,7 +153,7 @@ export class VFS {
   private async moveNodeTree(
     srcPath: string,
     destPath: string,
-    options?: { originalPath?: string | null },
+    options?: { originalPath?: Nullable<string> },
   ): Promise<StoredFileNode> {
     const src = await this.requireMeta(srcPath)
     const normalizedDest = normalizePath(destPath)
@@ -177,7 +177,7 @@ export class VFS {
       : [src]
 
     const now = Date.now()
-    let movedRoot: StoredFileNode | null = null
+    let movedRoot: Nullable<StoredFileNode> = null
 
     for (const node of subtree) {
       const nextPath = replacePathPrefix(node.path, srcPath, normalizedDest)
@@ -331,7 +331,7 @@ export class VFS {
       .filter((n) => isUnderPath(n.path, src.path))
       .sort((a, b) => a.path.length - b.path.length)
 
-    let rootCopy: StoredFileNode | null = null
+    let rootCopy: Nullable<StoredFileNode> = null
 
     for (const node of subtree) {
       const nextPath = replacePathPrefix(node.path, src.path, normalizedDest)
@@ -506,7 +506,7 @@ export class VFS {
   }
 
   /** 按节点 id 查找元信息 */
-  async getNodeById(id: string): Promise<FileNode | null> {
+  async getNodeById(id: string): Promise<Nullable<FileNode>> {
     await this.ensureBootstrapped()
     if (!id) return null
     const meta = await this.adapter.getMetaById(id)

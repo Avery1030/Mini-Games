@@ -3,25 +3,25 @@ import { useSudokuProgressStore } from './store'
 import { getLevel, loadAllLevels } from './parseLevel'
 import { SudokuGame } from './sudoku-game'
 import type { Difficulty, SudokuState } from './types'
-import { progressKey } from './types'
+import { DIFFICULTIES, progressKey } from './types'
 
 export type SudokuScreen = 'difficulty' | 'levels' | 'play'
 
 const LEVEL_BUNDLE = loadAllLevels()
 
 type Options = {
-  gameRef: MutableRefObject<SudokuGame | null>
+  gameRef: MutableRefObject<Nullable<SudokuGame>>
   stopCrackDemo: () => void
 }
 
 /** 难度/关卡/对局会话生命周期 */
 export function useSudokuSession({ gameRef, stopCrackDemo }: Options) {
-  const recordedWinKeyRef = useRef<string | null>(null)
+  const recordedWinKeyRef = useRef<Nullable<string>>(null)
 
   const [screen, setScreen] = useState<SudokuScreen>('difficulty')
-  const [difficulty, setDifficulty] = useState<Difficulty | null>(null)
-  const [levelId, setLevelId] = useState<number | null>(null)
-  const [state, setState] = useState<SudokuState | null>(null)
+  const [difficulty, setDifficulty] = useState<Nullable<Difficulty>>(null)
+  const [levelId, setLevelId] = useState<Nullable<number>>(null)
+  const [state, setState] = useState<Nullable<SudokuState>>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [crackMenuOpen, setCrackMenuOpen] = useState(false)
 
@@ -33,7 +33,7 @@ export function useSudokuSession({ gameRef, stopCrackDemo }: Options) {
 
   const difficultyItems = useMemo(
     () =>
-      (['easy', 'medium', 'hard', 'expert'] as const).map((d) => {
+      DIFFICULTIES.map((d) => {
         const ids = LEVEL_BUNDLE.catalogs[d]
         let clearedCount = 0
         for (const id of ids) {

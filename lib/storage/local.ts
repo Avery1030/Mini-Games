@@ -25,7 +25,7 @@ function canUseStorage(): boolean {
  * - createStateStorage：给 zustand persist 用
  */
 export const appStorage = {
-  getRaw(key: StorageKey): string | null {
+  getRaw(key: StorageKey): Nullable<string> {
     if (!canUseStorage()) return null
     try {
       return localStorage.getItem(key)
@@ -56,7 +56,7 @@ export const appStorage = {
     return appStorage.getRaw(key) != null
   },
 
-  getJson<K extends JsonStorageKey>(key: K): StorageSchema[K] | null {
+  getJson<K extends JsonStorageKey>(key: K): Nullable<StorageSchema[K]> {
     const raw = appStorage.getRaw(key)
     if (raw == null) return null
     try {
@@ -74,7 +74,7 @@ export const appStorage = {
     }
   },
 
-  getTheme(): ThemeStorageValue | null {
+  getTheme(): Nullable<ThemeStorageValue> {
     const raw = appStorage.getRaw(STORAGE_KEYS.theme)
     if (raw === 'light' || raw === 'dark') return raw
     return null
@@ -92,7 +92,7 @@ export const appStorage = {
     /** 每次读写前钩子 */
     before?: () => void | Promise<void>
   }): {
-    getItem: (name: string) => string | null | Promise<string | null>
+    getItem: (name: string) => Nullable<string> | Promise<Nullable<string>>
     setItem: (name: string, value: string) => void | Promise<void>
     removeItem: (name: string) => void | Promise<void>
   } {

@@ -8,7 +8,6 @@
     "minesweeper": "Minesweeper",
     "tetris": "Tetris",
     "suika": "Suika Game",
-    "tileMatch": "Tile Match",
     "imagePuzzle": "Image Puzzle",
     "canvasJigsaw": "Jigsaw",
     "document": "Document",
@@ -27,7 +26,6 @@
     "ide": "Code Editor",
     "sokoban": "Sokoban",
     "sudoku": "Sudoku",
-    "match3": "Match-3",
     "spider": "Spider Solitaire"
   },
   "desktop": {
@@ -549,7 +547,6 @@
       "title": "Built-in apps",
       "body": [
         "Minesweeper, Tetris, and Suika: classic games for zoning out.",
-        "Tile Match: layered cards — match three of a kind; fill the tray and you lose.",
         "Settings: Display, Appearance, Taskbar, and Data. Data lets you export/import a JSON backup of local preferences and desktop state.",
         "Document: the window you are reading. Offline content, no annotations saved.",
         "Log: dated release notes — open the Log icon; Document also shows a short recent summary.",
@@ -834,22 +831,6 @@
       "watermelon": "Watermelon"
     }
   },
-  "tileMatch": {
-    "title": "Tile Match",
-    "remaining": "Left",
-    "cleared": "Cleared",
-    "restart": "Restart",
-    "undo": "Undo",
-    "shuffle": "Shuffle",
-    "slot": "Tray",
-    "hint": "Pick free tiles; match three of a kind",
-    "boardLabel": "Tile Match board",
-    "won": "Cleared!",
-    "wonHint": "All tiles have been cleared",
-    "lost": "Game Over",
-    "lostHint": "The tray is full with no match",
-    "playAgain": "Play again"
-  },
   "imagePuzzle": {
     "title": "Image Puzzle",
     "moves": "Moves",
@@ -1111,24 +1092,6 @@
       "hiddenSingleBox": "In its box, {value} can only go in row {row}, column {col}",
       "uniqueSolution": "Fixed by unique solution: row {row}, column {col} = {value}"
     }
-  },
-  "match3": {
-    "title": "Match-3",
-    "levelN": "Level {n}",
-    "selectLevel": "Select level",
-    "moves": "Moves",
-    "score": "Score",
-    "target": "Target",
-    "reset": "Reset",
-    "prevLevel": "Previous level",
-    "nextLevel": "Next level",
-    "boardLabel": "Match-3 board",
-    "hint": "Swap adjacent; specials combo. Bricks break from nearby clears; auto-shuffle if no moves",
-    "won": "Level clear!",
-    "wonHint": "Target score reached",
-    "lost": "Failed",
-    "lostHint": "Out of moves before the target",
-    "playAgain": "Try again"
   },
   "spider": {
     "newGame": "New game",

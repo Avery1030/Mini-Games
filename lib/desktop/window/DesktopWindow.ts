@@ -33,7 +33,7 @@ export type WindowController = {
   removeWindow: (id: DesktopAppId) => void
 }
 
-let controller: WindowController | null = null
+let controller: Nullable<WindowController> = null
 
 export function registerWindowController(next: WindowController) {
   controller = next
@@ -136,7 +136,7 @@ export abstract class DesktopWindow {
     return getController().getRuntime(this.id)
   }
 
-  getBounds(): WindowBounds | null {
+  getBounds(): Nullable<WindowBounds> {
     return this.getRuntime()?.bounds ?? null
   }
 

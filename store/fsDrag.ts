@@ -17,10 +17,10 @@ export type FsDragSession = {
 }
 
 type FsDragState = {
-  session: FsDragSession | null
-  pixel: { left: number; top: number } | null
-  fsDropHighlight: FsDropTarget | null
-  iconDropTargetId: DesktopAppId | null
+  session: Nullable<FsDragSession>
+  pixel: Nullable<{ left: number; top: number }>
+  fsDropHighlight: Nullable<FsDropTarget>
+  iconDropTargetId: Nullable<DesktopAppId>
 }
 
 type FsDragActions = {
@@ -32,9 +32,9 @@ type FsDragActions = {
       onDragStart?: (ids: DesktopAppId[]) => void
     },
   ) => void
-  end: () => FsDragSession | null
+  end: () => Nullable<FsDragSession>
   cancel: () => void
-  setIconDropTarget: (id: DesktopAppId | null) => void
+  setIconDropTarget: (id: Nullable<DesktopAppId>) => void
 }
 
 export type FsDragStore = FsDragState & FsDragActions
@@ -79,10 +79,10 @@ export const useFsDragStore = create<FsDragStore>()((set, get) => ({
     const ignore = new Set(session.ids)
     const fsDropHighlight = moved ? hitFsDropTarget(e.clientX, e.clientY, ignore) : null
 
-    let iconDropTargetId: DesktopAppId | null = null
+    let iconDropTargetId: Nullable<DesktopAppId> = null
     if (moved && !isServer) {
       for (const el of document.elementsFromPoint(e.clientX, e.clientY)) {
-        const host = (el as Element).closest?.('[data-desktop-icon]') as HTMLElement | null
+        const host = (el as Element).closest?.('[data-desktop-icon]') as Nullable<HTMLElement>
         if (!host) continue
         const id = host.dataset.desktopIcon as DesktopAppId | undefined
         if (!id || ignore.has(id)) continue

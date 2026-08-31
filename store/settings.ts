@@ -48,16 +48,16 @@ export function screensaverIdleToMs(minutes: ScreensaverIdleMinutes): number {
 
 const settingsStorage = appStorage.createStateStorage()
 
-function normalizeWallpaperPath(raw: unknown): string | null {
+function normalizeWallpaperPath(raw: unknown): Nullable<string> {
   return isValidCustomWallpaperSrc(raw) ? raw : null
 }
 
 function syncWallpaperBoot(state: {
   wallpaperId: WallpaperId
-  wallpaperPath: string | null
+  wallpaperPath: Nullable<string>
   wallpaperFit: WallpaperFitMode
   wallpaper3dEnabled: boolean
-  wallpaper3dPath: string | null
+  wallpaper3dPath: Nullable<string>
 }) {
   writeWallpaperBoot({
     wallpaperId: state.wallpaperId,
@@ -71,10 +71,10 @@ function syncWallpaperBoot(state: {
 interface SettingsState {
   wallpaperId: WallpaperId
   /** 自定义静态壁纸路径（VFS `/Wallpapers/…` 或 public） */
-  wallpaperPath: string | null
+  wallpaperPath: Nullable<string>
   wallpaperFit: WallpaperFitMode
   wallpaper3dEnabled: boolean
-  wallpaper3dPath: string | null
+  wallpaper3dPath: Nullable<string>
   showIconLabels: boolean
   iconSize: 'sm' | 'md' | 'lg'
   uiScale: UiScale
@@ -93,10 +93,10 @@ interface SettingsActions {
   patch: (partial: SettingsPatch) => void
   applyWallpaper: (input: {
     wallpaperId: WallpaperId
-    wallpaperPath?: string | null
+    wallpaperPath?: Nullable<string>
     wallpaperFit?: WallpaperFitMode
     wallpaper3dEnabled?: boolean
-    wallpaper3dPath?: string | null
+    wallpaper3dPath?: Nullable<string>
   }) => void
   setWallpaperFit: (fit: WallpaperFitMode) => void
   clearCustomWallpaper: () => void
@@ -250,7 +250,7 @@ export const useSettingsStore = create<SettingsStore>()(
         const nextId = wallpaperId === CUSTOM_WALLPAPER_ID ? DEFAULT_WALLPAPER_ID : wallpaperId
         const next = {
           wallpaperId: nextId,
-          wallpaperPath: null as string | null,
+          wallpaperPath: null as Nullable<string>,
           wallpaperFit,
           wallpaper3dEnabled,
           wallpaper3dPath,

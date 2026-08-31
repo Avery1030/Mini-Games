@@ -7,8 +7,8 @@ import {
   START_SCORE,
   SUITS,
   TOTAL_CARDS,
+  Difficulty,
   type Card,
-  type Difficulty,
   type HintMove,
   type Rank,
   type SpiderState,
@@ -76,10 +76,16 @@ function recomputeScore(moves: number, completed: number): number {
 }
 
 function copiesForDifficulty(difficulty: Difficulty): number[] {
-  if (difficulty === 1) return [12]
-  if (difficulty === 2) return [6, 6]
-  if (difficulty === 3) return [4, 4, 4]
-  return [3, 3, 3, 3]
+  switch (difficulty) {
+    case Difficulty.OneSuit:
+      return [12]
+    case Difficulty.TwoSuit:
+      return [6, 6]
+    case Difficulty.ThreeSuit:
+      return [4, 4, 4]
+    default:
+      return [3, 3, 3, 3]
+  }
 }
 
 /**
@@ -206,7 +212,7 @@ export type CollectedRun = {
   suit: Suit
 }
 
-function findCompleteRunStart(col: readonly Card[]): number | null {
+function findCompleteRunStart(col: readonly Card[]): Nullable<number> {
   if (col.length < RUN_LEN) return null
   const start = col.length - RUN_LEN
   const run = col.slice(start)
@@ -242,7 +248,7 @@ export function collectCompleted(state: SpiderState): { state: SpiderState; runs
   return { state: next, runs }
 }
 
-export function placeMove(state: SpiderState, fromCol: number, fromIndex: number, toCol: number): SpiderState | null {
+export function placeMove(state: SpiderState, fromCol: number, fromIndex: number, toCol: number): Nullable<SpiderState> {
   if (state.won || state.lost) return null
   if (fromCol === toCol) return null
   const src = state.tableau[fromCol]
@@ -271,7 +277,7 @@ export function canDeal(state: SpiderState): boolean {
   return state.tableau.every((col) => col.length > 0)
 }
 
-export function placeDeal(state: SpiderState): SpiderState | null {
+export function placeDeal(state: SpiderState): Nullable<SpiderState> {
   if (!canDeal(state)) return null
   const next = cloneState(state)
   for (let i = 0; i < COLS; i++) {
@@ -325,10 +331,10 @@ function isUsefulMove(state: SpiderState, fromCol: number, fromIndex: number, to
   return true
 }
 
-export function findHint(state: SpiderState): HintMove | null {
+export function findHint(state: SpiderState): Nullable<HintMove> {
   if (state.won || state.lost) return null
   const cols = state.tableau
-  let fallback: HintMove | null = null
+  let fallback: Nullable<HintMove> = null
   for (let fromCol = 0; fromCol < COLS; fromCol++) {
     const src = cols[fromCol]!
     for (let fromIndex = 0; fromIndex < src.length; fromIndex++) {

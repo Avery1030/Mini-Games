@@ -193,8 +193,8 @@ export function Tetris({ embedded = false }: TetrisProps = {}) {
   }, [renderBoard, flashUntil, shakeUntil, animNow])
 
   useEffect(() => {
-    const isTypingTarget = (target: EventTarget | null) => {
-      const el = target as HTMLElement | null
+    const isTypingTarget = (target: Nullable<EventTarget>) => {
+      const el = target as Nullable<HTMLElement>
       const tag = el?.tagName
       return tag === 'INPUT' || tag === 'TEXTAREA' || !!el?.isContentEditable
     }

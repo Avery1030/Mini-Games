@@ -64,7 +64,7 @@ export function fitRectToWorkArea(b: { x: number; y: number; width: number; heig
 }
 
 export function createWindowSeed(opts: {
-  rememberedBounds?: WindowBounds | null
+  rememberedBounds?: Nullable<WindowBounds>
   defaultPosition?: { x: number; y: number }
   defaultMaximized?: boolean
   width: number

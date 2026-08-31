@@ -8,7 +8,6 @@
     "minesweeper": "扫雷",
     "tetris": "俄罗斯方块",
     "suika": "合成大西瓜",
-    "tileMatch": "格子消消",
     "imagePuzzle": "图片拼图",
     "canvasJigsaw": "不规则拼图",
     "document": "文档",
@@ -27,7 +26,6 @@
     "ide": "代码编辑器",
     "sokoban": "推箱子",
     "sudoku": "数独",
-    "match3": "消消乐",
     "spider": "蜘蛛纸牌"
   },
   "desktop": {
@@ -549,7 +547,6 @@
       "title": "内置应用",
       "body": [
         "扫雷、俄罗斯方块与合成大西瓜：几款经典小游戏，适合发呆。",
-        "格子消消：分层卡牌三消，集齐三个相同图案即可消除，卡槽满了会失败。",
         "设置：分区为显示、外观、任务栏与数据；数据页支持导出/导入本机偏好与桌面状态的 JSON 备份。",
         "文档：就是你现在看到的这个窗口。内容不会联网，也不会保存你的批注。",
         "日志：按日期记录桌面与应用的更新，可双击「日志」图标打开；文档里也有最近更新摘要。",
@@ -834,22 +831,6 @@
       "watermelon": "西瓜"
     }
   },
-  "tileMatch": {
-    "title": "格子消消",
-    "remaining": "剩余",
-    "cleared": "已消",
-    "restart": "重开",
-    "undo": "撤销",
-    "shuffle": "洗牌",
-    "slot": "卡槽",
-    "hint": "点亮起的牌放入卡槽，三个相同消除",
-    "boardLabel": "格子消消棋盘",
-    "won": "通关成功",
-    "wonHint": "所有卡牌均已消除",
-    "lost": "挑战失败",
-    "lostHint": "卡槽已满且无法消除",
-    "playAgain": "再来一局"
-  },
   "imagePuzzle": {
     "title": "图片拼图",
     "moves": "步数",
@@ -1111,24 +1092,6 @@
       "hiddenSingleBox": "宫内数字 {value} 只能放在第 {row} 行第 {col} 列",
       "uniqueSolution": "由唯一解确定：第 {row} 行第 {col} 列 = {value}"
     }
-  },
-  "match3": {
-    "title": "消消乐",
-    "levelN": "第 {n} 关",
-    "selectLevel": "选择关卡",
-    "moves": "步数",
-    "score": "分数",
-    "target": "目标",
-    "reset": "重置",
-    "prevLevel": "上一关",
-    "nextLevel": "下一关",
-    "boardLabel": "消消乐棋盘",
-    "hint": "点击选中再点相邻交换；道具互碰有加成；砖块需周围消除冲击；无解时自动重排",
-    "won": "过关！",
-    "wonHint": "已达到目标分数",
-    "lost": "失败",
-    "lostHint": "步数用尽且未达目标",
-    "playAgain": "再试一次"
   },
   "spider": {
     "newGame": "新游戏",

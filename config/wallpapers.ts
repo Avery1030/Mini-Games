@@ -194,7 +194,7 @@ export const DESKTOP_BG_PLACEHOLDER_STYLE: CSSProperties = {
  */
 export function resolveDesktopBackgroundStyle(
   wallpaperId: WallpaperId | string | undefined,
-  customSrc: string | null | undefined,
+  customSrc: Nullable<string> | undefined,
   fit: WallpaperFitMode = DEFAULT_WALLPAPER_FIT,
 ): CSSProperties {
   const safeFit = isWallpaperFitMode(fit) ? fit : DEFAULT_WALLPAPER_FIT

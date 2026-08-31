@@ -74,7 +74,7 @@ function endsWithNumber(expr: string) {
   return /(?:\d|\.)$/.test(expr)
 }
 
-function lastNumberSpan(expr: string): { start: number; raw: string } | null {
+function lastNumberSpan(expr: string): Nullable<{ start: number; raw: string }> {
   const m = expr.match(/(-?(?:\d+\.?\d*|\.\d+))$/)
   if (!m || m.index == null) return null
   return { start: m.index, raw: m[1]! }

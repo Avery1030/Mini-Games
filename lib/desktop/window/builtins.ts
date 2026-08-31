@@ -19,7 +19,6 @@ import {
   Grid3x3,
   HardDrive,
   ImageIcon,
-  LayoutGrid,
   Notebook,
   Palette,
   Puzzle,
@@ -30,10 +29,11 @@ import {
 } from 'lucide-react'
 import { registerBuiltinApps } from './defineApp'
 import { spawnIdeEditor } from './ideWindows'
+import { BuiltinAppId } from '@/config/desktop'
 
 registerBuiltinApps([
   {
-    id: 'games',
+    id: BuiltinAppId.Games,
     icon: Folder,
     defaultCoordinate: [0, 1],
     width: 360,
@@ -41,7 +41,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/games').then((m) => m.GamesApp),
   },
   {
-    id: 'minesweeper',
+    id: BuiltinAppId.Minesweeper,
     icon: Bomb,
     defaultCoordinate: [1, 1],
     width: 420,
@@ -51,7 +51,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/games/minesweeper').then((m) => m.Minesweeper),
   },
   {
-    id: 'tetris',
+    id: BuiltinAppId.Tetris,
     icon: Blocks,
     defaultCoordinate: [1, 2],
     width: 560,
@@ -61,7 +61,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/games/tetris').then((m) => m.Tetris),
   },
   {
-    id: 'suika',
+    id: BuiltinAppId.Suika,
     icon: Cherry,
     defaultCoordinate: [0, 1],
     width: 520,
@@ -72,18 +72,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/games/suika').then((m) => m.Suika),
   },
   {
-    id: 'tileMatch',
-    icon: LayoutGrid,
-    defaultCoordinate: [0, 2],
-    width: 390,
-    height: 720,
-    showOnDesktop: false,
-    showInStartMenu: false,
-    chrome: { resizable: true },
-    loadApp: () => import('@/features/games/tile-match').then((m) => m.TileMatch),
-  },
-  {
-    id: 'imagePuzzle',
+    id: BuiltinAppId.ImagePuzzle,
     icon: Puzzle,
     defaultCoordinate: [0, 3],
     width: 440,
@@ -93,7 +82,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/games/image-puzzle').then((m) => m.ImagePuzzle),
   },
   {
-    id: 'canvasJigsaw',
+    id: BuiltinAppId.CanvasJigsaw,
     icon: Shapes,
     defaultCoordinate: [0, 4],
     width: 520,
@@ -103,7 +92,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/games/canvas-jigsaw').then((m) => m.CanvasJigsaw),
   },
   {
-    id: 'sokoban',
+    id: BuiltinAppId.Sokoban,
     icon: Box,
     defaultCoordinate: [0, 5],
     width: 440,
@@ -113,7 +102,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/games/sokoban').then((m) => m.Sokoban),
   },
   {
-    id: 'sudoku',
+    id: BuiltinAppId.Sudoku,
     icon: Grid3x3,
     defaultCoordinate: [1, 4],
     width: 400,
@@ -123,17 +112,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/games/sudoku').then((m) => m.Sudoku),
   },
   {
-    id: 'match3',
-    icon: LayoutGrid,
-    defaultCoordinate: [1, 3],
-    width: 420,
-    height: 620,
-    showOnDesktop: false,
-    showInStartMenu: false,
-    loadApp: () => import('@/features/games/match3').then((m) => m.Match3),
-  },
-  {
-    id: 'spider',
+    id: BuiltinAppId.Spider,
     icon: Club,
     defaultCoordinate: [1, 5],
     width: 1040,
@@ -144,7 +123,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/games/spider').then((m) => m.Spider),
   },
   {
-    id: 'document',
+    id: BuiltinAppId.Document,
     icon: BookOpenText,
     defaultCoordinate: [1, 3],
     width: 520,
@@ -152,7 +131,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/document').then((m) => m.DocumentApp),
   },
   {
-    id: 'log',
+    id: BuiltinAppId.Log,
     icon: Notebook,
     defaultCoordinate: [1, 4],
     width: 520,
@@ -160,7 +139,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/log').then((m) => m.LogApp),
   },
   {
-    id: 'notepad',
+    id: BuiltinAppId.Notepad,
     icon: FileText,
     defaultCoordinate: [2, 1],
     width: 560,
@@ -168,7 +147,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/notepad').then((m) => m.NotepadApp),
   },
   {
-    id: 'ide',
+    id: BuiltinAppId.Ide,
     icon: CodeXml,
     defaultCoordinate: [4, 1],
     width: 720,
@@ -180,7 +159,7 @@ registerBuiltinApps([
     },
   },
   {
-    id: 'paint',
+    id: BuiltinAppId.Paint,
     icon: Palette,
     defaultCoordinate: [2, 2],
     width: 720,
@@ -188,7 +167,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/paint').then((m) => m.PaintApp),
   },
   {
-    id: 'settings',
+    id: BuiltinAppId.Settings,
     icon: Settings,
     defaultCoordinate: [2, 3],
     width: 560,
@@ -196,7 +175,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/settings').then((m) => m.SettingsApp),
   },
   {
-    id: 'calculator',
+    id: BuiltinAppId.Calculator,
     icon: Calculator,
     defaultCoordinate: [2, 4],
     width: 320,
@@ -205,7 +184,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/calculator').then((m) => m.CalculatorApp),
   },
   {
-    id: 'recycleBin',
+    id: BuiltinAppId.RecycleBin,
     icon: Trash2,
     defaultCoordinate: [1, 5],
     width: 640,
@@ -214,7 +193,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/recycle-bin').then((m) => m.RecycleBinApp),
   },
   {
-    id: 'cmd',
+    id: BuiltinAppId.Cmd,
     icon: Terminal,
     defaultCoordinate: [3, 1],
     width: 640,
@@ -222,7 +201,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/cmd').then((m) => m.CmdApp),
   },
   {
-    id: 'klineChartViewer',
+    id: BuiltinAppId.KlineChartViewer,
     icon: ChartCandlestick,
     defaultCoordinate: [3, 2],
     width: 1024,
@@ -230,7 +209,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/kline-chart').then((m) => m.KlineChartViewer),
   },
   {
-    id: 'aiChat',
+    id: BuiltinAppId.AiChat,
     icon: Bot,
     defaultCoordinate: [3, 3],
     width: 560,
@@ -238,7 +217,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/ai-chat').then((m) => m.AiChatApp),
   },
   {
-    id: 'taskManager',
+    id: BuiltinAppId.TaskManager,
     icon: AppWindow,
     defaultCoordinate: [3, 4],
     width: 420,
@@ -246,7 +225,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/task-manager').then((m) => m.TaskManagerApp),
   },
   {
-    id: 'imageViewer',
+    id: BuiltinAppId.ImageViewer,
     icon: ImageIcon,
     defaultCoordinate: [3, 5],
     width: 760,
@@ -254,7 +233,7 @@ registerBuiltinApps([
     loadApp: () => import('@/features/image-viewer').then((m) => m.ImageViewerApp),
   },
   {
-    id: 'fileExplorer',
+    id: BuiltinAppId.FileExplorer,
     icon: HardDrive,
     defaultCoordinate: [2, 5],
     width: 560,

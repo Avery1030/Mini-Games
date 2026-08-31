@@ -11,7 +11,7 @@ export const AI_CHAT_STORES = {
 
 export type AiChatStoreName = (typeof AI_CHAT_STORES)[keyof typeof AI_CHAT_STORES]
 
-let dbPromise: Promise<IDBDatabase> | null = null
+let dbPromise: Nullable<Promise<IDBDatabase>> = null
 
 function upgrade(db: IDBDatabase) {
   if (!db.objectStoreNames.contains(AI_CHAT_STORES.sessions)) {

@@ -58,7 +58,7 @@ function defaultUniqueTitle(existingTitles: string[], base: string): string {
  * 在桌面 / 文件夹内创建一个可打开的文件夹窗口实例。
  * 持久化由 desktopItems store 承接。
  */
-export function createDesktopFolderWindow(options: CreateDesktopFolderOptions = {}): FolderWindow | null {
+export function createDesktopFolderWindow(options: CreateDesktopFolderOptions = {}): Nullable<FolderWindow> {
   const id = nextId('folder')
   const existingTitles =
     options.siblingTitles ??
@@ -83,7 +83,7 @@ export function createDesktopFolderWindow(options: CreateDesktopFolderOptions = 
 
 export function createDesktopTextDocumentWindow(
   options: CreateDesktopTextDocumentOptions,
-): TextDocumentWindow | null {
+): Nullable<TextDocumentWindow> {
   const id = nextId('text')
   const existingTitles =
     options.siblingTitles ??

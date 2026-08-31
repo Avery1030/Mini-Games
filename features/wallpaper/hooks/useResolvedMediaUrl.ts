@@ -5,10 +5,10 @@ import { resolveWallpaperDisplayUrl, resolveWallpaperThumbUrl } from '@/lib/wall
 
 /** 将 VFS / public / http(s) 壁纸引用解析为可展示 URL */
 export function useResolvedMediaUrl(
-  src: string | null | undefined,
+  src: Nullable<string> | undefined,
   kind: 'full' | 'thumb' = 'full',
-): string | null {
-  const [url, setUrl] = useState<string | null>(() => {
+): Nullable<string> {
+  const [url, setUrl] = useState<Nullable<string>>(() => {
     if (!src) return null
     if (src.startsWith('http://') || src.startsWith('https://')) return src
     if (src.startsWith('/wallpapers/')) return src

@@ -92,7 +92,7 @@ const DIRS: ReadonlyArray<readonly [number, number]> = [
 export function shuffleBoard(size: PuzzleSize, steps?: number): PuzzleBoard {
   const moves = steps ?? size * size * 24
   let board = createSolvedBoard(size)
-  let last: PuzzlePos | null = null
+  let last: Nullable<PuzzlePos> = null
 
   for (let i = 0; i < moves; i++) {
     const blank = findBlank(board)

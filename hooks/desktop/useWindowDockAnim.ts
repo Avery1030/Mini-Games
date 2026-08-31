@@ -30,7 +30,7 @@ type UseWindowDockAnimOptions = {
   setMaximized: Dispatch<SetStateAction<boolean>>
   emitBounds: (next?: { position: Point; size: Size; maximized: boolean }) => void
   interactivelyMoving: boolean
-  initialDockPose: WindowPose | null
+  initialDockPose: Nullable<WindowPose>
 }
 
 /**
@@ -54,7 +54,7 @@ export function useWindowDockAnim({
 }: UseWindowDockAnimOptions) {
   const [geometryAnimating, setGeometryAnimating] = useState(false)
   const [minAnim, setMinAnim] = useState<MinAnim>(minimized ? 'hidden' : 'shown')
-  const [poseOverride, setPoseOverride] = useState<WindowPose | null>(initialDockPose)
+  const [poseOverride, setPoseOverride] = useState<Nullable<WindowPose>>(initialDockPose)
 
   const markTaskbar = (on: boolean) => {
     if (id) setTaskbarAppAnimating(id, on)

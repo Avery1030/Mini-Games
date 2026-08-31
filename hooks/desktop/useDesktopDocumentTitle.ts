@@ -15,7 +15,7 @@ import { useWindowStore } from '@/store/window'
 /** 与 `app/(desktop)/layout.tsx` metadata.title 保持一致 */
 export const DESKTOP_DOCUMENT_TITLE = 'Avery Mini OS'
 
-function selectActiveWindowId(windows: Record<string, DesktopWindowRuntime>): DesktopAppId | null {
+function selectActiveWindowId(windows: Record<string, DesktopWindowRuntime>): Nullable<DesktopAppId> {
   for (const [id, w] of Object.entries(windows)) {
     if (w.isOpen && w.active && !w.minimized) return id
   }

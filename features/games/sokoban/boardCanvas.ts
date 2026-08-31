@@ -385,7 +385,7 @@ export function drawSokobanBoard(
     level: LevelData
     visual: BoardVisual
     cellPx: number
-    staticLayer?: HTMLCanvasElement | OffscreenCanvas | null
+    staticLayer?: Nullable<HTMLCanvasElement | OffscreenCanvas>
   },
 ): void {
   const { level, visual, cellPx, staticLayer } = input
@@ -412,7 +412,7 @@ export function setupBoardCanvas(
   canvas: HTMLCanvasElement,
   level: LevelData,
   cellPx: number,
-): CanvasRenderingContext2D | null {
+): Nullable<CanvasRenderingContext2D> {
   const dpr = typeof window !== 'undefined' ? Math.min(2, window.devicePixelRatio || 1) : 1
   const cssW = level.width * cellPx
   const cssH = level.height * cellPx
@@ -433,7 +433,7 @@ export function setupBoardCanvas(
   return ctx
 }
 
-export function createStaticLayer(level: LevelData, cellPx: number): HTMLCanvasElement | null {
+export function createStaticLayer(level: LevelData, cellPx: number): Nullable<HTMLCanvasElement> {
   if (typeof document === 'undefined') return null
   const dpr = typeof window !== 'undefined' ? Math.min(2, window.devicePixelRatio || 1) : 1
   const cssW = level.width * cellPx

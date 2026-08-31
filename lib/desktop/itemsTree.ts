@@ -5,13 +5,13 @@ export function normalizeItemTitle(title: string): string {
   return title.trim().toLowerCase()
 }
 
-export function resolveParentId(parentId?: DesktopAppId | null): DesktopAppId | null {
+export function resolveParentId(parentId?: Nullable<DesktopAppId>): Nullable<DesktopAppId> {
   return parentId ?? null
 }
 
 export function getChildren(
   items: DesktopItemRecord[],
-  parentId: DesktopAppId | null,
+  parentId: Nullable<DesktopAppId>,
   opts?: { includeDeleted?: boolean },
 ): DesktopItemRecord[] {
   const pid = resolveParentId(parentId)
@@ -26,7 +26,7 @@ export function isSiblingTitleTaken(
   items: DesktopItemRecord[],
   kind: DesktopResourceKind,
   title: string,
-  parentId: DesktopAppId | null,
+  parentId: Nullable<DesktopAppId>,
   excludeId?: DesktopAppId,
 ): boolean {
   const key = normalizeItemTitle(title)
@@ -46,7 +46,7 @@ export function uniqueSiblingTitle(
   items: DesktopItemRecord[],
   kind: DesktopResourceKind,
   base: string,
-  parentId: DesktopAppId | null,
+  parentId: Nullable<DesktopAppId>,
   excludeId?: DesktopAppId,
 ): string {
   const trimmed = base.trim() || base

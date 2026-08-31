@@ -53,7 +53,7 @@ export {
   clearToasts,
   useToastStore,
   TOAST_MAX,
-  type ToastType,
   type ToastEntry,
   type ToastOptions,
+  ToastType,
 } from './toast'

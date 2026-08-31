@@ -20,7 +20,7 @@ export interface WindowsWindowProps {
   /** 无记忆时：首次是否最大化 */
   defaultMaximized?: boolean
   /** 有记忆时优先于 defaultPosition / width / height / defaultMaximized */
-  rememberedBounds?: WindowBounds | null
+  rememberedBounds?: Nullable<WindowBounds>
   children?: React.ReactNode
   defaultPosition?: { x: number; y: number }
   width?: number

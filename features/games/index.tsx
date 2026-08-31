@@ -30,7 +30,7 @@ export function GamesApp({ embedded = false }: GamesAppProps) {
   const locale = useLocale()
   const isMobile = useIsMobileViewport()
   const openWindow = useWindowStore((s) => s.openWindow)
-  const [selectedId, setSelectedId] = useState<DesktopAppId | null>(null)
+  const [selectedId, setSelectedId] = useState<Nullable<DesktopAppId>>(null)
 
   const definitions = useSyncExternalStore(
     subscribeDesktopRegistry,

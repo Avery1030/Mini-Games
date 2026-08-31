@@ -3,14 +3,14 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 import { STORAGE_KEYS, appStorage } from '@/lib/storage'
 import { cloneState, newGame } from './game'
 import { emptyRecords, insertRecord, normalizeRecords, type RecordWinResult, type SpiderRecordsMap } from './records'
-import type { Difficulty, SpiderState, SpiderTimeRecord } from './types'
+import { Difficulty, type SpiderState, type SpiderTimeRecord, isDifficulty } from './types'
 
 const MAX_UNDO = 40
 
 export type SpiderPersistState = {
   difficulty: Difficulty
   /** null 表示尚未开局（水合后 ensureGame 会补齐） */
-  state: SpiderState | null
+  state: Nullable<SpiderState>
   undoStack: SpiderState[]
   elapsed: number
   records: SpiderRecordsMap
@@ -26,7 +26,7 @@ interface SpiderActions {
   pushUndo: (prev: SpiderState) => void
   setElapsed: (sec: number | ((prev: number) => number)) => void
   restart: (difficulty?: Difficulty) => void
-  recordWin: (entry: { difficulty: Difficulty; elapsed: number; moves: number; score: number }) => RecordWinResult | null
+  recordWin: (entry: { difficulty: Difficulty; elapsed: number; moves: number; score: number }) => Nullable<RecordWinResult>
   /** 撤销通关后允许再次入榜 */
   clearWinLogged: () => void
 }
@@ -47,7 +47,7 @@ function persistSlice(s: SpiderStore): SpiderPersistState {
 export const useSpiderStore = create<SpiderStore>()(
   persist(
     (set, get) => ({
-      difficulty: 2,
+      difficulty: Difficulty.TwoSuit,
       state: null,
       undoStack: [],
       elapsed: 0,
@@ -121,7 +121,7 @@ export const useSpiderStore = create<SpiderStore>()(
       migrate: (persisted) => {
         const raw = (persisted ?? {}) as Partial<SpiderPersistState>
         return {
-          difficulty: raw.difficulty === 1 || raw.difficulty === 2 || raw.difficulty === 3 || raw.difficulty === 4 ? raw.difficulty : 2,
+          difficulty: isDifficulty(raw.difficulty) ? raw.difficulty : Difficulty.TwoSuit,
           state: raw.state ?? null,
           undoStack: Array.isArray(raw.undoStack) ? raw.undoStack : [],
           elapsed: typeof raw.elapsed === 'number' ? raw.elapsed : 0,

@@ -14,7 +14,7 @@ const ROW_H_MOBILE = 64
 export type ImageSidebarProps = {
   images: ImageItem[]
   selectedIds: string[]
-  activeId: string | null
+  activeId: Nullable<string>
   loading: boolean
   onToggle: (id: string) => void
   onSelectOnly: (id: string) => void

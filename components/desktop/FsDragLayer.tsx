@@ -91,7 +91,7 @@ export function FsDragLayer() {
           })
         } else {
           // 用幽灵图标左上角对应松手位置，换算桌面格点（与桌面内拖拽一致）
-          const desktopEl = document.querySelector('[data-fs-drop="desktop"]') as HTMLElement | null
+          const desktopEl = document.querySelector('[data-fs-drop="desktop"]') as Nullable<HTMLElement>
           const ghostLeft = e.clientX - ended.offsetX
           const ghostTop = e.clientY - ended.offsetY
           const prefer = desktopEl

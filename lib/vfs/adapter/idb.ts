@@ -30,7 +30,7 @@ function txDone(tx: IDBTransaction): Promise<void> {
   })
 }
 
-function mapIdbError(err: DOMException | Error | null): Error {
+function mapIdbError(err: Nullable<DOMException | Error>): Error {
   if (!err) return new VfsError('StorageQuota', 'IndexedDB request failed')
   const name = 'name' in err ? err.name : ''
   if (name === 'QuotaExceededError') {
@@ -52,7 +52,7 @@ function upgrade(db: IDBDatabase) {
 
 /** IndexedDB 存储适配器：元信息与文件内容分 store 存放 */
 export class IdbAdapter implements StorageAdapter {
-  private dbPromise: Promise<IDBDatabase> | null = null
+  private dbPromise: Nullable<Promise<IDBDatabase>> = null
 
   private open(): Promise<IDBDatabase> {
     if (typeof indexedDB === 'undefined') {
@@ -72,7 +72,7 @@ export class IdbAdapter implements StorageAdapter {
     return this.dbPromise
   }
 
-  async getMeta(path: string): Promise<StoredFileNode | null> {
+  async getMeta(path: string): Promise<Nullable<StoredFileNode>> {
     const db = await this.open()
     const row = await reqToPromise(
       db.transaction(STORES.fileMeta, 'readonly').objectStore(STORES.fileMeta).get(path),
@@ -80,7 +80,7 @@ export class IdbAdapter implements StorageAdapter {
     return (row as StoredFileNode | undefined) ?? null
   }
 
-  async getMetaById(id: string): Promise<StoredFileNode | null> {
+  async getMetaById(id: string): Promise<Nullable<StoredFileNode>> {
     const db = await this.open()
     const index = db
       .transaction(STORES.fileMeta, 'readonly')
@@ -120,7 +120,7 @@ export class IdbAdapter implements StorageAdapter {
     return rows as StoredFileNode[]
   }
 
-  async getContent(id: string): Promise<FileContent | null> {
+  async getContent(id: string): Promise<Nullable<FileContent>> {
     const db = await this.open()
     const row = await reqToPromise(
       db.transaction(STORES.fileContent, 'readonly').objectStore(STORES.fileContent).get(id),

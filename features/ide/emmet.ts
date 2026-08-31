@@ -325,7 +325,7 @@ class Parser {
   parseAttrs(node: EmmetNode) {
     const raw = this.balanced('[', ']')
     const re = /([^\s=\]]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s\]]+)))?/g
-    let m: RegExpExecArray | null
+    let m: Nullable<RegExpExecArray>
     while ((m = re.exec(raw))) {
       node.attrs.push([m[1]!, m[2] ?? m[3] ?? m[4] ?? ''])
     }
@@ -333,10 +333,10 @@ class Parser {
 
   parseList(stop: string): EmmetNode[] {
     const roots: EmmetNode[] = []
-    type Ctx = { siblings: EmmetNode[]; parent: EmmetNode | null }
+    type Ctx = { siblings: EmmetNode[]; parent: Nullable<EmmetNode> }
     const stack: Ctx[] = []
     let ctx: Ctx = { siblings: roots, parent: null }
-    let current: EmmetNode | null = null
+    let current: Nullable<EmmetNode> = null
 
     const add = (node: EmmetNode) => {
       ctx.siblings.push(node)
@@ -489,7 +489,7 @@ const HTML5 = `<!DOCTYPE html>
     </body>
 </html>`
 
-function expandMarkup(abbr: string): { expanded: string; caret: number } | null {
+function expandMarkup(abbr: string): Nullable<{ expanded: string; caret: number }> {
   const trimmed = abbr.trim()
   if (trimmed === '!' || trimmed === '!!!') {
     const caret = HTML5.indexOf('|')
@@ -516,7 +516,7 @@ function cssValue(raw: string, prop: string): string {
   return raw
 }
 
-function expandCss(abbr: string): string | null {
+function expandCss(abbr: string): Nullable<string> {
   const key = abbr.trim()
   if (CSS_SNIPPETS[key]) return CSS_SNIPPETS[key]
   const m = key.match(/^([a-z]+)(.*)$/i)
@@ -576,7 +576,7 @@ function applyIndentToExpanded(expanded: string, caretIn: number, indent: string
   return { expanded: out.join('\n'), caretIn: newCaret }
 }
 
-export function emmetSyntaxAt(text: string, caret: number, language: IdeLanguage): EmmetSyntax | null {
+export function emmetSyntaxAt(text: string, caret: number, language: IdeLanguage): Nullable<EmmetSyntax> {
   if (language === 'css') return 'stylesheet'
   if (language !== 'markup' && language !== 'plain') return null
   const before = text.slice(0, caret).toLowerCase()
@@ -593,7 +593,7 @@ export function extractEmmetAbbr(
   text: string,
   caret: number,
   syntax: EmmetSyntax,
-): { abbreviation: string; start: number; end: number } | null {
+): Nullable<{ abbreviation: string; start: number; end: number }> {
   const lineStart = text.lastIndexOf('\n', caret - 1) + 1
   let i = caret - 1
   while (i >= lineStart) {
@@ -612,7 +612,7 @@ export function extractEmmetAbbr(
   return { abbreviation, start, end: caret }
 }
 
-export function suggestEmmet(text: string, caret: number, language: IdeLanguage): EmmetSuggestion | null {
+export function suggestEmmet(text: string, caret: number, language: IdeLanguage): Nullable<EmmetSuggestion> {
   const syntax = emmetSyntaxAt(text, caret, language)
   if (!syntax) return null
   const extracted = extractEmmetAbbr(text, caret, syntax)

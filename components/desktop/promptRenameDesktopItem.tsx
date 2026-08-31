@@ -8,7 +8,7 @@ import { isSiblingTitleTaken, resolveParentId } from '@/lib/desktop/itemsTree'
 import { parseItemTitleInput } from '@/lib/desktop/fileTypes'
 import { useDesktopItemsStore, type DesktopResourceKind } from '@/store/desktopItems'
 
-type PromptResult = string | null
+type PromptResult = Nullable<string>
 
 export type PromptRenameDesktopItemOptions = {
   currentName: string
@@ -16,7 +16,7 @@ export type PromptRenameDesktopItemOptions = {
   itemId: DesktopAppId
   kind: DesktopResourceKind
   /** 同级父级；缺省时从 store 读取 */
-  parentId?: DesktopAppId | null
+  parentId?: Nullable<DesktopAppId>
 }
 
 /**
@@ -70,7 +70,7 @@ function RenameItemForm({
   initialName: string
   itemId: DesktopAppId
   kind: DesktopResourceKind
-  parentId?: DesktopAppId | null
+  parentId?: Nullable<DesktopAppId>
   onCancel: () => void
   onConfirm: (name: string) => void
 }) {
@@ -78,7 +78,7 @@ function RenameItemForm({
   const tm = useTranslations('modal')
   const items = useDesktopItemsStore((s) => s.items)
   const [name, setName] = useState(initialName)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<Nullable<string>>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -146,11 +146,11 @@ function RenameItemForm({
   )
 }
 
-export function promptRenameVfsFile(options: { currentName: string; title: string }): Promise<string | null> {
+export function promptRenameVfsFile(options: { currentName: string; title: string }): Promise<Nullable<string>> {
   const { currentName, title } = options
   return new Promise((resolve) => {
     let settled = false
-    const finish = (value: string | null) => {
+    const finish = (value: Nullable<string>) => {
       if (settled) return
       settled = true
       resolve(value)
@@ -191,7 +191,7 @@ function RenameVfsForm({
   const td = useTranslations('desktop')
   const tm = useTranslations('modal')
   const [name, setName] = useState(initialName)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<Nullable<string>>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {

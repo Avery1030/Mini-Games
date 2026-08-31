@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { type Difficulty, type GameState, getInitialGameState, PRESETS, MinesweeperGame } from './minesweeper-game'
+import { Difficulty, type GameState, getInitialGameState, PRESETS, MinesweeperGame } from './minesweeper-game'
 
 const CELL_SIZE = 22
 const NUMBER_COLORS: Record<number, string> = {
@@ -16,7 +16,13 @@ const NUMBER_COLORS: Record<number, string> = {
   8: '#808080',
 }
 
-const DIFFICULTIES: Difficulty[] = ['basic', 'intermediate', 'expert', 'fullscreen', 'custom']
+const DIFFICULTIES: Difficulty[] = [
+  Difficulty.Basic,
+  Difficulty.Intermediate,
+  Difficulty.Expert,
+  Difficulty.Fullscreen,
+  Difficulty.Custom,
+]
 
 export interface MinesweeperProps {
   /** 嵌入弹窗内时为 true，去掉全屏最小高度 */
@@ -25,19 +31,19 @@ export interface MinesweeperProps {
 
 export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
   const t = useTranslations('minesweeper')
-  const [difficulty, setDifficulty] = useState<Difficulty>('basic')
+  const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.Basic)
   const [customInputs, setCustomInputs] = useState({ rows: 32, cols: 32, mines: 250 })
 
-  const [state, setState] = useState<GameState>(() => getInitialGameState(PRESETS.basic))
-  const [hoveredCell, setHoveredCell] = useState<{ row: number; col: number } | null>(null)
-  const [pressedCell, setPressedCell] = useState<{ row: number; col: number } | null>(null)
+  const [state, setState] = useState<GameState>(() => getInitialGameState(PRESETS[Difficulty.Basic]))
+  const [hoveredCell, setHoveredCell] = useState<Nullable<{ row: number; col: number }>>(null)
+  const [pressedCell, setPressedCell] = useState<Nullable<{ row: number; col: number }>>(null)
 
-  const gameRef = useRef<MinesweeperGame | null>(null)
+  const gameRef = useRef<Nullable<MinesweeperGame>>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
     if (gameRef.current == null) {
-      gameRef.current = new MinesweeperGame(PRESETS.basic, setState)
+      gameRef.current = new MinesweeperGame(PRESETS[Difficulty.Basic], setState)
       setState(gameRef.current.getState())
     }
     return () => {
@@ -61,7 +67,7 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
 
   const applyPreset = useCallback((d: Difficulty) => {
     setDifficulty(d)
-    if (d !== 'custom' && gameRef.current) {
+    if (d !== Difficulty.Custom && gameRef.current) {
       const { rows: r, cols: c, mines: m } = PRESETS[d]
       gameRef.current.setDimensions(r, c, m)
     }
@@ -266,7 +272,7 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
           </div>
         </div>
 
-        {difficulty === 'custom' && (
+        {difficulty === Difficulty.Custom && (
           <div className='flex flex-wrap items-center justify-center gap-2 px-3 py-2 border border-[#808080] bg-[#c0c0c0]'>
             <label className='flex items-center gap-1 text-sm'>
               {t('cols')}

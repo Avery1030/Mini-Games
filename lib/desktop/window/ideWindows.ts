@@ -85,7 +85,7 @@ export class IdeEditorWindow extends DesktopWindow {
   override readonly showInStartMenu = false
   override readonly showOnDesktop = false
   override title: string
-  filePath: string | null
+  filePath: Nullable<string>
   dirty = false
   readonly windowKind = 'ide-editor' as const
   unsavedTitle = 'Confirm'
@@ -93,14 +93,14 @@ export class IdeEditorWindow extends DesktopWindow {
   closeSaveLabel = 'Save'
   closeDiscardLabel = "Don't Save"
   closeCancelLabel = 'Cancel'
-  saveHandler: (() => Promise<boolean>) | null = null
-  previewId: DesktopAppId | null = null
-  onRetargetPath: ((path: string) => void) | null = null
-  private deferred: DeferredApp | null = null
+  saveHandler: Nullable<(() => Promise<boolean>)> = null
+  previewId: Nullable<DesktopAppId> = null
+  onRetargetPath: Nullable<((path: string) => void)> = null
+  private deferred: Nullable<DeferredApp> = null
   private closeConfirming = false
   private cleaned = false
 
-  constructor(opts: { id: DesktopAppId; filePath?: string | null; title?: string }) {
+  constructor(opts: { id: DesktopAppId; filePath?: Nullable<string>; title?: string }) {
     super()
     this.id = opts.id
     this.filePath = opts.filePath ?? null
@@ -146,7 +146,7 @@ export class IdeEditorWindow extends DesktopWindow {
     persistIdeSessions()
   }
 
-  setFileMeta(path: string | null, dirty: boolean, untitled = untitledTitle()) {
+  setFileMeta(path: Nullable<string>, dirty: boolean, untitled = untitledTitle()) {
     const prevPath = this.filePath
     this.filePath = path
     this.dirty = dirty
@@ -210,7 +210,7 @@ export class HtmlPreviewWindow extends DesktopWindow {
   override title: string
   html: string
   revision = 0
-  private deferred: DeferredApp | null = null
+  private deferred: Nullable<DeferredApp> = null
   private cleaned = false
 
   constructor(opts: { id: DesktopAppId; title: string; html: string }) {
@@ -267,9 +267,9 @@ export class HtmlPreviewWindow extends DesktopWindow {
 
 export function spawnIdeEditor(opts?: {
   id?: DesktopAppId
-  filePath?: string | null
+  filePath?: Nullable<string>
   title?: string
-}): IdeEditorWindow | null {
+}): Nullable<IdeEditorWindow> {
   const id = opts?.id && opts.id.startsWith('ide_') ? opts.id : nextId('ide')
   const existing = getIdeEditorWindow(id)
   if (existing) return existing
@@ -285,7 +285,7 @@ export function spawnIdeEditor(opts?: {
 }
 
 /** 深链 / 刷新：按已有 id 恢复窗口，没有会话时至少开一个空编辑器 */
-export function ensureIdeEditorWindow(id: DesktopAppId): IdeEditorWindow | null {
+export function ensureIdeEditorWindow(id: DesktopAppId): Nullable<IdeEditorWindow> {
   if (!id.startsWith('ide_')) return null
   const existing = getIdeEditorWindow(id)
   if (existing) return existing
@@ -334,7 +334,7 @@ export function openIdeFile(filePath: string): void {
   spawnIdeEditor({ filePath, title: name })?.open()
 }
 
-export function spawnHtmlPreview(opts: { html: string; title: string; reuseId?: string | null }): HtmlPreviewWindow | null {
+export function spawnHtmlPreview(opts: { html: string; title: string; reuseId?: Nullable<string> }): Nullable<HtmlPreviewWindow> {
   const existing =
     (opts.reuseId ? getHtmlPreviewWindow(opts.reuseId) : undefined) ?? findExistingHtmlPreview()
   if (existing) {

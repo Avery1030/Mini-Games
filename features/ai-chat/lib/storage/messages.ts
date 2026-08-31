@@ -160,7 +160,7 @@ export async function clearSessionMessages(sessionId: string): Promise<void> {
  */
 export async function readHistoryPage(
   sessionId: string,
-  options: { limit?: number; before?: string | null } = {},
+  options: { limit?: number; before?: Nullable<string> } = {},
 ): Promise<AiChatHistoryPage> {
   const limit = Math.min(
     Math.max(options.limit ?? AI_CHAT_HISTORY_PAGE_SIZE, 1),

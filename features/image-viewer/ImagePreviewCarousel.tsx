@@ -7,15 +7,15 @@ const SLIDE_MS = 280
 export type SlideDirection = -1 | 0 | 1
 
 type Props = {
-  src: string | null
+  src: Nullable<string>
   alt: string
   /** 1=下一张从右入，-1=上一张从左入，0=无动画（点选列表等） */
   direction: SlideDirection
 }
 
 type Stage = {
-  current: string | null
-  outgoing: string | null
+  current: Nullable<string>
+  outgoing: Nullable<string>
   dir: -1 | 1
   animating: boolean
 }

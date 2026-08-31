@@ -5,14 +5,14 @@ import { STORAGE_KEYS, appStorage } from '@/lib/storage'
 export type PaintTool = 'brush' | 'eraser' | 'line' | 'rect' | 'ellipse'
 
 interface PaintState {
-  lastDrawingId: string | null
+  lastDrawingId: Nullable<string>
   tool: PaintTool
   color: string
   brushSize: number
 }
 
 interface PaintActions {
-  setLastDrawingId: (id: string | null) => void
+  setLastDrawingId: (id: Nullable<string>) => void
   setTool: (tool: PaintTool) => void
   setColor: (color: string) => void
   setBrushSize: (size: number) => void

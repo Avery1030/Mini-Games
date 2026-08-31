@@ -54,10 +54,10 @@ function promptDestPath(options: {
   title: string
   defaultPath: string
   confirmLabel: string
-}): Promise<string | null> {
+}): Promise<Nullable<string>> {
   return new Promise((resolve) => {
     let settled = false
-    const finish = (v: string | null) => {
+    const finish = (v: Nullable<string>) => {
       if (settled) return
       settled = true
       resolve(v)
@@ -144,8 +144,8 @@ export function FileExplorerApp({ embedded = false }: FileExplorerProps = {}) {
   const [cwd, setCwd] = useState('/')
   const [nodes, setNodes] = useState<FileNode[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedPath, setSelectedPath] = useState<string | null>(null)
-  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
+  const [selectedPath, setSelectedPath] = useState<Nullable<string>>(null)
+  const [contextMenu, setContextMenu] = useState<Nullable<ContextMenuState>>(null)
 
   const loadDir = useCallback(async (path: string) => {
     setLoading(true)

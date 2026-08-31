@@ -46,7 +46,7 @@ export function WindowsDesktop() {
   const deletedCount = useDesktopItemsStore((s) => s.items.filter((f) => f.isDeleted).length)
   const rearrangeIcons = useDesktopStore((s) => s.rearrangeIcons)
   const desktopIcons = useVisibleDesktopIcons()
-  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
+  const [contextMenu, setContextMenu] = useState<Nullable<ContextMenuState>>(null)
 
   const closeContextMenu = () => setContextMenu(null)
 
@@ -97,7 +97,7 @@ export function WindowsDesktop() {
     toast.success(tRecycle('emptied', { count: n + vfsCount }))
   }
 
-  const handleCreateTextDocument = async (coordinate: ReturnType<typeof pointerToCoordinate> | null) => {
+  const handleCreateTextDocument = async (coordinate: Nullable<ReturnType<typeof pointerToCoordinate>>) => {
     const record = await createTextDocument({
       title: td('newTextDocumentName'),
       coordinate: coordinate ?? undefined,
@@ -109,11 +109,11 @@ export function WindowsDesktop() {
 
   const handleDesktopContextMenu = (e: React.MouseEvent) => {
     e.preventDefault()
-    const target = e.target as Element | null
+    const target = e.target as Nullable<Element>
     if (target?.closest?.('[data-window-id]')) return
 
-    const iconEl = target?.closest?.('[data-desktop-icon]') as HTMLElement | null
-    const iconId = (iconEl?.dataset.desktopIcon ?? null) as DesktopAppId | null
+    const iconEl = target?.closest?.('[data-desktop-icon]') as Nullable<HTMLElement>
+    const iconId = (iconEl?.dataset.desktopIcon ?? null) as Nullable<DesktopAppId>
     const app = iconId ? desktopIcons.find((a) => a.id === iconId) : undefined
     const onBlank = !iconId
     const isVfsFile = Boolean(iconId && isVfsDesktopFileId(iconId))

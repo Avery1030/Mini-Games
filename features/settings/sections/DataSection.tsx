@@ -13,7 +13,7 @@ export function DataSection() {
   const t = useTranslations('settings')
   const { setTheme } = useTheme()
   const fileRef = useRef<HTMLInputElement>(null)
-  const [busy, setBusy] = useState<'export' | 'import' | null>(null)
+  const [busy, setBusy] = useState<Nullable<'export' | 'import'>>(null)
 
   const onExport = () => {
     setBusy('export')
@@ -31,7 +31,7 @@ export function DataSection() {
     fileRef.current?.click()
   }
 
-  const onImportFile = async (files: FileList | null) => {
+  const onImportFile = async (files: Nullable<FileList>) => {
     const file = files?.[0]
     if (!file) return
     setBusy('import')

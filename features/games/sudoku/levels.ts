@@ -4,10 +4,10 @@
  *
  * puzzle：恰好 9 行，每行 9 字符；'.' 或 ' ' 表示空，'1'-'9' 为线索。
  */
-import type { Difficulty, LevelJsonEntry } from './types'
+import { Difficulty, type LevelJsonEntry } from './types'
 
 export const SUDOKU_LEVELS_BY_DIFFICULTY: Record<Difficulty, LevelJsonEntry[]> = {
-  easy: [
+  [Difficulty.Easy]: [
     {
       id: 1,
       puzzle: [
@@ -177,7 +177,7 @@ export const SUDOKU_LEVELS_BY_DIFFICULTY: Record<Difficulty, LevelJsonEntry[]> =
       ],
     },
   ],
-  medium: [
+  [Difficulty.Medium]: [
     {
       id: 1,
       puzzle: [
@@ -347,7 +347,7 @@ export const SUDOKU_LEVELS_BY_DIFFICULTY: Record<Difficulty, LevelJsonEntry[]> =
       ],
     },
   ],
-  hard: [
+  [Difficulty.Hard]: [
     {
       id: 1,
       puzzle: [
@@ -517,7 +517,7 @@ export const SUDOKU_LEVELS_BY_DIFFICULTY: Record<Difficulty, LevelJsonEntry[]> =
       ],
     },
   ],
-  expert: [
+  [Difficulty.Expert]: [
     {
       id: 1,
       puzzle: [

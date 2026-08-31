@@ -70,7 +70,7 @@ export function tryMove(state: SokobanState, direction: Direction): SokobanState
 }
 
 /** 求解用：不计撤销栈，避免 BFS 内存膨胀 */
-export function tryMoveNoHistory(state: SokobanState, direction: Direction): SokobanState | null {
+export function tryMoveNoHistory(state: SokobanState, direction: Direction): Nullable<SokobanState> {
   if (state.won) return null
   const advanced = advanceMove(state, direction)
   if (!advanced) return null
@@ -87,7 +87,7 @@ export function tryMoveNoHistory(state: SokobanState, direction: Direction): Sok
 function advanceMove(
   state: SokobanState,
   direction: Direction,
-): { player: CellPos; boxes: CellPos[]; won: boolean } | null {
+): Nullable<{ player: CellPos; boxes: CellPos[]; won: boolean }> {
   const { level, player, boxes } = state
   const d = DIR_DELTA[direction]
   const nx = player.x + d.x

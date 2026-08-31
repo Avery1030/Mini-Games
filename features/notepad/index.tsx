@@ -29,7 +29,7 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
   const setWordWrap = useNotepadStore((s) => s.setWordWrap)
 
   const [notes, setNotes] = useState<NoteMeta[]>([])
-  const [activeId, setActiveId] = useState<string | null>(null)
+  const [activeId, setActiveId] = useState<Nullable<string>>(null)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [savedTitle, setSavedTitle] = useState('')
@@ -38,7 +38,7 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
   const [busy, setBusy] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  const activeIdRef = useRef<string | null>(null)
+  const activeIdRef = useRef<Nullable<string>>(null)
   activeIdRef.current = activeId
 
   const dirty = activeId != null && (title !== savedTitle || content !== savedContent)

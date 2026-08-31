@@ -9,7 +9,7 @@ export type LevelSelectItem = {
   index: number
   unlocked: boolean
   /** 最佳通关用时（秒）；未通关为 null */
-  bestTime: number | null
+  bestTime: Nullable<number>
   clues: number
 }
 

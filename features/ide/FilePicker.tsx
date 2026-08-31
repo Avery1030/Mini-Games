@@ -58,7 +58,7 @@ function FilePickerForm({
   const [cwd, setCwd] = useState(initialDir || '/')
   const [nodes, setNodes] = useState<FileNode[]>([])
   const [loading, setLoading] = useState(true)
-  const [selected, setSelected] = useState<string | null>(null)
+  const [selected, setSelected] = useState<Nullable<string>>(null)
   const [filename, setFilename] = useState(initialName)
   const [error, setError] = useState('')
 
@@ -186,10 +186,10 @@ function FilePickerForm({
   )
 }
 
-export function pickIdeFile(options: PickOptions): Promise<string | null> {
+export function pickIdeFile(options: PickOptions): Promise<Nullable<string>> {
   return new Promise((resolve) => {
     let settled = false
-    const finish = (v: string | null) => {
+    const finish = (v: Nullable<string>) => {
       if (settled) return
       settled = true
       resolve(v)

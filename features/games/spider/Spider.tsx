@@ -55,7 +55,7 @@ import {
 } from './render'
 import { RecordsModalBody, WinRecordsBody } from './RecordsPanel'
 import { playShuffleSound } from './sound'
-import { COLS, DEAL_SIZE, DIFFICULTIES, type Card, type Difficulty, type SpiderState } from './types'
+import { COLS, DEAL_SIZE, DIFFICULTIES, isDifficulty, type Card, type SpiderState } from './types'
 
 export type SpiderProps = {
   embedded?: boolean
@@ -78,8 +78,8 @@ type DragPack = {
 type PendingPointer = {
   startX: number
   startY: number
-  col: number | null
-  pack: DragPack | null
+  col: Nullable<number>
+  pack: Nullable<DragPack>
 }
 
 type Selection = { col: number; index: number }
@@ -92,18 +92,18 @@ export function Spider({ embedded = false }: SpiderProps) {
   const undoStack = useSpiderStore((s) => s.undoStack)
   const elapsed = useSpiderStore((s) => s.elapsed)
   const [running, setRunning] = useState(false)
-  const [selected, setSelected] = useState<Selection | null>(null)
+  const [selected, setSelected] = useState<Nullable<Selection>>(null)
   const [busy, setBusy] = useState(false)
 
   const wrapRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const layoutRef = useRef<Layout | null>(null)
-  const stateRef = useRef<SpiderState | null>(state)
-  const selectedRef = useRef<Selection | null>(null)
-  const pendingRef = useRef<PendingPointer | null>(null)
-  const dragRef = useRef<DragPack | null>(null)
-  const ghostRef = useRef<{ x: number; y: number } | null>(null)
-  const animRef = useRef<{
+  const layoutRef = useRef<Nullable<Layout>>(null)
+  const stateRef = useRef<Nullable<SpiderState>>(state)
+  const selectedRef = useRef<Nullable<Selection>>(null)
+  const pendingRef = useRef<Nullable<PendingPointer>>(null)
+  const dragRef = useRef<Nullable<DragPack>>(null)
+  const ghostRef = useRef<Nullable<{ x: number; y: number }>>(null)
+  const animRef = useRef<Nullable<{
     cards: Card[]
     x0: number
     y0: number
@@ -111,9 +111,9 @@ export function Spider({ embedded = false }: SpiderProps) {
     y1: number
     start: number
     onDone: () => void
-  } | null>(null)
-  const batchRef = useRef<FlightBatch | null>(null)
-  const flipRef = useRef<{ id: number; start: number } | null>(null)
+  }>>(null)
+  const batchRef = useRef<Nullable<FlightBatch>>(null)
+  const flipRef = useRef<Nullable<{ id: number; start: number }>>(null)
   const rafRef = useRef(0)
   const winShownRef = useRef(false)
   const genRef = useRef(0)
@@ -581,7 +581,7 @@ export function Spider({ embedded = false }: SpiderProps) {
     return { x: e.clientX - rect.left, y: e.clientY - rect.top }
   }
 
-  const handleClick = (col: number | null, pack: DragPack | null) => {
+  const handleClick = (col: Nullable<number>, pack: Nullable<DragPack>) => {
     const sel = selectedRef.current
     const layout = layoutRef.current
     const cur = stateRef.current
@@ -685,7 +685,14 @@ export function Spider({ embedded = false }: SpiderProps) {
 
   if (!hydrated || !state) {
     return (
-      <div className={cn(embeddedAppShell(embedded, 'flex min-h-0 min-w-0 flex-col overflow-hidden bg-window text-on-chrome font-pixel'))}>
+      <div
+        className={cn(
+          embeddedAppShell(
+            embedded,
+            'flex min-h-0 min-w-0 flex-col overflow-hidden bg-window text-on-chrome font-pixel',
+          ),
+        )}
+      >
         <div className={cn(winChromeSunken, 'relative m-2 min-h-0 flex-1 overflow-hidden bg-[#0a6b3c]')} />
       </div>
     )
@@ -695,7 +702,11 @@ export function Spider({ embedded = false }: SpiderProps) {
   const locked = busy || state.won || state.lost
 
   return (
-    <div className={cn(embeddedAppShell(embedded, 'flex min-h-0 min-w-0 flex-col overflow-hidden bg-window text-on-chrome font-pixel'))}>
+    <div
+      className={cn(
+        embeddedAppShell(embedded, 'flex min-h-0 min-w-0 flex-col overflow-hidden bg-window text-on-chrome font-pixel'),
+      )}
+    >
       <div className='flex min-w-0 shrink-0 flex-wrap items-center gap-1.5 border-b border-chrome-dark px-2 py-1.5'>
         <Button size='sm' className='px-2' onClick={() => void confirmRestart()}>
           {t('newGame')}
@@ -731,8 +742,8 @@ export function Spider({ embedded = false }: SpiderProps) {
           disabled={locked}
           options={DIFFICULTIES.map((d) => ({ value: String(d), label: t(`diff${d}`) }))}
           onValueChange={(v) => {
-            const next = Number(v) as Difficulty
-            if (next === difficulty) return
+            const next = Number(v)
+            if (!isDifficulty(next) || next === difficulty) return
             restart(next)
           }}
         />

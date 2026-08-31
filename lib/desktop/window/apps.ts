@@ -20,7 +20,7 @@ export class TextDocumentWindow extends DesktopWindow {
   override readonly showInStartMenu = false
   readonly noteId: string
   override title: string
-  private deferred: DeferredApp | null = null
+  private deferred: Nullable<DeferredApp> = null
 
   constructor(opts: { id: DesktopAppId; title: string; noteId: string; coordinate?: DesktopCoordinate }) {
     super()
@@ -81,7 +81,7 @@ export class FolderWindow extends DesktopWindow {
   override readonly kind: DesktopItemKind = 'folder'
   override readonly showInStartMenu = false
   override title: string
-  private deferred: DeferredApp | null = null
+  private deferred: Nullable<DeferredApp> = null
 
   constructor(opts: { id: DesktopAppId; title: string; coordinate?: DesktopCoordinate }) {
     super()

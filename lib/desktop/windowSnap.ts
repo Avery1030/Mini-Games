@@ -11,8 +11,8 @@ export type SnapSize = { width: number; height: number }
 
 /** 单次拖拽会话的轴向锁定（贴住哪条边） */
 export type SnapSession = {
-  lockX: number | null
-  lockY: number | null
+  lockX: Nullable<number>
+  lockY: Nullable<number>
 }
 
 export function createSnapSession(): SnapSession {
@@ -24,10 +24,10 @@ type EdgeRect = { left: number; top: number; right: number; bottom: number }
 function snapAxis(
   value: number,
   targets: number[],
-  lock: number | null,
+  lock: Nullable<number>,
   threshold: number,
   escape: number,
-): { value: number; lock: number | null } {
+): { value: number; lock: Nullable<number> } {
   // 已吸附：在 escape 距离内继续钉住，超过才放开
   if (lock != null) {
     if (Math.abs(value - lock) < escape) {
@@ -35,7 +35,7 @@ function snapAxis(
     }
   }
 
-  let best: number | null = null
+  let best: Nullable<number> = null
   let bestDist = threshold
   for (const t of targets) {
     const d = Math.abs(value - t)

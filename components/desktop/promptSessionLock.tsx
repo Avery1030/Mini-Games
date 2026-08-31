@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button, Input, closeModal, openModal } from '@/components/ui'
 
-type PromptResult = string | null
+type PromptResult = Nullable<string>
 
 /**
  * 锁屏前弹出：设置本次临时密码（仅本次锁屏有效）。
@@ -53,7 +53,7 @@ function LockSetupForm({
   const tm = useTranslations('modal')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<Nullable<string>>(null)
 
   const submit = () => {
     const a = password.trim()

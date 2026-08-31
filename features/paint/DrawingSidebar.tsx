@@ -21,7 +21,7 @@ function formatUpdatedAt(ts: number, locale: string): string {
 
 export interface DrawingSidebarProps {
   drawings: DrawingMeta[]
-  activeId: string | null
+  activeId: Nullable<string>
   loading: boolean
   busy: boolean
   onSelect: (id: string) => void

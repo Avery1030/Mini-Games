@@ -3,7 +3,7 @@
 import { IdeApp } from './IdeApp'
 import { HtmlPreviewApp } from './HtmlPreview'
 
-export function bindIdeApp(windowId: string, initialPath: string | null) {
+export function bindIdeApp(windowId: string, initialPath: Nullable<string>) {
   return function IdeBound({ embedded }: { embedded?: boolean }) {
     return <IdeApp embedded={embedded} windowId={windowId} initialPath={initialPath} />
   }

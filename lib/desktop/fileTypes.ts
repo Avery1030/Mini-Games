@@ -14,7 +14,7 @@ export const DESKTOP_FILE_TYPE_META: Partial<Record<DesktopResourceKind, Desktop
   textDocument: { extension: '.txt' },
 }
 
-export function getItemExtension(kind: DesktopItemKind | DesktopResourceKind): string | null {
+export function getItemExtension(kind: DesktopItemKind | DesktopResourceKind): Nullable<string> {
   if (kind === 'app') return null
   return DESKTOP_FILE_TYPE_META[kind as DesktopResourceKind]?.extension ?? null
 }

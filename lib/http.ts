@@ -8,14 +8,9 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD'
 /** 响应解析方式；默认 json。stream 返回原始 Response（不消费 body） */
 export type HttpResponseType = 'json' | 'text' | 'blob' | 'arrayBuffer' | 'void' | 'stream'
 
-export type HttpQuery = Record<string, string | number | boolean | null | undefined>
+export type HttpQuery = Record<string, Nullable<string | number | boolean> | undefined>
 
-export type HttpBody =
-  | BodyInit
-  | Record<string, unknown>
-  | unknown[]
-  | null
-  | undefined
+export type HttpBody = Nullable<BodyInit | Record<string, unknown> | unknown[]> | undefined
 
 export class HttpError extends Error {
   readonly status: number
@@ -278,7 +273,7 @@ export function createHttp(defaults: HttpInstanceConfig = {}): HttpClient {
       const data = await parseResponse<TResponse>(res, responseType)
 
       if (!res.ok) {
-        const errData = data as { error?: unknown; message?: unknown } | null
+        const errData = data as Nullable<{ error?: unknown; message?: unknown }>
         let message = `HTTP ${res.status}`
         if (errData && typeof errData === 'object') {
           const raw = errData.error ?? errData.message

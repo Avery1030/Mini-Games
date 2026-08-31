@@ -23,7 +23,7 @@ export type CmdAppProps = {
 export function CmdApp({ embedded = false }: CmdAppProps) {
   const t = useTranslations('cmd')
   const items = useDesktopItemsStore((s) => s.items)
-  const [cwd, setCwd] = useState<DesktopAppId | null>(null)
+  const [cwd, setCwd] = useState<Nullable<DesktopAppId>>(null)
   const [lines, setLines] = useState<CmdLine[]>(() => [
     {
       id: 'boot-1',

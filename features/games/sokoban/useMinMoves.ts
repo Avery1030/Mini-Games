@@ -4,8 +4,8 @@ import { solveMinMovesAsync } from './solver'
 import type { LevelData } from './types'
 
 /** 异步求解当前关开局最少步数 */
-export function useMinMoves(levelId: number | null, level: LevelData | null | undefined) {
-  const [minMoves, setMinMoves] = useState<number | null>(null)
+export function useMinMoves(levelId: Nullable<number>, level: Nullable<LevelData> | undefined) {
+  const [minMoves, setMinMoves] = useState<Nullable<number>>(null)
   const [minMovesReady, setMinMovesReady] = useState(false)
   const cacheRef = useRef<Map<string, number>>(new Map())
 

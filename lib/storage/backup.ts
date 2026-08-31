@@ -22,7 +22,7 @@ export type AppBackupSnapshot = {
 
 export type ImportAppBackupResult = {
   /** 导入后的主题（若备份中有） */
-  theme: 'light' | 'dark' | null
+  theme: Nullable<'light' | 'dark'>
   /** 实际写入的 key 数量 */
   appliedKeys: number
 }
@@ -103,7 +103,7 @@ export function parseAppBackup(input: unknown): AppBackupSnapshot {
  */
 export function writeAppBackupToStorage(snapshot: AppBackupSnapshot): ImportAppBackupResult {
   let appliedKeys = 0
-  let theme: 'light' | 'dark' | null = null
+  let theme: Nullable<'light' | 'dark'> = null
 
   for (const key of BACKUP_STORAGE_KEYS) {
     if (!Object.prototype.hasOwnProperty.call(snapshot.entries, key)) continue

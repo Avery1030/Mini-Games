@@ -10,7 +10,7 @@ export type WindowHistoryState = {
 export type WindowRoute = { type: 'desktop' } | { type: 'window'; id: DesktopAppId } | { type: 'foreign' }
 
 /** 聚焦窗口对应的 path；无聚焦时为桌面根路径。 */
-export function windowPath(id: DesktopAppId | null): string {
+export function windowPath(id: Nullable<DesktopAppId>): string {
   if (!id) return '/'
   return `/window/${encodeURIComponent(id)}`
 }
@@ -27,7 +27,7 @@ export function parseWindowPath(pathname: string): WindowRoute {
   }
 }
 
-export function setWindowUrl(id: DesktopAppId | null, mode: 'push' | 'replace' = 'push'): void {
+export function setWindowUrl(id: Nullable<DesktopAppId>, mode: 'push' | 'replace' = 'push'): void {
   if (isServer) return
   const path = windowPath(id)
   if (window.location.pathname === path) return

@@ -7,7 +7,7 @@ import { cn } from '@/lib/cn'
 import { winChromeSunken } from '@/lib/winChrome'
 import { formatTime } from './anim'
 import { useSpiderStore } from './store'
-import { DIFFICULTIES, TOP_RECORDS, type Difficulty, type SpiderTimeRecord } from './types'
+import { DIFFICULTIES, TOP_RECORDS, isDifficulty, type Difficulty, type SpiderTimeRecord } from './types'
 
 type RecordsTableProps = {
   records: SpiderTimeRecord[]
@@ -25,7 +25,7 @@ function StatCell({ label, value }: { label: string; value: string }) {
 
 function RecordsTable({ records, highlightAt }: RecordsTableProps) {
   const t = useTranslations('spider')
-  const slots: Array<SpiderTimeRecord | null> = Array.from({ length: TOP_RECORDS }, (_, i) => records[i] ?? null)
+  const slots: Array<Nullable<SpiderTimeRecord>> = Array.from({ length: TOP_RECORDS }, (_, i) => records[i] ?? null)
 
   return (
     <div className={cn(winChromeSunken, 'overflow-hidden bg-field')}>
@@ -83,7 +83,7 @@ export function WinRecordsBody({
   moves: number
   score: number
   /** undefined：重开已入榜对局，不展示新纪录/未入榜提示 */
-  rank?: number | null
+  rank?: Nullable<number>
   records: SpiderTimeRecord[]
   highlightAt?: number
 }) {
@@ -124,7 +124,10 @@ export function RecordsModalBody({ initialDifficulty }: { initialDifficulty: Dif
         aria-label={t('difficulty')}
         value={String(view)}
         options={DIFFICULTIES.map((d) => ({ value: String(d), label: t(`diff${d}`) }))}
-        onValueChange={(v) => setView(Number(v) as Difficulty)}
+        onValueChange={(v) => {
+          const next = Number(v)
+          if (isDifficulty(next)) setView(next)
+        }}
       />
       <RecordsTable records={list} />
     </div>

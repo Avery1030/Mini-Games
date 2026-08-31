@@ -116,7 +116,7 @@ export async function fetchBinanceKlines(params: FetchKlinesParams): Promise<KLi
 
 export async function fetchBarsForLoader(opts: {
   type: 'init' | 'forward' | 'backward' | 'update'
-  timestamp: number | null
+  timestamp: Nullable<number>
   symbol: string
   period: Period
   signal?: AbortSignal
@@ -150,7 +150,7 @@ export type KlineSocketHandlers = {
   onError?: (error: Event | Error) => void
 }
 
-function parseKlinePayload(raw: string): KLineBar | null {
+function parseKlinePayload(raw: string): Nullable<KLineBar> {
   const payload = JSON.parse(raw) as {
     data?: {
       k?: {
@@ -202,8 +202,8 @@ export function subscribeBinanceKline(
   ]
 
   let closed = false
-  let pollTimer: ReturnType<typeof setInterval> | null = null
-  let managed: ManagedWebSocket | null = null
+  let pollTimer: Nullable<ReturnType<typeof setInterval>> = null
+  let managed: Nullable<ManagedWebSocket> = null
 
   const stopPoll = () => {
     if (pollTimer) {

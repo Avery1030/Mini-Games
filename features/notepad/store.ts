@@ -4,13 +4,13 @@ import { STORAGE_KEYS, appStorage } from '@/lib/storage'
 
 interface NotepadState {
   /** 上次打开的笔记 id（用于恢复） */
-  lastNoteId: string | null
+  lastNoteId: Nullable<string>
   /** 是否自动换行 */
   wordWrap: boolean
 }
 
 interface NotepadActions {
-  setLastNoteId: (id: string | null) => void
+  setLastNoteId: (id: Nullable<string>) => void
   setWordWrap: (value: boolean) => void
 }
 

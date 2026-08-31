@@ -101,7 +101,7 @@ const PERIOD_TO_INTERVAL = new Map<string, BinanceInterval>(
   INTERVALS.map((item) => [PERIOD_KEY(item.period.span, item.period.type), item.value]),
 )
 
-export function periodToInterval(period: Period): BinanceInterval | null {
+export function periodToInterval(period: Period): Nullable<BinanceInterval> {
   return PERIOD_TO_INTERVAL.get(PERIOD_KEY(period.span, period.type)) ?? null
 }
 

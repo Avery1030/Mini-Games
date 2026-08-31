@@ -16,10 +16,10 @@ function isBootablePath(src: string): boolean {
 /** 同步写入轻量标记，首屏在 settings 水合前避免闪回默认壁纸 */
 export function writeWallpaperBoot(input: {
   wallpaperId: WallpaperId
-  wallpaperPath?: string | null
+  wallpaperPath?: Nullable<string>
   wallpaperFit?: WallpaperFitMode
   wallpaper3dEnabled?: boolean
-  wallpaper3dPath?: string | null
+  wallpaper3dPath?: Nullable<string>
 }): void {
   if (isServer) return
   const payload: WallpaperBootState = {
@@ -36,7 +36,7 @@ export function writeWallpaperBoot(input: {
   appStorage.setJson(STORAGE_KEYS.wallpaperBoot, payload)
 }
 
-export function readWallpaperBoot(): WallpaperBootState | null {
+export function readWallpaperBoot(): Nullable<WallpaperBootState> {
   if (isServer) return null
   const parsed = appStorage.getJson(STORAGE_KEYS.wallpaperBoot)
   if (!parsed || !isWallpaperId(parsed.wallpaperId)) return null

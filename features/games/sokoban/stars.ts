@@ -8,7 +8,7 @@ export type StarCount = 1 | 2 | 3
  * - 1★：通关即可
  * 最短未知时统一 1★。
  */
-export function calcStars(moves: number, minMoves: number | null): StarCount {
+export function calcStars(moves: number, minMoves: Nullable<number>): StarCount {
   if (moves < 0) return 1
   if (minMoves == null || minMoves <= 0) return 1
   if (moves <= minMoves) return 3

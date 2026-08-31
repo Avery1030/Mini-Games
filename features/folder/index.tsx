@@ -106,7 +106,7 @@ export function FolderApp({ embedded = false, folderTitle, folderId }: FolderApp
   )
   const primarySelected = selected[0] ?? null
 
-  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
+  const [contextMenu, setContextMenu] = useState<Nullable<ContextMenuState>>(null)
 
   const openChild = (child: DesktopItemRecord) => {
     clearRenameTimer()

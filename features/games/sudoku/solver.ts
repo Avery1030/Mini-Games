@@ -37,8 +37,8 @@ function candidateCount(grid: number[][], row: number, col: number): number {
   return n
 }
 
-function findBestEmpty(grid: number[][]): { row: number; col: number } | null {
-  let best: { row: number; col: number; count: number } | null = null
+function findBestEmpty(grid: number[][]): Nullable<{ row: number; col: number }> {
+  let best: Nullable<{ row: number; col: number; count: number }> = null
   for (let r = 0; r < SIZE; r++) {
     for (let c = 0; c < SIZE; c++) {
       if (grid[r]![c] !== 0) continue
@@ -82,7 +82,7 @@ export function countSolutions(grid: number[][], limit = 2): number {
 }
 
 /** 求一个解；无解返回 null */
-export function solveOne(grid: number[][]): number[][] | null {
+export function solveOne(grid: number[][]): Nullable<number[][]> {
   const g = cloneGrid(grid)
   const dfs = (): boolean => {
     const pos = findBestEmpty(g)
@@ -100,12 +100,12 @@ export function solveOne(grid: number[][]): number[][] | null {
 }
 
 /** 要求恰好唯一解；否则返回 null */
-export function solveUnique(grid: number[][]): number[][] | null {
+export function solveUnique(grid: number[][]): Nullable<number[][]> {
   if (countSolutions(grid, 2) !== 1) return null
   return solveOne(grid)
 }
 
-function findNakedSingle(grid: number[][]): CrackStep | null {
+function findNakedSingle(grid: number[][]): Nullable<CrackStep> {
   for (let r = 0; r < SIZE; r++) {
     for (let c = 0; c < SIZE; c++) {
       if (grid[r]![c] !== 0) continue
@@ -129,7 +129,7 @@ function findNakedSingle(grid: number[][]): CrackStep | null {
 function findHiddenSingle(
   grid: number[][],
   kind: Extract<CrackReasonKind, 'hiddenSingleRow' | 'hiddenSingleCol' | 'hiddenSingleBox'>,
-): CrackStep | null {
+): Nullable<CrackStep> {
   for (let num = 1; num <= SIZE; num++) {
     for (let unit = 0; unit < SIZE; unit++) {
       let onlyRow = -1
@@ -167,7 +167,7 @@ function findHiddenSingle(
   return null
 }
 
-function findLogicalStep(grid: number[][]): CrackStep | null {
+function findLogicalStep(grid: number[][]): Nullable<CrackStep> {
   return (
     findNakedSingle(grid) ??
     findHiddenSingle(grid, 'hiddenSingleRow') ??
@@ -177,7 +177,7 @@ function findLogicalStep(grid: number[][]): CrackStep | null {
 }
 
 /** 当前盘面下一步基础技法提示；没有则返回 null */
-export function findHintStep(board: number[][], solution: number[][]): CrackStep | null {
+export function findHintStep(board: number[][], solution: number[][]): Nullable<CrackStep> {
   const step = findLogicalStep(board)
   if (!step) return null
   const answer = solution[step.row]![step.col]!
@@ -191,7 +191,7 @@ export function findHintStep(board: number[][], solution: number[][]): CrackStep
  * 从当前盘面出发生成填数路径（用于逐步破解）。
  * 优先裸单 / 隐单并标注依据；无法用基础技法推进时，按唯一解填入兜底。
  */
-export function buildCrackPath(board: number[][], solution: number[][]): CrackStep[] | null {
+export function buildCrackPath(board: number[][], solution: number[][]): Nullable<CrackStep[]> {
   if (countSolutions(board, 2) !== 1) return null
 
   const g = cloneGrid(board)

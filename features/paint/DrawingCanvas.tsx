@@ -23,7 +23,7 @@ export type DrawingCanvasHandle = {
   undo: () => boolean
   canUndo: () => boolean
   exportPngBase64: () => string
-  loadFromUrl: (url: string | null) => Promise<void>
+  loadFromUrl: (url: Nullable<string>) => Promise<void>
   isBlank: () => boolean
 }
 
@@ -93,8 +93,8 @@ export const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>
     const baseRef = useRef<HTMLCanvasElement>(null)
     const overlayRef = useRef<HTMLCanvasElement>(null)
     const drawing = useRef(false)
-    const start = useRef<Point | null>(null)
-    const last = useRef<Point | null>(null)
+    const start = useRef<Nullable<Point>>(null)
+    const last = useRef<Nullable<Point>>(null)
     const historyRef = useRef<ImageData[]>([])
     const snapshotTaken = useRef(false)
     const sizeRef = useRef<Size>({ w: CANVAS_WIDTH, h: CANVAS_HEIGHT })
@@ -196,7 +196,7 @@ export const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>
         const dpr = Math.min(window.devicePixelRatio || 1, 2)
         dprRef.current = dpr
 
-        let backup: HTMLCanvasElement | null = null
+        let backup: Nullable<HTMLCanvasElement> = null
         if (preserve && base.width > 0 && base.height > 0) {
           backup = document.createElement('canvas')
           backup.width = base.width

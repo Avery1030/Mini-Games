@@ -15,7 +15,7 @@ export function contentTypeForExt(ext: ImageExt): string {
   }
 }
 
-export function extFromMimeOrName(mime: string | null | undefined, nameOrUrl: string): ImageExt {
+export function extFromMimeOrName(mime: Nullable<string> | undefined, nameOrUrl: string): ImageExt {
   const t = (mime || '').toLowerCase()
   if (t.includes('png')) return 'png'
   if (t.includes('webp')) return 'webp'
@@ -28,7 +28,7 @@ export function extFromMimeOrName(mime: string | null | undefined, nameOrUrl: st
 }
 
 /** 浏览器内生成 JPEG 缩略图（最长边 160） */
-export async function makeThumbBlob(blob: Blob): Promise<Blob | null> {
+export async function makeThumbBlob(blob: Blob): Promise<Nullable<Blob>> {
   try {
     const bitmap = await createImageBitmap(blob)
     const scale = Math.min(1, THUMB_MAX_EDGE / Math.max(bitmap.width, bitmap.height))
@@ -44,7 +44,7 @@ export async function makeThumbBlob(blob: Blob): Promise<Blob | null> {
     }
     ctx.drawImage(bitmap, 0, 0, w, h)
     bitmap.close()
-    return await new Promise<Blob | null>((resolve) => {
+    return await new Promise<Nullable<Blob>>((resolve) => {
       canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.72)
     })
   } catch {

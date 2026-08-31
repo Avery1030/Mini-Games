@@ -21,7 +21,7 @@ type Props = {
   searchActiveStart?: number
   onChange: (next: string) => void
   onCursorChange?: (line: number, col: number) => void
-  textareaRef?: RefObject<HTMLTextAreaElement | null>
+  textareaRef?: RefObject<Nullable<HTMLTextAreaElement>>
 }
 
 const EDITOR_FONT = 'font-mono text-[12px] leading-5'
@@ -141,8 +141,8 @@ export function CodeEditor({
   const searchInnerRef = useRef<HTMLPreElement>(null)
   const paneRef = useRef<HTMLDivElement>(null)
   const taRef = textareaRef ?? localRef
-  const emmetRef = useRef<EmmetSuggestion | null>(null)
-  const [emmet, setEmmet] = useState<EmmetSuggestion | null>(null)
+  const emmetRef = useRef<Nullable<EmmetSuggestion>>(null)
+  const [emmet, setEmmet] = useState<Nullable<EmmetSuggestion>>(null)
   const [emmetPos, setEmmetPos] = useState({ left: 0, top: 0, above: false })
   const undoStack = useRef<HistorySnap[]>([])
   const redoStack = useRef<HistorySnap[]>([])
@@ -150,7 +150,7 @@ export function CodeEditor({
   const selRef = useRef({ start: 0, end: 0 })
   const fromSelfRef = useRef(false)
   const typingRef = useRef(false)
-  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const typingTimer = useRef<Nullable<ReturnType<typeof setTimeout>>>(null)
   const epochRef = useRef(historyEpoch)
 
   const lines = lineCount(value)
@@ -299,7 +299,7 @@ export function CodeEditor({
     setEmmet(null)
   }
 
-  const refreshEmmet = (ta?: HTMLTextAreaElement | null) => {
+  const refreshEmmet = (ta?: Nullable<HTMLTextAreaElement>) => {
     const el = ta ?? taRef.current
     const pane = paneRef.current
     if (!el || el.selectionStart !== el.selectionEnd) {

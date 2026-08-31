@@ -17,10 +17,10 @@ export type WallpaperFitModePersist = 'tile' | 'cover' | 'center' | 'stretch'
 export type SettingsPersistState = {
   wallpaperId: WallpaperId
   /** 当前自定义壁纸 VFS/public 路径 */
-  wallpaperPath: string | null
+  wallpaperPath: Nullable<string>
   wallpaperFit: WallpaperFitModePersist
   wallpaper3dEnabled: boolean
-  wallpaper3dPath: string | null
+  wallpaper3dPath: Nullable<string>
   showIconLabels: boolean
   iconSize: 'sm' | 'md' | 'lg'
   uiScale: UiScale
@@ -46,14 +46,14 @@ export type CoordinatesPersistState = {
 }
 
 export type NotepadPersistState = {
-  lastNoteId: string | null
+  lastNoteId: Nullable<string>
   wordWrap: boolean
 }
 
 export type PaintToolPersist = 'brush' | 'eraser' | 'line' | 'rect' | 'ellipse'
 
 export type PaintPersistState = {
-  lastDrawingId: string | null
+  lastDrawingId: Nullable<string>
   tool: PaintToolPersist
   color: string
   brushSize: number
@@ -77,7 +77,7 @@ export type WallpaperBootPersist = {
 
 export type LockPersistState = {
   isLocked: boolean
-  sessionHash: string | null
+  sessionHash: Nullable<string>
 }
 
 /** 日历按日备注：key 为 yyyy-MM-dd */
@@ -92,7 +92,7 @@ export type DesktopItemPersist = {
   createdAt: number
   noteId?: string
   /** null = 桌面根；否则为父文件夹 id */
-  parentId?: string | null
+  parentId?: Nullable<string>
   /** 软删除：进入回收站后为 true，不从持久化中移除 */
   isDeleted?: boolean
   deletedAt?: number
@@ -106,7 +106,7 @@ export type DesktopItemsPersistState = {
 
 export type IdeSessionPersist = {
   id: string
-  filePath: string | null
+  filePath: Nullable<string>
   title: string
 }
 

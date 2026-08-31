@@ -128,28 +128,28 @@ export function CanvasJigsaw({ embedded = false, onClose }: CanvasJigsawProps = 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const imageRef = useRef<HTMLImageElement | null>(null)
+  const imageRef = useRef<Nullable<HTMLImageElement>>(null)
   const piecesRef = useRef<Piece[]>([])
-  const dragGroupIdRef = useRef<string | null>(null)
+  const dragGroupIdRef = useRef<Nullable<string>>(null)
   const dragGrabRef = useRef({ pieceId: '', ox: 0, oy: 0 })
-  const rafRef = useRef<number | null>(null)
-  const objectUrlRef = useRef<string | null>(null)
-  const timerRef = useRef<number | null>(null)
+  const rafRef = useRef<Nullable<number>>(null)
+  const objectUrlRef = useRef<Nullable<string>>(null)
+  const timerRef = useRef<Nullable<number>>(null)
 
   const boardRef = useRef({ originX: 0, originY: 0, w: 0, h: 0 })
   const sizeRef = useRef({ w: 0, h: 0 })
 
   const [difficulty, setDifficulty] = useState<JigsawDifficulty>('easy')
   const [imageStatus, setImageStatus] = useState<ImageLoadStatus>('loading')
-  const [imageError, setImageError] = useState<'loadFailed' | 'invalidType' | null>(null)
+  const [imageError, setImageError] = useState<Nullable<'loadFailed' | 'invalidType'>>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewSrc, setPreviewSrc] = useState('')
   const [moves, setMoves] = useState(0)
-  const [startedAt, setStartedAt] = useState<number | null>(null)
+  const [startedAt, setStartedAt] = useState<Nullable<number>>(null)
   const [elapsedSec, setElapsedSec] = useState(0)
   const [won, setWon] = useState(false)
   const [wonElapsed, setWonElapsed] = useState(0)
-  const startedAtRef = useRef<number | null>(null)
+  const startedAtRef = useRef<Nullable<number>>(null)
 
   const clearObjectUrl = useCallback(() => {
     if (objectUrlRef.current) {
@@ -352,7 +352,7 @@ export function CanvasJigsaw({ embedded = false, onClose }: CanvasJigsawProps = 
     [clearObjectUrl],
   )
 
-  const pickTopPiece = useCallback((x: number, y: number): Piece | null => {
+  const pickTopPiece = useCallback((x: number, y: number): Nullable<Piece> => {
     const list = piecesRef.current
     for (let i = list.length - 1; i >= 0; i--) {
       const p = list[i]

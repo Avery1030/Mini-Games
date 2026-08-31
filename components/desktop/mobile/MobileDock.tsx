@@ -7,12 +7,12 @@ import { useDesktopApps, useDesktopHydrated } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
 import { getDesktopWindow, resolveDesktopItemTitle, type DesktopIconComponent } from '@/lib/desktop/window'
 import { cn } from '@/lib/cn'
-import type { DesktopAppId } from '@/config/desktop'
+import { BuiltinAppId, type DesktopAppId } from '@/config/desktop'
 export const MOBILE_DOCK_APP_IDS: DesktopAppId[] = [
-  'settings',
-  'notepad',
-  'aiChat',
-  'recycleBin',
+  BuiltinAppId.Settings,
+  BuiltinAppId.Notepad,
+  BuiltinAppId.AiChat,
+  BuiltinAppId.RecycleBin,
 ]
 
 type DockItem = {

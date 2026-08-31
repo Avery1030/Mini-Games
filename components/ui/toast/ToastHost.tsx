@@ -8,26 +8,26 @@ import { Button } from '../Button'
 import { WinCloseIcon } from '../WindowChromeIcons'
 import { dismissToast } from './api'
 import { useToastStore } from './store'
-import type { ToastEntry, ToastType } from './types'
+import { ToastType, type ToastEntry } from './types'
 
 /** Win95 消息框式色块图标 */
 const TYPE_STYLE: Record<
   ToastType,
   { iconBg: string; iconFg: string; Icon: typeof Check; label: string }
 > = {
-  success: {
+  [ToastType.Success]: {
     iconBg: 'bg-[#008000]',
     iconFg: 'text-white',
     Icon: Check,
     label: 'OK',
   },
-  error: {
+  [ToastType.Error]: {
     iconBg: 'bg-[#c00000]',
     iconFg: 'text-white',
     Icon: X,
     label: 'Error',
   },
-  warning: {
+  [ToastType.Warning]: {
     iconBg: 'bg-[#808000]',
     iconFg: 'text-[#ffff00]',
     Icon: AlertTriangle,

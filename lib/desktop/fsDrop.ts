@@ -12,12 +12,12 @@ export function hitFsDropTarget(
   clientX: number,
   clientY: number,
   ignoreIds?: ReadonlySet<DesktopAppId>,
-): FsDropTarget | null {
+): Nullable<FsDropTarget> {
   if (isServer) return null
   const els = document.elementsFromPoint(clientX, clientY)
 
   for (const el of els) {
-    const iconHost = (el as Element).closest?.('[data-desktop-icon]') as HTMLElement | null
+    const iconHost = (el as Element).closest?.('[data-desktop-icon]') as Nullable<HTMLElement>
     if (iconHost) {
       const id = iconHost.dataset.desktopIcon as DesktopAppId | undefined
       if (id && !ignoreIds?.has(id)) {
@@ -27,7 +27,7 @@ export function hitFsDropTarget(
       // 非投放图标：继续向下找（可能落在窗口/空白投放区）
     }
 
-    const dropHost = (el as Element).closest?.('[data-fs-drop]') as HTMLElement | null
+    const dropHost = (el as Element).closest?.('[data-fs-drop]') as Nullable<HTMLElement>
     if (!dropHost) continue
     const raw = dropHost.dataset.fsDrop?.trim()
     if (!raw) continue

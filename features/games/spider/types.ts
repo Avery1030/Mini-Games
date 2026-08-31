@@ -1,9 +1,33 @@
-export type Suit = 'spades' | 'hearts' | 'diamonds' | 'clubs'
+export enum Suit {
+  Spades = 'spades',
+  Hearts = 'hearts',
+  Diamonds = 'diamonds',
+  Clubs = 'clubs',
+}
 export type Rank = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13
-export type Difficulty = 1 | 2 | 3 | 4
+export enum Difficulty {
+  OneSuit = 1,
+  TwoSuit = 2,
+  ThreeSuit = 3,
+  FourSuit = 4,
+}
 
-export const DIFFICULTIES: readonly Difficulty[] = [1, 2, 3, 4]
-export const SUITS: readonly Suit[] = ['spades', 'hearts', 'diamonds', 'clubs']
+export const DIFFICULTIES: readonly Difficulty[] = [
+  Difficulty.OneSuit,
+  Difficulty.TwoSuit,
+  Difficulty.ThreeSuit,
+  Difficulty.FourSuit,
+]
+export const SUITS: readonly Suit[] = [Suit.Spades, Suit.Hearts, Suit.Diamonds, Suit.Clubs]
+
+export function isDifficulty(v: unknown): v is Difficulty {
+  return (
+    v === Difficulty.OneSuit ||
+    v === Difficulty.TwoSuit ||
+    v === Difficulty.ThreeSuit ||
+    v === Difficulty.FourSuit
+  )
+}
 
 export type Card = {
   id: number

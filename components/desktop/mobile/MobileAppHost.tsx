@@ -9,7 +9,7 @@ import { resolveDesktopItemTitle } from '@/lib/desktop/window'
 import { cn } from '@/lib/cn'
 import type { DesktopAppView } from '@/config/desktop'
 
-function pickForeground(apps: DesktopAppView[]): DesktopAppView | null {
+function pickForeground(apps: DesktopAppView[]): Nullable<DesktopAppView> {
   const visible = apps.filter((a) => a.isOpen && !a.minimized && a.app)
   if (visible.length === 0) return null
   const active = visible.find((a) => a.active)

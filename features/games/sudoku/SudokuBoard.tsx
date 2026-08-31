@@ -10,7 +10,7 @@ type Props = {
   settings: SudokuSettings
   inputLocked: boolean
   showCrackCoords: boolean
-  lastStep: CrackStep | null
+  lastStep: Nullable<CrackStep>
   boardLabel: string
   onCellClick: (row: number, col: number) => void
 }

@@ -310,7 +310,7 @@ export function DesktopIconsLayer() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const el = e.target as HTMLElement | null
+      const el = e.target as Nullable<HTMLElement>
       if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return
       const scope = useDesktopSelectionStore.getState().scope
       if (scope.type !== 'desktop') return

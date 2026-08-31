@@ -1,6 +1,10 @@
 import type { ReactNode } from 'react'
 
-export type ToastType = 'success' | 'error' | 'warning'
+export enum ToastType {
+  Success = 'success',
+  Error = 'error',
+  Warning = 'warning',
+}
 
 export type ToastEntry = {
   id: string

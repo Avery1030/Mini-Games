@@ -3,7 +3,7 @@ import type { ContextMenuItem } from '@/components/ui'
 import { resolveMenuItems, type MenuItemConfig } from '@/components/ui/resolveMenuItems'
 
 export type DesktopContextMenuCtx = {
-  iconId: DesktopAppId | null
+  iconId: Nullable<DesktopAppId>
   app: DesktopAppView | undefined
   onBlank: boolean
   isUserItem: boolean

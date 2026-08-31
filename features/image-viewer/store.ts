@@ -3,7 +3,7 @@ import { normalizePath, vfs } from '@/lib/vfs'
 
 interface ImageViewerLaunchState {
   /** 待打开的 VFS 绝对路径 */
-  pendingFilePath: string | null
+  pendingFilePath: Nullable<string>
   /** 递增以通知已打开的查看器重新加载 */
   openEpoch: number
 }
@@ -17,7 +17,7 @@ interface ImageViewerLaunchActions {
   /** 按节点 id 解析路径后打开（回收站等场景） */
   openFileById: (id: string) => Promise<void>
   /** 取出并清空 pending 路径 */
-  consumePendingFilePath: () => string | null
+  consumePendingFilePath: () => Nullable<string>
 }
 
 export type ImageViewerStore = ImageViewerLaunchState & ImageViewerLaunchActions

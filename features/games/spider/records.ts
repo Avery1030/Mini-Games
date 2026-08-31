@@ -1,15 +1,20 @@
-import { DIFFICULTIES, TOP_RECORDS, type Difficulty, type SpiderTimeRecord } from './types'
+import { DIFFICULTIES, Difficulty, TOP_RECORDS, type SpiderTimeRecord } from './types'
 
 export type SpiderRecordsMap = Record<Difficulty, SpiderTimeRecord[]>
 
 export type RecordWinResult = {
-  rank: number | null
+  rank: Nullable<number>
   records: SpiderTimeRecord[]
   current: SpiderTimeRecord
 }
 
 export function emptyRecords(): SpiderRecordsMap {
-  return { 1: [], 2: [], 3: [], 4: [] }
+  return {
+    [Difficulty.OneSuit]: [],
+    [Difficulty.TwoSuit]: [],
+    [Difficulty.ThreeSuit]: [],
+    [Difficulty.FourSuit]: [],
+  }
 }
 
 function isTimeRecord(v: unknown): v is SpiderTimeRecord {

@@ -19,7 +19,7 @@ export function isIdeExplorerOpenPath(path: string): boolean {
   return EXPLORER_EXT_SET.has(getExtension(path).toLowerCase())
 }
 
-export function languageFromPath(path: string | null): IdeLanguage {
+export function languageFromPath(path: Nullable<string>): IdeLanguage {
   if (!path) return 'plain'
   switch (getExtension(path).toLowerCase()) {
     case 'html':
@@ -56,7 +56,7 @@ export function mimeFromPath(path: string): string {
   }
 }
 
-export function isHtmlPath(path: string | null): boolean {
+export function isHtmlPath(path: Nullable<string>): boolean {
   if (!path) return false
   const ext = getExtension(path).toLowerCase()
   return ext === 'html' || ext === 'htm'

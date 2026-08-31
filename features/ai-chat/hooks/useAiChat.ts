@@ -26,14 +26,14 @@ import { promptSessionTitle } from '../promptNewSessionTitle'
 
 export type UseAiChatResult = {
   sessions: AiChatSessionMeta[]
-  activeSessionId: string | null
+  activeSessionId: Nullable<string>
   messages: UiMessage[]
   historyLoading: boolean
   historyLoadingMore: boolean
   hasMoreHistory: boolean
   streaming: boolean
   sessionEpoch: number
-  inputRef: RefObject<HTMLTextAreaElement | null>
+  inputRef: RefObject<Nullable<HTMLTextAreaElement>>
   stop: () => void
   clearChat: () => Promise<void>
   deleteMessage: (id: string) => Promise<void>
@@ -53,14 +53,14 @@ export type UseAiChatResult = {
 export function useAiChat(): UseAiChatResult {
   const t = useTranslations('aiChat')
   const [sessions, setSessions] = useState<AiChatSessionMeta[]>([])
-  const [activeSessionId, setActiveSessionIdState] = useState<string | null>(null)
+  const [activeSessionId, setActiveSessionIdState] = useState<Nullable<string>>(null)
   const [messages, setMessages] = useState<UiMessage[]>([])
   const [historyLoading, setHistoryLoading] = useState(true)
   const [historyLoadingMore, setHistoryLoadingMore] = useState(false)
   const [hasMoreHistory, setHasMoreHistory] = useState(false)
   const [streaming, setStreaming] = useState(false)
   const [sessionEpoch, setSessionEpoch] = useState(0)
-  const abortRef = useRef<AbortController | null>(null)
+  const abortRef = useRef<Nullable<AbortController>>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesRef = useRef(messages)
   const activeSessionIdRef = useRef(activeSessionId)

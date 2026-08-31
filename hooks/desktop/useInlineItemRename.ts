@@ -13,7 +13,7 @@ import { toast } from '@/components/ui'
 
 export type UseInlineItemRenameOptions = {
   /** 同级父目录；桌面根为 null */
-  parentId: DesktopAppId | null
+  parentId: Nullable<DesktopAppId>
   scope: SelectionScope
   selectedIds: DesktopAppId[]
 }
@@ -26,14 +26,14 @@ export function useInlineItemRename({ parentId, scope, selectedIds }: UseInlineI
   const items = useDesktopItemsStore((s) => s.items)
   const renameItem = useDesktopItemsStore((s) => s.renameItem)
 
-  const [editingId, setEditingId] = useState<DesktopAppId | null>(null)
+  const [editingId, setEditingId] = useState<Nullable<DesktopAppId>>(null)
   const [editValue, setEditValue] = useState('')
-  const renameTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const renameTimerRef = useRef<Nullable<ReturnType<typeof setTimeout>>>(null)
   const editInputRef = useRef<HTMLInputElement>(null)
   const editCommitLockRef = useRef(false)
   const skipBlurCommitRef = useRef(false)
   const editValueRef = useRef('')
-  const editingChildRef = useRef<DesktopItemRecord | null>(null)
+  const editingChildRef = useRef<Nullable<DesktopItemRecord>>(null)
 
   const clearRenameTimer = useCallback(() => {
     if (renameTimerRef.current) {

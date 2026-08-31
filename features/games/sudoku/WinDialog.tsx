@@ -4,7 +4,7 @@ import { winChrome } from '@/lib/winChrome'
 type Props = {
   mode: 'won' | 'lost'
   elapsed: number
-  bestTime: number | null
+  bestTime: Nullable<number>
   hasNextLevel: boolean
   labels: {
     won: string
