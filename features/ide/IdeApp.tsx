@@ -50,10 +50,10 @@ export function IdeApp({ windowId, initialPath = null }: IdeAppProps = {}) {
   const tm = useTranslations('modal')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const contentRef = useRef('')
-  const pathRef = useRef<Nullable<string>>(null)
+  const pathRef = useRef<Nullable<string>>(initialPath)
   const savedRef = useRef('')
 
-  const [path, setPath] = useState<Nullable<string>>(null)
+  const [path, setPath] = useState<Nullable<string>>(initialPath)
   const [content, setContent] = useState('')
   const [savedContent, setSavedContent] = useState('')
   const [cursor, setCursor] = useState({ line: 1, col: 1 })

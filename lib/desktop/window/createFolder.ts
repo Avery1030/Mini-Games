@@ -130,7 +130,7 @@ export function renameDesktopItemWindow(
   return true
 }
 
-/** 解析图标/窗口显示名：动态 title → titles[locale] → i18n apps.* → id */
+/** 解析图标/窗口显示名：实例 title → 快照 title → titles[locale] → i18n apps.* → id */
 export function resolveDesktopItemTitle(
   app: Pick<DesktopAppDefinition, 'id' | 'title' | 'kind' | 'titles'>,
   tApps: (key: string) => string,
@@ -145,9 +145,10 @@ export function resolveDesktopItemTitle(
     titles?.['en-US'] ||
     (titles ? Object.values(titles).find((v) => typeof v === 'string' && v.trim()) : undefined) ||
     undefined
+  const dynamicTitle = win?.title?.trim() || app.title?.trim() || undefined
 
   let fromI18n: string | undefined
-  if (!app.title?.trim() && !fromTitles) {
+  if (!dynamicTitle && !fromTitles) {
     try {
       const v = tApps(app.id)
       if (v && v !== app.id && !v.startsWith('apps.')) fromI18n = v
@@ -156,8 +157,8 @@ export function resolveDesktopItemTitle(
     }
   }
 
-  const base = app.title?.trim() || fromTitles || fromI18n || app.id
-  return formatItemDisplayName(app.kind ?? 'app', base)
+  const base = dynamicTitle || fromTitles || fromI18n || app.id
+  return formatItemDisplayName(app.kind ?? win?.kind ?? 'app', base)
 }
 
 /** 根据已占用格点分配空位；优先 prefer，冲突则从该点向外找最近空位 */

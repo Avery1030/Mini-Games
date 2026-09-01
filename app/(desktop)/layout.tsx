@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { DesktopPage } from '@/components/desktop'
 
 export const metadata: Metadata = {
-  title: 'Avery Mini OS',
+  // 标签页标题由 DesktopDocumentTitle 按聚焦窗口写入；这里不设 title，避免 Next 一直抢回默认名
   description: 'Avery Mini OS is a modern desktop operating system designed to be fast, secure, and easy to use.',
 }
 
