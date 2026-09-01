@@ -61,7 +61,7 @@ export interface DesktopAppDefinition {
   }>
   defaultCoordinate: DesktopCoordinate
   /** 有 app 组件的图标才能打开窗口 */
-  app?: ComponentType<{ embedded?: boolean }>
+  app?: ComponentType
   width?: number
   height?: number
   chrome?: WindowChromeOptions

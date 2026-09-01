@@ -30,7 +30,6 @@ import {
 } from './types'
 
 export interface CanvasJigsawProps {
-  embedded?: boolean
   onClose?: () => void
 }
 
@@ -121,7 +120,7 @@ function drawPiece(
 /**
  * 纯 Canvas 不规则拼图：邻块相对磁吸成组，大块可自由拖动。
  */
-export function CanvasJigsaw({ embedded = false, onClose }: CanvasJigsawProps = {}) {
+export function CanvasJigsaw({ onClose }: CanvasJigsawProps = {}) {
   const t = useTranslations('canvasJigsaw')
 
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -494,7 +493,7 @@ export function CanvasJigsaw({ embedded = false, onClose }: CanvasJigsawProps = 
   return (
     <div
       className={cn(
-        embeddedAppShell(embedded, 'relative flex flex-col bg-[#c0c0c0] text-black min-h-0'),
+        embeddedAppShell('relative flex flex-col bg-[#c0c0c0] text-black min-h-0'),
         'overflow-hidden h-full',
       )}
     >

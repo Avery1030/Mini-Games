@@ -7,11 +7,7 @@ import { useKlineChartStore } from './store'
 import { useKlineChart } from './hooks/useKlineChart'
 import { Toolbar } from './Toolbar'
 
-export interface KlineChartViewerProps {
-  embedded?: boolean
-}
-
-export function KlineChartViewer({ embedded = false }: KlineChartViewerProps) {
+export function KlineChartViewer() {
   const locale = useLocale()
   const t = useTranslations('klineChart')
   const { resolvedTheme } = useTheme()
@@ -29,7 +25,7 @@ export function KlineChartViewer({ embedded = false }: KlineChartViewerProps) {
   })
 
   return (
-    <div className={embeddedAppShell(embedded, 'flex flex-col bg-window-body')}>
+    <div className={embeddedAppShell('flex flex-col bg-window-body')}>
       <Toolbar
         symbol={chart.symbol}
         interval={chart.interval}

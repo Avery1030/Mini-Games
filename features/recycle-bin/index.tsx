@@ -19,10 +19,6 @@ import { requestOpenNote } from '@/features/notepad/pendingOpen'
 import { useImageViewerStore } from '@/features/image-viewer/store'
 import { cn } from '@/lib/cn'
 
-export type RecycleBinAppProps = {
-  embedded?: boolean
-}
-
 const IMAGE_EXTS = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'])
 
 type TrashRow =
@@ -96,7 +92,7 @@ function rowIcon(row: TrashRow) {
 /**
  * 回收站窗口：同时展示桌面软删除项与 VFS `/Trash` 文件。
  */
-export function RecycleBinApp({ embedded = false }: RecycleBinAppProps) {
+export function RecycleBinApp() {
   const t = useTranslations('recycleBin')
   const td = useTranslations('desktop')
   const tm = useTranslations('modal')
@@ -138,9 +134,7 @@ export function RecycleBinApp({ embedded = false }: RecycleBinAppProps) {
   const rows = useMemo((): TrashRow[] => {
     const desktopRoots = getRecycleBinRoots(desktopItems)
     const linkedNoteIds = new Set(
-      desktopItems
-        .filter((i) => i.isDeleted && i.kind === 'textDocument' && i.noteId)
-        .map((i) => i.noteId as string),
+      desktopItems.filter((i) => i.isDeleted && i.kind === 'textDocument' && i.noteId).map((i) => i.noteId as string),
     )
 
     const desktopRows: TrashRow[] = desktopRoots.map((item) => ({
@@ -417,10 +411,7 @@ export function RecycleBinApp({ embedded = false }: RecycleBinAppProps) {
 
   return (
     <div
-      className={cn(
-        embeddedAppShell(embedded, 'flex flex-col text-sm text-on-chrome bg-window font-pixel'),
-        !embedded && 'p-0',
-      )}
+      className={cn(embeddedAppShell('flex flex-col text-sm text-on-chrome bg-window font-pixel'))}
       onPointerDown={ensureScope}
     >
       <div className='shrink-0 flex flex-wrap items-center gap-2 px-3 py-2 border-b border-chrome-dark bg-chrome'>
@@ -447,7 +438,7 @@ export function RecycleBinApp({ embedded = false }: RecycleBinAppProps) {
         </Button>
       </div>
 
-      <div className={cn('flex-1 min-h-0 flex flex-col gap-2 overflow-hidden', embedded ? 'p-3' : 'p-2')}>
+      <div className='flex-1 min-h-0 flex flex-col gap-2 overflow-hidden p-3'>
         <div className='shrink-0 flex items-center gap-2'>
           <Trash2 size={18} strokeWidth={2} className='shrink-0 text-muted' aria-hidden />
           <div className='min-w-0'>

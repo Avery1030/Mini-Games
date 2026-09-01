@@ -8,17 +8,13 @@ import { MasterDetail, Panel } from '@/components/ui'
 import { useIsMobileViewport } from '@/hooks/desktop'
 import { CHANGELOG_DATES, formatChangelogDate } from '@/content/changelog'
 
-export interface DocumentProps {
-  embedded?: boolean
-}
-
 const DOC_IDS = ['welcome', 'desktop', 'apps', 'changelog', 'about'] as const
 type DocId = (typeof DOC_IDS)[number]
 
 /** 文档里的更新摘要：只展示最近几条，完整列表见「日志」应用 */
 const DOC_CHANGELOG_PREVIEW = 3
 
-export function DocumentApp({ embedded = false }: DocumentProps = {}) {
+export function DocumentApp() {
   const t = useTranslations('docs')
   const tc = useTranslations('changelog')
   const tNav = useTranslations('mobile')
@@ -34,11 +30,10 @@ export function DocumentApp({ embedded = false }: DocumentProps = {}) {
   return (
     <div
       className={cn(
-        embeddedAppShell(embedded, 'flex flex-col text-sm text-on-chrome bg-window font-pixel'),
-        !embedded && 'p-4',
+        embeddedAppShell('flex flex-col text-sm text-on-chrome bg-window font-pixel'),
       )}
     >
-      <div className={cn('flex-1 min-h-0 flex p-2', embedded && 'p-3', isMobile && 'p-0')}>
+      <div className={cn('flex-1 min-h-0 flex p-3', isMobile && 'p-0')}>
         <MasterDetail
           defaultSize={128}
           minSize={96}

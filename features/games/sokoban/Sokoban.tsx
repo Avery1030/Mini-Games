@@ -20,7 +20,6 @@ import { WinDialog } from './WinDialog'
 import type { Direction, SokobanState } from './types'
 
 export interface SokobanProps {
-  embedded?: boolean
   onClose?: () => void
 }
 
@@ -29,7 +28,7 @@ type Screen = 'select' | 'play'
 /**
  * 推箱子：先选关（顺序解锁 + 星级），再进入 Canvas 棋盘。
  */
-export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
+export function Sokoban({ onClose }: SokobanProps = {}) {
   const t = useTranslations('sokoban')
 
   const boardHostRef = useRef<HTMLDivElement>(null)
@@ -346,7 +345,7 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
   if (screen === 'select') {
     return (
       <div
-        className={cn(embeddedAppShell(embedded, 'relative flex flex-col bg-chrome text-on-chrome min-h-0'), 'h-full')}
+        className={cn(embeddedAppShell('relative flex flex-col bg-chrome text-on-chrome min-h-0'), 'h-full')}
       >
         <LevelSelect
           items={levelSelectItems}
@@ -372,7 +371,7 @@ export function Sokoban({ embedded = false, onClose }: SokobanProps = {}) {
     <div
       ref={rootRef}
       className={cn(
-        embeddedAppShell(embedded, 'relative flex flex-col bg-chrome text-on-chrome min-h-0'),
+        embeddedAppShell('relative flex flex-col bg-chrome text-on-chrome min-h-0'),
         'overflow-hidden h-full outline-none',
       )}
       tabIndex={0}

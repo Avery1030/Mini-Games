@@ -8,10 +8,6 @@ import { Button } from '@/components/ui'
 import { winChromeSunken } from '@/lib/winChrome'
 import { applyUnary, evaluateExpression, formatCalcNumber } from './engine'
 
-export interface CalculatorProps {
-  embedded?: boolean
-}
-
 type KeyDef = {
   id: string
   label: string
@@ -83,7 +79,7 @@ function lastNumberSpan(expr: string): Nullable<{ start: number; raw: string }> 
 /**
  * Win95 风格计算器：四则运算、括号、幂、开方等；支持键盘。
  */
-export function CalculatorApp({ embedded = false }: CalculatorProps = {}) {
+export function CalculatorApp() {
   const t = useTranslations('calculator')
   const [expr, setExpr] = useState('')
   const [display, setDisplay] = useState('0')
@@ -398,11 +394,10 @@ export function CalculatorApp({ embedded = false }: CalculatorProps = {}) {
   return (
     <div
       className={cn(
-        embeddedAppShell(embedded, 'flex flex-col text-sm text-on-chrome bg-window font-pixel'),
-        !embedded && 'p-4',
+        embeddedAppShell('flex flex-col text-sm text-on-chrome bg-window font-pixel'),
       )}
     >
-      <div className={cn('flex-1 min-h-0 flex flex-col gap-2', embedded ? 'p-3' : 'p-2')}>
+      <div className='flex-1 min-h-0 flex flex-col gap-2 p-3'>
         <div className={cn(winChromeSunken, 'bg-field px-2 py-1.5 space-y-0.5')}>
           <div className='flex h-3.5 items-center justify-between gap-2 overflow-hidden text-[10px] leading-none text-muted'>
             <span className='min-w-0 truncate'>{expr}</span>

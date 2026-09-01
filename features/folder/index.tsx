@@ -18,7 +18,6 @@ import { useInlineItemRename } from '@/hooks/desktop/useInlineItemRename'
 import { FolderItemList, FS_LIST_GRAB_X, FS_LIST_GRAB_Y } from './FolderItemList'
 
 export type FolderAppProps = {
-  embedded?: boolean
   folderTitle?: string
   folderId: DesktopAppId
 }
@@ -26,7 +25,7 @@ export type FolderAppProps = {
 /**
  * 文件夹窗口：任意 folderId（桌面根文件夹 / 嵌套文件夹）共用同一套多选与行内重命名。
  */
-export function FolderApp({ embedded = false, folderTitle, folderId }: FolderAppProps) {
+export function FolderApp({ folderTitle, folderId }: FolderAppProps) {
   const t = useTranslations('folder')
   const td = useTranslations('desktop')
   const items = useDesktopItemsStore((s) => s.items)
@@ -259,8 +258,7 @@ export function FolderApp({ embedded = false, folderTitle, folderId }: FolderApp
   return (
     <div
       className={cn(
-        embeddedAppShell(embedded, 'flex flex-col text-sm text-on-chrome bg-window font-pixel'),
-        !embedded && 'p-0',
+        embeddedAppShell('flex flex-col text-sm text-on-chrome bg-window font-pixel'),
       )}
       onContextMenu={(e) => handleContextMenu(e)}
       onPointerDown={ensureScope}
@@ -290,7 +288,7 @@ export function FolderApp({ embedded = false, folderTitle, folderId }: FolderApp
         </Button>
       </div>
 
-      <div className={cn('flex-1 min-h-0 flex flex-col gap-2 overflow-hidden', embedded ? 'p-3' : 'p-2')}>
+      <div className='flex-1 min-h-0 flex flex-col gap-2 overflow-hidden p-3'>
         <div className='shrink-0 flex items-center gap-2'>
           <FolderOpen size={18} strokeWidth={2} className='shrink-0 text-muted' aria-hidden />
           <div className='min-w-0'>

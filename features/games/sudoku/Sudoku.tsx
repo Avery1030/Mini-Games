@@ -23,11 +23,7 @@ import { useSudokuKeyboard } from './useSudokuKeyboard'
 import { useSudokuSession } from './useSudokuSession'
 import { WinDialog } from './WinDialog'
 
-export interface SudokuProps {
-  embedded?: boolean
-}
-
-export function Sudoku({ embedded = false }: SudokuProps = {}) {
+export function Sudoku() {
   const t = useTranslations('sudoku')
   const settings = useSudokuProgressStore((s) => s.settings)
   const setSetting = useSudokuProgressStore((s) => s.setSetting)
@@ -87,7 +83,7 @@ export function Sudoku({ embedded = false }: SudokuProps = {}) {
     stopCrackDemo,
   })
 
-  const shell = cn(embeddedAppShell(embedded, 'relative flex flex-col bg-chrome text-on-chrome min-h-0'), 'h-full')
+  const shell = cn(embeddedAppShell('relative flex flex-col bg-chrome text-on-chrome min-h-0'), 'h-full')
 
   if (screen === 'difficulty') {
     return (

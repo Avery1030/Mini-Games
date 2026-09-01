@@ -10,14 +10,11 @@ import { ChatComposer } from './ChatComposer'
 import { MessageList } from './MessageList'
 import { SessionSidebar } from './SessionSidebar'
 import { useAiChat } from './hooks/useAiChat'
-import type { AiChatProps } from './types'
-
-export type { AiChatProps } from './types'
 
 /**
  * 智聊：多会话 + 流式对话；历史存独立 IndexedDB；.chat 导入导出走 VFS。
  */
-export const AiChatApp = memo(function AiChatApp({ embedded = false }: AiChatProps = {}) {
+export const AiChatApp = memo(function AiChatApp() {
   const t = useTranslations('aiChat')
   const tm = useTranslations('mobile')
   const isMobile = useIsMobileViewport()
@@ -53,8 +50,7 @@ export const AiChatApp = memo(function AiChatApp({ embedded = false }: AiChatPro
   return (
     <div
       className={cn(
-        embeddedAppShell(embedded, 'flex flex-col text-sm text-on-chrome bg-window font-pixel'),
-        !embedded && 'p-4',
+        embeddedAppShell('flex flex-col text-sm text-on-chrome bg-window font-pixel'),
       )}
     >
       <div className={cn('flex-1 min-h-0 flex m-2', isMobile && 'm-0')}>

@@ -17,14 +17,10 @@ import { useIsMobileViewport } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
 import { GAME_APP_IDS } from './ids'
 
-export type GamesAppProps = {
-  embedded?: boolean
-}
-
 /**
  * 内置「游戏」文件夹：列出小游戏，双击（触屏单击）打开；游戏本身不单独出现在桌面。
  */
-export function GamesApp({ embedded = false }: GamesAppProps) {
+export function GamesApp() {
   const t = useTranslations('games')
   const tApps = useTranslations('apps')
   const locale = useLocale()
@@ -58,7 +54,7 @@ export function GamesApp({ embedded = false }: GamesAppProps) {
   )
 
   return (
-    <div className={cn(embeddedAppShell(embedded, 'flex flex-col bg-chrome text-on-chrome min-h-0'))}>
+    <div className={cn(embeddedAppShell('flex flex-col bg-chrome text-on-chrome min-h-0'))}>
       <p className='shrink-0 px-2 py-1.5 text-[11px] text-muted border-b border-chrome-dark max-md:text-[12px]'>
         {t('hint')}
       </p>

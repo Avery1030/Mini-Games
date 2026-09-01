@@ -8,11 +8,7 @@ import { MasterDetail, Panel } from '@/components/ui'
 import { useIsMobileViewport } from '@/hooks/desktop'
 import { CHANGELOG_DATES, formatChangelogDate, type ChangelogDateId } from '@/content/changelog'
 
-export interface LogProps {
-  embedded?: boolean
-}
-
-export function LogApp({ embedded = false }: LogProps = {}) {
+export function LogApp() {
   const t = useTranslations('changelog')
   const tNav = useTranslations('mobile')
   const locale = useLocale()
@@ -27,11 +23,10 @@ export function LogApp({ embedded = false }: LogProps = {}) {
   return (
     <div
       className={cn(
-        embeddedAppShell(embedded, 'flex flex-col text-sm text-on-chrome bg-window font-pixel'),
-        !embedded && 'p-4',
+        embeddedAppShell('flex flex-col text-sm text-on-chrome bg-window font-pixel'),
       )}
     >
-      <div className={cn('flex-1 min-h-0 flex p-2', embedded && 'p-3', isMobile && 'p-0')}>
+      <div className={cn('flex-1 min-h-0 flex p-3', isMobile && 'p-0')}>
         <MasterDetail
           defaultSize={148}
           minSize={110}

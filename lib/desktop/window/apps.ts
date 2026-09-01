@@ -4,7 +4,7 @@ import type { DesktopAppId, DesktopCoordinate, DesktopItemKind } from '@/config/
 import { DesktopWindow } from './DesktopWindow'
 import { createDeferredApp, type DeferredApp } from './defineApp'
 
-type AppHost = ComponentType<{ embedded?: boolean }>
+type AppHost = ComponentType
 
 /**
  * 桌面文本文档窗口：运行时由 createDesktopTextDocumentWindow 实例化。
@@ -36,9 +36,8 @@ export class TextDocumentWindow extends DesktopWindow {
       const noteId = this.noteId
       this.deferred = createDeferredApp(async () => {
         const { TextDocumentApp } = await import('@/features/text-document')
-        return function TextDocumentLoaded(props: { embedded?: boolean }) {
+        return function TextDocumentLoaded() {
           return createElement(TextDocumentApp, {
-            embedded: props.embedded,
             itemId,
             noteId,
           })
@@ -95,9 +94,8 @@ export class FolderWindow extends DesktopWindow {
       const folderId = this.id
       this.deferred = createDeferredApp(async () => {
         const { FolderApp } = await import('@/features/folder')
-        return function FolderLoaded(props: { embedded?: boolean }) {
+        return function FolderLoaded() {
           return createElement(FolderApp, {
-            embedded: props.embedded,
             folderId,
           })
         }

@@ -4,13 +4,13 @@ import { IdeApp } from './IdeApp'
 import { HtmlPreviewApp } from './HtmlPreview'
 
 export function bindIdeApp(windowId: string, initialPath: Nullable<string>) {
-  return function IdeBound({ embedded }: { embedded?: boolean }) {
-    return <IdeApp embedded={embedded} windowId={windowId} initialPath={initialPath} />
+  return function IdeBound() {
+    return <IdeApp windowId={windowId} initialPath={initialPath} />
   }
 }
 
 export function bindHtmlPreviewApp(windowId: string) {
-  return function PreviewBound({ embedded }: { embedded?: boolean }) {
-    return <HtmlPreviewApp embedded={embedded} windowId={windowId} />
+  return function PreviewBound() {
+    return <HtmlPreviewApp windowId={windowId} />
   }
 }

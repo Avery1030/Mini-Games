@@ -14,7 +14,6 @@ import { useDesktopItemsStore } from '@/store/desktopItems'
 import { getDesktopWindow } from '@/lib/desktop/window'
 
 export type TextDocumentAppProps = {
-  embedded?: boolean
   itemId: DesktopAppId
   noteId: string
 }
@@ -22,7 +21,7 @@ export type TextDocumentAppProps = {
 /**
  * 桌面文本文档窗口：单文件编辑（不带记事本侧栏）。
  */
-export function TextDocumentApp({ embedded = false, itemId, noteId }: TextDocumentAppProps) {
+export function TextDocumentApp({ itemId, noteId }: TextDocumentAppProps) {
   const t = useTranslations('textDocument')
   const tn = useTranslations('notepad')
   const td = useTranslations('desktop')
@@ -99,8 +98,7 @@ export function TextDocumentApp({ embedded = false, itemId, noteId }: TextDocume
   return (
     <div
       className={cn(
-        embeddedAppShell(embedded, 'flex flex-col text-sm text-on-chrome bg-window font-pixel'),
-        !embedded && 'p-0',
+        embeddedAppShell('flex flex-col text-sm text-on-chrome bg-window font-pixel'),
       )}
     >
       <div className='shrink-0 flex flex-wrap items-center gap-2 px-3 py-2 border-b border-chrome-dark bg-chrome'>
@@ -109,7 +107,7 @@ export function TextDocumentApp({ embedded = false, itemId, noteId }: TextDocume
         </Button>
       </div>
 
-      <div className={cn('flex-1 min-h-0 flex flex-col gap-2 overflow-hidden', embedded ? 'p-3' : 'p-2')}>
+      <div className='flex-1 min-h-0 flex flex-col gap-2 overflow-hidden p-3'>
         <div className='shrink-0 flex items-center gap-2'>
           <FileText size={18} strokeWidth={2} className='shrink-0 text-muted' aria-hidden />
           <div className='min-w-0 flex-1'>

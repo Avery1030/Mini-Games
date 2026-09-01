@@ -18,10 +18,6 @@ import {
   type TetrominoType,
 } from './tetris-game'
 import { isServer } from '@/lib/env'
-export interface TetrisProps {
-  embedded?: boolean
-}
-
 const CELL = 24
 const CELL_COLORS: Record<CellValue, string> = {
   0: '#111827',
@@ -106,7 +102,7 @@ function playTone(freq: number, duration = 0.08, type: OscillatorType = 'square'
   )
 }
 
-export function Tetris({ embedded = false }: TetrisProps = {}) {
+export function Tetris() {
   const [state, setState] = useState(createInitialState)
   const renderBoard = useMemo(() => getRenderBoard(state), [state])
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -239,11 +235,7 @@ export function Tetris({ embedded = false }: TetrisProps = {}) {
   }, [state.status])
 
   return (
-    <div
-      className={`w-full text-white bg-[#0f172a] p-4 ${
-        embedded ? 'h-full min-h-0 overflow-auto' : 'min-h-screen'
-      }`}
-    >
+    <div className='w-full text-white bg-[#0f172a] p-4 h-full min-h-0 overflow-auto'>
       <div className='flex items-start gap-4 h-full'>
         <div className='bg-black/50 border-2 border-[#334155] p-1'>
           <canvas ref={canvasRef} className='block' />

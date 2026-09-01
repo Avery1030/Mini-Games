@@ -1,1 +1,1 @@
-export { Sudoku, type SudokuProps } from './Sudoku'
+export { Sudoku } from './Sudoku'

@@ -12,7 +12,7 @@ import {
   unregisterDesktopWindow,
 } from './registry'
 
-type AppHost = ComponentType<{ embedded?: boolean }>
+type AppHost = ComponentType
 
 function nextId(prefix: 'ide' | 'preview'): DesktopAppId {
   const rand =

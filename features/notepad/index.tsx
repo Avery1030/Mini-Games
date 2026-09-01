@@ -13,11 +13,7 @@ import { NoteSidebar } from './NoteSidebar'
 import type { NoteMeta } from './types'
 import { subscribeOpenNote, takePendingOpenNote } from './pendingOpen'
 
-export interface NotepadProps {
-  embedded?: boolean
-}
-
-export function NotepadApp({ embedded = false }: NotepadProps = {}) {
+export function NotepadApp() {
   const t = useTranslations('notepad')
   const tm = useTranslations('modal')
   const tNav = useTranslations('mobile')
@@ -211,11 +207,10 @@ export function NotepadApp({ embedded = false }: NotepadProps = {}) {
   return (
     <div
       className={cn(
-        embeddedAppShell(embedded, 'flex flex-col text-sm text-on-chrome bg-window font-pixel'),
-        !embedded && 'p-4',
+        embeddedAppShell('flex flex-col text-sm text-on-chrome bg-window font-pixel'),
       )}
     >
-      <div className={cn('flex-1 min-h-0 flex p-2', embedded && 'p-3', isMobile && 'p-0')}>
+      <div className={cn('flex-1 min-h-0 flex p-3', isMobile && 'p-0')}>
         <MasterDetail
           defaultSize={168}
           minSize={120}

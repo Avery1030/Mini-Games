@@ -19,11 +19,7 @@ import { DrawingSidebar } from './DrawingSidebar'
 import { PaintToolbar } from './PaintToolbar'
 import type { DrawingMeta } from './types'
 
-export interface PaintProps {
-  embedded?: boolean
-}
-
-export function PaintApp({ embedded = false }: PaintProps = {}) {
+export function PaintApp() {
   const t = useTranslations('paint')
   const tm = useTranslations('modal')
   const tNav = useTranslations('mobile')
@@ -256,11 +252,10 @@ export function PaintApp({ embedded = false }: PaintProps = {}) {
   return (
     <div
       className={cn(
-        embeddedAppShell(embedded, 'flex flex-col text-sm text-on-chrome bg-window font-pixel'),
-        !embedded && 'p-4',
+        embeddedAppShell('flex flex-col text-sm text-on-chrome bg-window font-pixel'),
       )}
     >
-      <div className={cn('flex-1 min-h-0 flex p-2', embedded && 'p-3', isMobile && 'p-0')}>
+      <div className={cn('flex-1 min-h-0 flex p-3', isMobile && 'p-0')}>
         <MasterDetail
           defaultSize={156}
           minSize={120}

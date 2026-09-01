@@ -24,12 +24,7 @@ const DIFFICULTIES: Difficulty[] = [
   Difficulty.Custom,
 ]
 
-export interface MinesweeperProps {
-  /** 嵌入弹窗内时为 true，去掉全屏最小高度 */
-  embedded?: boolean
-}
-
-export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
+export function Minesweeper() {
   const t = useTranslations('minesweeper')
   const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.Basic)
   const [customInputs, setCustomInputs] = useState({ rows: 32, cols: 32, mines: 250 })
@@ -246,13 +241,7 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
   const statusWidth = Math.max(boardPixelW + 8, 220)
 
   return (
-    <div
-      className={
-        embedded
-          ? 'flex h-full min-h-0 flex-col bg-[#c0c0c0] text-[#000]'
-          : 'flex min-h-screen flex-col items-center bg-[#c0c0c0] p-4 text-[#000]'
-      }
-    >
+    <div className='flex h-full min-h-0 flex-col bg-[#c0c0c0] text-[#000]'>
       {/* 顶栏固定：难度 + 状态，避免被 flex 挤压裁切 */}
       <div className='flex w-full shrink-0 flex-col items-center gap-2 px-3 pt-3 pb-1'>
         <div className='max-w-full overflow-x-auto'>
@@ -353,13 +342,7 @@ export function Minesweeper({ embedded = false }: MinesweeperProps = {}) {
       </div>
 
       {/* 仅棋盘区域滚动，大图难度不再把顶栏顶出视口 */}
-      <div
-        className={
-          embedded
-            ? 'flex min-h-0 min-w-0 flex-1 justify-center overflow-auto px-3 py-1'
-            : 'flex justify-center overflow-auto'
-        }
-      >
+      <div className='flex min-h-0 min-w-0 flex-1 justify-center overflow-auto px-3 py-1'>
         <div className='inline-block h-fit p-1 border-2 border-t-[#808080] border-l-[#808080] border-r-[#fff] border-b-[#fff] bg-[#c0c0c0] cursor-default'>
           <canvas
             ref={canvasRef}

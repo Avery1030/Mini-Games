@@ -31,10 +31,6 @@ import { TASKBAR_H } from '@/lib/desktop/windowGeometry'
 import { copyVfsFileToDesktop, setVfsImageAsWallpaper } from '@/lib/desktop/vfsFileActions'
 import { useDesktopVfsStore } from '@/store/desktopVfs'
 
-export type FileExplorerProps = {
-  embedded?: boolean
-}
-
 function formatBytes(size: number): string {
   if (!Number.isFinite(size) || size < 0) return '—'
   if (size < 1024) return `${size} B`
@@ -136,7 +132,7 @@ function DestPathForm({
 /**
  * VFS 资源管理器：浏览绝对路径目录，图片支持打开 / 设壁纸 / 复制 / 移动 / 删除(trash)。
  */
-export function FileExplorerApp({ embedded = false }: FileExplorerProps = {}) {
+export function FileExplorerApp() {
   const t = useTranslations('fileExplorer')
   const tm = useTranslations('modal')
   const refreshDesktopVfs = useDesktopVfsStore((s) => s.refresh)
@@ -328,8 +324,7 @@ export function FileExplorerApp({ embedded = false }: FileExplorerProps = {}) {
   return (
     <div
       className={cn(
-        embeddedAppShell(embedded, 'flex flex-col text-sm text-on-chrome bg-window font-pixel'),
-        !embedded && 'p-0',
+        embeddedAppShell('flex flex-col text-sm text-on-chrome bg-window font-pixel'),
       )}
     >
       <div className='shrink-0 flex flex-wrap items-center gap-2 px-2 py-1.5 border-b border-chrome-dark bg-chrome'>

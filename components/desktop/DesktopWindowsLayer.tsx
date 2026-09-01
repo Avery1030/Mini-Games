@@ -74,7 +74,7 @@ export function DesktopWindowsLayer() {
             zIndex={app.zIndex}
             onFocus={() => focusWindow(app.id)}
           >
-            <App embedded />
+            <App />
           </WindowsWindow>
         )
       })}

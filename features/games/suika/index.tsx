@@ -19,10 +19,6 @@ import { WORLD_HEIGHT, WORLD_WIDTH } from './physics'
 import { drawFruitIcon, drawSuikaFrame, type CanvasLabels } from './render'
 import { playMergeSound } from './sound'
 
-export interface SuikaProps {
-  embedded?: boolean
-}
-
 type HudState = {
   score: number
   bestScore: number
@@ -58,7 +54,7 @@ function MiniFruit({ level, size }: { level: number; size: number }) {
 /**
  * 合成大西瓜：Canvas 渲染 + rAF 物理循环（无第三方物理库）。
  */
-export function Suika({ embedded = false }: SuikaProps = {}) {
+export function Suika() {
   const t = useTranslations('suika')
   const engineRef = useRef<Nullable<SuikaEngine>>(null)
   if (!engineRef.current) engineRef.current = new SuikaEngine()
@@ -237,7 +233,7 @@ export function Suika({ embedded = false }: SuikaProps = {}) {
   return (
     <div
       className={cn(
-        embeddedAppShell(embedded, 'flex flex-col bg-[#1a2e1a] text-white min-h-0'),
+        embeddedAppShell('flex flex-col bg-[#1a2e1a] text-white min-h-0'),
         'overflow-hidden',
       )}
     >

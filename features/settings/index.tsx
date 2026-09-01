@@ -27,10 +27,6 @@ import {
 import { AppearanceSection, DataSection, DisplaySection, TaskbarSection } from './sections'
 import { SETTINGS_SECTIONS, type SectionId, type WallpaperDraft } from './types'
 
-export interface SettingsProps {
-  embedded?: boolean
-}
-
 function draftFromSettings(
   wallpaperId: WallpaperId,
   wallpaperPath: Nullable<string>,
@@ -49,7 +45,7 @@ function draftFromSettings(
   }
 }
 
-export function SettingsApp({ embedded = false }: SettingsProps = {}) {
+export function SettingsApp() {
   const t = useTranslations('settings')
   const tw = useTranslations('wallpapers')
   const tm = useTranslations('mobile')
@@ -222,8 +218,7 @@ export function SettingsApp({ embedded = false }: SettingsProps = {}) {
   return (
     <div
       className={cn(
-        embeddedAppShell(embedded, 'flex flex-col text-sm text-on-chrome bg-window font-pixel'),
-        !embedded && 'p-4',
+        embeddedAppShell('flex flex-col text-sm text-on-chrome bg-window font-pixel'),
       )}
     >
       <div className={cn('flex-1 min-h-0 flex m-2', isMobile && 'm-0')}>

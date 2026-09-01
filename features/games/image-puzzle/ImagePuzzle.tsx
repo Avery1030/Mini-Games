@@ -19,8 +19,6 @@ import {
 import { BLANK, PUZZLE_SIZES, type PuzzleSize, type PuzzleState } from './types'
 
 export interface ImagePuzzleProps {
-  /** 嵌入桌面窗口时为 true */
-  embedded?: boolean
   /** 可选关闭回调（桌面窗口可用窗口壳关闭；独立页可传入） */
   onClose?: () => void
 }
@@ -38,7 +36,7 @@ function formatElapsed(sec: number): string {
 /**
  * 滑动图片拼图：纯 DOM + 二维数组状态，无游戏引擎。
  */
-export function ImagePuzzle({ embedded = false, onClose }: ImagePuzzleProps = {}) {
+export function ImagePuzzle({ onClose }: ImagePuzzleProps = {}) {
   const t = useTranslations('imagePuzzle')
   const [state, setState] = useState<PuzzleState>(() => createInitialState(3))
   const [imageSrc, setImageSrc] = useState('')
@@ -197,7 +195,7 @@ export function ImagePuzzle({ embedded = false, onClose }: ImagePuzzleProps = {}
   return (
     <div
       className={cn(
-        embeddedAppShell(embedded, 'relative flex flex-col bg-[#c0c0c0] text-black min-h-0'),
+        embeddedAppShell('relative flex flex-col bg-[#c0c0c0] text-black min-h-0'),
         'overflow-hidden h-full',
       )}
     >

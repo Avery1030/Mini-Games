@@ -1,9 +1,5 @@
 import type { AiChatAttachment } from '@/features/ai-chat/lib'
 
-export type AiChatProps = {
-  embedded?: boolean
-}
-
 export type UiMessage = {
   id: string
   role: 'user' | 'assistant'

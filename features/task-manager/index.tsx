@@ -11,10 +11,6 @@ import { resolveDesktopItemTitle } from '@/lib/desktop/window'
 import { useDesktopApps, useDesktopHydrated, useIsMobileViewport } from '@/hooks/desktop'
 import { useWindowStore } from '@/store/window'
 
-export type TaskManagerAppProps = {
-  embedded?: boolean
-}
-
 type RunningRow = {
   id: DesktopAppId
   title: string
@@ -28,7 +24,7 @@ type TabId = 'applications' | 'programs'
  * 仿 Windows 任务管理器：运行窗口 + 程序列表；结束任务 / 切换 / 最小化全部。
  * 状态统一来自 window store（生命周期由 open/close/minimize/forceClose 维护）。
  */
-export function TaskManagerApp({ embedded = false }: TaskManagerAppProps) {
+export function TaskManagerApp() {
   const t = useTranslations('taskManager')
   const tApps = useTranslations('apps')
   const locale = useLocale()
@@ -125,7 +121,7 @@ export function TaskManagerApp({ embedded = false }: TaskManagerAppProps) {
   }
 
   return (
-    <div className={cn(embeddedAppShell(embedded), 'flex flex-col bg-chrome text-on-chrome p-2 gap-2 max-md:p-2.5')}>
+    <div className={cn(embeddedAppShell(), 'flex flex-col bg-chrome text-on-chrome p-2 gap-2 max-md:p-2.5')}>
       <div className='text-xs font-bold px-0.5 max-md:text-sm'>{t('title')}</div>
       <p className='text-[10px] text-muted px-0.5 -mt-1 max-md:text-[11px]'>{t('hint')}</p>
 

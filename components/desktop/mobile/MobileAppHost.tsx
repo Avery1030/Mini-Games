@@ -77,7 +77,7 @@ export function MobileAppHost() {
       </header>
 
       <div className='min-h-0 flex-1 overflow-hidden overscroll-contain'>
-        <App embedded />
+        <App />
       </div>
     </div>
   )

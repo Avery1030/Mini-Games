@@ -58,10 +58,6 @@ import { playShuffleSound } from './sound'
 import { COLS, DEAL_SIZE, DIFFICULTIES, isDifficulty, type Card, type SpiderState } from './types'
 import { useSpiderKeyboard } from './useSpiderKeyboard'
 
-export type SpiderProps = {
-  embedded?: boolean
-}
-
 const WIN_MODAL_ID = 'spider-win'
 const LOSE_MODAL_ID = 'spider-lose'
 const RECORDS_MODAL_ID = 'spider-records'
@@ -98,7 +94,7 @@ function ShortcutButton({
   )
 }
 
-export function Spider({ embedded = false }: SpiderProps) {
+export function Spider() {
   const t = useTranslations('spider')
   const [hydrated, setHydrated] = useState(() => useSpiderStore.persist.hasHydrated())
   const difficulty = useSpiderStore((s) => s.difficulty)
@@ -721,10 +717,7 @@ export function Spider({ embedded = false }: SpiderProps) {
     return (
       <div
         className={cn(
-          embeddedAppShell(
-            embedded,
-            'flex min-h-0 min-w-0 flex-col overflow-hidden bg-window text-on-chrome font-pixel',
-          ),
+          embeddedAppShell('flex min-h-0 min-w-0 flex-col overflow-hidden bg-window text-on-chrome font-pixel'),
         )}
       >
         <div className={cn(winChromeSunken, 'relative m-2 min-h-0 flex-1 overflow-hidden bg-[#0a6b3c]')} />
@@ -738,7 +731,7 @@ export function Spider({ embedded = false }: SpiderProps) {
   return (
     <div
       className={cn(
-        embeddedAppShell(embedded, 'flex min-h-0 min-w-0 flex-col overflow-hidden bg-window text-on-chrome font-pixel'),
+        embeddedAppShell('flex min-h-0 min-w-0 flex-col overflow-hidden bg-window text-on-chrome font-pixel'),
       )}
     >
       <div className='flex min-w-0 shrink-0 flex-wrap items-center gap-1.5 border-b border-chrome-dark px-2 py-1.5'>

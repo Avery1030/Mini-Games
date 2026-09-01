@@ -13,14 +13,10 @@ import {
   type CmdLine,
 } from './commands'
 
-export type CmdAppProps = {
-  embedded?: boolean
-}
-
 /**
  * 简易 DOS 风格命令提示符。
  */
-export function CmdApp({ embedded = false }: CmdAppProps) {
+export function CmdApp() {
   const t = useTranslations('cmd')
   const items = useDesktopItemsStore((s) => s.items)
   const [cwd, setCwd] = useState<Nullable<DesktopAppId>>(null)
@@ -108,8 +104,7 @@ export function CmdApp({ embedded = false }: CmdAppProps) {
   return (
     <div
       className={cn(
-        embeddedAppShell(embedded, 'flex flex-col font-mono text-[12px] bg-[#0c0c0c] text-[#c0c0c0]'),
-        !embedded && 'p-0',
+        embeddedAppShell('flex flex-col font-mono text-[12px] bg-[#0c0c0c] text-[#c0c0c0]'),
       )}
       onClick={() => inputRef.current?.focus()}
     >

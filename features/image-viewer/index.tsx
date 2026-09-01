@@ -21,16 +21,12 @@ import { useImageViewerStore } from '@/features/image-viewer/store'
 
 const SLIDE_LOCK_MS = 280
 
-export type ImageViewerProps = {
-  embedded?: boolean
-}
-
 type PendingAction = Nullable<'upload' | 'import' | 'delete'>
 
 /**
  * 图片查看器：VFS `/Pictures` 图库 + 路径启动预览；URL 仅临时预览（不写入 VFS）。
  */
-export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
+export function ImageViewerApp() {
   const t = useTranslations('imageViewer')
   const tm = useTranslations('modal')
   const tNav = useTranslations('mobile')
@@ -294,8 +290,7 @@ export function ImageViewerApp({ embedded = false }: ImageViewerProps = {}) {
   return (
     <div
       className={cn(
-        embeddedAppShell(embedded, 'flex flex-col text-sm text-on-chrome bg-window font-pixel'),
-        !embedded && 'p-4',
+        embeddedAppShell('flex flex-col text-sm text-on-chrome bg-window font-pixel'),
       )}
     >
       <div className='shrink-0 flex flex-wrap items-center gap-1.5 px-2 py-1.5 border-b border-chrome-dark bg-chrome-hover/30 max-md:gap-2 max-md:py-2'>

@@ -9,7 +9,7 @@ import {
 import { DesktopWindow, type DesktopIconComponent } from './DesktopWindow'
 import { pushBuiltinWindow } from './registry'
 
-export type AppComponent = ComponentType<{ embedded?: boolean }>
+export type AppComponent = ComponentType
 
 /** 打开窗口时再动态 import 应用组件 */
 export type LoadAppFn = () => Promise<AppComponent>
@@ -79,13 +79,13 @@ export function createDeferredApp(load: LoadAppFn): DeferredApp {
     prefetch: () => {
       void ensure()
     },
-    component: function DeferredApp(props: { embedded?: boolean }) {
+    component: function DeferredApp() {
       // 预取已完成：同步渲染，跳过 Suspense，打开即显
-      if (resolved) return createElement(resolved, props)
+      if (resolved) return createElement(resolved)
       return createElement(
         Suspense,
         { fallback: createElement(AppChunkFallback) },
-        createElement(LazyComp, props),
+        createElement(LazyComp),
       )
     },
   }

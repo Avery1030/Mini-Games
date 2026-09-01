@@ -65,7 +65,7 @@ export abstract class DesktopWindow {
   abstract readonly defaultCoordinate: DesktopCoordinate
 
   /** 有 app 才能打开窗口；仅桌面图标时可省略 */
-  abstract readonly app?: ComponentType<{ embedded?: boolean }>
+  abstract readonly app?: ComponentType
 
   readonly width: number = 400
   readonly height: number = 320

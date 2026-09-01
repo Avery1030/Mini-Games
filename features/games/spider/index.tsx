@@ -1,1 +1,1 @@
-export { Spider, type SpiderProps } from './Spider'
+export { Spider } from './Spider'

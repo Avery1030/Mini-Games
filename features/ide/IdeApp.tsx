@@ -37,7 +37,6 @@ function readFormatOnSavePref(): boolean {
 }
 
 export type IdeAppProps = {
-  embedded?: boolean
   windowId?: string
   initialPath?: Nullable<string>
 }
@@ -46,7 +45,7 @@ function untitledName(t: (key: string) => string) {
   return t('untitled')
 }
 
-export function IdeApp({ embedded = false, windowId, initialPath = null }: IdeAppProps = {}) {
+export function IdeApp({ windowId, initialPath = null }: IdeAppProps = {}) {
   const t = useTranslations('ide')
   const tm = useTranslations('modal')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -419,7 +418,7 @@ export function IdeApp({ embedded = false, windowId, initialPath = null }: IdeAp
       ref={rootRef}
       data-vfs-drop='1'
       className={cn(
-        embeddedAppShell(embedded, 'relative flex flex-col text-sm text-on-chrome bg-window font-pixel min-h-0'),
+        embeddedAppShell('relative flex flex-col text-sm text-on-chrome bg-window font-pixel min-h-0'),
       )}
       onDragOver={(e) => {
         if (!isVfsFileDrag(e.dataTransfer)) return
