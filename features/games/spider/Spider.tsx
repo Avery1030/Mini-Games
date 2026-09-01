@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Button, Select, closeModal, confirmModal, openModal, toast } from '@/components/ui'
+import { Button, Select, closeModal, confirmModal, openModal, toast, type ButtonProps } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { winChromeSunken } from '@/lib/winChrome'
@@ -56,6 +56,7 @@ import {
 import { RecordsModalBody, WinRecordsBody } from './RecordsPanel'
 import { playShuffleSound } from './sound'
 import { COLS, DEAL_SIZE, DIFFICULTIES, isDifficulty, type Card, type SpiderState } from './types'
+import { useSpiderKeyboard } from './useSpiderKeyboard'
 
 export type SpiderProps = {
   embedded?: boolean
@@ -83,6 +84,19 @@ type PendingPointer = {
 }
 
 type Selection = { col: number; index: number }
+
+function ShortcutButton({
+  shortcut,
+  children,
+  ...props
+}: ButtonProps & { shortcut: string }) {
+  return (
+    <Button size='sm' className='px-2' aria-keyshortcuts={shortcut} {...props}>
+      {children}
+      <span className='font-normal text-muted'>({shortcut})</span>
+    </Button>
+  )
+}
 
 export function Spider({ embedded = false }: SpiderProps) {
   const t = useTranslations('spider')
@@ -535,6 +549,18 @@ export function Spider({ embedded = false }: SpiderProps) {
     })
   }, [finishAction, startBatch, t])
 
+  const openRecords = useCallback(() => {
+    closeModal(RECORDS_MODAL_ID)
+    openModal({
+      id: RECORDS_MODAL_ID,
+      title: t('recordsTitle'),
+      widthClassName: 'w-[min(380px,calc(100vw-2rem))]',
+      content: <RecordsModalBody initialDifficulty={difficulty} />,
+      dismissible: true,
+      showClose: true,
+    })
+  }, [difficulty, t])
+
   const undo = useCallback(() => {
     if (animating() || busy) return
     const stack = useSpiderStore.getState().undoStack
@@ -573,6 +599,14 @@ export function Spider({ embedded = false }: SpiderProps) {
     setSelected(null)
     startBatch(flights, applyPrev, { fallbackDuration: UNDO_CARD_MS })
   }, [busy, setGameState, startBatch])
+
+  useSpiderKeyboard({
+    enabled: hydrated && hasBoard,
+    onNewGame: () => void confirmRestart(),
+    onDeal: tryDeal,
+    onUndo: undo,
+    onRecords: openRecords,
+  })
 
   const toCanvasPoint = (e: React.PointerEvent | PointerEvent) => {
     const canvas = canvasRef.current
@@ -708,32 +742,27 @@ export function Spider({ embedded = false }: SpiderProps) {
       )}
     >
       <div className='flex min-w-0 shrink-0 flex-wrap items-center gap-1.5 border-b border-chrome-dark px-2 py-1.5'>
-        <Button size='sm' className='px-2' onClick={() => void confirmRestart()}>
+        <ShortcutButton shortcut='N' onClick={() => void confirmRestart()}>
           {t('newGame')}
-        </Button>
-        <Button size='sm' className='px-2' disabled={locked || !canDeal(state)} onClick={tryDeal}>
-          {t('deal')} ({dealsLeft})
-        </Button>
-        <Button size='sm' className='px-2' disabled={busy || state.won || undoStack.length === 0} onClick={undo}>
-          {t('undo')}
-        </Button>
-        <Button
-          size='sm'
-          className='px-2'
-          onClick={() => {
-            closeModal(RECORDS_MODAL_ID)
-            openModal({
-              id: RECORDS_MODAL_ID,
-              title: t('recordsTitle'),
-              widthClassName: 'w-[min(380px,calc(100vw-2rem))]',
-              content: <RecordsModalBody initialDifficulty={difficulty} />,
-              dismissible: true,
-              showClose: true,
-            })
-          }}
+        </ShortcutButton>
+        <ShortcutButton
+          shortcut='D'
+          disabled={locked || !canDeal(state)}
+          onClick={tryDeal}
         >
+          {t('deal')} ({dealsLeft})
+        </ShortcutButton>
+        <ShortcutButton
+          shortcut='Z'
+          disabled={busy || state.won || undoStack.length === 0}
+          aria-keyshortcuts='Z Control+Z Meta+Z'
+          onClick={undo}
+        >
+          {t('undo')}
+        </ShortcutButton>
+        <ShortcutButton shortcut='R' onClick={openRecords}>
           {t('records')}
-        </Button>
+        </ShortcutButton>
         <Select
           size='sm'
           className='w-[9rem] shrink-0'
