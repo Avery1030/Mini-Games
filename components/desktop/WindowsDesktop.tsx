@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { DesktopIconsLayer, useVisibleDesktopIcons } from './DesktopIconsLayer'
 import { DesktopWindowsLayer } from './DesktopWindowsLayer'
@@ -19,8 +19,9 @@ import { promptRenameDesktopItem, promptRenameVfsFile } from './promptRenameDesk
 import { FsDragLayer } from './FsDragLayer'
 import { buildDesktopContextMenu } from './buildDesktopContextMenu'
 import { useSettingsStore } from '@/store/settings'
-import { TRASH_PATH, getBasename, vfs } from '@/lib/vfs'
+import { TRASH_PATH, VFS_DRAG_MIME, VFS_PATHS, getBasename, isVfsError, parseVfsDragPaths, vfs } from '@/lib/vfs'
 import { isVfsDesktopFileId, useDesktopVfsStore } from '@/store/desktopVfs'
+import { useVfsStore } from '@/store/vfsStore'
 import { openVfsFile } from '@/lib/desktop/openVfsFile'
 import { renameDesktopVfsFile } from '@/lib/desktop/vfsFileActions'
 
@@ -38,8 +39,6 @@ export function WindowsDesktop() {
   const wallpaper3dEnabled = useSettingsStore((s) => s.wallpaper3dEnabled)
   const wallpaper3dPath = useSettingsStore((s) => s.wallpaper3dPath)
   const openWindow = useWindowStore((s) => s.openWindow)
-  const createFolder = useDesktopItemsStore((s) => s.createFolder)
-  const createTextDocument = useDesktopItemsStore((s) => s.createTextDocument)
   const renameItem = useDesktopItemsStore((s) => s.renameItem)
   const moveItemsToRecycleBin = useDesktopItemsStore((s) => s.moveItemsToRecycleBin)
   const emptyRecycleBin = useDesktopItemsStore((s) => s.emptyRecycleBin)
@@ -48,7 +47,20 @@ export function WindowsDesktop() {
   const desktopIcons = useVisibleDesktopIcons()
   const [contextMenu, setContextMenu] = useState<Nullable<ContextMenuState>>(null)
 
+  const corruptReset = useVfsStore((s) => s.corruptReset)
   const closeContextMenu = () => setContextMenu(null)
+
+  useEffect(() => {
+    void useVfsStore.getState().hydrate()
+  }, [])
+
+  useEffect(() => {
+    if (!corruptReset) return
+    void modal.alert({
+      title: tm('confirmTitle'),
+      message: td('vfsCorruptReset'),
+    }).then(() => useVfsStore.getState().clearCorruptFlag())
+  }, [corruptReset, td, tm])
 
   const handleArrangeIcons = (container: HTMLElement, align: ArrangeAlign) => {
     if (desktopIcons.length === 0) return
@@ -98,12 +110,31 @@ export function WindowsDesktop() {
   }
 
   const handleCreateTextDocument = async (coordinate: Nullable<ReturnType<typeof pointerToCoordinate>>) => {
-    const record = await createTextDocument({
-      title: td('newTextDocumentName'),
-      coordinate: coordinate ?? undefined,
-    })
-    if (!record) {
+    await handleCreateVfsOnDesktop('txt', td('newTextDocumentName'), coordinate)
+  }
+
+  const handleCreateVfsOnDesktop = async (
+    kind: 'folder' | 'txt' | 'wps' | 'et',
+    defaultName: string,
+    coordinate: Nullable<ReturnType<typeof pointerToCoordinate>>,
+  ) => {
+    const store = useVfsStore.getState()
+    if (!store.hydrated) await store.hydrate()
+    const desktop = store.getByPath(VFS_PATHS.desktop)
+    if (!desktop) {
       toast.error(td('createTextDocumentFail'))
+      return
+    }
+    try {
+      const created = await store.createItem(kind === 'folder' ? 'folder' : 'file', desktop.id, {
+        name: defaultName,
+        extension: kind === 'folder' ? undefined : kind === 'txt' ? 'txt' : kind,
+      })
+      if (coordinate) {
+        useDesktopStore.getState().ensureCoordinate(created.path, coordinate)
+      }
+    } catch (err) {
+      toast.error(isVfsError(err) && err.code === 'ExistError' ? td('renameDuplicateVfs') : td('createTextDocumentFail'))
     }
   }
 
@@ -152,7 +183,7 @@ export function WindowsDesktop() {
         canOpen,
         hasUserSelection: selectedUserIds.length > 0,
         singleUserSelection: selectedUserIds.length === 1,
-        canPaste: Boolean(sel.clipboard?.ids.length),
+        canPaste: Boolean(sel.clipboard?.ids.length) || Boolean(useVfsStore.getState().clipboard?.ids.length),
         deletedCount,
         clickCoordinate,
         desktopEl,
@@ -166,6 +197,8 @@ export function WindowsDesktop() {
           new: td('new'),
           newFolder: td('newFolder'),
           newTextDocument: td('newTextDocument'),
+          newWriter: td('newWriter'),
+          newSheet: td('newSheet'),
           emptyRecycleBin: td('emptyRecycleBin'),
           arrangeIcons: td('arrangeIcons'),
           arrangeLeft: td('arrangeLeft'),
@@ -238,21 +271,31 @@ export function WindowsDesktop() {
             useDesktopSelectionStore.getState().clear()
           },
           paste: () => {
-            void useDesktopSelectionStore
-              .getState()
-              .pasteInto(null)
-              .then((ids) => {
-                if (ids.length === 0) toast.warning(td('pasteFail'))
-              })
+            void (async () => {
+              const vfsClip = useVfsStore.getState().clipboard
+              if (vfsClip?.ids.length) {
+                const desktop = useVfsStore.getState().getByPath(VFS_PATHS.desktop)
+                if (desktop) {
+                  const created = await useVfsStore.getState().pasteItem(desktop.id)
+                  if (created.length === 0) toast.warning(td('pasteFail'))
+                  return
+                }
+              }
+              const ids = await useDesktopSelectionStore.getState().pasteInto(null)
+              if (ids.length === 0) toast.warning(td('pasteFail'))
+            })()
           },
           createFolder: () => {
-            createFolder({
-              title: td('newFolderName'),
-              coordinate: clickCoordinate,
-            })
+            void handleCreateVfsOnDesktop('folder', td('newFolderName'), clickCoordinate)
           },
           createTextDocument: () => {
             void handleCreateTextDocument(clickCoordinate)
+          },
+          createWriter: () => {
+            void handleCreateVfsOnDesktop('wps', td('newWriterName'), clickCoordinate)
+          },
+          createSheet: () => {
+            void handleCreateVfsOnDesktop('et', td('newSheetName'), clickCoordinate)
           },
           emptyRecycleBin: () => {
             void handleEmptyRecycleBin()
@@ -264,7 +307,8 @@ export function WindowsDesktop() {
             handleArrangeIcons(desktopEl, 'right')
           },
           refresh: () => {
-            window.location.reload()
+            void useVfsStore.getState().refresh()
+            void useDesktopVfsStore.getState().refresh()
           },
         },
       }),
@@ -276,7 +320,41 @@ export function WindowsDesktop() {
       className='flex h-[100dvh] w-full flex-col overflow-hidden select-none font-pixel text-on-desktop'
       style={desktopBgStyle}
     >
-      <div className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem]' onContextMenu={handleDesktopContextMenu}>
+      <div
+        className='flex-1 relative overflow-hidden p-[2rem_2rem_.5rem]'
+        onContextMenu={handleDesktopContextMenu}
+        onDragOver={(e) => {
+          if (![VFS_DRAG_MIME, 'text/plain'].some((t) => e.dataTransfer.types.includes(t))) return
+          e.preventDefault()
+          e.dataTransfer.dropEffect = e.ctrlKey || e.altKey ? 'copy' : 'move'
+        }}
+        onDrop={(e) => {
+          const raw = e.dataTransfer.getData(VFS_DRAG_MIME) || e.dataTransfer.getData('text/plain')
+          const paths = parseVfsDragPaths(raw)
+          if (paths.length === 0) return
+          e.preventDefault()
+          const copy = e.ctrlKey || e.altKey
+          const desktop = useVfsStore.getState().getByPath(VFS_PATHS.desktop)
+          if (!desktop) return
+          void (async () => {
+            for (const path of paths) {
+              if (path.startsWith(`${VFS_PATHS.desktop}/`) && !copy) continue
+              const src = Object.values(useVfsStore.getState().items).find((it) => it.path === path)
+              if (!src) continue
+              try {
+                if (copy) {
+                  useVfsStore.getState().copyItem([src.id])
+                  await useVfsStore.getState().pasteItem(desktop.id)
+                } else {
+                  await useVfsStore.getState().moveItem(src.id, desktop.id)
+                }
+              } catch {
+                toast.warning(td('cannotMoveVfsIntoFolder'))
+              }
+            }
+          })()
+        }}
+      >
         {wallpaper3dEnabled && wallpaper3dPath ? <Desktop3DWallpaper path={wallpaper3dPath} enabled /> : null}
         <DesktopIconsLayer />
         <DesktopWindowsLayer />

@@ -69,6 +69,13 @@ export {
   findOfficeWindowByFile,
 } from './officeWindows'
 export {
+  ExplorerAppWindow,
+  spawnExplorerWindow,
+  getExplorerWindow,
+  restorePersistedExplorerSessions,
+  ensureExplorerWindow,
+} from './explorerWindows'
+export {
   prefetchApps,
   scheduleIdlePrefetchBuiltinApps,
 } from './prefetchApps'

@@ -25,6 +25,8 @@ export type DesktopContextMenuCtx = {
     new: string
     newFolder: string
     newTextDocument: string
+    newWriter: string
+    newSheet: string
     emptyRecycleBin: string
     arrangeIcons: string
     arrangeLeft: string
@@ -40,6 +42,8 @@ export type DesktopContextMenuCtx = {
     paste: () => void
     createFolder: () => void
     createTextDocument: () => void
+    createWriter: () => void
+    createSheet: () => void
     emptyRecycleBin: () => void
     arrangeLeft: () => void
     arrangeRight: () => void
@@ -108,6 +112,16 @@ const DESKTOP_MENU_CONFIG: MenuItemConfig<DesktopContextMenuCtx>[] = [
         id: 'newTextDocument',
         label: (ctx) => ctx.labels.newTextDocument,
         onSelect: (ctx) => ctx.actions.createTextDocument(),
+      },
+      {
+        id: 'newWriter',
+        label: (ctx) => ctx.labels.newWriter,
+        onSelect: (ctx) => ctx.actions.createWriter(),
+      },
+      {
+        id: 'newSheet',
+        label: (ctx) => ctx.labels.newSheet,
+        onSelect: (ctx) => ctx.actions.createSheet(),
       },
     ],
   },

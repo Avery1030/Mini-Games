@@ -32,6 +32,10 @@ export const STORAGE_KEYS = {
   ideSessions: 'desktop-ide-sessions',
   /** 运行时 WPS 窗口会话（刷新后恢复） */
   officeSessions: 'desktop-office-sessions',
+  /** 运行时资源管理器窗口会话 */
+  explorerSessions: 'desktop-explorer-sessions',
+  /** VFS 目录快照（zustand persist；文件内容仍在 IndexedDB） */
+  vfsCatalog: 'desktop-vfs-catalog',
   /** Win95 Writer / Sheet 虚拟文件柜（zustand persist） */
   office: 'desktop-office',
 } as const

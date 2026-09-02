@@ -11,7 +11,9 @@ import { findOfficeWindowByFile, getOfficeWindow } from '@/lib/desktop/window/of
 import { useOfficeStore } from '../store'
 import { pickOfficeFile } from '../fileDialog'
 import { EMPTY_SHEET, SHEET_COLS, SHEET_ROWS, colLetter, cellKey, type SheetBody } from '../schema'
-import { fetchOfficeFile, saveSheetAtPath, updateSheetFile } from '../vfsApi'
+import { fetchOfficeByPath, fetchOfficeFile, saveSheetAtPath, updateSheetFile } from '../vfsApi'
+import { officeKindFromPath } from '../fileTypes'
+import { preventVfsFileDrag, vfsPathsFromDrag } from '@/lib/desktop/vfsDrop'
 import { evaluateSheet, selectionStats } from './formula'
 
 type CellPos = { col: number; row: number }
@@ -378,7 +380,25 @@ export function SheetApp({ windowId, initialFileId }: Props = {}) {
       : `${cellKey(sel.c0, sel.r0)}:${cellKey(sel.c1, sel.r1)}`
 
   return (
-    <div className={cn(embeddedAppShell('flex flex-col bg-window text-on-chrome font-pixel'))}>
+    <div
+      className={cn(embeddedAppShell('flex flex-col bg-window text-on-chrome font-pixel'))}
+      onDragOver={preventVfsFileDrag}
+      onDrop={(e) => {
+        e.preventDefault()
+        const path = vfsPathsFromDrag(e).find((p) => officeKindFromPath(p) === 'sheet')
+        if (!path) return
+        void (async () => {
+          if (!(await confirmDiscard())) return
+          try {
+            const file = await fetchOfficeByPath(path)
+            if (!file.sheet) throw new Error('not sheet')
+            applyFile(file.id, file.name, file.sheet)
+          } catch {
+            toast.error(t('loadFail'))
+          }
+        })()
+      }}
+    >
       <div className='shrink-0 flex flex-wrap items-center gap-1 px-2 py-1.5 border-b border-chrome-dark bg-chrome'>
         <Button size='sm' onClick={() => void onNew()}>
           {t('new')}

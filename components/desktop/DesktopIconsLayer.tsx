@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useShallow } from 'zustand/react/shallow'
-import { File, FileCode, FileText, Image as ImageIcon, ScrollText, Table2 } from 'lucide-react'
+import { File, FileCode, FileText, Folder, Image as ImageIcon, ScrollText, Table2 } from 'lucide-react'
 import { DesktopIcon, ICON_VIS } from './DesktopIcon'
 import { DesktopDragGhost } from './DesktopDragGhost'
 import { useDesktopApps, useDesktopHydrated, useDesktopIconDrag, useMarqueeSelect, MarqueeOverlay } from '@/hooks/desktop'
@@ -28,6 +28,7 @@ import { getExtension, vfs, type FileNode } from '@/lib/vfs'
 import { isVfsDesktopFileId, useDesktopVfsStore } from '@/store/desktopVfs'
 
 function vfsFileIcon(node: FileNode) {
+  if (node.isDirectory) return Folder
   if (isImagePath(node.path)) return ImageIcon
   const office = officeKindFromPath(node.path)
   if (office === 'writer') return ScrollText

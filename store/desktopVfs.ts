@@ -1,7 +1,6 @@
 import { create } from 'zustand'
-import { getExtension, vfs, type FileNode } from '@/lib/vfs'
-
-const DESKTOP_DIR = '/Desktop'
+import { getExtension, subscribeVfsChange, vfs, type FileNode } from '@/lib/vfs'
+import { VFS_PATHS } from '@/lib/vfs/catalog'
 
 type DesktopVfsState = {
   files: FileNode[]
@@ -10,8 +9,7 @@ type DesktopVfsState = {
 }
 
 /**
- * 桌面 VFS 文件列表（`/Desktop` 下非目录项）。
- * 图标层订阅此 store，与 desktopItems 并存。
+ * 桌面 = `/Desktop` 目录内容（文件 + 文件夹）。
  */
 export const useDesktopVfsStore = create<DesktopVfsState>((set) => ({
   files: [],
@@ -20,10 +18,11 @@ export const useDesktopVfsStore = create<DesktopVfsState>((set) => ({
   refresh: async () => {
     set({ loading: true })
     try {
-      const children = await vfs.readDir(DESKTOP_DIR)
-      const files = children
-        .filter((n) => !n.isDirectory)
-        .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+      const children = await vfs.readDir(VFS_PATHS.desktop)
+      const files = [...children].sort((a, b) => {
+        if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1
+        return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+      })
       set({ files, loading: false })
     } catch {
       set({ files: [], loading: false })
@@ -31,8 +30,14 @@ export const useDesktopVfsStore = create<DesktopVfsState>((set) => ({
   },
 }))
 
+if (typeof window !== 'undefined') {
+  subscribeVfsChange(() => {
+    void useDesktopVfsStore.getState().refresh()
+  })
+}
+
 export function isVfsDesktopFileId(id: string): boolean {
-  return id.startsWith('/Desktop/')
+  return id.startsWith(`${VFS_PATHS.desktop}/`)
 }
 
 export function getVfsDesktopFileExt(path: string): string {

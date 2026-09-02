@@ -8,6 +8,7 @@ import {
   registerWindowController,
   restorePersistedIdeSessions,
   restorePersistedOfficeSessions,
+  restorePersistedExplorerSessions,
 } from '@/lib/desktop/window'
 import { STORAGE_KEYS, appStorage } from '@/lib/storage'
 
@@ -137,6 +138,7 @@ function normalizeBounds(raw: unknown): Nullable<WindowBounds> {
 function mergeWindows(saved?: Partial<Record<DesktopAppId, Partial<DesktopWindowRuntime>>>): WindowsMap {
   restorePersistedIdeSessions()
   restorePersistedOfficeSessions()
+  restorePersistedExplorerSessions()
   const defaults = createDefaultWindows()
   const known = new Set(Object.keys(defaults))
   const ids = new Set<string>([...known])
@@ -147,7 +149,8 @@ function mergeWindows(saved?: Partial<Record<DesktopAppId, Partial<DesktopWindow
       id.startsWith('text_') ||
       id.startsWith('ide_') ||
       id.startsWith('wri_') ||
-      id.startsWith('sht_')
+      id.startsWith('sht_') ||
+      id.startsWith('exp_')
     ) {
       ids.add(id)
     }

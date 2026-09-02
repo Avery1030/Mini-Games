@@ -1,4 +1,4 @@
-import { getExtension, vfs } from '@/lib/vfs'
+import { getExtension, parseExeContent, vfs } from '@/lib/vfs'
 import { isImagePath } from '@/features/image-viewer/api'
 import { isIdeExplorerOpenPath } from '@/features/ide/languages'
 import { useImageViewerStore } from '@/features/image-viewer/store'
@@ -8,14 +8,23 @@ import { officeKindFromPath } from '@/features/office/fileTypes'
 import '@/features/office/store'
 import { openIdeFile } from '@/lib/desktop/window/ideWindows'
 import { openOfficeFile } from '@/lib/desktop/window/officeWindows'
+import { resolveOpenTarget } from '@/lib/desktop/appRegister'
+import { spawnExplorerWindow } from '@/lib/desktop/window/explorerWindows'
 
-export type OpenVfsFileKind = 'image' | 'text' | 'code' | 'office' | 'unsupported'
+export type OpenVfsFileKind = 'image' | 'text' | 'code' | 'office' | 'exe' | 'folder' | 'unsupported'
 
 /**
- * 按 VFS 路径打开对应应用（图片 → 查看器，代码 → IDE，txt → 记事本，wps/et → 办公）。
- * 不放在 lib/vfs 桶导出中，避免 store/window ↔ registry 循环依赖。
+ * 按应用注册表打开 VFS 路径（文件夹 → 资源管理器）。
  */
 export async function openVfsFile(filePath: string): Promise<OpenVfsFileKind> {
+  try {
+    await vfs.readDir(filePath)
+    spawnExplorerWindow({ path: filePath })?.open()
+    return 'folder'
+  } catch {
+    /* 按文件打开 */
+  }
+
   if (isImagePath(filePath)) {
     useImageViewerStore.getState().openFile(filePath)
     return 'image'
@@ -26,29 +35,35 @@ export async function openVfsFile(filePath: string): Promise<OpenVfsFileKind> {
     return 'code'
   }
 
-  const officeKind = officeKindFromPath(filePath)
-  if (officeKind) {
-    try {
-      const { node } = await vfs.readFile(filePath)
-      openOfficeFile(officeKind, node.id, node.name)
-      return 'office'
-    } catch {
-      return 'unsupported'
-    }
-  }
+  try {
+    const { content, node } = await vfs.readFile(filePath)
+    const target = resolveOpenTarget(filePath, { isDirectory: false, mimeType: node.mimeType })
 
-  const ext = getExtension(filePath).toLowerCase()
-  if (ext === 'txt') {
-    try {
-      const { node } = await vfs.readFile(filePath)
+    if (target.kind === 'writer' || target.kind === 'sheet') {
+      const kind = officeKindFromPath(filePath)
+      if (!kind) return 'unsupported'
+      openOfficeFile(kind, node.id, node.name)
+      return 'office'
+    }
+
+    if (target.kind === 'notepad' || getExtension(filePath).toLowerCase() === 'txt') {
       useNotepadStore.getState().setLastNoteId(node.id)
       requestOpenNote(node.id)
       const { useWindowStore } = await import('@/store/window')
       useWindowStore.getState().openWindow('notepad')
       return 'text'
-    } catch {
-      return 'unsupported'
     }
+
+    if (target.kind === 'exe') {
+      const raw = typeof content === 'string' ? content : ''
+      const parsed = parseExeContent(raw)
+      if (!parsed) return 'unsupported'
+      const { useWindowStore } = await import('@/store/window')
+      useWindowStore.getState().openWindow(parsed.appId)
+      return 'exe'
+    }
+  } catch {
+    return 'unsupported'
   }
 
   return 'unsupported'

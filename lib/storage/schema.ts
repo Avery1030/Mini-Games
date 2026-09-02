@@ -125,6 +125,16 @@ export type OfficeSessionsPersistState = {
   sessions: OfficeSessionWindowPersist[]
 }
 
+export type ExplorerSessionPersist = {
+  id: string
+  path: string
+  title: string
+}
+
+export type ExplorerSessionsPersistState = {
+  sessions: ExplorerSessionPersist[]
+}
+
 export type OfficeKindPersist = 'writer' | 'sheet'
 
 export type OfficeFilePersist = {
@@ -188,6 +198,8 @@ export type StorageSchema = {
   [STORAGE_KEYS.desktopItems]: ZustandPersistEnvelope<DesktopItemsPersistState>
   [STORAGE_KEYS.ideSessions]: IdeSessionsPersistState
   [STORAGE_KEYS.officeSessions]: OfficeSessionsPersistState
+  [STORAGE_KEYS.explorerSessions]: ExplorerSessionsPersistState
+  [STORAGE_KEYS.vfsCatalog]: ZustandPersistEnvelope<{ items: Record<string, unknown> }>
   [STORAGE_KEYS.office]: ZustandPersistEnvelope<OfficePersistState>
 }
 

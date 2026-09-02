@@ -30,6 +30,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { registerBuiltinApps } from './defineApp'
+import { spawnExplorerWindow } from './explorerWindows'
 import { spawnIdeEditor } from './ideWindows'
 import { spawnOfficeWindow } from './officeWindows'
 import { BuiltinAppId } from '@/config/desktop'
@@ -239,9 +240,13 @@ registerBuiltinApps([
     id: BuiltinAppId.FileExplorer,
     icon: HardDrive,
     defaultCoordinate: [2, 5],
-    width: 560,
-    height: 420,
+    width: 720,
+    height: 480,
     loadApp: () => import('@/features/file-explorer').then((m) => m.FileExplorerApp),
+    beforeOpen: () => {
+      spawnExplorerWindow({ path: '/' })?.open()
+      return false
+    },
   },
   {
     id: BuiltinAppId.Writer,

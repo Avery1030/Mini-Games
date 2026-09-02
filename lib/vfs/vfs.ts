@@ -1,4 +1,6 @@
 import { IdbAdapter, type StorageAdapter } from './adapter'
+import { VFS_PATHS } from './catalog'
+import { emitVfsChange } from './events'
 import { VfsError } from './errors'
 import {
   getBasename,
@@ -11,17 +13,19 @@ import {
 import type { FileContent, FileNode, StoredFileNode } from './types'
 
 /** 系统隐藏回收站目录（bootstrap 自动创建） */
-export const TRASH_PATH = '/Trash'
+export const TRASH_PATH = VFS_PATHS.trash
 
 const BOOTSTRAP_DIRS = [
   '/',
-  '/Desktop',
-  '/Documents',
+  VFS_PATHS.desktop,
+  VFS_PATHS.games,
+  VFS_PATHS.documents,
   '/Documents/Chats',
   '/Pictures',
   '/Pictures/Drawings',
   '/Wallpapers',
   '/Wallpapers/3d',
+  VFS_PATHS.myComputer,
   TRASH_PATH,
 ] as const
 
@@ -111,6 +115,11 @@ export class VFS {
       }
     }
     this.bootstrapped = true
+    emitVfsChange()
+  }
+
+  private notify(): void {
+    emitVfsChange()
   }
 
   private async requireMeta(path: string): Promise<StoredFileNode> {
@@ -271,6 +280,7 @@ export class VFS {
 
     await this.adapter.putContent(node.id, content)
     await this.adapter.putMeta(node)
+    this.notify()
     return toPublicNode(node)
   }
 
@@ -285,11 +295,13 @@ export class VFS {
       throw new VfsError('PermissionError', 'Cannot permanently delete the Trash directory itself')
     }
     await this.removeNodeRecursive(normalized)
+    this.notify()
   }
 
   async renameFile(oldPath: string, newPath: string): Promise<FileNode> {
     await this.ensureBootstrapped()
     const moved = await this.moveNodeTree(normalizePath(oldPath), normalizePath(newPath))
+    this.notify()
     return toPublicNode(moved)
   }
 
@@ -324,6 +336,7 @@ export class VFS {
       }
       await this.adapter.putContent(node.id, content)
       await this.adapter.putMeta(node)
+      this.notify()
       return toPublicNode(node)
     }
 
@@ -359,12 +372,14 @@ export class VFS {
     }
 
     if (!rootCopy) throw new VfsError('FileNotFound', `Copy failed: ${normalizedDest}`)
+    this.notify()
     return toPublicNode(rootCopy)
   }
 
   async moveFile(srcPath: string, destPath: string): Promise<FileNode> {
     await this.ensureBootstrapped()
     const moved = await this.moveNodeTree(normalizePath(srcPath), normalizePath(destPath))
+    this.notify()
     return toPublicNode(moved)
   }
 
@@ -392,6 +407,7 @@ export class VFS {
 
     const node = makeDirNode(normalized)
     await this.adapter.putMeta(node)
+    this.notify()
     return toPublicNode(node)
   }
 
@@ -439,6 +455,7 @@ export class VFS {
       originalPath: normalized,
       trashedAt: Date.now(),
     })
+    this.notify()
   }
 
   /**
@@ -472,6 +489,7 @@ export class VFS {
     const moved = await this.moveFile(normalized, destPath)
     const meta = await this.requireMeta(moved.path)
     await this.adapter.putMeta(stripTrashMeta(meta))
+    this.notify()
   }
 
   /** 永久删除回收站内全部内容 */
@@ -481,6 +499,14 @@ export class VFS {
     for (const child of children) {
       await this.removeFile(child.path)
     }
+    this.notify()
+  }
+
+  /** 列出全部节点（含 /Trash），供 vfsStore 建树 */
+  async listAll(): Promise<FileNode[]> {
+    await this.ensureBootstrapped()
+    const all = await this.adapter.listAllMeta()
+    return all.map(toPublicNode)
   }
 
   async search(keyword: string): Promise<FileNode[]> {

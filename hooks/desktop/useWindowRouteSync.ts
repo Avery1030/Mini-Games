@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import type { DesktopAppId, DesktopWindowRuntime } from '@/config/desktop'
-import { ensureIdeEditorWindow, ensureOfficeWindow, getDesktopWindow } from '@/lib/desktop/window'
+import { ensureIdeEditorWindow, ensureOfficeWindow, ensureExplorerWindow, getDesktopWindow } from '@/lib/desktop/window'
 import { parseWindowPath, setWindowUrl } from '@/lib/desktop/windowRoute'
 import { useDesktopHydrated } from '@/hooks/desktop/useDesktopApps'
 import { useWindowStore } from '@/store/window'
@@ -49,6 +49,7 @@ export function useWindowRouteSync(enabled: boolean): void {
       if (route.type === 'window') {
         if (route.id.startsWith('ide_')) ensureIdeEditorWindow(route.id)
         if (route.id.startsWith('wri_') || route.id.startsWith('sht_')) ensureOfficeWindow(route.id)
+        if (route.id.startsWith('exp_')) ensureExplorerWindow(route.id)
         const deskWin = getDesktopWindow(route.id)
         if (deskWin?.app) {
           useWindowStore.getState().openWindow(route.id)
@@ -91,6 +92,7 @@ export function useWindowRouteSync(enabled: boolean): void {
         if (route.type === 'window') {
           if (route.id.startsWith('ide_')) ensureIdeEditorWindow(route.id)
         if (route.id.startsWith('wri_') || route.id.startsWith('sht_')) ensureOfficeWindow(route.id)
+        if (route.id.startsWith('exp_')) ensureExplorerWindow(route.id)
           const deskWin = getDesktopWindow(route.id)
           if (deskWin?.app) {
             useWindowStore.getState().openWindow(route.id)

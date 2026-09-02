@@ -11,7 +11,9 @@ import { findOfficeWindowByFile, getOfficeWindow } from '@/lib/desktop/window/of
 import { useOfficeStore } from '../store'
 import { pickOfficeFile } from '../fileDialog'
 import { EMPTY_WRITER } from '../schema'
-import { fetchOfficeFile, saveWriterAtPath, updateWriterFile } from '../vfsApi'
+import { fetchOfficeByPath, fetchOfficeFile, saveWriterAtPath, updateWriterFile } from '../vfsApi'
+import { officeKindFromPath } from '../fileTypes'
+import { preventVfsFileDrag, vfsPathsFromDrag } from '@/lib/desktop/vfsDrop'
 import { htmlToPlainText, sanitizeWriterHtml } from './sanitize'
 import { exportWriterDocx, exportWriterPdf, exportWriterTxt } from './exportDoc'
 import { WriterToolbar, type WriterAlign, type WriterCommand, type WriterFormat } from './WriterToolbar'
@@ -327,7 +329,24 @@ export function WriterApp({ windowId, initialFileId }: Props = {}) {
   })
 
   return (
-    <div className={cn(embeddedAppShell('flex flex-col bg-window text-on-chrome font-pixel'))}>
+    <div
+      className={cn(embeddedAppShell('flex flex-col bg-window text-on-chrome font-pixel'))}
+      onDragOver={preventVfsFileDrag}
+      onDrop={(e) => {
+        e.preventDefault()
+        const path = vfsPathsFromDrag(e).find((p) => officeKindFromPath(p) === 'writer')
+        if (!path) return
+        void (async () => {
+          if (!(await confirmDiscard())) return
+          try {
+            const file = await fetchOfficeByPath(path)
+            applyFile(file.id, file.name, file.writer?.html ?? EMPTY_WRITER.html)
+          } catch {
+            toast.error(t('loadFail'))
+          }
+        })()
+      }}
+    >
       <WriterToolbar
         format={format}
         exporting={exporting}

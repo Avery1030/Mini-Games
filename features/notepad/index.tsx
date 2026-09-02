@@ -12,6 +12,8 @@ import { NoteEditor } from './NoteEditor'
 import { NoteSidebar } from './NoteSidebar'
 import type { NoteMeta } from './types'
 import { subscribeOpenNote, takePendingOpenNote } from './pendingOpen'
+import { getExtension, vfs } from '@/lib/vfs'
+import { preventVfsFileDrag, vfsPathsFromDrag } from '@/lib/desktop/vfsDrop'
 
 export function NotepadApp() {
   const t = useTranslations('notepad')
@@ -209,6 +211,22 @@ export function NotepadApp() {
       className={cn(
         embeddedAppShell('flex flex-col text-sm text-on-chrome bg-window font-pixel'),
       )}
+      onDragOver={preventVfsFileDrag}
+      onDrop={(e) => {
+        e.preventDefault()
+        const path = vfsPathsFromDrag(e).find((p) => getExtension(p).toLowerCase() === 'txt')
+        if (!path) return
+        void (async () => {
+          try {
+            const { content, node } = await vfs.readFile(path)
+            if (typeof content !== 'string') return
+            applyNote({ id: node.id, title: node.name.replace(/\.txt$/i, ''), content })
+            await refreshList()
+          } catch {
+            toast.error(t('loadFail'))
+          }
+        })()
+      }}
     >
       <div className={cn('flex-1 min-h-0 flex p-3', isMobile && 'p-0')}>
         <MasterDetail
