@@ -6,11 +6,14 @@ import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { Button, Input, modal, toast } from '@/components/ui'
 import { winChrome, winChromePressed, winChromeSunken } from '@/lib/winChrome'
-import { useWindowStore } from '@/store/window'
+import { useMetaHotkeys } from '@/hooks/useMetaHotkeys'
+import { useSilentAutoSave } from '@/hooks/useSilentAutoSave'
+import { useWindowActive } from '@/hooks/desktop/useWindowActive'
 import { findOfficeWindowByFile, getOfficeWindow } from '@/lib/desktop/window/officeWindows'
 import { useOfficeStore } from '../store'
 import { pickOfficeFile } from '../fileDialog'
 import { EMPTY_SHEET, SHEET_COLS, SHEET_ROWS, colLetter, cellKey, type SheetBody } from '../schema'
+import { OFFICE_AUTO_SAVE_MS } from '../constants'
 import { fetchOfficeByPath, fetchOfficeFile, saveSheetAtPath, updateSheetFile } from '../vfsApi'
 import { officeKindFromPath } from '../fileTypes'
 import { preventVfsFileDrag, vfsPathsFromDrag } from '@/lib/desktop/vfsDrop'
@@ -67,10 +70,7 @@ export function SheetApp({ windowId, initialFileId }: Props = {}) {
   const lastSheetId = useOfficeStore((s) => s.lastSheetId)
   const setLastOpened = useOfficeStore((s) => s.setLastOpened)
   const hostId = windowId ?? 'sheet'
-  const isActive = useWindowStore((s) => {
-    const w = s.windows[hostId]
-    return Boolean(w?.isOpen && w.active && !w.minimized)
-  })
+  const isActive = useWindowActive(hostId)
 
   const savedRef = useRef('')
   const dirtyRef = useRef(false)
@@ -302,33 +302,20 @@ export function SheetApp({ windowId, initialFileId }: Props = {}) {
     else void onSaveAs()
   }
 
-  useEffect(() => {
-    if (!fileId || !dirty) return
-    const timer = window.setTimeout(() => {
+  useSilentAutoSave(
+    Boolean(fileId && dirty),
+    OFFICE_AUTO_SAVE_MS,
+    () => {
       const id = fileIdRef.current
       if (id && dirtyRef.current) void persistExisting(id, undefined, true)
-    }, 30_000)
-    return () => window.clearTimeout(timer)
-  }, [dirty, fileId, persistExisting, snapshot])
+    },
+    [dirty, fileId, persistExisting, snapshot],
+  )
 
-  useEffect(() => {
-    if (!isActive) return
-    const onKey = (e: KeyboardEvent) => {
-      if (!(e.metaKey || e.ctrlKey)) return
-      const key = e.key.toLowerCase()
-      if (key === 's') {
-        e.preventDefault()
-        onSave()
-      } else if (key === 'n') {
-        e.preventDefault()
-        void onNew()
-      } else if (key === 'o') {
-        e.preventDefault()
-        void onOpen()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+  useMetaHotkeys(isActive, {
+    s: () => onSave(),
+    n: () => void onNew(),
+    o: () => void onOpen(),
   })
 
   useEffect(() => {

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { IMAGE_OPEN_EXTS, WRITER_EXT, SHEET_EXT } from '@/config/fileOpen'
 import { getExtension } from './path-utils'
 import type { FileNode } from './types'
 
@@ -113,7 +114,7 @@ export function encodeExeContent(appId: string): string {
   return JSON.stringify({ appId })
 }
 
-const IMAGE_EXT = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'])
+const IMAGE_EXT = new Set<string>(IMAGE_OPEN_EXTS)
 const CODE_EXT = new Set(['html', 'htm', 'css', 'js', 'ts', 'tsx', 'jsx', 'json'])
 
 export function iconForPath(path: string, isDirectory: boolean, executable = false): VfsIconKey {
@@ -127,8 +128,8 @@ export function iconForPath(path: string, isDirectory: boolean, executable = fal
   }
   if (executable) return 'exe'
   const ext = getExtension(path).toLowerCase()
-  if (ext === 'wps') return 'wps'
-  if (ext === 'et') return 'et'
+  if (ext === WRITER_EXT) return 'wps'
+  if (ext === SHEET_EXT) return 'et'
   if (ext === 'txt') return 'txt'
   if (ext === 'exe') return 'exe'
   if (IMAGE_EXT.has(ext)) return 'image'

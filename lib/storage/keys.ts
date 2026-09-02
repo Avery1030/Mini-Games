@@ -38,6 +38,10 @@ export const STORAGE_KEYS = {
   vfsCatalog: 'desktop-vfs-catalog',
   /** Win95 Writer / Sheet 虚拟文件柜（zustand persist） */
   office: 'desktop-office',
+  /** 合成大西瓜最高分（原始字符串数字） */
+  suikaBest: 'suika-best-score',
+  /** IDE 保存时格式化（'1' | '0'） */
+  ideFormatOnSave: 'ide:formatOnSave',
 } as const
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS]

@@ -1,3 +1,4 @@
+import { readBest, writeBest } from './bestScore'
 import { getFruit, randomDropLevel, type FruitLevel } from './fruits'
 import {
   applyGravityAndIntegrate,
@@ -41,28 +42,8 @@ export type SuikaSnapshot = {
   watermelonCount: number
 }
 
-const BEST_KEY = 'suika-best-score'
 const SUBSTEPS = 4
 const DROP_COOLDOWN = 0.28
-
-function readBest(): number {
-  if (typeof window === 'undefined') return 0
-  try {
-    const n = Number(window.localStorage.getItem(BEST_KEY) || 0)
-    return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0
-  } catch {
-    return 0
-  }
-}
-
-function writeBest(score: number): void {
-  if (typeof window === 'undefined') return
-  try {
-    window.localStorage.setItem(BEST_KEY, String(score))
-  } catch {
-    /* ignore */
-  }
-}
 
 /**
  * 合成大西瓜引擎。

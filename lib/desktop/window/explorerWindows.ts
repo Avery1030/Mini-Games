@@ -1,6 +1,7 @@
 import { HardDrive } from 'lucide-react'
 import type { ComponentType } from 'react'
 import type { DesktopAppId, DesktopCoordinate } from '@/config/desktop'
+import { createWindowIdSuffix } from '@/lib/id'
 import { STORAGE_KEYS, appStorage } from '@/lib/storage'
 import { DesktopWindow } from './DesktopWindow'
 import { createDeferredApp, type DeferredApp } from './defineApp'
@@ -21,11 +22,7 @@ export type ExplorerSessionPersist = {
 }
 
 function nextId(): DesktopAppId {
-  const rand =
-    typeof crypto !== 'undefined' && 'randomUUID' in crypto
-      ? crypto.randomUUID().replace(/-/g, '').slice(0, 8)
-      : `${Date.now().toString(36)}`
-  return `exp_${rand}`
+  return `exp_${createWindowIdSuffix()}`
 }
 
 function isExplorerWindow(w: DesktopWindow): w is ExplorerAppWindow {

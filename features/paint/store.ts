@@ -1,8 +1,9 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { STORAGE_KEYS, appStorage } from '@/lib/storage'
+import { PaintPersistSchema, type PaintTool } from './schema'
 
-export type PaintTool = 'brush' | 'eraser' | 'line' | 'rect' | 'ellipse'
+export type { PaintTool }
 
 interface PaintState {
   lastDrawingId: Nullable<string>
@@ -41,6 +42,17 @@ export const usePaintStore = create<PaintStore>()(
         color: s.color,
         brushSize: s.brushSize,
       }),
+      merge: (persisted, current) => {
+        const parsed = PaintPersistSchema.safeParse(persisted)
+        if (!parsed.success) return current
+        return {
+          ...current,
+          ...(parsed.data.lastDrawingId !== undefined ? { lastDrawingId: parsed.data.lastDrawingId } : {}),
+          ...(parsed.data.tool !== undefined ? { tool: parsed.data.tool } : {}),
+          ...(parsed.data.color !== undefined ? { color: parsed.data.color } : {}),
+          ...(parsed.data.brushSize !== undefined ? { brushSize: parsed.data.brushSize } : {}),
+        }
+      },
     },
   ),
 )

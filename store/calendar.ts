@@ -1,9 +1,14 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
+import { z } from 'zod'
 import { STORAGE_KEYS, appStorage } from '@/lib/storage'
 
 const DATE_KEY_RE = /^\d{4}-\d{2}-\d{2}$/
 const MAX_NOTE_LEN = 500
+
+const CalendarPersistSchema = z.object({
+  notes: z.record(z.string(), z.unknown()).optional(),
+})
 
 type CalendarState = {
   /** 按日备注，key 为 yyyy-MM-dd */
@@ -50,10 +55,10 @@ export const useCalendarStore = create<CalendarState>()(
       storage: createJSONStorage(() => appStorage.createStateStorage()),
       partialize: (s) => ({ notes: s.notes }),
       merge: (persisted, current) => {
-        const saved = persisted as { notes?: unknown } | undefined
+        const parsed = CalendarPersistSchema.safeParse(persisted)
         return {
           ...current,
-          notes: normalizeNotes(saved?.notes),
+          notes: normalizeNotes(parsed.success ? parsed.data.notes : undefined),
         }
       },
     },

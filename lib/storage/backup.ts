@@ -9,9 +9,7 @@ export const BACKUP_VERSION = 1
  * 参与导入导出的 storage key。
  * - 排除 lock：锁屏会话绑定本机临时密码，跨设备还原无意义且可能误锁
  */
-export const BACKUP_STORAGE_KEYS: StorageKey[] = STORAGE_KEY_LIST.filter(
-  (key) => key !== STORAGE_KEYS.lock,
-)
+export const BACKUP_STORAGE_KEYS: StorageKey[] = STORAGE_KEY_LIST.filter((key) => key !== STORAGE_KEYS.lock)
 
 export type AppBackupSnapshot = {
   format: typeof BACKUP_FORMAT
@@ -31,10 +29,20 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
+function isRawStringKey(key: StorageKey): boolean {
+  return key === STORAGE_KEYS.theme || key === STORAGE_KEYS.suikaBest || key === STORAGE_KEYS.ideFormatOnSave
+}
+
 function serializeEntry(key: StorageKey, value: unknown): string {
-  if (key === STORAGE_KEYS.theme) {
-    if (value !== 'light' && value !== 'dark') {
+  if (isRawStringKey(key)) {
+    if (typeof value !== 'string') {
+      throw new Error(`Invalid string value for ${key}`)
+    }
+    if (key === STORAGE_KEYS.theme && value !== 'light' && value !== 'dark') {
       throw new Error(`Invalid theme value for ${key}`)
+    }
+    if (key === STORAGE_KEYS.ideFormatOnSave && value !== '0' && value !== '1') {
+      throw new Error(`Invalid ide formatOnSave value for ${key}`)
     }
     return value
   }
@@ -42,7 +50,7 @@ function serializeEntry(key: StorageKey, value: unknown): string {
 }
 
 function parseStoredRaw(key: StorageKey, raw: string): unknown {
-  if (key === STORAGE_KEYS.theme) return raw
+  if (isRawStringKey(key)) return raw
   try {
     return JSON.parse(raw) as unknown
   } catch {

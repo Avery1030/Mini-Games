@@ -1,28 +1,12 @@
-import { BuiltinAppId } from '@/config/desktop'
+import { getAppByExtension, type FileOpenEntry, type RegisteredAppKind } from '@/config/fileOpen'
 import { getExtension, parseExeContent, EXE_MIME, type FileNode } from '@/lib/vfs'
 import { isImagePath } from '@/features/image-viewer/api'
 import { isIdeExplorerOpenPath } from '@/features/ide/languages'
-import { officeKindFromPath } from '@/features/office/fileTypes'
 
-export type RegisteredAppKind = 'writer' | 'sheet' | 'notepad' | 'image' | 'ide' | 'exe' | 'folder' | 'unsupported'
+export type { RegisteredAppKind, FileOpenEntry }
+export type AppRegisterEntry = FileOpenEntry
 
-export type AppRegisterEntry = {
-  kind: RegisteredAppKind
-  /** 内置窗口 id；exe 时从文件内容读取 */
-  appId?: BuiltinAppId
-}
-
-const EXT_MAP: Record<string, AppRegisterEntry> = {
-  wps: { kind: 'writer' },
-  et: { kind: 'sheet' },
-  txt: { kind: 'notepad' },
-  exe: { kind: 'exe' },
-}
-
-export function getAppByExtension(ext: string): AppRegisterEntry {
-  const key = ext.replace(/^\./, '').toLowerCase()
-  return EXT_MAP[key] ?? { kind: 'unsupported' }
-}
+export { getAppByExtension }
 
 export function resolveOpenTarget(
   path: string,
@@ -31,12 +15,11 @@ export function resolveOpenTarget(
   if (node?.isDirectory) return { kind: 'folder' }
   if (isImagePath(path)) return { kind: 'image' }
   if (isIdeExplorerOpenPath(path)) return { kind: 'ide' }
-  const office = officeKindFromPath(path)
-  if (office === 'writer') return { kind: 'writer' }
-  if (office === 'sheet') return { kind: 'sheet' }
   const ext = getExtension(path).toLowerCase()
+  const mapped = getAppByExtension(ext)
+  if (mapped.kind === 'writer' || mapped.kind === 'sheet') return mapped
   if (ext === 'exe' || node?.mimeType === EXE_MIME) return { kind: 'exe' }
-  return getAppByExtension(ext)
+  return mapped
 }
 
 export { parseExeContent }

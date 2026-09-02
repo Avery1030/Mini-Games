@@ -22,19 +22,8 @@ import { pickIdeFile } from './FilePicker'
 import { FindReplacePanel } from './FindReplace'
 import { formatIdeText } from './format'
 import { isHtmlPath, isIdeFilePath, languageFromPath, mimeFromPath } from './languages'
+import { readFormatOnSavePref, writeFormatOnSavePref } from './prefs'
 import { IdeToolbar } from './Toolbar'
-
-const FORMAT_ON_SAVE_KEY = 'ide:formatOnSave'
-
-function readFormatOnSavePref(): boolean {
-  try {
-    const raw = localStorage.getItem(FORMAT_ON_SAVE_KEY)
-    if (raw == null) return true
-    return raw === '1'
-  } catch {
-    return true
-  }
-}
 
 export type IdeAppProps = {
   windowId?: string
@@ -448,11 +437,7 @@ export function IdeApp({ windowId, initialPath = null }: IdeAppProps = {}) {
         formatOnSave={formatOnSave}
         onFormatOnSaveChange={(value) => {
           setFormatOnSave(value)
-          try {
-            localStorage.setItem(FORMAT_ON_SAVE_KEY, value ? '1' : '0')
-          } catch {
-            // 忽略隐私模式等写入失败
-          }
+          writeFormatOnSavePref(value)
         }}
         onNew={() => void onNew()}
         onOpen={() => void onOpen()}

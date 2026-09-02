@@ -1,7 +1,13 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
+import { z } from 'zod'
 import { STORAGE_KEYS, appStorage } from '@/lib/storage'
 import { hashLockPassword, verifyLockPassword } from '@/lib/lockPassword'
+
+const LockPersistSchema = z.object({
+  isLocked: z.unknown().optional(),
+  sessionHash: z.unknown().optional(),
+})
 
 interface LockState {
   isLocked: boolean
@@ -56,7 +62,8 @@ export const useLockStore = create<LockStore>()(
         sessionHash: s.sessionHash,
       }),
       migrate: (persisted) => {
-        const raw = (persisted ?? {}) as { isLocked?: unknown; sessionHash?: unknown }
+        const parsed = LockPersistSchema.safeParse(persisted ?? {})
+        const raw = parsed.success ? parsed.data : {}
         return {
           isLocked: raw.isLocked === true,
           sessionHash: typeof raw.sessionHash === 'string' ? raw.sessionHash : null,

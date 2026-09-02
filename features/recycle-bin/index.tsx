@@ -18,10 +18,10 @@ import { useFsListSelection } from '@/hooks/desktop/useFsListSelection'
 import { requestOpenNote } from '@/features/notepad/pendingOpen'
 import { officeKindFromPath } from '@/features/office/fileTypes'
 import { openOfficeFile } from '@/lib/desktop/window/officeWindows'
+import { isImagePath } from '@/features/image-viewer/api'
 import { useImageViewerStore } from '@/features/image-viewer/store'
 import { cn } from '@/lib/cn'
-
-const IMAGE_EXTS = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'])
+import { formatBytes, formatOptionalShortDateTime } from '@/lib/format'
 
 type TrashRow =
   | {
@@ -47,25 +47,6 @@ type TrashRow =
       size: number
     }
 
-function formatTimestamp(ts: number | undefined, locale: string): string {
-  if (ts == null) return '—'
-  try {
-    return new Intl.DateTimeFormat(locale, {
-      dateStyle: 'short',
-      timeStyle: 'short',
-    }).format(new Date(ts))
-  } catch {
-    return new Date(ts).toLocaleString()
-  }
-}
-
-function formatBytes(size: number): string {
-  if (!Number.isFinite(size) || size < 0) return '—'
-  if (size < 1024) return `${size} B`
-  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
-  return `${(size / (1024 * 1024)).toFixed(1)} MB`
-}
-
 function vfsErrorMessage(err: unknown, fallback: string): string {
   if (isVfsError(err)) return err.message
   if (err instanceof Error) return err.message
@@ -90,7 +71,7 @@ function rowIcon(row: TrashRow) {
   if (office === 'sheet') return Table2
   const ext = getExtension(row.path).toLowerCase()
   if (ext === 'txt') return FileText
-  if (IMAGE_EXTS.has(ext === 'jpeg' ? 'jpg' : ext)) return ImageIcon
+  if (isImagePath(row.path)) return ImageIcon
   return File
 }
 
@@ -299,7 +280,7 @@ export function RecycleBinApp() {
         `${t('propName')}: ${row.name}`,
         `${t('propType')}: ${typeLabel}`,
         `${t('propOriginalPath')}: ${row.originalPath}`,
-        `${t('propTrashedAt')}: ${formatTimestamp(row.trashedAt, locale)}`,
+        `${t('propTrashedAt')}: ${formatOptionalShortDateTime(row.trashedAt, locale)}`,
         `${t('propSize')}: ${row.sizeLabel}`,
       ]
       if (row.source === 'vfs') {
@@ -346,8 +327,7 @@ export function RecycleBinApp() {
         openOfficeFile(officeKind, row.id, row.name)
         return
       }
-      const normalizedExt = ext === 'jpeg' ? 'jpg' : ext
-      if (IMAGE_EXTS.has(normalizedExt)) {
+      if (isImagePath(row.path)) {
         void useImageViewerStore.getState().openFileById(row.id)
         return
       }
@@ -520,7 +500,7 @@ export function RecycleBinApp() {
                               active ? 'text-icon-select-fg/80' : 'text-muted',
                             )}
                           >
-                            {formatTimestamp(row.trashedAt, locale)}
+                            {formatOptionalShortDateTime(row.trashedAt, locale)}
                           </span>
                           <span
                             className={cn(

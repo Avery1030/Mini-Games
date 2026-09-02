@@ -1,3 +1,4 @@
+import { IDE_EXPLORER_OPEN_EXTS } from '@/config/fileOpen'
 import { getExtension } from '@/lib/vfs'
 
 export const IDE_FILE_EXTS = ['js', 'ts', 'html', 'htm', 'css', 'json', 'txt'] as const
@@ -9,7 +10,7 @@ export type IdeLanguage = 'markup' | 'css' | 'javascript' | 'typescript' | 'json
 const EXT_SET = new Set<string>(IDE_FILE_EXTS)
 
 /** 资源管理器双击打开 IDE（txt 仍走记事本） */
-const EXPLORER_EXT_SET = new Set(['js', 'ts', 'html', 'htm', 'css', 'json'])
+const EXPLORER_EXT_SET = new Set<string>(IDE_EXPLORER_OPEN_EXTS)
 
 export function isIdeFilePath(path: string): boolean {
   return EXT_SET.has(getExtension(path).toLowerCase())

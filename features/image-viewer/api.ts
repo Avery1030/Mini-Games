@@ -1,3 +1,4 @@
+import { IMAGE_OPEN_EXTS } from '@/config/fileOpen'
 import { fetchRemoteImageBlob } from '@/lib/idb/fetchRemote'
 import {
   contentTypeForExt,
@@ -22,7 +23,7 @@ const MAX_TITLE = 80
 const MAX_BYTES = 10 * 1024 * 1024
 const MAX_IMAGES = 100
 
-export const IMAGE_EXTS = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'])
+export const IMAGE_EXTS = new Set<string>(IMAGE_OPEN_EXTS)
 
 function urlKey(id: string) {
   return `image:${id}`

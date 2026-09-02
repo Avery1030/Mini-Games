@@ -154,7 +154,7 @@ export type OfficePersistState = {
 
 /**
  * 每个 key 对应的「语义值」类型。
- * - theme：纯字符串
+ * - theme / suikaBest / ideFormatOnSave：纯字符串
  * - 其余：JSON（zustand 为 envelope；boot 为对象本身）
  */
 export type StorageSchema = {
@@ -201,7 +201,14 @@ export type StorageSchema = {
   [STORAGE_KEYS.explorerSessions]: ExplorerSessionsPersistState
   [STORAGE_KEYS.vfsCatalog]: ZustandPersistEnvelope<{ items: Record<string, unknown> }>
   [STORAGE_KEYS.office]: ZustandPersistEnvelope<OfficePersistState>
+  /** 原始数字字符串，如 `"1280"` */
+  [STORAGE_KEYS.suikaBest]: string
+  /** `'1'` | `'0'`，缺省视为开启 */
+  [STORAGE_KEYS.ideFormatOnSave]: '0' | '1'
 }
 
-/** 以 JSON 读写的 key（不含 theme） */
-export type JsonStorageKey = Exclude<StorageKey, typeof STORAGE_KEYS.theme>
+/** 以 JSON 读写的 key（不含纯字符串 key） */
+export type JsonStorageKey = Exclude<
+  StorageKey,
+  typeof STORAGE_KEYS.theme | typeof STORAGE_KEYS.suikaBest | typeof STORAGE_KEYS.ideFormatOnSave
+>

@@ -6,11 +6,14 @@ import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { modal, toast } from '@/components/ui'
 import { winChromeSunken } from '@/lib/winChrome'
-import { useWindowStore } from '@/store/window'
+import { useMetaHotkeys } from '@/hooks/useMetaHotkeys'
+import { useSilentAutoSave } from '@/hooks/useSilentAutoSave'
+import { useWindowActive } from '@/hooks/desktop/useWindowActive'
 import { findOfficeWindowByFile, getOfficeWindow } from '@/lib/desktop/window/officeWindows'
 import { useOfficeStore } from '../store'
 import { pickOfficeFile } from '../fileDialog'
 import { EMPTY_WRITER } from '../schema'
+import { OFFICE_AUTO_SAVE_MS } from '../constants'
 import { fetchOfficeByPath, fetchOfficeFile, saveWriterAtPath, updateWriterFile } from '../vfsApi'
 import { officeKindFromPath } from '../fileTypes'
 import { preventVfsFileDrag, vfsPathsFromDrag } from '@/lib/desktop/vfsDrop'
@@ -18,8 +21,6 @@ import { htmlToPlainText, sanitizeWriterHtml } from './sanitize'
 import { exportWriterDocx, exportWriterPdf, exportWriterTxt } from './exportDoc'
 import { WriterToolbar, type WriterAlign, type WriterCommand, type WriterFormat } from './WriterToolbar'
 import { WriterRuler } from './WriterRuler'
-
-const AUTO_SAVE_MS = 30_000
 
 function currentBlock(): string {
   try {
@@ -87,10 +88,7 @@ export function WriterApp({ windowId, initialFileId }: Props = {}) {
   const lastWriterId = useOfficeStore((s) => s.lastWriterId)
   const setLastOpened = useOfficeStore((s) => s.setLastOpened)
   const hostId = windowId ?? 'writer'
-  const isActive = useWindowStore((s) => {
-    const w = s.windows[hostId]
-    return Boolean(w?.isOpen && w.active && !w.minimized)
-  })
+  const isActive = useWindowActive(hostId)
 
   const editorRef = useRef<HTMLDivElement>(null)
   const htmlRef = useRef(EMPTY_WRITER.html)
@@ -299,33 +297,20 @@ export function WriterApp({ windowId, initialFileId }: Props = {}) {
     syncFormat()
   }
 
-  useEffect(() => {
-    if (!fileId || !dirty) return
-    const timer = window.setTimeout(() => {
+  useSilentAutoSave(
+    Boolean(fileId && dirty),
+    OFFICE_AUTO_SAVE_MS,
+    () => {
       const id = fileIdRef.current
       if (id && dirtyRef.current) void persistExisting(id, undefined, true)
-    }, AUTO_SAVE_MS)
-    return () => window.clearTimeout(timer)
-  }, [dirty, fileId, html, persistExisting])
+    },
+    [dirty, fileId, html, persistExisting],
+  )
 
-  useEffect(() => {
-    if (!isActive) return
-    const onKey = (e: KeyboardEvent) => {
-      if (!(e.metaKey || e.ctrlKey)) return
-      const key = e.key.toLowerCase()
-      if (key === 's') {
-        e.preventDefault()
-        onSave()
-      } else if (key === 'n') {
-        e.preventDefault()
-        void onNew()
-      } else if (key === 'o') {
-        e.preventDefault()
-        void onOpen()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+  useMetaHotkeys(isActive, {
+    s: () => onSave(),
+    n: () => void onNew(),
+    o: () => void onOpen(),
   })
 
   return (

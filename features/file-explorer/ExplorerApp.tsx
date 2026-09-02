@@ -2,104 +2,42 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent } from 'react'
 import { useTranslations } from 'next-intl'
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-  ClipboardPaste,
-  Copy,
-  File,
-  FileCode,
-  FileText,
-  Folder,
-  FolderOpen,
-  Gamepad2,
-  HardDrive,
-  Image as ImageIcon,
-  Info,
-  LayoutGrid,
-  List,
-  Monitor,
-  ScrollText,
-  Scissors,
-  Table2,
-  Trash2,
-} from 'lucide-react'
+import { FolderOpen } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
-import { Button, ContextMenu, Input, Panel, modal, toast, type ContextMenuState } from '@/components/ui'
-import { winChrome, winChromeSunken } from '@/lib/winChrome'
+import { ContextMenu, Panel, modal, toast, type ContextMenuState } from '@/components/ui'
+import { winChrome } from '@/lib/winChrome'
 import { MarqueeOverlay, useMarqueeSelect } from '@/hooks/desktop/useMarqueeSelect'
+import { useWindowActive } from '@/hooks/desktop/useWindowActive'
 import { TASKBAR_H } from '@/lib/desktop/windowGeometry'
+import { formatBytes, formatShortDateTime } from '@/lib/format'
 import {
   VFS_DRAG_MIME,
   VFS_PATHS,
   isVfsError,
   parseVfsDragPaths,
-  type VfsIconKey,
   type VfsItem,
 } from '@/lib/vfs'
 import { openVfsFile } from '@/lib/desktop/openVfsFile'
 import { getExplorerWindow } from '@/lib/desktop/window/explorerWindows'
-import { useWindowStore } from '@/store/window'
 import { useVfsStore } from '@/store/vfsStore'
+import { ExplorerAddressBar } from './ExplorerAddressBar'
+import { ExplorerToolbar } from './ExplorerToolbar'
+import { ExplorerTree } from './ExplorerTree'
+import { ItemIcon } from './ItemIcon'
 import { promptVfsName } from './promptName'
-
-type ViewMode = 'icons' | 'details'
-type SortKey = 'name' | 'type' | 'date'
+import type { SortKey, ViewMode } from './types'
 
 type Props = {
   windowId?: string
   initialPath?: string
 }
 
-const TREE_ROOTS: Array<{ path: string; labelKey: 'treeComputer' | 'treeDesktop' | 'treeDocuments' | 'treeGames' | 'treeTrash' }> = [
-  { path: '/', labelKey: 'treeComputer' },
-  { path: VFS_PATHS.desktop, labelKey: 'treeDesktop' },
-  { path: VFS_PATHS.documents, labelKey: 'treeDocuments' },
-  { path: VFS_PATHS.games, labelKey: 'treeGames' },
-  { path: VFS_PATHS.trash, labelKey: 'treeTrash' },
-]
-
-function formatBytes(size: number): string {
-  if (!Number.isFinite(size) || size < 0) return '—'
-  if (size < 1024) return `${size} B`
-  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
-  return `${(size / (1024 * 1024)).toFixed(1)} MB`
-}
-
-function formatTime(ts: number, locale: string): string {
-  try {
-    return new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' }).format(new Date(ts))
-  } catch {
-    return new Date(ts).toLocaleString()
-  }
-}
-
-function ItemIcon({ icon, size = 16 }: { icon: VfsIconKey; size?: number }) {
-  const props = { size, className: 'shrink-0' as const }
-  if (icon === 'folder' || icon === 'documents') return <Folder {...props} />
-  if (icon === 'desktop') return <Monitor {...props} />
-  if (icon === 'computer') return <HardDrive {...props} />
-  if (icon === 'games') return <Gamepad2 {...props} />
-  if (icon === 'trash') return <Trash2 {...props} />
-  if (icon === 'wps') return <ScrollText {...props} />
-  if (icon === 'et') return <Table2 {...props} />
-  if (icon === 'txt') return <FileText {...props} />
-  if (icon === 'image') return <ImageIcon {...props} />
-  if (icon === 'code') return <FileCode {...props} />
-  if (icon === 'exe') return <Gamepad2 {...props} />
-  return <File {...props} />
-}
-
 export function FileExplorerApp({ windowId, initialPath = '/' }: Props) {
   const t = useTranslations('fileExplorer')
   const tm = useTranslations('modal')
   const hostId = windowId ?? 'fileExplorer'
-  const isActive = useWindowStore((s) => {
-    const w = s.windows[hostId]
-    return Boolean(w?.isOpen && w.active && !w.minimized)
-  })
+  const isActive = useWindowActive(hostId)
 
   const items = useVfsStore((s) => s.items)
   const clipboard = useVfsStore((s) => s.clipboard)
@@ -259,7 +197,7 @@ export function FileExplorerApp({ windowId, initialPath = '/' }: Props) {
         `${t('typeCol')}: ${item.type === 'folder' ? t('folder') : item.extension || t('file')}`,
         `${t('path')}: ${item.path}`,
         `${t('sizeCol')}: ${item.type === 'folder' ? '—' : formatBytes(item.size)}`,
-        `${t('modified')}: ${formatTime(item.updatedAt, locale)}`,
+        `${t('modified')}: ${formatShortDateTime(item.updatedAt, locale)}`,
       ].join('\n'),
     })
   }
@@ -421,100 +359,42 @@ export function FileExplorerApp({ windowId, initialPath = '/' }: Props) {
 
   return (
     <div className={cn(embeddedAppShell('flex flex-col bg-window text-on-chrome font-pixel'))}>
-      <div className='shrink-0 flex flex-wrap items-center gap-1 px-1 py-1 border-b border-chrome-dark bg-chrome'>
-        <Button size='icon-sm' disabled={!canBack} title={t('back')} onClick={() => {
+      <ExplorerToolbar
+        canBack={canBack}
+        canForward={canForward}
+        parentPath={parentPath}
+        selectedCount={selected.length}
+        hasClipboard={Boolean(clipboard)}
+        view={view}
+        onBack={() => {
           const i = histIndex - 1
           setHistIndex(i)
           go(history[i], false)
-        }}>
-          <ChevronLeft size={13} />
-        </Button>
-        <Button size='icon-sm' disabled={!canForward} title={t('forward')} onClick={() => {
+        }}
+        onForward={() => {
           const i = histIndex + 1
           setHistIndex(i)
           go(history[i], false)
-        }}>
-          <ChevronRight size={13} />
-        </Button>
-        <Button size='icon-sm' disabled={!parentPath} title={t('up')} onClick={() => parentPath && go(parentPath)}>
-          <ChevronUp size={13} />
-        </Button>
-        <div className='w-px h-5 bg-chrome-dark/50 mx-0.5' />
-        <Button size='icon-sm' disabled={selected.length === 0} title={t('cut')} onClick={() => useVfsStore.getState().cutItem(selectedIds)}>
-          <Scissors size={13} />
-        </Button>
-        <Button size='icon-sm' disabled={selected.length === 0} title={t('copy')} onClick={() => useVfsStore.getState().copyItem(selectedIds)}>
-          <Copy size={13} />
-        </Button>
-        <Button size='icon-sm' disabled={!clipboard} title={t('paste')} onClick={() => void pasteHere()}>
-          <ClipboardPaste size={13} />
-        </Button>
-        <Button size='icon-sm' disabled={selected.length === 0} title={t('trash')} onClick={() => void trashSelected(selectedIds)}>
-          <Trash2 size={13} />
-        </Button>
-        <Button size='icon-sm' disabled={selected.length !== 1} title={t('properties')} onClick={() => selected[0] && showProps(selected[0])}>
-          <Info size={13} />
-        </Button>
-        <div className='w-px h-5 bg-chrome-dark/50 mx-0.5' />
-        <Button size='icon-sm' variant={view === 'icons' ? 'pressed' : 'raised'} title={t('viewIcons')} onClick={() => setView('icons')}>
-          <LayoutGrid size={13} />
-        </Button>
-        <Button size='icon-sm' variant={view === 'details' ? 'pressed' : 'raised'} title={t('viewDetails')} onClick={() => setView('details')}>
-          <List size={13} />
-        </Button>
-      </div>
+        }}
+        onUp={() => parentPath && go(parentPath)}
+        onCut={() => useVfsStore.getState().cutItem(selectedIds)}
+        onCopy={() => useVfsStore.getState().copyItem(selectedIds)}
+        onPaste={() => void pasteHere()}
+        onTrash={() => void trashSelected(selectedIds)}
+        onProperties={() => selected[0] && showProps(selected[0])}
+        onViewIcons={() => setView('icons')}
+        onViewDetails={() => setView('details')}
+      />
 
-      <div className='shrink-0 flex items-center gap-1 px-1 py-1 border-b border-chrome-dark bg-chrome'>
-        <span className='text-[10px] shrink-0'>{t('address')}</span>
-        <div className={cn(winChromeSunken, 'flex-1 min-w-0 bg-field')}>
-          <Input
-            size='sm'
-            tone='field'
-            value={address}
-            className='border-0 h-6'
-            onChange={(e) => setAddress(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                const next = address.trim() || '/'
-                if (Object.values(items).some((it) => it.path === next && it.type === 'folder')) go(next)
-                else toast.warning(t('invalidPath'))
-              }
-            }}
-          />
-        </div>
-        <Button size='sm' onClick={() => {
-          const next = address.trim() || '/'
-          if (Object.values(items).some((it) => it.path === next && it.type === 'folder')) go(next)
-          else toast.warning(t('invalidPath'))
-        }}>
-          {t('go')}
-        </Button>
-      </div>
+      <ExplorerAddressBar
+        address={address}
+        items={items}
+        onAddressChange={setAddress}
+        onGo={go}
+      />
 
       <div className='flex-1 min-h-0 flex m-1 gap-1'>
-        <Panel inset padded={false} className='w-44 shrink-0 overflow-auto bg-field'>
-          <nav className='py-1'>
-            {TREE_ROOTS.map((root) => {
-              const node = Object.values(items).find((it) => it.path === root.path)
-              const active = cwd === root.path || (root.path !== '/' && cwd.startsWith(`${root.path}/`))
-              return (
-                <button
-                  key={root.path}
-                  type='button'
-                  className={cn(
-                    'w-full flex items-center gap-1 px-2 py-0.5 text-left text-[11px]',
-                    active ? 'bg-icon-select text-icon-select-fg' : 'hover:bg-icon-select/30',
-                  )}
-                  onClick={() => go(root.path)}
-                >
-                  <ItemIcon icon={node?.icon ?? 'folder'} size={14} />
-                  <span className='truncate'>{t(root.labelKey)}</span>
-                </button>
-              )
-            })}
-          </nav>
-        </Panel>
+        <ExplorerTree cwd={cwd} items={items} onNavigate={go} />
 
         <Panel inset padded={false} className='flex-1 min-w-0 overflow-auto bg-field relative'>
           <div
@@ -606,7 +486,7 @@ export function FileExplorerApp({ windowId, initialPath = '/' }: Props) {
                         </td>
                         <td className='px-2 py-0.5 tabular-nums'>{item.type === 'folder' ? t('folder') : formatBytes(item.size)}</td>
                         <td className='px-2 py-0.5'>{item.type === 'folder' ? t('folder') : item.extension || t('file')}</td>
-                        <td className='px-2 py-0.5 tabular-nums'>{formatTime(item.updatedAt, navigator.language)}</td>
+                        <td className='px-2 py-0.5 tabular-nums'>{formatShortDateTime(item.updatedAt, navigator.language)}</td>
                       </tr>
                     )
                   })}

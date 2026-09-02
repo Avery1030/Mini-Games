@@ -9,6 +9,7 @@ import {
 } from './registry'
 import { coordKey } from '@/lib/desktop/layout'
 import { formatItemDisplayName } from '@/lib/desktop/fileTypes'
+import { createWindowIdSuffix } from '@/lib/id'
 
 export type CreateDesktopFolderOptions = {
   title?: string
@@ -32,11 +33,7 @@ export type CreateDesktopTextDocumentOptions = {
 }
 
 function nextId(prefix: 'folder' | 'text'): DesktopAppId {
-  const rand =
-    typeof crypto !== 'undefined' && 'randomUUID' in crypto
-      ? crypto.randomUUID().replace(/-/g, '').slice(0, 8)
-      : `${Date.now().toString(36)}`
-  return `${prefix}_${rand}`
+  return `${prefix}_${createWindowIdSuffix()}`
 }
 
 function normalizeTitle(title: string): string {

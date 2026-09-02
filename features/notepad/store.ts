@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { STORAGE_KEYS, appStorage } from '@/lib/storage'
+import { NotepadPersistSchema } from './schema'
 
 interface NotepadState {
   /** 上次打开的笔记 id（用于恢复） */
@@ -28,6 +29,15 @@ export const useNotepadStore = create<NotepadStore>()(
       name: STORAGE_KEYS.notepad,
       storage: createJSONStorage(() => appStorage.createStateStorage()),
       partialize: (s) => ({ lastNoteId: s.lastNoteId, wordWrap: s.wordWrap }),
+      merge: (persisted, current) => {
+        const parsed = NotepadPersistSchema.safeParse(persisted)
+        if (!parsed.success) return current
+        return {
+          ...current,
+          ...(parsed.data.lastNoteId !== undefined ? { lastNoteId: parsed.data.lastNoteId } : {}),
+          ...(parsed.data.wordWrap !== undefined ? { wordWrap: parsed.data.wordWrap } : {}),
+        }
+      },
     },
   ),
 )

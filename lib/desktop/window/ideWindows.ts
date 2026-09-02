@@ -1,6 +1,7 @@
 import { CodeXml, Globe } from 'lucide-react'
 import type { ComponentType } from 'react'
 import type { DesktopAppId, DesktopCoordinate } from '@/config/desktop'
+import { createWindowIdSuffix } from '@/lib/id'
 import { STORAGE_KEYS, appStorage, type IdeSessionPersist } from '@/lib/storage'
 import { DesktopWindow } from './DesktopWindow'
 import { createDeferredApp, type DeferredApp } from './defineApp'
@@ -15,11 +16,7 @@ import {
 type AppHost = ComponentType
 
 function nextId(prefix: 'ide' | 'preview'): DesktopAppId {
-  const rand =
-    typeof crypto !== 'undefined' && 'randomUUID' in crypto
-      ? crypto.randomUUID().replace(/-/g, '').slice(0, 8)
-      : `${Date.now().toString(36)}`
-  return `${prefix}_${rand}`
+  return `${prefix}_${createWindowIdSuffix()}`
 }
 
 function untitledTitle(): string {
