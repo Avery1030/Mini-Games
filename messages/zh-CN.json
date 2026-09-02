@@ -26,7 +26,9 @@
     "ide": "代码编辑器",
     "sokoban": "推箱子",
     "sudoku": "数独",
-    "spider": "蜘蛛纸牌"
+    "spider": "蜘蛛纸牌",
+    "writer": "WPS 文字",
+    "sheet": "WPS 表格"
   },
   "desktop": {
     "open": "打开",
@@ -557,7 +559,8 @@
         "命令提示符：简易 DOS 风格终端，可浏览桌面/文件夹路径并打开部分应用。",
         "智聊：接入 SiliconFlow 流式对话，API Key 通过 .env 配置，会话保存在 IndexedDB。",
         "图片查看器：上传本地图片或从 URL 导入，支持多选浏览；图片保存在 IndexedDB。",
-        "代码编辑器：多窗口编辑 HTML / CSS / JS / TS / JSON，带语法高亮、查找替换、Emmet 与 HTML 预览；文件保存在虚拟文件系统，可从资源管理器或桌面打开。"
+        "代码编辑器：多窗口编辑 HTML / CSS / JS / TS / JSON，带语法高亮、查找替换、Emmet 与 HTML 预览；文件保存在虚拟文件系统，可从资源管理器或桌面打开。",
+        "WPS 文字 / WPS 表格：仿早期办公套件的富文本与电子表格，文件保存在「文档」文件夹，可从资源管理器打开；文字可导出 PDF、DOCX、TXT。"
       ]
     },
     "changelog": {
@@ -607,6 +610,64 @@
     "saveFail": "保存失败",
     "deleteFail": "删除失败"
   },
+  "writer": {
+    "new": "新建",
+    "open": "打开",
+    "save": "保存",
+    "saveAs": "另存为",
+    "openTitle": "打开文档",
+    "saveAsTitle": "另存为",
+    "fileName": "文件名",
+    "emptyList": "还没有文档",
+    "untitled": "未命名.wps",
+    "loading": "加载中…",
+    "delete": "删除",
+    "confirmDelete": "确定将「{name}」移至回收站？",
+    "deleted": "已删除",
+    "deleteFail": "删除失败",
+    "loadFail": "打开失败",
+    "body": "正文",
+    "heading1": "标题",
+    "heading2": "小标题",
+    "bold": "加粗",
+    "list": "项目符号",
+    "color": "颜色",
+    "exportPdf": "导出 PDF",
+    "exportDocx": "导出 DOC",
+    "exportTxt": "导出 TXT",
+    "exporting": "正在导出…",
+    "exported": "已导出",
+    "exportFail": "导出失败",
+    "unsaved": "未保存",
+    "saved": "已保存",
+    "savedOk": "已保存",
+    "saveFail": "保存失败",
+    "confirmDiscard": "当前文档有未保存的修改，确定放弃吗？"
+  },
+  "sheet": {
+    "new": "新建",
+    "open": "打开",
+    "save": "保存",
+    "saveAs": "另存为",
+    "openTitle": "打开表格",
+    "saveAsTitle": "另存为",
+    "fileName": "文件名",
+    "emptyList": "还没有表格",
+    "untitled": "未命名.et",
+    "loading": "加载中…",
+    "delete": "删除",
+    "confirmDelete": "确定将「{name}」移至回收站？",
+    "deleted": "已删除",
+    "deleteFail": "删除失败",
+    "loadFail": "打开失败",
+    "formula": "编辑栏",
+    "hint": "单元格输入数字；公式例：=SUM(A1:A3) 或 =A1+B1",
+    "unsaved": "未保存",
+    "saved": "已保存",
+    "savedOk": "已保存",
+    "saveFail": "保存失败",
+    "confirmDiscard": "当前表格有未保存的修改，确定放弃吗？"
+  },
   "paint": {
     "drawings": "作品",
     "new": "新建",
@@ -644,6 +705,13 @@
     "clear": "清空"
   },
   "changelog": {
+    "2026-09-02": {
+      "title": "WPS 文字与表格",
+      "items": [
+        "新增「WPS 文字」：Win95 风格富文本（标题 / 加粗 / 颜色 / 列表），文件保存在「文档」里，资源管理器可打开；打开对话框支持右键删除（移至回收站）。可导出 PDF、DOCX、TXT。",
+        "新增「WPS 表格」：单元格输入与 =SUM(A1:A3)、=A1+B1 等基础公式；.et 文件同样落在虚拟文件系统。"
+      ]
+    },
     "2026-08-15": {
       "title": "代码编辑器与标签页标题",
       "items": [

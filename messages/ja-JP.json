@@ -26,7 +26,9 @@
     "ide": "コードエディタ",
     "sokoban": "倉庫番",
     "sudoku": "数独",
-    "spider": "スパイダー"
+    "spider": "スパイダー",
+    "writer": "WPS Writer",
+    "sheet": "WPS Sheet"
   },
   "desktop": {
     "open": "開く",
@@ -557,7 +559,8 @@
         "コマンド プロンプト：簡易 DOS 風ターミナル。デスクトップ／フォルダー パスを閲覧し、一部のアプリを開けます。",
         "智チャット：SiliconFlow ストリーミング チャット。API キーは .env 経由。セッションは IndexedDB に保存。",
         "画像ビューア：ローカル画像をアップロードまたは URL からインポート。複数選択で閲覧。ファイルは IndexedDB に保存。",
-        "コードエディタ：HTML / CSS / JS / TS / JSON を複数ウィンドウで編集。シンタックスハイライト、検索と置換、Emmet、HTML プレビュー。ファイルは仮想ファイルシステムに保存し、エクスプローラーまたはデスクトップから開けます。"
+        "コードエディタ：HTML / CSS / JS / TS / JSON を複数ウィンドウで編集。シンタックスハイライト、検索と置換、Emmet、HTML プレビュー。ファイルは仮想ファイルシステムに保存し、エクスプローラーまたはデスクトップから開けます。",
+        "WPS Writer / WPS Sheet：初期オフィス風の文書と表。ファイルは「ドキュメント」フォルダに保存し、エクスプローラーから開けます。文書は PDF / DOCX / TXT を書き出せます。"
       ]
     },
     "changelog": {
@@ -607,6 +610,64 @@
     "saveFail": "保存に失敗しました",
     "deleteFail": "削除に失敗しました"
   },
+  "writer": {
+    "new": "新規",
+    "open": "開く",
+    "save": "保存",
+    "saveAs": "名前を付けて保存",
+    "openTitle": "文書を開く",
+    "saveAsTitle": "名前を付けて保存",
+    "fileName": "ファイル名",
+    "emptyList": "文書はまだありません",
+    "untitled": "無題.wps",
+    "loading": "読み込み中…",
+    "delete": "削除",
+    "confirmDelete": "「{name}」をごみ箱に移しますか？",
+    "deleted": "削除しました",
+    "deleteFail": "削除に失敗しました",
+    "loadFail": "開けませんでした",
+    "body": "本文",
+    "heading1": "見出し",
+    "heading2": "小見出し",
+    "bold": "太字",
+    "list": "箇条書き",
+    "color": "色",
+    "exportPdf": "PDF 書き出し",
+    "exportDocx": "DOC 書き出し",
+    "exportTxt": "TXT 書き出し",
+    "exporting": "書き出し中…",
+    "exported": "書き出しました",
+    "exportFail": "書き出しに失敗しました",
+    "unsaved": "未保存",
+    "saved": "保存済み",
+    "savedOk": "保存しました",
+    "saveFail": "保存に失敗しました",
+    "confirmDiscard": "この文書には未保存の変更があります。破棄しますか？"
+  },
+  "sheet": {
+    "new": "新規",
+    "open": "開く",
+    "save": "保存",
+    "saveAs": "名前を付けて保存",
+    "openTitle": "表を開く",
+    "saveAsTitle": "名前を付けて保存",
+    "fileName": "ファイル名",
+    "emptyList": "表はまだありません",
+    "untitled": "無題.et",
+    "loading": "読み込み中…",
+    "delete": "削除",
+    "confirmDelete": "「{name}」をごみ箱に移しますか？",
+    "deleted": "削除しました",
+    "deleteFail": "削除に失敗しました",
+    "loadFail": "開けませんでした",
+    "formula": "数式バー",
+    "hint": "数値を入力。数式例：=SUM(A1:A3) または =A1+B1",
+    "unsaved": "未保存",
+    "saved": "保存済み",
+    "savedOk": "保存しました",
+    "saveFail": "保存に失敗しました",
+    "confirmDiscard": "この表には未保存の変更があります。破棄しますか？"
+  },
   "paint": {
     "drawings": "作品",
     "new": "新規",
@@ -644,6 +705,13 @@
     "clear": "クリア"
   },
   "changelog": {
+    "2026-09-02": {
+      "title": "WPS Writer と Sheet",
+      "items": [
+        "「WPS Writer」を追加：Win95 風リッチテキスト（見出し / 太字 / 色 / リスト）。ファイルは「ドキュメント」に保存し、エクスプローラーから開けます。開くダイアログは右クリック削除（ごみ箱）に対応。PDF / DOCX / TXT 書き出し。",
+        "「WPS Sheet」を追加：セル入力と =SUM(A1:A3)、=A1+B1 などの基本数式。.et ファイルも仮想ファイルシステムに保存。"
+      ]
+    },
     "2026-08-15": {
       "title": "コードエディタとタブタイトル",
       "items": [

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from 'react'
 import { useTranslations } from 'next-intl'
-import { ChevronUp, File, FileCode, FileText, Folder, FolderOpen, Image as ImageIcon, RefreshCw } from 'lucide-react'
+import { ChevronUp, File, FileCode, FileText, Folder, FolderOpen, Image as ImageIcon, RefreshCw, ScrollText, Table2 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import {
@@ -26,6 +26,7 @@ import {
 } from '@/lib/vfs'
 import { isImagePath } from '@/features/image-viewer/api'
 import { isIdeFilePath } from '@/features/ide/languages'
+import { officeKindFromPath } from '@/features/office/fileTypes'
 import { openVfsFile } from '@/lib/desktop/openVfsFile'
 import { TASKBAR_H } from '@/lib/desktop/windowGeometry'
 import { copyVfsFileToDesktop, setVfsImageAsWallpaper } from '@/lib/desktop/vfsFileActions'
@@ -41,6 +42,9 @@ function formatBytes(size: number): string {
 function nodeIcon(node: FileNode) {
   if (node.isDirectory) return Folder
   if (isImagePath(node.path)) return ImageIcon
+  const office = officeKindFromPath(node.path)
+  if (office === 'writer') return ScrollText
+  if (office === 'sheet') return Table2
   if (getExtension(node.path).toLowerCase() === 'txt') return FileText
   if (isIdeFilePath(node.path)) return FileCode
   return File

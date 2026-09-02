@@ -14,6 +14,8 @@
     "ahooks": "^3.9.7",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "klinecharts": "^10.0.0",
     "lucide-react": "^1.24.0",
     "next": "15.5.9",
@@ -25,6 +27,7 @@
     "react-dom": "19.1.0",
     "tailwind-merge": "^3.6.0",
     "three": "^0.185.1",
+    "zod": "^4.5.4",
     "zustand": "^5.0.12"
   },
   "devDependencies": {

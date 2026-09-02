@@ -3,7 +3,7 @@
 import { Button, ContextMenu, Panel, modal, toast, type ContextMenuState } from '@/components/ui'
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import { File, FileText, Folder, Image as ImageIcon, Trash2 } from 'lucide-react'
+import { File, FileText, Folder, Image as ImageIcon, ScrollText, Table2, Trash2 } from 'lucide-react'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import type { DesktopAppId } from '@/config/desktop'
 import { TRASH_PATH, getExtension, isVfsError, vfs, type FileNode } from '@/lib/vfs'
@@ -16,6 +16,8 @@ import { TASKBAR_H } from '@/lib/desktop/windowGeometry'
 import { formatItemDisplayName } from '@/lib/desktop/fileTypes'
 import { useFsListSelection } from '@/hooks/desktop/useFsListSelection'
 import { requestOpenNote } from '@/features/notepad/pendingOpen'
+import { officeKindFromPath } from '@/features/office/fileTypes'
+import { requestOpenOfficeFile } from '@/features/office/pendingOpen'
 import { useImageViewerStore } from '@/features/image-viewer/store'
 import { cn } from '@/lib/cn'
 
@@ -83,6 +85,9 @@ function rowIcon(row: TrashRow) {
     return row.kind === 'textDocument' ? FileText : Folder
   }
   if (row.isDirectory) return Folder
+  const office = officeKindFromPath(row.path)
+  if (office === 'writer') return ScrollText
+  if (office === 'sheet') return Table2
   const ext = getExtension(row.path).toLowerCase()
   if (ext === 'txt') return FileText
   if (IMAGE_EXTS.has(ext === 'jpeg' ? 'jpg' : ext)) return ImageIcon
@@ -334,6 +339,12 @@ export function RecycleBinApp() {
         useNotepadStore.getState().setLastNoteId(row.id)
         requestOpenNote(row.id)
         useWindowStore.getState().openWindow('notepad')
+        return
+      }
+      const officeKind = officeKindFromPath(row.path)
+      if (officeKind) {
+        requestOpenOfficeFile(officeKind, row.id)
+        useWindowStore.getState().openWindow(officeKind)
         return
       }
       const normalizedExt = ext === 'jpeg' ? 'jpg' : ext

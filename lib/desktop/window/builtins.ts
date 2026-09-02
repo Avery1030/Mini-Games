@@ -22,8 +22,10 @@ import {
   Notebook,
   Palette,
   Puzzle,
+  ScrollText,
   Settings,
   Shapes,
+  Table2,
   Terminal,
   Trash2,
 } from 'lucide-react'
@@ -239,5 +241,21 @@ registerBuiltinApps([
     width: 560,
     height: 420,
     loadApp: () => import('@/features/file-explorer').then((m) => m.FileExplorerApp),
+  },
+  {
+    id: BuiltinAppId.Writer,
+    icon: ScrollText,
+    defaultCoordinate: [5, 1],
+    width: 720,
+    height: 520,
+    loadApp: () => import('@/features/office').then((m) => m.WriterApp),
+  },
+  {
+    id: BuiltinAppId.Sheet,
+    icon: Table2,
+    defaultCoordinate: [5, 2],
+    width: 780,
+    height: 520,
+    loadApp: () => import('@/features/office').then((m) => m.SheetApp),
   },
 ])

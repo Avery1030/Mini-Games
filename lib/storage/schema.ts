@@ -114,6 +114,23 @@ export type IdeSessionsPersistState = {
   sessions: IdeSessionPersist[]
 }
 
+export type OfficeKindPersist = 'writer' | 'sheet'
+
+export type OfficeFilePersist = {
+  id: string
+  name: string
+  kind: OfficeKindPersist
+  updatedAt: number
+  writer?: { html: string }
+  sheet?: { cols: number; rows: number; cells: Record<string, string> }
+}
+
+export type OfficePersistState = {
+  files: OfficeFilePersist[]
+  lastWriterId: Nullable<string>
+  lastSheetId: Nullable<string>
+}
+
 /**
  * 每个 key 对应的「语义值」类型。
  * - theme：纯字符串
@@ -159,6 +176,7 @@ export type StorageSchema = {
   [STORAGE_KEYS.calendar]: ZustandPersistEnvelope<CalendarPersistState>
   [STORAGE_KEYS.desktopItems]: ZustandPersistEnvelope<DesktopItemsPersistState>
   [STORAGE_KEYS.ideSessions]: IdeSessionsPersistState
+  [STORAGE_KEYS.office]: ZustandPersistEnvelope<OfficePersistState>
 }
 
 /** 以 JSON 读写的 key（不含 theme） */

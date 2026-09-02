@@ -30,6 +30,8 @@ export const STORAGE_KEYS = {
   desktopItems: 'desktop-items',
   /** 运行时 IDE 窗口会话（刷新后恢复） */
   ideSessions: 'desktop-ide-sessions',
+  /** Win95 Writer / Sheet 虚拟文件柜（zustand persist） */
+  office: 'desktop-office',
 } as const
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS]

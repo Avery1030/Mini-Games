@@ -1,0 +1,58 @@
+import { z } from 'zod'
+
+export const OFFICE_HTML_MAX = 400_000
+export const OFFICE_CELL_MAX = 4_000
+export const SHEET_COLS = 10
+export const SHEET_ROWS = 24
+
+export const WriterBodySchema = z.object({
+  html: z.string().max(OFFICE_HTML_MAX),
+})
+
+export const SheetBodySchema = z.object({
+  cols: z.number().int().min(1).max(26),
+  rows: z.number().int().min(1).max(100),
+  cells: z.record(z.string(), z.string().max(OFFICE_CELL_MAX)),
+})
+
+export const OfficeFileSchema = z.object({
+  id: z.string().min(1).max(64),
+  name: z.string().min(1).max(80),
+  kind: z.enum(['writer', 'sheet']),
+  updatedAt: z.number(),
+  writer: WriterBodySchema.optional(),
+  sheet: SheetBodySchema.optional(),
+})
+
+export const OfficePersistSchema = z.object({
+  files: z.array(OfficeFileSchema).max(200),
+  lastWriterId: z.string().nullable(),
+  lastSheetId: z.string().nullable(),
+})
+
+export type WriterBody = z.infer<typeof WriterBodySchema>
+export type SheetBody = z.infer<typeof SheetBodySchema>
+export type OfficeFile = z.infer<typeof OfficeFileSchema>
+export type OfficeKind = OfficeFile['kind']
+export type OfficePersist = z.infer<typeof OfficePersistSchema>
+
+export const EMPTY_WRITER: WriterBody = { html: '<p></p>' }
+
+export const EMPTY_SHEET: SheetBody = {
+  cols: SHEET_COLS,
+  rows: SHEET_ROWS,
+  cells: {},
+}
+
+export function parseOfficePersist(raw: unknown): Nullable<OfficePersist> {
+  const parsed = OfficePersistSchema.safeParse(raw)
+  return parsed.success ? parsed.data : null
+}
+
+export function colLetter(index: number): string {
+  return String.fromCharCode(65 + index)
+}
+
+export function cellKey(col: number, row: number): string {
+  return `${colLetter(col)}${row + 1}`
+}

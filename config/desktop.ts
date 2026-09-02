@@ -26,6 +26,8 @@ export enum BuiltinAppId {
   TaskManager = 'taskManager',
   ImageViewer = 'imageViewer',
   FileExplorer = 'fileExplorer',
+  Writer = 'writer',
+  Sheet = 'sheet',
 }
 
 /**

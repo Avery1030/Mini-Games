@@ -26,7 +26,9 @@
     "ide": "Code Editor",
     "sokoban": "Sokoban",
     "sudoku": "Sudoku",
-    "spider": "Spider Solitaire"
+    "spider": "Spider Solitaire",
+    "writer": "WPS Writer",
+    "sheet": "WPS Sheet"
   },
   "desktop": {
     "open": "Open",
@@ -557,7 +559,8 @@
         "Command Prompt: a simple DOS-style terminal to browse desktop/folder paths and open some apps.",
         "Zhi Chat: SiliconFlow streaming chat; API key via .env; session stored in IndexedDB.",
         "Image Viewer: upload local images or import from a URL; multi-select browsing; files stored in IndexedDB.",
-        "Code Editor: multiple windows for HTML / CSS / JS / TS / JSON, with syntax highlighting, find/replace, Emmet, and HTML preview. Files live in the virtual file system and can be opened from File Explorer or the desktop."
+        "Code Editor: multiple windows for HTML / CSS / JS / TS / JSON, with syntax highlighting, find/replace, Emmet, and HTML preview. Files live in the virtual file system and can be opened from File Explorer or the desktop.",
+        "WPS Writer / WPS Sheet: retro office suite; files live in Documents on the virtual filesystem and can be opened from File Explorer. Writer can export PDF, DOCX, and TXT."
       ]
     },
     "changelog": {
@@ -607,6 +610,64 @@
     "saveFail": "Failed to save",
     "deleteFail": "Failed to delete"
   },
+  "writer": {
+    "new": "New",
+    "open": "Open",
+    "save": "Save",
+    "saveAs": "Save As",
+    "openTitle": "Open Document",
+    "saveAsTitle": "Save As",
+    "fileName": "File name",
+    "emptyList": "No documents yet",
+    "untitled": "Untitled.wps",
+    "loading": "Loading…",
+    "delete": "Delete",
+    "confirmDelete": "Move \"{name}\" to the Recycle Bin?",
+    "deleted": "Deleted",
+    "deleteFail": "Failed to delete",
+    "loadFail": "Failed to open",
+    "body": "Body",
+    "heading1": "Heading",
+    "heading2": "Subhead",
+    "bold": "Bold",
+    "list": "Bullets",
+    "color": "Color",
+    "exportPdf": "Export PDF",
+    "exportDocx": "Export DOC",
+    "exportTxt": "Export TXT",
+    "exporting": "Exporting…",
+    "exported": "Exported",
+    "exportFail": "Export failed",
+    "unsaved": "Unsaved",
+    "saved": "Saved",
+    "savedOk": "Saved",
+    "saveFail": "Save failed",
+    "confirmDiscard": "This document has unsaved changes. Discard them?"
+  },
+  "sheet": {
+    "new": "New",
+    "open": "Open",
+    "save": "Save",
+    "saveAs": "Save As",
+    "openTitle": "Open Spreadsheet",
+    "saveAsTitle": "Save As",
+    "fileName": "File name",
+    "emptyList": "No spreadsheets yet",
+    "loading": "Loading…",
+    "delete": "Delete",
+    "confirmDelete": "Move \"{name}\" to the Recycle Bin?",
+    "deleted": "Deleted",
+    "deleteFail": "Failed to delete",
+    "loadFail": "Failed to open",
+    "untitled": "Untitled.et",
+    "formula": "Formula bar",
+    "hint": "Type numbers; formulas e.g. =SUM(A1:A3) or =A1+B1",
+    "unsaved": "Unsaved",
+    "saved": "Saved",
+    "savedOk": "Saved",
+    "saveFail": "Save failed",
+    "confirmDiscard": "This spreadsheet has unsaved changes. Discard them?"
+  },
   "paint": {
     "drawings": "Drawings",
     "new": "New",
@@ -644,6 +705,13 @@
     "clear": "Clear"
   },
   "changelog": {
+    "2026-09-02": {
+      "title": "WPS Writer and Sheet",
+      "items": [
+        "Added WPS Writer: Win95 rich text (heading / bold / color / lists); files are saved under Documents and can be opened from File Explorer. The Open dialog supports right-click delete (Recycle Bin). Export PDF / DOCX / TXT.",
+        "Added WPS Sheet: cell entry and formulas such as =SUM(A1:A3) and =A1+B1; .et files also live on the virtual filesystem."
+      ]
+    },
     "2026-08-15": {
       "title": "Code Editor & tab title",
       "items": [

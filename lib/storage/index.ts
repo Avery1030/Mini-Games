@@ -24,6 +24,9 @@ export type {
   DesktopItemPersist,
   IdeSessionPersist,
   IdeSessionsPersistState,
+  OfficeKindPersist,
+  OfficeFilePersist,
+  OfficePersistState,
 } from './schema'
 
 export { appStorage } from './local'
