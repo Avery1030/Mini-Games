@@ -30,6 +30,8 @@ export const STORAGE_KEYS = {
   desktopItems: 'desktop-items',
   /** 运行时 IDE 窗口会话（刷新后恢复） */
   ideSessions: 'desktop-ide-sessions',
+  /** 运行时 WPS 窗口会话（刷新后恢复） */
+  officeSessions: 'desktop-office-sessions',
   /** Win95 Writer / Sheet 虚拟文件柜（zustand persist） */
   office: 'desktop-office',
 } as const

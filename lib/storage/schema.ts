@@ -114,6 +114,17 @@ export type IdeSessionsPersistState = {
   sessions: IdeSessionPersist[]
 }
 
+export type OfficeSessionWindowPersist = {
+  id: string
+  kind: OfficeKindPersist
+  fileId: Nullable<string>
+  title: string
+}
+
+export type OfficeSessionsPersistState = {
+  sessions: OfficeSessionWindowPersist[]
+}
+
 export type OfficeKindPersist = 'writer' | 'sheet'
 
 export type OfficeFilePersist = {
@@ -176,6 +187,7 @@ export type StorageSchema = {
   [STORAGE_KEYS.calendar]: ZustandPersistEnvelope<CalendarPersistState>
   [STORAGE_KEYS.desktopItems]: ZustandPersistEnvelope<DesktopItemsPersistState>
   [STORAGE_KEYS.ideSessions]: IdeSessionsPersistState
+  [STORAGE_KEYS.officeSessions]: OfficeSessionsPersistState
   [STORAGE_KEYS.office]: ZustandPersistEnvelope<OfficePersistState>
 }
 

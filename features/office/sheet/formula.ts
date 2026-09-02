@@ -1,6 +1,6 @@
 import { colLetter, SHEET_COLS, SHEET_ROWS, type SheetBody } from '../schema'
 
-export type SheetEvalError = '#ERR!' | '#CYCLE!' | '#DIV/0!'
+export type SheetEvalError = '#ERROR!' | '#CYCLE!' | '#DIV/0!'
 
 const CELL_RE = /^([A-J])([1-9]|1\d|2[0-4])$/i
 
@@ -170,13 +170,19 @@ function evalFormula(src: string, ctx: EvalCtx): number | SheetEvalError {
 
   try {
     const value = parseExpr()
-    if (i !== tokens.length) return '#ERR!'
-    if (!Number.isFinite(value)) return '#ERR!'
+    if (i !== tokens.length) return '#ERROR!'
+    if (!Number.isFinite(value)) return '#ERROR!'
     return value
   } catch (err) {
     if (err instanceof Error && err.message === 'div') return '#DIV/0!'
-    return '#ERR!'
+    return '#ERROR!'
   }
+}
+
+function formatEval(value: number | SheetEvalError): string {
+  if (typeof value !== 'number') return value
+  if (Number.isInteger(value)) return String(value)
+  return String(Math.round(value * 1e6) / 1e6)
 }
 
 export function displayCell(body: SheetBody, col: number, row: number): string {
@@ -187,10 +193,42 @@ export function displayCell(body: SheetBody, col: number, row: number): string {
     cache: new Map(),
     stack: new Set(),
   }
-  const value = evalCell(col, row, ctx)
-  if (typeof value === 'number') {
-    if (Number.isInteger(value)) return String(value)
-    return String(Math.round(value * 1e6) / 1e6)
+  return formatEval(evalCell(col, row, ctx))
+}
+
+/** 一次扫完全表，改单元格后所有公式一起刷新 */
+export function evaluateSheet(body: SheetBody): Record<string, string> {
+  const ctx: EvalCtx = {
+    getRaw: (c, r) => body.cells[`${colLetter(c)}${r + 1}`] ?? '',
+    cache: new Map(),
+    stack: new Set(),
   }
-  return value
+  const out: Record<string, string> = {}
+  for (let r = 0; r < (body.rows || SHEET_ROWS); r++) {
+    for (let c = 0; c < (body.cols || SHEET_COLS); c++) {
+      const key = `${colLetter(c)}${r + 1}`
+      const raw = body.cells[key] ?? ''
+      out[key] = raw.startsWith('=') ? formatEval(evalCell(c, r, ctx)) : raw
+    }
+  }
+  return out
+}
+
+export function selectionStats(
+  evaluated: Record<string, string>,
+  range: { c0: number; r0: number; c1: number; r1: number },
+): { sum: number; avg: Nullable<number>; count: number } {
+  let sum = 0
+  let count = 0
+  for (let r = range.r0; r <= range.r1; r++) {
+    for (let c = range.c0; c <= range.c1; c++) {
+      const shown = evaluated[`${colLetter(c)}${r + 1}`] ?? ''
+      if (!shown || shown.startsWith('#')) continue
+      const n = Number(shown)
+      if (!Number.isFinite(n)) continue
+      sum += n
+      count += 1
+    }
+  }
+  return { sum, count, avg: count > 0 ? sum / count : null }
 }

@@ -5,9 +5,9 @@ import { useImageViewerStore } from '@/features/image-viewer/store'
 import { useNotepadStore } from '@/features/notepad/store'
 import { requestOpenNote } from '@/features/notepad/pendingOpen'
 import { officeKindFromPath } from '@/features/office/fileTypes'
-import { requestOpenOfficeFile } from '@/features/office/pendingOpen'
 import '@/features/office/store'
 import { openIdeFile } from '@/lib/desktop/window/ideWindows'
+import { openOfficeFile } from '@/lib/desktop/window/officeWindows'
 
 export type OpenVfsFileKind = 'image' | 'text' | 'code' | 'office' | 'unsupported'
 
@@ -30,9 +30,7 @@ export async function openVfsFile(filePath: string): Promise<OpenVfsFileKind> {
   if (officeKind) {
     try {
       const { node } = await vfs.readFile(filePath)
-      requestOpenOfficeFile(officeKind, node.id)
-      const { useWindowStore } = await import('@/store/window')
-      useWindowStore.getState().openWindow(officeKind)
+      openOfficeFile(officeKind, node.id, node.name)
       return 'office'
     } catch {
       return 'unsupported'

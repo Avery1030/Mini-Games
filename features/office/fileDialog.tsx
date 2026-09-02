@@ -1,13 +1,15 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { ScrollText, Table2 } from 'lucide-react'
+import { ChevronUp, Folder, FolderOpen, ScrollText, Table2 } from 'lucide-react'
 import { Button, ContextMenu, Input, Panel, closeModal, modal, openModal, toast, type ContextMenuState } from '@/components/ui'
+import { winChromeSunken } from '@/lib/winChrome'
 import { cn } from '@/lib/cn'
 import { TASKBAR_H } from '@/lib/desktop/windowGeometry'
-import { useOfficeStore } from './store'
-import { fetchOfficeFile, listOfficeFiles, trashOfficeFile, type OfficeFileRecord } from './vfsApi'
+import { getParentPath, joinPath, normalizePath, vfs, type FileNode } from '@/lib/vfs'
+import { OFFICE_DIR, officeKindFromPath } from './fileTypes'
+import { fetchOfficeByPath, trashOfficeFile, type OfficeFileRecord } from './vfsApi'
 import type { OfficeKind } from './schema'
 
 type Mode = 'open' | 'save'
@@ -20,6 +22,15 @@ type PickOptions = {
   nameLabel: string
   emptyLabel: string
   defaultName?: string
+  defaultPath?: string
+}
+
+function splitDefault(path?: string, fallbackName?: string): { dir: string; name: string } {
+  if (!path) return { dir: OFFICE_DIR, name: fallbackName ?? '' }
+  const trimmed = path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path
+  const last = trimmed.slice(trimmed.lastIndexOf('/') + 1)
+  if (last.includes('.')) return { dir: getParentPath(trimmed), name: last }
+  return { dir: trimmed || '/', name: fallbackName ?? '' }
 }
 
 function FileDialogForm({
@@ -29,6 +40,7 @@ function FileDialogForm({
   nameLabel,
   emptyLabel,
   defaultName,
+  defaultPath,
   onCancel,
   onConfirm,
 }: {
@@ -38,86 +50,78 @@ function FileDialogForm({
   nameLabel: string
   emptyLabel: string
   defaultName?: string
+  defaultPath?: string
   onCancel: () => void
-  onConfirm: (payload: { id?: string; name: string }) => void
+  onConfirm: (payload: { path: string }) => void
 }) {
   const tModal = useTranslations('modal')
   const t = useTranslations(kind === 'writer' ? 'writer' : 'sheet')
-  const [list, setList] = useState<OfficeFileRecord[]>([])
+  const { dir: initialDir, name: initialName } = splitDefault(defaultPath, defaultName)
+  const [cwd, setCwd] = useState(initialDir || OFFICE_DIR)
+  const [nodes, setNodes] = useState<FileNode[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<Nullable<string>>(null)
-  const [name, setName] = useState(defaultName ?? '')
+  const [filename, setFilename] = useState(initialName)
   const [error, setError] = useState('')
   const [contextMenu, setContextMenu] = useState<Nullable<ContextMenuState>>(null)
-  const Icon = kind === 'writer' ? ScrollText : Table2
+  const FileIcon = kind === 'writer' ? ScrollText : Table2
 
-  const refresh = useCallback(async () => {
-    const files = await listOfficeFiles(kind)
-    setList(files)
-    return files
-  }, [kind])
+  const loadDir = useCallback(
+    async (path: string) => {
+      setLoading(true)
+      setError('')
+      try {
+        const list = await vfs.readDir(path)
+        setCwd(path)
+        setNodes(list)
+        setSelected(null)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t('loadFail'))
+      } finally {
+        setLoading(false)
+      }
+    },
+    [t],
+  )
 
   useEffect(() => {
-    let cancelled = false
-    void (async () => {
-      setLoading(true)
-      try {
-        const files = await refresh()
-        if (cancelled) return
-        setSelected((prev) => {
-          if (prev && files.some((f) => f.id === prev)) return prev
-          return files[0]?.id ?? null
-        })
-        setName((prev) => prev || files[0]?.name || defaultName || '')
-      } catch {
-        if (!cancelled) setError(emptyLabel)
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [defaultName, emptyLabel, refresh])
+    void loadDir(initialDir || OFFICE_DIR)
+  }, [initialDir, loadDir])
+
+  const parentPath = useMemo(() => (cwd === '/' ? null : getParentPath(cwd)), [cwd])
+  const visible = nodes.filter((n) => n.isDirectory || officeKindFromPath(n.path) === kind)
 
   const confirm = () => {
     if (mode === 'open') {
-      const file = list.find((f) => f.id === selected)
-      if (!file) {
-        setError(emptyLabel)
+      const node = nodes.find((n) => n.path === selected)
+      if (!node || node.isDirectory || officeKindFromPath(node.path) !== kind) {
+        setError(t('pickFileFirst'))
         return
       }
-      onConfirm({ id: file.id, name: file.name })
+      onConfirm({ path: node.path })
       return
     }
-    const trimmed = name.trim()
-    if (!trimmed) {
+    const name = filename.trim()
+    if (!name) {
       setError(nameLabel)
       return
     }
-    const existing = list.find((f) => f.name.trim().toLowerCase() === trimmed.toLowerCase())
-    onConfirm({ id: existing?.id, name: trimmed })
+    try {
+      onConfirm({ path: joinPath(cwd, name) })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('loadFail'))
+    }
   }
 
-  const onDelete = async (file: OfficeFileRecord) => {
+  const onDelete = async (node: FileNode) => {
     const ok = await modal.confirm({
       title: tModal('confirmTitle'),
-      message: t('confirmDelete', { name: file.name }),
+      message: t('confirmDelete', { name: node.name }),
     })
     if (!ok) return
     try {
-      await trashOfficeFile(file.id)
-      const s = useOfficeStore.getState()
-      if (s.lastWriterId === file.id) s.setLastOpened('writer', null)
-      if (s.lastSheetId === file.id) s.setLastOpened('sheet', null)
-      const files = await refresh()
-      setSelected((prev) => {
-        if (prev !== file.id) return prev
-        return files[0]?.id ?? null
-      })
-      if (mode === 'save' && name.trim().toLowerCase() === file.name.toLowerCase()) {
-        setName(files[0]?.name ?? defaultName ?? '')
-      }
+      await trashOfficeFile(node.id)
+      await loadDir(cwd)
       toast.success(t('deleted'))
     } catch {
       toast.error(t('deleteFail'))
@@ -126,17 +130,28 @@ function FileDialogForm({
 
   return (
     <div className='flex flex-col gap-2 min-h-0'>
+      <div className='flex items-center gap-1'>
+        <Button size='sm' disabled={!parentPath} onClick={() => parentPath && void loadDir(parentPath)}>
+          <ChevronUp size={12} />
+        </Button>
+        <div className={cn(winChromeSunken, 'min-w-0 flex-1 flex items-center gap-1 text-[11px] px-2 py-0.5 bg-field truncate')}>
+          <FolderOpen size={12} className='shrink-0' />
+          <span className='truncate'>{cwd}</span>
+        </div>
+      </div>
+
       <Panel inset padded={false} className='h-52 overflow-auto bg-field'>
         {loading ? (
           <p className='p-3 text-[11px] text-muted'>{t('loading')}</p>
-        ) : list.length === 0 ? (
+        ) : visible.length === 0 ? (
           <p className='p-3 text-[11px] text-muted'>{emptyLabel}</p>
         ) : (
           <ul>
-            {list.map((file) => {
-              const active = selected === file.id
+            {visible.map((node) => {
+              const active = selected === node.path
+              const Icon = node.isDirectory ? Folder : FileIcon
               return (
-                <li key={file.id}>
+                <li key={node.path}>
                   <button
                     type='button'
                     className={cn(
@@ -145,19 +160,23 @@ function FileDialogForm({
                       active && 'bg-[var(--window-title-active)] text-[var(--window-title-text)]',
                     )}
                     onClick={() => {
-                      setSelected(file.id)
-                      setName(file.name)
+                      setSelected(node.path)
                       setError('')
+                      if (!node.isDirectory) setFilename(node.name)
                     }}
                     onDoubleClick={() => {
-                      setSelected(file.id)
-                      onConfirm({ id: file.id, name: file.name })
+                      if (node.isDirectory) {
+                        void loadDir(node.path)
+                        return
+                      }
+                      onConfirm({ path: node.path })
                     }}
                     onContextMenu={(e) => {
+                      if (node.isDirectory) return
                       e.preventDefault()
                       e.stopPropagation()
-                      setSelected(file.id)
-                      setName(file.name)
+                      setSelected(node.path)
+                      setFilename(node.name)
                       setContextMenu({
                         x: e.clientX,
                         y: e.clientY,
@@ -166,7 +185,7 @@ function FileDialogForm({
                             id: 'delete',
                             label: t('delete'),
                             onSelect: () => {
-                              void onDelete(file)
+                              void onDelete(node)
                             },
                           },
                         ],
@@ -174,7 +193,7 @@ function FileDialogForm({
                     }}
                   >
                     <Icon size={14} className='shrink-0' />
-                    <span className='truncate'>{file.name}</span>
+                    <span className='truncate'>{node.name}</span>
                   </button>
                 </li>
               )
@@ -186,7 +205,7 @@ function FileDialogForm({
       {mode === 'save' ? (
         <label className='flex items-center gap-2 text-[11px]'>
           <span className='shrink-0'>{nameLabel}</span>
-          <Input size='sm' value={name} onChange={(e) => setName(e.target.value)} />
+          <Input size='sm' value={filename} onChange={(e) => setFilename(e.target.value)} />
         </label>
       ) : null}
 
@@ -208,10 +227,10 @@ function FileDialogForm({
 
 export function pickOfficeFile(
   options: PickOptions,
-): Promise<Nullable<{ id?: string; name: string; file?: OfficeFileRecord }>> {
+): Promise<Nullable<{ id?: string; name: string; path: string; file?: OfficeFileRecord }>> {
   return new Promise((resolve) => {
     let settled = false
-    const finish = (v: Nullable<{ id?: string; name: string; file?: OfficeFileRecord }>) => {
+    const finish = (v: Nullable<{ id?: string; name: string; path: string; file?: OfficeFileRecord }>) => {
       if (settled) return
       settled = true
       resolve(v)
@@ -221,7 +240,7 @@ export function pickOfficeFile(
       title: options.title,
       dismissible: true,
       showClose: true,
-      widthClassName: 'w-[min(380px,calc(100vw-2rem))]',
+      widthClassName: 'w-[min(420px,calc(100vw-2rem))]',
       content: (
         <FileDialogForm
           kind={options.kind}
@@ -230,14 +249,21 @@ export function pickOfficeFile(
           nameLabel={options.nameLabel}
           emptyLabel={options.emptyLabel}
           defaultName={options.defaultName}
+          defaultPath={options.defaultPath}
           onCancel={() => {
             finish(null)
             closeModal(id)
           }}
           onConfirm={(payload) => {
             void (async () => {
-              const file = payload.id ? await fetchOfficeFile(payload.id).catch(() => undefined) : undefined
-              finish({ ...payload, file })
+              const path = normalizePath(payload.path)
+              const file = await fetchOfficeByPath(path).catch(() => undefined)
+              finish({
+                path,
+                id: file?.id,
+                name: file?.name ?? path.slice(path.lastIndexOf('/') + 1),
+                file,
+              })
               closeModal(id)
             })()
           }}

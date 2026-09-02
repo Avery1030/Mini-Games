@@ -60,6 +60,15 @@ export {
   ensureIdeEditorWindow,
 } from './ideWindows'
 export {
+  OfficeAppWindow,
+  spawnOfficeWindow,
+  openOfficeFile,
+  getOfficeWindow,
+  restorePersistedOfficeSessions,
+  ensureOfficeWindow,
+  findOfficeWindowByFile,
+} from './officeWindows'
+export {
   prefetchApps,
   scheduleIdlePrefetchBuiltinApps,
 } from './prefetchApps'

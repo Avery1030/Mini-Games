@@ -6,16 +6,18 @@ import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { modal, toast } from '@/components/ui'
 import { winChromeSunken } from '@/lib/winChrome'
+import { useWindowStore } from '@/store/window'
+import { findOfficeWindowByFile, getOfficeWindow } from '@/lib/desktop/window/officeWindows'
 import { useOfficeStore } from '../store'
 import { pickOfficeFile } from '../fileDialog'
 import { EMPTY_WRITER } from '../schema'
-import { subscribeOpenOfficeFile, takePendingOpenOfficeFile } from '../pendingOpen'
-import { createOfficeFile, fetchOfficeFile, updateWriterFile } from '../vfsApi'
-import { sanitizeWriterHtml } from './sanitize'
+import { fetchOfficeFile, saveWriterAtPath, updateWriterFile } from '../vfsApi'
+import { htmlToPlainText, sanitizeWriterHtml } from './sanitize'
 import { exportWriterDocx, exportWriterPdf, exportWriterTxt } from './exportDoc'
-import { WriterToolbar } from './WriterToolbar'
+import { WriterToolbar, type WriterAlign, type WriterCommand, type WriterFormat } from './WriterToolbar'
+import { WriterRuler } from './WriterRuler'
 
-let writerSessionBooted = false
+const AUTO_SAVE_MS = 30_000
 
 function currentBlock(): string {
   try {
@@ -37,28 +39,77 @@ function currentColor(): string {
   }
 }
 
-export function WriterApp() {
+function queryFlag(cmd: string): boolean {
+  try {
+    return document.queryCommandState(cmd)
+  } catch {
+    return false
+  }
+}
+
+function currentAlign(): WriterAlign {
+  if (queryFlag('justifyCenter')) return 'center'
+  if (queryFlag('justifyRight')) return 'right'
+  if (queryFlag('justifyFull')) return 'justify'
+  return 'left'
+}
+
+function readFormat(): WriterFormat {
+  return {
+    block: currentBlock(),
+    color: currentColor(),
+    bold: queryFlag('bold'),
+    italic: queryFlag('italic'),
+    underline: queryFlag('underline'),
+    list: queryFlag('insertUnorderedList'),
+    align: currentAlign(),
+  }
+}
+
+function writerStats(html: string): { lines: number; chars: number } {
+  const text = htmlToPlainText(html)
+  const chars = [...text.replace(/\s/g, '')].length
+  const lineParts = text.split(/\n/).filter((s) => s.trim().length > 0)
+  return { chars, lines: Math.max(1, lineParts.length || (text ? 1 : 1)) }
+}
+
+type Props = {
+  windowId?: string
+  initialFileId?: Nullable<string>
+}
+
+export function WriterApp({ windowId, initialFileId }: Props = {}) {
   const t = useTranslations('writer')
   const tm = useTranslations('modal')
   const hydrated = useOfficeStore((s) => s._hasHydrated)
   const lastWriterId = useOfficeStore((s) => s.lastWriterId)
   const setLastOpened = useOfficeStore((s) => s.setLastOpened)
+  const hostId = windowId ?? 'writer'
+  const isActive = useWindowStore((s) => {
+    const w = s.windows[hostId]
+    return Boolean(w?.isOpen && w.active && !w.minimized)
+  })
 
   const editorRef = useRef<HTMLDivElement>(null)
   const htmlRef = useRef(EMPTY_WRITER.html)
-  const savedRef = useRef(EMPTY_WRITER.html)
   const dirtyRef = useRef(false)
+  const fileIdRef = useRef<Nullable<string>>(null)
+  const booted = useRef(false)
 
   const [fileId, setFileId] = useState<Nullable<string>>(null)
   const [name, setName] = useState(t('untitled'))
   const [html, setHtml] = useState(EMPTY_WRITER.html)
-  const [block, setBlock] = useState('p')
-  const [color, setColor] = useState('#000000')
+  const [savedHtml, setSavedHtml] = useState(EMPTY_WRITER.html)
+  const [format, setFormat] = useState<WriterFormat>(readFormat)
   const [exporting, setExporting] = useState(false)
 
   htmlRef.current = html
-  const dirty = html !== savedRef.current
+  fileIdRef.current = fileId
+  const dirty = html !== savedHtml
   dirtyRef.current = dirty
+  const stats = writerStats(html)
+
+  const syncFormat = () => setFormat(readFormat())
 
   const applyFile = useCallback(
     (id: string, nextName: string, nextHtml: string) => {
@@ -66,7 +117,7 @@ export function WriterApp() {
       setFileId(id)
       setName(nextName)
       setHtml(clean)
-      savedRef.current = clean
+      setSavedHtml(clean)
       htmlRef.current = clean
       setLastOpened('writer', id)
       const el = editorRef.current
@@ -80,7 +131,7 @@ export function WriterApp() {
     setFileId(null)
     setName(t('untitled'))
     setHtml(clean)
-    savedRef.current = clean
+    setSavedHtml(clean)
     htmlRef.current = clean
     setLastOpened('writer', null)
     const el = editorRef.current
@@ -97,10 +148,10 @@ export function WriterApp() {
   )
 
   useEffect(() => {
-    if (!hydrated || writerSessionBooted) return
-    writerSessionBooted = true
+    if (!hydrated || booted.current) return
+    booted.current = true
     void (async () => {
-      const prefer = takePendingOpenOfficeFile('writer') || lastWriterId
+      const prefer = initialFileId || (!windowId ? lastWriterId : null)
       if (prefer) {
         try {
           await openById(prefer)
@@ -111,63 +162,52 @@ export function WriterApp() {
       }
       applyBlank()
     })()
-  }, [applyBlank, hydrated, lastWriterId, openById])
+  }, [applyBlank, hydrated, initialFileId, lastWriterId, openById, windowId])
 
   useEffect(() => {
     const el = editorRef.current
     if (el) el.innerHTML = htmlRef.current
   }, [fileId])
 
+  useEffect(() => {
+    if (!windowId) return
+    getOfficeWindow(windowId)?.setFileMeta(fileId, name, dirty)
+  }, [dirty, fileId, name, windowId])
+
   const confirmDiscard = useCallback(async () => {
     if (!dirtyRef.current) return true
     return modal.confirm({ title: tm('confirmTitle'), message: t('confirmDiscard') })
   }, [t, tm])
 
-  useEffect(
-    () =>
-      subscribeOpenOfficeFile('writer', (id) => {
-        void (async () => {
-          if (id === fileId) return
-          if (!(await confirmDiscard())) return
-          try {
-            await openById(id)
-          } catch {
-            toast.error(t('loadFail'))
-          }
-        })()
-      }),
-    [confirmDiscard, fileId, openById, t],
-  )
-
   const readEditor = () => sanitizeWriterHtml(editorRef.current?.innerHTML ?? htmlRef.current)
 
   const persistExisting = useCallback(
-    async (id: string, nextName?: string) => {
+    async (id: string, nextName?: string, silent = false) => {
       const next = readEditor()
       setHtml(next)
       try {
         const saved = await updateWriterFile(id, { html: next, name: nextName })
-        savedRef.current = next
+        setSavedHtml(next)
         setName(saved.name)
         setFileId(saved.id)
         setLastOpened('writer', saved.id)
-        toast.success(t('savedOk'))
+        if (!silent) toast.success(t('savedOk'))
         return true
       } catch {
-        toast.error(t('saveFail'))
+        if (!silent) toast.error(t('saveFail'))
         return false
       }
     },
     [setLastOpened, t],
   )
 
-  const persistNew = useCallback(
-    async (nextName: string) => {
+  const persistToPath = useCallback(
+    async (path: string) => {
       const next = readEditor()
       setHtml(next)
       try {
-        const created = await createOfficeFile('writer', { name: nextName, html: next })
-        applyFile(created.id, created.name, next)
+        const saved = await saveWriterAtPath(path, next)
+        applyFile(saved.id, saved.name, next)
         toast.success(t('savedOk'))
         return true
       } catch {
@@ -198,12 +238,14 @@ export function WriterApp() {
       toast.error(t('loadFail'))
       return
     }
+    if (windowId) {
+      const other = findOfficeWindowByFile('writer', picked.file.id)
+      if (other && other.id !== windowId) {
+        other.open()
+        return
+      }
+    }
     applyFile(picked.file.id, picked.file.name, picked.file.writer?.html ?? EMPTY_WRITER.html)
-  }
-
-  const onSave = () => {
-    if (fileId) void persistExisting(fileId)
-    else void persistNew(name)
   }
 
   const onSaveAs = async () => {
@@ -221,7 +263,12 @@ export function WriterApp() {
       await persistExisting(picked.id, picked.name)
       return
     }
-    await persistNew(picked.name)
+    await persistToPath(picked.path)
+  }
+
+  const onSave = () => {
+    if (fileId) void persistExisting(fileId)
+    else void onSaveAs()
   }
 
   const onExport = async (kind: 'pdf' | 'docx' | 'txt') => {
@@ -229,7 +276,7 @@ export function WriterApp() {
     setExporting(true)
     try {
       if (kind === 'txt') exportWriterTxt(next, name)
-      else if (kind === 'docx') await exportWriterDocx(next, name)
+      else if (kind === 'docx') exportWriterDocx(next, name)
       else await exportWriterPdf(next, name)
       toast.success(t('exported'))
     } catch {
@@ -247,15 +294,32 @@ export function WriterApp() {
       /* ignore */
     }
     setHtml(readEditor())
-    setBlock(currentBlock())
-    setColor(currentColor())
+    syncFormat()
   }
 
   useEffect(() => {
+    if (!fileId || !dirty) return
+    const timer = window.setTimeout(() => {
+      const id = fileIdRef.current
+      if (id && dirtyRef.current) void persistExisting(id, undefined, true)
+    }, AUTO_SAVE_MS)
+    return () => window.clearTimeout(timer)
+  }, [dirty, fileId, html, persistExisting])
+
+  useEffect(() => {
+    if (!isActive) return
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+      if (!(e.metaKey || e.ctrlKey)) return
+      const key = e.key.toLowerCase()
+      if (key === 's') {
         e.preventDefault()
         onSave()
+      } else if (key === 'n') {
+        e.preventDefault()
+        void onNew()
+      } else if (key === 'o') {
+        e.preventDefault()
+        void onOpen()
       }
     }
     window.addEventListener('keydown', onKey)
@@ -265,15 +329,14 @@ export function WriterApp() {
   return (
     <div className={cn(embeddedAppShell('flex flex-col bg-window text-on-chrome font-pixel'))}>
       <WriterToolbar
-        block={block}
-        color={color}
+        format={format}
         exporting={exporting}
-        onCommand={(cmd) => {
-          if (cmd === 'bold') run('bold')
-          else if (cmd === 'ul') run('insertUnorderedList')
-          else if (cmd === 'h1') run('formatBlock', '<h1>')
+        onCommand={(cmd: WriterCommand) => {
+          if (cmd === 'h1') run('formatBlock', '<h1>')
           else if (cmd === 'h2') run('formatBlock', '<h2>')
-          else run('formatBlock', '<p>')
+          else if (cmd === 'p') run('formatBlock', '<p>')
+          else if (cmd === 'ul') run('insertUnorderedList')
+          else run(cmd)
         }}
         onColor={(c) => run('foreColor', c)}
         onNew={() => void onNew()}
@@ -283,7 +346,8 @@ export function WriterApp() {
         onExport={(k) => void onExport(k)}
       />
 
-      <div className='flex-1 min-h-0 p-2'>
+      <div className='flex-1 min-h-0 p-2 flex flex-col gap-1'>
+        <WriterRuler />
         <div
           ref={editorRef}
           contentEditable
@@ -291,30 +355,27 @@ export function WriterApp() {
           spellCheck={false}
           className={cn(
             winChromeSunken,
-            'h-full overflow-auto bg-field text-on-chrome p-3 text-[13px] leading-relaxed outline-none',
+            'flex-1 min-h-0 overflow-auto bg-field text-on-chrome p-3 text-[13px] leading-relaxed outline-none',
             '[&_h1]:text-[22px] [&_h1]:font-bold [&_h1]:m-0 [&_h1]:mb-2',
             '[&_h2]:text-[16px] [&_h2]:font-bold [&_h2]:m-0 [&_h2]:mb-2',
             '[&_p]:m-0 [&_p]:mb-2 [&_ul]:m-0 [&_ul]:pl-5',
           )}
           onInput={() => {
             setHtml(readEditor())
-            setBlock(currentBlock())
-            setColor(currentColor())
+            syncFormat()
           }}
-          onMouseUp={() => {
-            setBlock(currentBlock())
-            setColor(currentColor())
-          }}
-          onKeyUp={() => {
-            setBlock(currentBlock())
-            setColor(currentColor())
-          }}
+          onMouseUp={syncFormat}
+          onKeyUp={syncFormat}
         />
       </div>
 
       <div className='shrink-0 px-2 py-0.5 border-t border-chrome-dark bg-status-bar text-[10px] text-status-bar-fg flex justify-between gap-2'>
-        <span className='truncate min-w-0'>{name}</span>
-        <span className='shrink-0'>{dirty ? t('unsaved') : t('saved')}</span>
+        <span className='truncate min-w-0'>
+          {name} · {t('lines', { count: stats.lines })} · {t('words', { count: stats.chars })}
+        </span>
+        <span className={cn('shrink-0 font-bold', dirty ? 'text-red-700 dark:text-red-400' : 'text-status-bar-fg')}>
+          {dirty ? t('unsaved') : t('saved')}
+        </span>
       </div>
     </div>
   )

@@ -1,4 +1,4 @@
-import { getBasename, getParentPath, sanitizeFileStem, vfs, type FileNode } from '@/lib/vfs'
+import { getBasename, getParentPath, joinPath, sanitizeFileStem, vfs, type FileNode } from '@/lib/vfs'
 import {
   EMPTY_SHEET,
   EMPTY_WRITER,
@@ -121,22 +121,51 @@ export async function fetchOfficeFile(id: string): Promise<OfficeFileRecord> {
   return toRecord(node, content)
 }
 
+export async function fetchOfficeByPath(path: string): Promise<OfficeFileRecord> {
+  const { content, node } = await vfs.readFile(path)
+  if (!isOfficeNode(node)) throw new Error('文件不存在')
+  return toRecord(node, content)
+}
+
 export async function createOfficeFile(
   kind: OfficeKind,
-  input?: { name?: string; html?: string; sheet?: SheetBody },
+  input?: { name?: string; html?: string; sheet?: SheetBody; dir?: string },
 ): Promise<OfficeFileRecord> {
-  const existing = await vfs.readDir(OFFICE_DIR)
-  const count = existing.filter((n) => isOfficeNode(n)).length
+  const dir = input?.dir?.trim() || OFFICE_DIR
+  try {
+    await vfs.readDir(dir)
+  } catch {
+    await vfs.mkdir(dir)
+  }
+  const count = (await vfs.readDir(OFFICE_DIR).catch(() => [])).filter((n) => isOfficeNode(n)).length
   if (count >= MAX_OFFICE_FILES) throw new Error(`文件数量已达上限（${MAX_OFFICE_FILES}）`)
 
   const name = await uniqueName(kind, input?.name)
-  const path = await vfs.allocateUniquePath(OFFICE_DIR, name)
+  const path = await vfs.allocateUniquePath(dir, name)
   const mime = kind === 'writer' ? 'text/html' : 'application/json'
   const body =
     kind === 'writer'
       ? assertWriterHtml(input?.html ?? EMPTY_WRITER.html)
       : JSON.stringify(assertSheetBody(input?.sheet ?? { ...EMPTY_SHEET, cells: {} }))
   const node = await vfs.writeFile(path, body, mime)
+  return toRecord(node, body)
+}
+
+function forceOfficePath(path: string, kind: OfficeKind): string {
+  const name = ensureFileName(getBasename(path), kind)
+  const parent = getParentPath(path)
+  return parent === '/' ? `/${name}` : joinPath(parent, name)
+}
+
+export async function saveWriterAtPath(path: string, html: string): Promise<OfficeFileRecord> {
+  const htmlBody = assertWriterHtml(html)
+  const node = await vfs.writeFile(forceOfficePath(path, 'writer'), htmlBody, 'text/html')
+  return toRecord(node, htmlBody)
+}
+
+export async function saveSheetAtPath(path: string, sheet: SheetBody): Promise<OfficeFileRecord> {
+  const body = JSON.stringify(assertSheetBody(sheet))
+  const node = await vfs.writeFile(forceOfficePath(path, 'sheet'), body, 'application/json')
   return toRecord(node, body)
 }
 

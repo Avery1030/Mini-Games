@@ -626,6 +626,17 @@
     "deleted": "Deleted",
     "deleteFail": "Failed to delete",
     "loadFail": "Failed to open",
+    "pickFileFirst": "Select a document first",
+    "undo": "Undo",
+    "redo": "Redo",
+    "italic": "Italic",
+    "underline": "Underline",
+    "alignLeft": "Align left",
+    "alignCenter": "Center",
+    "alignRight": "Align right",
+    "alignJustify": "Justify",
+    "lines": "{count} lines",
+    "words": "{count} characters",
     "body": "Body",
     "heading1": "Heading",
     "heading2": "Subhead",
@@ -660,6 +671,10 @@
     "deleteFail": "Failed to delete",
     "loadFail": "Failed to open",
     "untitled": "Untitled.et",
+    "pickFileFirst": "Select a spreadsheet first",
+    "sum": "Sum {value}",
+    "avg": "Avg {value}",
+    "fill": "Fill",
     "formula": "Formula bar",
     "hint": "Type numbers; formulas e.g. =SUM(A1:A3) or =A1+B1",
     "unsaved": "Unsaved",
@@ -708,8 +723,9 @@
     "2026-09-02": {
       "title": "WPS Writer and Sheet",
       "items": [
-        "Added WPS Writer: Win95 rich text (heading / bold / color / lists); files are saved under Documents and can be opened from File Explorer. The Open dialog supports right-click delete (Recycle Bin). Export PDF / DOCX / TXT.",
-        "Added WPS Sheet: cell entry and formulas such as =SUM(A1:A3) and =A1+B1; .et files also live on the virtual filesystem."
+        "Added WPS Writer: Win95 rich text (heading / bold / italic / underline / alignment / color / lists); files are saved under Documents and can be opened from File Explorer. The Open dialog supports right-click delete (Recycle Bin). Export PDF / DOCX / TXT.",
+        "WPS Writer: pressed toolbar buttons, ruler, line/character counts with red Unsaved, autosave, Ctrl+S/N/O; multiple independent windows.",
+        "Added WPS Sheet: drag-select, fill handle, frozen headers, formula-bar sync, selection sum/average; formula errors show #ERROR!; .et files live on the virtual filesystem."
       ]
     },
     "2026-08-15": {

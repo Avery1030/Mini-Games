@@ -24,6 +24,8 @@ export type {
   DesktopItemPersist,
   IdeSessionPersist,
   IdeSessionsPersistState,
+  OfficeSessionWindowPersist,
+  OfficeSessionsPersistState,
   OfficeKindPersist,
   OfficeFilePersist,
   OfficePersistState,

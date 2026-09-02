@@ -31,6 +31,7 @@ import {
 } from 'lucide-react'
 import { registerBuiltinApps } from './defineApp'
 import { spawnIdeEditor } from './ideWindows'
+import { spawnOfficeWindow } from './officeWindows'
 import { BuiltinAppId } from '@/config/desktop'
 
 registerBuiltinApps([
@@ -249,6 +250,10 @@ registerBuiltinApps([
     width: 720,
     height: 520,
     loadApp: () => import('@/features/office').then((m) => m.WriterApp),
+    beforeOpen: () => {
+      spawnOfficeWindow({ kind: 'writer' })?.open()
+      return false
+    },
   },
   {
     id: BuiltinAppId.Sheet,
@@ -257,5 +262,9 @@ registerBuiltinApps([
     width: 780,
     height: 520,
     loadApp: () => import('@/features/office').then((m) => m.SheetApp),
+    beforeOpen: () => {
+      spawnOfficeWindow({ kind: 'sheet' })?.open()
+      return false
+    },
   },
 ])

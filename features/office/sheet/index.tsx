@@ -1,41 +1,108 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { Button, Input, modal, toast } from '@/components/ui'
 import { winChrome, winChromePressed, winChromeSunken } from '@/lib/winChrome'
+import { useWindowStore } from '@/store/window'
+import { findOfficeWindowByFile, getOfficeWindow } from '@/lib/desktop/window/officeWindows'
 import { useOfficeStore } from '../store'
 import { pickOfficeFile } from '../fileDialog'
 import { EMPTY_SHEET, SHEET_COLS, SHEET_ROWS, colLetter, cellKey, type SheetBody } from '../schema'
-import { subscribeOpenOfficeFile, takePendingOpenOfficeFile } from '../pendingOpen'
-import { createOfficeFile, fetchOfficeFile, updateSheetFile } from '../vfsApi'
-import { displayCell } from './formula'
+import { fetchOfficeFile, saveSheetAtPath, updateSheetFile } from '../vfsApi'
+import { evaluateSheet, selectionStats } from './formula'
 
-let sheetSessionBooted = false
+type CellPos = { col: number; row: number }
+type Range = { c0: number; r0: number; c1: number; r1: number }
 
-export function SheetApp() {
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n))
+}
+
+function normRange(a: CellPos, b: CellPos): Range {
+  return {
+    c0: Math.min(a.col, b.col),
+    r0: Math.min(a.row, b.row),
+    c1: Math.max(a.col, b.col),
+    r1: Math.max(a.row, b.row),
+  }
+}
+
+function inRange(range: Range, col: number, row: number) {
+  return col >= range.c0 && col <= range.c1 && row >= range.r0 && row <= range.r1
+}
+
+function fillCopy(sheet: SheetBody, from: Range, to: Range): SheetBody {
+  const srcW = from.c1 - from.c0 + 1
+  const srcH = from.r1 - from.r0 + 1
+  const cells = { ...sheet.cells }
+  for (let r = to.r0; r <= to.r1; r++) {
+    for (let c = to.c0; c <= to.c1; c++) {
+      if (inRange(from, c, r)) continue
+      const srcC = from.c0 + ((c - to.c0) % srcW + srcW) % srcW
+      const srcR = from.r0 + ((r - to.r0) % srcH + srcH) % srcH
+      const srcKey = cellKey(srcC, srcR)
+      const destKey = cellKey(c, r)
+      const val = sheet.cells[srcKey]
+      if (val) cells[destKey] = val
+      else delete cells[destKey]
+    }
+  }
+  return { ...sheet, cells }
+}
+
+type Props = {
+  windowId?: string
+  initialFileId?: Nullable<string>
+}
+
+export function SheetApp({ windowId, initialFileId }: Props = {}) {
   const t = useTranslations('sheet')
   const tm = useTranslations('modal')
   const hydrated = useOfficeStore((s) => s._hasHydrated)
   const lastSheetId = useOfficeStore((s) => s.lastSheetId)
   const setLastOpened = useOfficeStore((s) => s.setLastOpened)
+  const hostId = windowId ?? 'sheet'
+  const isActive = useWindowStore((s) => {
+    const w = s.windows[hostId]
+    return Boolean(w?.isOpen && w.active && !w.minimized)
+  })
 
   const savedRef = useRef('')
   const dirtyRef = useRef(false)
+  const fileIdRef = useRef<Nullable<string>>(null)
+  const sheetRef = useRef<SheetBody>(EMPTY_SHEET)
+  const selRef = useRef<Range>({ c0: 0, r0: 0, c1: 0, r1: 0 })
+  const anchorRef = useRef<CellPos>({ col: 0, row: 0 })
+  const draftRef = useRef('')
+  const editingRef = useRef(false)
+  const formulaRef = useRef<HTMLInputElement>(null)
+  const booted = useRef(false)
+  const dragMode = useRef<Nullable<'select' | 'fill'>>(null)
+  const fillOrigin = useRef<Range>({ c0: 0, r0: 0, c1: 0, r1: 0 })
   const [fileId, setFileId] = useState<Nullable<string>>(null)
   const [name, setName] = useState(t('untitled'))
   const [sheet, setSheet] = useState<SheetBody>(EMPTY_SHEET)
-  const [sel, setSel] = useState({ col: 0, row: 0 })
+  const [anchor, setAnchor] = useState<CellPos>({ col: 0, row: 0 })
+  const [sel, setSel] = useState<Range>({ c0: 0, r0: 0, c1: 0, r1: 0 })
   const [draft, setDraft] = useState('')
   const [editing, setEditing] = useState(false)
 
+  fileIdRef.current = fileId
+  sheetRef.current = sheet
+  selRef.current = sel
+  anchorRef.current = anchor
+  draftRef.current = draft
+  editingRef.current = editing
   const snapshot = useMemo(() => JSON.stringify(sheet.cells), [sheet.cells])
-  const dirty = snapshot !== savedRef.current
-  dirtyRef.current = dirty
-  const activeKey = cellKey(sel.col, sel.row)
+  const activeKey = cellKey(anchor.col, anchor.row)
   const raw = sheet.cells[activeKey] ?? ''
+  const dirty = snapshot !== savedRef.current || (editing && draft !== raw)
+  dirtyRef.current = dirty
+  const evaluated = useMemo(() => evaluateSheet(sheet), [sheet])
+  const stats = useMemo(() => selectionStats(evaluated, sel), [evaluated, sel])
 
   const applyFile = useCallback(
     (id: string, nextName: string, body: SheetBody) => {
@@ -45,7 +112,8 @@ export function SheetApp() {
       setSheet(next)
       savedRef.current = JSON.stringify(next.cells)
       setLastOpened('sheet', id)
-      setSel({ col: 0, row: 0 })
+      setAnchor({ col: 0, row: 0 })
+      setSel({ c0: 0, r0: 0, c1: 0, r1: 0 })
       setDraft(next.cells[cellKey(0, 0)] ?? '')
       setEditing(false)
     },
@@ -59,7 +127,8 @@ export function SheetApp() {
     setSheet(next)
     savedRef.current = JSON.stringify(next.cells)
     setLastOpened('sheet', null)
-    setSel({ col: 0, row: 0 })
+    setAnchor({ col: 0, row: 0 })
+    setSel({ c0: 0, r0: 0, c1: 0, r1: 0 })
     setDraft('')
     setEditing(false)
   }, [setLastOpened, t])
@@ -74,10 +143,10 @@ export function SheetApp() {
   )
 
   useEffect(() => {
-    if (!hydrated || sheetSessionBooted) return
-    sheetSessionBooted = true
+    if (!hydrated || booted.current) return
+    booted.current = true
     void (async () => {
-      const prefer = takePendingOpenOfficeFile('sheet') || lastSheetId
+      const prefer = initialFileId || (!windowId ? lastSheetId : null)
       if (prefer) {
         try {
           await openById(prefer)
@@ -88,32 +157,21 @@ export function SheetApp() {
       }
       applyBlank()
     })()
-  }, [applyBlank, hydrated, lastSheetId, openById])
+  }, [applyBlank, hydrated, initialFileId, lastSheetId, openById, windowId])
+
+  useEffect(() => {
+    if (!windowId) return
+    getOfficeWindow(windowId)?.setFileMeta(fileId, name, dirty)
+  }, [dirty, fileId, name, windowId])
 
   const confirmDiscard = useCallback(async () => {
     if (!dirtyRef.current) return true
     return modal.confirm({ title: tm('confirmTitle'), message: t('confirmDiscard') })
   }, [t, tm])
 
-  useEffect(
-    () =>
-      subscribeOpenOfficeFile('sheet', (id) => {
-        void (async () => {
-          if (id === fileId) return
-          if (!(await confirmDiscard())) return
-          try {
-            await openById(id)
-          } catch {
-            toast.error(t('loadFail'))
-          }
-        })()
-      }),
-    [confirmDiscard, fileId, openById, t],
-  )
-
   const commitDraft = useCallback(
-    (nextDraft: string, move?: { col: number; row: number }) => {
-      const key = cellKey(sel.col, sel.row)
+    (nextDraft: string, move?: CellPos) => {
+      const key = cellKey(anchor.col, anchor.row)
       setSheet((prev) => {
         const cells = { ...prev.cells }
         if (nextDraft.trim()) cells[key] = nextDraft
@@ -122,48 +180,71 @@ export function SheetApp() {
       })
       setEditing(false)
       if (move) {
-        const col = Math.max(0, Math.min(SHEET_COLS - 1, move.col))
-        const row = Math.max(0, Math.min(SHEET_ROWS - 1, move.row))
-        setSel({ col, row })
+        const col = clamp(move.col, 0, SHEET_COLS - 1)
+        const row = clamp(move.row, 0, SHEET_ROWS - 1)
+        setAnchor({ col, row })
+        setSel({ c0: col, r0: row, c1: col, r1: row })
       }
     },
-    [sel.col, sel.row],
+    [anchor.col, anchor.row],
   )
 
   useEffect(() => {
     if (!editing) setDraft(raw)
-  }, [editing, raw, sel.col, sel.row])
+  }, [editing, raw, anchor.col, anchor.row])
 
-  const persistExisting = async (id: string, nextName?: string) => {
+  const persistExisting = useCallback(
+    async (id: string, nextName?: string, silent = false) => {
+      const current = sheetRef.current
+      const pos = anchorRef.current
+      const nextSheet = (() => {
+        if (!editingRef.current) return current
+        const key = cellKey(pos.col, pos.row)
+        const cells = { ...current.cells }
+        const value = draftRef.current
+        if (value.trim()) cells[key] = value
+        else delete cells[key]
+        return { ...current, cells }
+      })()
+      try {
+        const saved = await updateSheetFile(id, { sheet: nextSheet, name: nextName })
+        setSheet(nextSheet)
+        savedRef.current = JSON.stringify(nextSheet.cells)
+        setFileId(saved.id)
+        setName(saved.name)
+        setLastOpened('sheet', saved.id)
+        setEditing(false)
+        if (!silent) toast.success(t('savedOk'))
+        return true
+      } catch {
+        if (!silent) toast.error(t('saveFail'))
+        return false
+      }
+    },
+    [setLastOpened, t],
+  )
+
+  const persistToPath = async (path: string) => {
+    const current = sheetRef.current
+    const pos = anchorRef.current
+    const nextSheet = (() => {
+      if (!editingRef.current) return current
+      const key = cellKey(pos.col, pos.row)
+      const cells = { ...current.cells }
+      const value = draftRef.current
+      if (value.trim()) cells[key] = value
+      else delete cells[key]
+      return { ...current, cells }
+    })()
     try {
-      const saved = await updateSheetFile(id, { sheet, name: nextName })
-      savedRef.current = JSON.stringify(sheet.cells)
-      setFileId(saved.id)
-      setName(saved.name)
-      setLastOpened('sheet', saved.id)
+      const saved = await saveSheetAtPath(path, nextSheet)
+      applyFile(saved.id, saved.name, nextSheet)
       toast.success(t('savedOk'))
       return true
     } catch {
       toast.error(t('saveFail'))
       return false
     }
-  }
-
-  const persistNew = async (nextName: string) => {
-    try {
-      const created = await createOfficeFile('sheet', { name: nextName, sheet })
-      applyFile(created.id, created.name, sheet)
-      toast.success(t('savedOk'))
-      return true
-    } catch {
-      toast.error(t('saveFail'))
-      return false
-    }
-  }
-
-  const persist = (id?: string, nextName?: string) => {
-    if (id) return persistExisting(id, nextName)
-    return persistNew(nextName ?? name)
   }
 
   const onNew = async () => {
@@ -186,6 +267,13 @@ export function SheetApp() {
       toast.error(t('loadFail'))
       return
     }
+    if (windowId) {
+      const other = findOfficeWindowByFile('sheet', picked.file.id)
+      if (other && other.id !== windowId) {
+        other.open()
+        return
+      }
+    }
     applyFile(picked.file.id, picked.file.name, picked.file.sheet)
   }
 
@@ -200,22 +288,94 @@ export function SheetApp() {
       defaultName: name,
     })
     if (!picked) return
-    await persist(picked.id, picked.name)
+    if (picked.id) {
+      await persistExisting(picked.id, picked.name)
+      return
+    }
+    await persistToPath(picked.path)
+  }
+
+  const onSave = () => {
+    if (fileId) void persistExisting(fileId)
+    else void onSaveAs()
   }
 
   useEffect(() => {
+    if (!fileId || !dirty) return
+    const timer = window.setTimeout(() => {
+      const id = fileIdRef.current
+      if (id && dirtyRef.current) void persistExisting(id, undefined, true)
+    }, 30_000)
+    return () => window.clearTimeout(timer)
+  }, [dirty, fileId, persistExisting, snapshot])
+
+  useEffect(() => {
+    if (!isActive) return
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+      if (!(e.metaKey || e.ctrlKey)) return
+      const key = e.key.toLowerCase()
+      if (key === 's') {
         e.preventDefault()
-        void persist(fileId ?? undefined)
+        onSave()
+      } else if (key === 'n') {
+        e.preventDefault()
+        void onNew()
+      } else if (key === 'o') {
+        e.preventDefault()
+        void onOpen()
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   })
 
+  useEffect(() => {
+    const onUp = () => {
+      if (dragMode.current === 'fill') {
+        setSheet((prev) => fillCopy(prev, fillOrigin.current, selRef.current))
+      }
+      dragMode.current = null
+    }
+    window.addEventListener('mouseup', onUp)
+    return () => window.removeEventListener('mouseup', onUp)
+  }, [])
+
+  const enterCell = (col: number, row: number) => {
+    if (dragMode.current === 'select') {
+      setSel(normRange(anchor, { col, row }))
+    } else if (dragMode.current === 'fill') {
+      const origin = fillOrigin.current
+      setSel({
+        c0: Math.min(origin.c0, col),
+        r0: Math.min(origin.r0, row),
+        c1: Math.max(origin.c1, col),
+        r1: Math.max(origin.r1, row),
+      })
+    }
+  }
+
+  const startSelect = (col: number, row: number, e: MouseEvent) => {
+    e.preventDefault()
+    if (editing) commitDraft(draft)
+    dragMode.current = 'select'
+    setAnchor({ col, row })
+    setSel({ c0: col, r0: row, c1: col, r1: row })
+    setEditing(false)
+  }
+
+  const startFill = (e: MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragMode.current = 'fill'
+    fillOrigin.current = sel
+  }
+
   const cols = Array.from({ length: SHEET_COLS }, (_, i) => i)
   const rows = Array.from({ length: SHEET_ROWS }, (_, i) => i)
+  const selLabel =
+    sel.c0 === sel.c1 && sel.r0 === sel.r1
+      ? activeKey
+      : `${cellKey(sel.c0, sel.r0)}:${cellKey(sel.c1, sel.r1)}`
 
   return (
     <div className={cn(embeddedAppShell('flex flex-col bg-window text-on-chrome font-pixel'))}>
@@ -226,7 +386,7 @@ export function SheetApp() {
         <Button size='sm' onClick={() => void onOpen()}>
           {t('open')}
         </Button>
-        <Button size='sm' onClick={() => void persist(fileId ?? undefined)}>
+        <Button size='sm' onClick={() => void onSave()}>
           {t('save')}
         </Button>
         <Button size='sm' onClick={() => void onSaveAs()}>
@@ -236,8 +396,9 @@ export function SheetApp() {
       </div>
 
       <div className='shrink-0 flex items-center gap-2 px-2 py-1 border-b border-chrome-dark bg-chrome'>
-        <span className={cn(winChromePressed, 'min-w-[3rem] text-center text-[11px] px-1 py-0.5')}>{activeKey}</span>
+        <span className={cn(winChromePressed, 'min-w-[4.5rem] text-center text-[11px] px-1 py-0.5')}>{selLabel}</span>
         <Input
+          ref={formulaRef}
           size='sm'
           value={editing ? draft : raw}
           onFocus={() => {
@@ -248,32 +409,32 @@ export function SheetApp() {
             setEditing(true)
             setDraft(e.target.value)
           }}
-          onBlur={() => commitDraft(draft)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault()
-              commitDraft(draft, { col: sel.col, row: sel.row + 1 })
+              commitDraft(draft, { col: anchor.col, row: anchor.row + 1 })
             } else if (e.key === 'Escape') {
               setEditing(false)
               setDraft(raw)
             }
           }}
+          className='flex-1 min-w-0'
           aria-label={t('formula')}
         />
       </div>
 
       <div className={cn(winChromeSunken, 'flex-1 min-h-0 m-2 overflow-auto bg-field')}>
-        <table className='border-collapse text-[11px] min-w-full'>
+        <table className='border-separate border-spacing-0 text-[11px] min-w-full'>
           <thead>
             <tr>
-              <th className={cn(winChrome, 'sticky top-0 z-[1] w-8 h-6 font-normal')} />
+              <th className={cn(winChrome, 'sticky top-0 left-0 z-30 w-8 h-6 font-normal bg-chrome')} />
               {cols.map((c) => (
                 <th
                   key={c}
                   className={cn(
                     winChrome,
-                    'sticky top-0 z-[1] min-w-[72px] h-6 font-bold',
-                    sel.col === c && 'bg-chrome-hover',
+                    'sticky top-0 z-20 min-w-[72px] h-6 font-bold bg-chrome',
+                    (c >= sel.c0 && c <= sel.c1) && 'bg-chrome-hover',
                   )}
                 >
                   {colLetter(c)}
@@ -287,35 +448,46 @@ export function SheetApp() {
                 <th
                   className={cn(
                     winChrome,
-                    'sticky left-0 z-[1] w-8 h-6 font-normal',
-                    sel.row === r && 'bg-chrome-hover',
+                    'sticky left-0 z-10 w-8 h-6 font-normal bg-chrome',
+                    (r >= sel.r0 && r <= sel.r1) && 'bg-chrome-hover',
                   )}
                 >
                   {r + 1}
                 </th>
                 {cols.map((c) => {
-                  const active = sel.col === c && sel.row === r
+                  const active = anchor.col === c && anchor.row === r
+                  const selected = inRange(sel, c, r)
                   const key = cellKey(c, r)
-                  const shown = active && editing ? draft : displayCell(sheet, c, r)
+                  const shown = active && editing ? draft : evaluated[key] ?? ''
+                  const isFillCorner = c === sel.c1 && r === sel.r1
                   return (
                     <td
                       key={key}
                       className={cn(
-                        'h-6 border border-chrome-dark px-1 bg-field cursor-cell',
-                        active && 'outline-2 outline-offset-[-2px] outline-black',
+                        'relative h-6 border border-chrome-dark px-1 cursor-cell',
+                        selected && !active && 'bg-[var(--window-title-active)] text-[var(--window-title-text)]',
+                        active && 'bg-field outline-2 outline-offset-[-2px] outline-black',
+                        !selected && !active && 'bg-field',
                       )}
-                      onClick={() => {
-                        if (editing && !active) commitDraft(draft)
-                        setSel({ col: c, row: r })
-                        setEditing(false)
-                      }}
+                      onMouseDown={(e) => startSelect(c, r, e)}
+                      onMouseEnter={() => enterCell(c, r)}
                       onDoubleClick={() => {
-                        setSel({ col: c, row: r })
+                        setAnchor({ col: c, row: r })
+                        setSel({ c0: c, r0: r, c1: c, r1: r })
                         setDraft(sheet.cells[key] ?? '')
                         setEditing(true)
+                        requestAnimationFrame(() => formulaRef.current?.focus())
                       }}
                     >
                       <span className={cn('block truncate', shown.startsWith('#') && 'text-red-700')}>{shown}</span>
+                      {isFillCorner ? (
+                        <button
+                          type='button'
+                          aria-label={t('fill')}
+                          className='absolute -right-1 -bottom-1 z-[1] size-2 bg-black border border-white p-0 cursor-crosshair'
+                          onMouseDown={startFill}
+                        />
+                      ) : null}
                     </td>
                   )
                 })}
@@ -326,8 +498,15 @@ export function SheetApp() {
       </div>
 
       <div className='shrink-0 px-2 py-0.5 border-t border-chrome-dark bg-status-bar text-[10px] text-status-bar-fg flex justify-between gap-2'>
-        <span className='truncate min-w-0'>{name}</span>
-        <span className='shrink-0'>{dirty ? t('unsaved') : t('saved')}</span>
+        <span className='truncate min-w-0'>
+          {name}
+          {stats.count > 0
+            ? ` · ${t('sum', { value: stats.sum })} · ${t('avg', { value: Math.round((stats.avg ?? 0) * 1e4) / 1e4 })}`
+            : ''}
+        </span>
+        <span className={cn('shrink-0 font-bold', dirty ? 'text-red-700 dark:text-red-400' : 'text-status-bar-fg')}>
+          {dirty ? t('unsaved') : t('saved')}
+        </span>
       </div>
     </div>
   )

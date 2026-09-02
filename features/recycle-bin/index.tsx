@@ -17,7 +17,7 @@ import { formatItemDisplayName } from '@/lib/desktop/fileTypes'
 import { useFsListSelection } from '@/hooks/desktop/useFsListSelection'
 import { requestOpenNote } from '@/features/notepad/pendingOpen'
 import { officeKindFromPath } from '@/features/office/fileTypes'
-import { requestOpenOfficeFile } from '@/features/office/pendingOpen'
+import { openOfficeFile } from '@/lib/desktop/window/officeWindows'
 import { useImageViewerStore } from '@/features/image-viewer/store'
 import { cn } from '@/lib/cn'
 
@@ -343,8 +343,7 @@ export function RecycleBinApp() {
       }
       const officeKind = officeKindFromPath(row.path)
       if (officeKind) {
-        requestOpenOfficeFile(officeKind, row.id)
-        useWindowStore.getState().openWindow(officeKind)
+        openOfficeFile(officeKind, row.id, row.name)
         return
       }
       const normalizedExt = ext === 'jpeg' ? 'jpg' : ext

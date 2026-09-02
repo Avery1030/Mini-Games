@@ -24,6 +24,12 @@ function sanitizeElement(node: Node, out: Document): Nullable<Node> {
     const color = el.getAttribute('color')
     if (color && isSafeColor(color)) copy.setAttribute('color', color)
   }
+  if (tag === 'P' || tag === 'DIV' || tag === 'H1' || tag === 'H2' || tag === 'H3' || tag === 'LI') {
+    const align = (el.getAttribute('align') || el.style.textAlign || '').toLowerCase()
+    if (align === 'left' || align === 'center' || align === 'right' || align === 'justify') {
+      copy.style.textAlign = align
+    }
+  }
   if (tag === 'SPAN') {
     const color = el.style.color
     if (color && isSafeColor(color)) copy.style.color = color
