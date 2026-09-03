@@ -241,7 +241,13 @@ export function DisplaySection({
           <div className='text-xs font-bold'>{t('fitMode')}</div>
           <div className='flex flex-wrap gap-1'>
             {WALLPAPER_FIT_MODES.map((mode) => (
-              <Button key={mode} size='sm' active={fit === mode} onClick={() => onFitChange(mode)}>
+              <Button
+                key={mode}
+                size='sm'
+                active={fit === mode}
+                variant={fit === mode ? 'pressed' : 'raised'}
+                onClick={() => onFitChange(mode)}
+              >
                 {t(`fit.${mode}`)}
               </Button>
             ))}

@@ -41,7 +41,7 @@ function writeStored(key: string | undefined, value: number) {
 
 /**
  * 可拖拽左右分栏：拖动中间分隔条调节主栏宽度（Win95 风格细槽）。
- * 双击分隔条可恢复默认宽度。
+ * 双击分隔条恢复默认宽度；聚焦后可用方向键微调。
  */
 export function SplitPane({
   children,
@@ -66,6 +66,15 @@ export function SplitPane({
 
   const clamp = useCallback((next: number) => Math.min(maxSize, Math.max(minSize, next)), [minSize, maxSize])
 
+  const applySize = useCallback(
+    (next: number, persist = false) => {
+      const clamped = clamp(next)
+      setSize(clamped)
+      if (persist) writeStored(storageKey, clamped)
+    },
+    [clamp, storageKey],
+  )
+
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return
     e.preventDefault()
@@ -77,7 +86,7 @@ export function SplitPane({
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!draggingRef.current || !containerRef.current) return
     const rect = containerRef.current.getBoundingClientRect()
-    setSize(clamp(e.clientX - rect.left))
+    applySize(e.clientX - rect.left)
   }
 
   const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -106,7 +115,7 @@ export function SplitPane({
 
   return (
     <div ref={containerRef} className={cn('flex min-h-0 min-w-0 flex-1', className)}>
-      <div className='flex min-h-0 shrink-0 flex-col overflow-hidden' style={{ width: size }}>
+      <div className='flex h-full min-h-0 shrink-0 flex-col overflow-hidden' style={{ width: size }}>
         {primary}
       </div>
 
@@ -131,11 +140,23 @@ export function SplitPane({
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
-        onDoubleClick={() => {
-          const reset = clamp(defaultSize)
-          setSize(reset)
-          writeStored(storageKey, reset)
+        onKeyDown={(e) => {
+          const step = e.shiftKey ? 24 : 8
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault()
+            applySize(sizeRef.current - step, true)
+          } else if (e.key === 'ArrowRight') {
+            e.preventDefault()
+            applySize(sizeRef.current + step, true)
+          } else if (e.key === 'Home') {
+            e.preventDefault()
+            applySize(minSize, true)
+          } else if (e.key === 'End') {
+            e.preventDefault()
+            applySize(maxSize, true)
+          }
         }}
+        onDoubleClick={() => applySize(defaultSize, true)}
       >
         {/* 凹槽竖线 */}
         <span
@@ -164,7 +185,7 @@ export function SplitPane({
         </span>
       </div>
 
-      <div className='flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden'>{secondary}</div>
+      <div className='flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden'>{secondary}</div>
     </div>
   )
 }

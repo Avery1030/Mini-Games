@@ -344,6 +344,7 @@
     "treeDocuments": "Documents",
     "treeGames": "Games",
     "treeTrash": "Recycle Bin",
+    "resizeTree": "Resize folder list",
     "nameCol": "Name",
     "sizeCol": "Size",
     "typeCol": "Type",

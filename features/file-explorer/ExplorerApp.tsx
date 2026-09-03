@@ -5,19 +5,13 @@ import { useTranslations } from 'next-intl'
 import { FolderOpen } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
-import { ContextMenu, Panel, modal, toast, type ContextMenuState } from '@/components/ui'
+import { ContextMenu, Panel, SplitPane, modal, toast, type ContextMenuState } from '@/components/ui'
 import { winChrome } from '@/lib/winChrome'
 import { MarqueeOverlay, useMarqueeSelect } from '@/hooks/desktop/useMarqueeSelect'
 import { useWindowActive } from '@/hooks/desktop/useWindowActive'
 import { TASKBAR_H } from '@/lib/desktop/windowGeometry'
 import { formatBytes, formatShortDateTime } from '@/lib/format'
-import {
-  VFS_DRAG_MIME,
-  VFS_PATHS,
-  isVfsError,
-  parseVfsDragPaths,
-  type VfsItem,
-} from '@/lib/vfs'
+import { VFS_DRAG_MIME, VFS_PATHS, isVfsError, parseVfsDragPaths, type VfsItem } from '@/lib/vfs'
 import { openVfsFile } from '@/lib/desktop/openVfsFile'
 import { getExplorerWindow } from '@/lib/desktop/window/explorerWindows'
 import { useVfsStore } from '@/store/vfsStore'
@@ -53,10 +47,7 @@ export function FileExplorerApp({ windowId, initialPath = '/' }: Props) {
   const [contextMenu, setContextMenu] = useState<Nullable<ContextMenuState>>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
-  const cwdItem = useMemo(
-    () => Object.values(items).find((it) => it.path === cwd) ?? null,
-    [cwd, items],
-  )
+  const cwdItem = useMemo(() => Object.values(items).find((it) => it.path === cwd) ?? null, [cwd, items])
 
   const children = useMemo(() => {
     if (!cwdItem) return []
@@ -72,10 +63,7 @@ export function FileExplorerApp({ windowId, initialPath = '/' }: Props) {
   }, [cwd, cwdItem, items, sortKey])
 
   const orderedIds = useMemo(() => children.map((c) => c.id), [children])
-  const selected = useMemo(
-    () => children.filter((c) => selectedIds.includes(c.id)),
-    [children, selectedIds],
-  )
+  const selected = useMemo(() => children.filter((c) => selectedIds.includes(c.id)), [children, selectedIds])
 
   const go = useCallback(
     (path: string, push = true) => {
@@ -120,7 +108,10 @@ export function FileExplorerApp({ windowId, initialPath = '/' }: Props) {
 
   const trashSelected = async (ids: string[]) => {
     if (ids.length === 0) return
-    const names = ids.map((id) => items[id]?.name).filter(Boolean).join(', ')
+    const names = ids
+      .map((id) => items[id]?.name)
+      .filter(Boolean)
+      .join(', ')
     const ok = await modal.confirm({
       title: tm('confirmTitle'),
       message: t('confirmTrash', { name: names }),
@@ -351,7 +342,7 @@ export function FileExplorerApp({ windowId, initialPath = '/' }: Props) {
     return () => window.removeEventListener('keydown', onKey)
   })
 
-  const parentPath = cwd === '/' ? null : cwdItem ? items[cwdItem.parentId ?? '']?.path ?? '/' : null
+  const parentPath = cwd === '/' ? null : cwdItem ? (items[cwdItem.parentId ?? '']?.path ?? '/') : null
   const canBack = histIndex > 0
   const canForward = histIndex < history.length - 1
   const sizeSum = selected.reduce((n, it) => n + (it.type === 'file' ? it.size : 0), 0)
@@ -386,17 +377,19 @@ export function FileExplorerApp({ windowId, initialPath = '/' }: Props) {
         onViewDetails={() => setView('details')}
       />
 
-      <ExplorerAddressBar
-        address={address}
-        items={items}
-        onAddressChange={setAddress}
-        onGo={go}
-      />
+      <ExplorerAddressBar address={address} items={items} onAddressChange={setAddress} onGo={go} />
 
-      <div className='flex-1 min-h-0 flex m-1 gap-1'>
+      <SplitPane
+        className='m-1'
+        defaultSize={148}
+        minSize={96}
+        maxSize={360}
+        storageKey='split:file-explorer'
+        handleLabel={t('resizeTree')}
+      >
         <ExplorerTree cwd={cwd} items={items} onNavigate={go} />
 
-        <Panel inset padded={false} className='flex-1 min-w-0 overflow-auto bg-field relative'>
+        <Panel inset padded={false} className='h-full min-h-0 overflow-auto bg-field relative'>
           <div
             ref={listRef}
             className='h-full min-h-[8rem] relative'
@@ -413,7 +406,9 @@ export function FileExplorerApp({ windowId, initialPath = '/' }: Props) {
             onDrop={(e) => void dropOnPane(e)}
           >
             {children.length === 0 ? (
-              <div className='h-full min-h-[8rem] flex items-center justify-center text-[11px] text-muted'>{t('empty')}</div>
+              <div className='h-full min-h-[8rem] flex items-center justify-center text-[11px] text-muted'>
+                {t('empty')}
+              </div>
             ) : view === 'icons' ? (
               <ul className='p-2 grid grid-cols-[repeat(auto-fill,minmax(72px,1fr))] gap-2'>
                 {children.map((item) => {
@@ -465,7 +460,10 @@ export function FileExplorerApp({ windowId, initialPath = '/' }: Props) {
                         key={item.id}
                         data-explorer-item={item.id}
                         draggable
-                        className={cn('cursor-default', active ? 'bg-icon-select text-icon-select-fg' : 'hover:bg-icon-select/20')}
+                        className={cn(
+                          'cursor-default',
+                          active ? 'bg-icon-select text-icon-select-fg' : 'hover:bg-icon-select/20',
+                        )}
                         onClick={(e) => onItemClick(item, e)}
                         onDoubleClick={() => void openItem(item)}
                         onContextMenu={(e) => {
@@ -480,13 +478,23 @@ export function FileExplorerApp({ windowId, initialPath = '/' }: Props) {
                       >
                         <td className='px-2 py-0.5'>
                           <span className='flex items-center gap-1 min-w-0'>
-                            {item.type === 'folder' && cwd !== item.path ? <FolderOpen size={12} className='shrink-0' /> : <ItemIcon icon={item.icon} size={12} />}
+                            {item.type === 'folder' && cwd !== item.path ? (
+                              <FolderOpen size={12} className='shrink-0' />
+                            ) : (
+                              <ItemIcon icon={item.icon} size={12} />
+                            )}
                             <span className='truncate'>{item.name}</span>
                           </span>
                         </td>
-                        <td className='px-2 py-0.5 tabular-nums'>{item.type === 'folder' ? t('folder') : formatBytes(item.size)}</td>
-                        <td className='px-2 py-0.5'>{item.type === 'folder' ? t('folder') : item.extension || t('file')}</td>
-                        <td className='px-2 py-0.5 tabular-nums'>{formatShortDateTime(item.updatedAt, navigator.language)}</td>
+                        <td className='px-2 py-0.5 tabular-nums'>
+                          {item.type === 'folder' ? t('folder') : formatBytes(item.size)}
+                        </td>
+                        <td className='px-2 py-0.5'>
+                          {item.type === 'folder' ? t('folder') : item.extension || t('file')}
+                        </td>
+                        <td className='px-2 py-0.5 tabular-nums'>
+                          {formatShortDateTime(item.updatedAt, navigator.language)}
+                        </td>
                       </tr>
                     )
                   })}
@@ -496,7 +504,7 @@ export function FileExplorerApp({ windowId, initialPath = '/' }: Props) {
             <MarqueeOverlay rect={marqueeRect} />
           </div>
         </Panel>
-      </div>
+      </SplitPane>
 
       <div className='shrink-0 px-2 py-0.5 border-t border-chrome-dark bg-status-bar text-[10px] text-status-bar-fg flex justify-between gap-2'>
         <span className='truncate min-w-0'>

@@ -16,7 +16,7 @@ type Props = {
 export function ExplorerTree({ cwd, items, onNavigate }: Props) {
   const t = useTranslations('fileExplorer')
   return (
-    <Panel inset padded={false} className='w-44 shrink-0 overflow-auto bg-field'>
+    <Panel inset padded={false} className='h-full min-h-0 w-full overflow-auto bg-field'>
       <nav className='py-1'>
         {TREE_ROOTS.map((root) => {
           const node = Object.values(items).find((it) => it.path === root.path)

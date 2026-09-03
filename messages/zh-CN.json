@@ -344,6 +344,7 @@
     "treeDocuments": "文档",
     "treeGames": "游戏",
     "treeTrash": "回收站",
+    "resizeTree": "调整文件夹列表宽度",
     "nameCol": "名称",
     "sizeCol": "大小",
     "typeCol": "类型",
