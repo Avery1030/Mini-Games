@@ -29,17 +29,20 @@ import {
   Terminal,
   Trash2,
 } from 'lucide-react'
-import { BuiltinAppId } from '@/config/desktop'
+import { BuiltinAppId, desktopIconCoordinate, type DesktopCoordinate } from '@/config/desktop'
 import type { RegisterBuiltinAppOptions } from '@/lib/desktop/window/defineApp'
 import { spawnExplorerWindow } from '@/lib/desktop/window/explorerWindows'
 import { spawnIdeEditor } from '@/lib/desktop/window/ideWindows'
 import { spawnOfficeWindow } from '@/lib/desktop/window/officeWindows'
 
+let desktopIconIndex = 0
+const nextDesktopCoord = (): DesktopCoordinate => desktopIconCoordinate(desktopIconIndex++)
+
 export const BUILTIN_APPS: readonly RegisterBuiltinAppOptions[] = [
   {
     id: BuiltinAppId.Games,
     icon: Folder,
-    defaultCoordinate: [0, 1],
+    defaultCoordinate: nextDesktopCoord(),
     width: 360,
     height: 320,
     loadApp: () => import('@/features/games').then((m) => m.GamesApp),
@@ -129,7 +132,7 @@ export const BUILTIN_APPS: readonly RegisterBuiltinAppOptions[] = [
   {
     id: BuiltinAppId.Document,
     icon: BookOpenText,
-    defaultCoordinate: [1, 3],
+    defaultCoordinate: nextDesktopCoord(),
     width: 520,
     height: 420,
     loadApp: () => import('@/features/document').then((m) => m.DocumentApp),
@@ -137,7 +140,7 @@ export const BUILTIN_APPS: readonly RegisterBuiltinAppOptions[] = [
   {
     id: BuiltinAppId.Log,
     icon: Notebook,
-    defaultCoordinate: [1, 4],
+    defaultCoordinate: nextDesktopCoord(),
     width: 520,
     height: 420,
     loadApp: () => import('@/features/log').then((m) => m.LogApp),
@@ -145,7 +148,7 @@ export const BUILTIN_APPS: readonly RegisterBuiltinAppOptions[] = [
   {
     id: BuiltinAppId.Notepad,
     icon: FileText,
-    defaultCoordinate: [2, 1],
+    defaultCoordinate: nextDesktopCoord(),
     width: 560,
     height: 460,
     loadApp: () => import('@/features/notepad').then((m) => m.NotepadApp),
@@ -153,7 +156,7 @@ export const BUILTIN_APPS: readonly RegisterBuiltinAppOptions[] = [
   {
     id: BuiltinAppId.Ide,
     icon: CodeXml,
-    defaultCoordinate: [4, 1],
+    defaultCoordinate: nextDesktopCoord(),
     width: 720,
     height: 520,
     loadApp: () => import('@/features/ide').then((m) => m.IdeApp),
@@ -165,7 +168,7 @@ export const BUILTIN_APPS: readonly RegisterBuiltinAppOptions[] = [
   {
     id: BuiltinAppId.Paint,
     icon: Palette,
-    defaultCoordinate: [2, 2],
+    defaultCoordinate: nextDesktopCoord(),
     width: 720,
     height: 560,
     loadApp: () => import('@/features/paint').then((m) => m.PaintApp),
@@ -173,7 +176,7 @@ export const BUILTIN_APPS: readonly RegisterBuiltinAppOptions[] = [
   {
     id: BuiltinAppId.Settings,
     icon: Settings,
-    defaultCoordinate: [2, 3],
+    defaultCoordinate: nextDesktopCoord(),
     width: 560,
     height: 520,
     loadApp: () => import('@/features/settings').then((m) => m.SettingsApp),
@@ -181,7 +184,7 @@ export const BUILTIN_APPS: readonly RegisterBuiltinAppOptions[] = [
   {
     id: BuiltinAppId.Calculator,
     icon: Calculator,
-    defaultCoordinate: [2, 4],
+    defaultCoordinate: nextDesktopCoord(),
     width: 320,
     height: 480,
     chrome: { resizable: false, maximizable: false },
@@ -190,7 +193,7 @@ export const BUILTIN_APPS: readonly RegisterBuiltinAppOptions[] = [
   {
     id: BuiltinAppId.RecycleBin,
     icon: Trash2,
-    defaultCoordinate: [1, 5],
+    defaultCoordinate: nextDesktopCoord(),
     width: 640,
     height: 440,
     showInStartMenu: false,
@@ -199,7 +202,7 @@ export const BUILTIN_APPS: readonly RegisterBuiltinAppOptions[] = [
   {
     id: BuiltinAppId.Cmd,
     icon: Terminal,
-    defaultCoordinate: [3, 1],
+    defaultCoordinate: nextDesktopCoord(),
     width: 640,
     height: 400,
     loadApp: () => import('@/features/cmd').then((m) => m.CmdApp),
@@ -207,7 +210,7 @@ export const BUILTIN_APPS: readonly RegisterBuiltinAppOptions[] = [
   {
     id: BuiltinAppId.KlineChartViewer,
     icon: ChartCandlestick,
-    defaultCoordinate: [3, 2],
+    defaultCoordinate: nextDesktopCoord(),
     width: 1024,
     height: 768,
     loadApp: () => import('@/features/kline-chart').then((m) => m.KlineChartViewer),
@@ -215,7 +218,7 @@ export const BUILTIN_APPS: readonly RegisterBuiltinAppOptions[] = [
   {
     id: BuiltinAppId.AiChat,
     icon: Bot,
-    defaultCoordinate: [3, 3],
+    defaultCoordinate: nextDesktopCoord(),
     width: 560,
     height: 520,
     loadApp: () => import('@/features/ai-chat').then((m) => m.AiChatApp),
@@ -223,7 +226,7 @@ export const BUILTIN_APPS: readonly RegisterBuiltinAppOptions[] = [
   {
     id: BuiltinAppId.TaskManager,
     icon: AppWindow,
-    defaultCoordinate: [3, 4],
+    defaultCoordinate: nextDesktopCoord(),
     width: 420,
     height: 480,
     loadApp: () => import('@/features/task-manager').then((m) => m.TaskManagerApp),
@@ -231,7 +234,7 @@ export const BUILTIN_APPS: readonly RegisterBuiltinAppOptions[] = [
   {
     id: BuiltinAppId.ImageViewer,
     icon: ImageIcon,
-    defaultCoordinate: [3, 5],
+    defaultCoordinate: nextDesktopCoord(),
     width: 760,
     height: 560,
     loadApp: () => import('@/features/image-viewer').then((m) => m.ImageViewerApp),
@@ -239,7 +242,7 @@ export const BUILTIN_APPS: readonly RegisterBuiltinAppOptions[] = [
   {
     id: BuiltinAppId.FileExplorer,
     icon: HardDrive,
-    defaultCoordinate: [2, 5],
+    defaultCoordinate: nextDesktopCoord(),
     width: 720,
     height: 480,
     loadApp: () => import('@/features/file-explorer').then((m) => m.FileExplorerApp),
@@ -251,7 +254,7 @@ export const BUILTIN_APPS: readonly RegisterBuiltinAppOptions[] = [
   {
     id: BuiltinAppId.Writer,
     icon: ScrollText,
-    defaultCoordinate: [5, 1],
+    defaultCoordinate: nextDesktopCoord(),
     width: 720,
     height: 520,
     loadApp: () => import('@/features/office').then((m) => m.WriterApp),
@@ -263,7 +266,7 @@ export const BUILTIN_APPS: readonly RegisterBuiltinAppOptions[] = [
   {
     id: BuiltinAppId.Sheet,
     icon: Table2,
-    defaultCoordinate: [5, 2],
+    defaultCoordinate: nextDesktopCoord(),
     width: 780,
     height: 520,
     loadApp: () => import('@/features/office').then((m) => m.SheetApp),

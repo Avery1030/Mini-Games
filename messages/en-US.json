@@ -44,7 +44,6 @@
     "newSheet": "WPS Sheet",
     "newSheetName": "New Spreadsheet.et",
     "createTextDocumentFail": "Failed to create text document",
-    "vfsCorruptReset": "The virtual filesystem was damaged and has been reset to defaults.",
     "cannotMoveVfsIntoFolder": "Use File Explorer to move desktop VFS files",
     "rename": "Rename",
     "renameTitle": "Rename",

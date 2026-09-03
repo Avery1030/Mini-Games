@@ -1,5 +1,6 @@
 import {
   DEFAULT_WINDOW_RUNTIME,
+  desktopIconCoordinate,
   type DesktopAppDefinition,
   type DesktopAppId,
   type DesktopCoordinate,
@@ -174,9 +175,12 @@ export function createDefaultWindows(): Record<DesktopAppId, DesktopWindowRuntim
 
 export function createDefaultCoordinates(): Record<DesktopAppId, DesktopCoordinate> {
   const list = [...builtinWindows, ...dynamicWindows.values()]
-  return Object.fromEntries(
-    list.map((w) => [w.id, [...w.defaultCoordinate] as DesktopCoordinate]),
-  ) as Record<DesktopAppId, DesktopCoordinate>
+  const visible = list.filter((w) => w.showOnDesktop !== false)
+  const hidden = list.filter((w) => w.showOnDesktop === false)
+  return Object.fromEntries([
+    ...visible.map((w, i) => [w.id, desktopIconCoordinate(i)] as const),
+    ...hidden.map((w, i) => [w.id, [1, 48 + i] as DesktopCoordinate] as const),
+  ]) as Record<DesktopAppId, DesktopCoordinate>
 }
 
 /** 刷新某窗口的 definition 快照（例如 rename 后） */

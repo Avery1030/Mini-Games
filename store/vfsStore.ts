@@ -33,7 +33,6 @@ type VfsState = {
   items: Record<string, VfsItem>
   clipboard: Nullable<VfsClipboard>
   hydrated: boolean
-  corruptReset: boolean
 }
 
 type VfsActions = {
@@ -54,7 +53,6 @@ type VfsActions = {
   getFileByExtension: (ext: string) => ReturnType<typeof getAppByExtension>
   exportAll: () => Promise<VfsCatalogPersist>
   importAll: (payload: unknown) => Promise<void>
-  clearCorruptFlag: () => void
 }
 
 export type VfsStore = VfsState & VfsActions
@@ -93,7 +91,6 @@ export const useVfsStore = create<VfsStore>()(
       items: {},
       clipboard: null,
       hydrated: false,
-      corruptReset: false,
 
       persist: () => {
         /* zustand persist 订阅 state；此方法供业务显式触发 snapshot */
@@ -128,7 +125,7 @@ export const useVfsStore = create<VfsStore>()(
           await seedGameExecutables(get)
           await get().refresh()
         } catch {
-          set({ items: {}, corruptReset: true })
+          set({ items: {} })
           try {
             await vfs.readDir('/')
             await get().refresh()
@@ -298,8 +295,6 @@ export const useVfsStore = create<VfsStore>()(
         }
         await get().refresh()
       },
-
-      clearCorruptFlag: () => set({ corruptReset: false }),
     }),
     {
       name: STORAGE_KEYS.vfsCatalog,
@@ -309,11 +304,8 @@ export const useVfsStore = create<VfsStore>()(
         items: Object.fromEntries(Object.entries(s.items).map(([id, it]) => [id, { ...it, content: '' }])),
       }),
       merge: (persisted, current) => {
-        if (!persisted || typeof persisted !== 'object') return { ...current, corruptReset: true }
+        if (!persisted || typeof persisted !== 'object') return current
         return current
-      },
-      onRehydrateStorage: () => (_state, error) => {
-        if (error) useVfsStore.setState({ corruptReset: true })
       },
     },
   ),

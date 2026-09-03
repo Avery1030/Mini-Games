@@ -44,7 +44,6 @@
     "newSheet": "WPS Sheet",
     "newSheetName": "新規表.et",
     "createTextDocumentFail": "テキスト ドキュメントの作成に失敗しました",
-    "vfsCorruptReset": "仮想ファイルシステムが壊れていたため、初期フォルダーに戻しました。",
     "cannotMoveVfsIntoFolder": "デスクトップの VFS ファイルはエクスプローラーで移動してください",
     "rename": "名前の変更",
     "renameTitle": "名前の変更",

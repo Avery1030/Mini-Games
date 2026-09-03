@@ -54,6 +54,14 @@ export type AppTitles = Partial<Record<AppLocale, string>>
 
 export type DesktopCoordinate = [number, number]
 
+/** 桌面图标默认每列个数（从上到下、再从左到右） */
+export const DESKTOP_ICON_ROWS = 8
+
+export function desktopIconCoordinate(index: number, rows = DESKTOP_ICON_ROWS): DesktopCoordinate {
+  const n = Math.max(1, rows)
+  return [Math.floor(index / n) + 1, (index % n) + 1]
+}
+
 export type DesktopItemKind = 'app' | 'folder' | 'textDocument'
 
 /** 窗口铬行为：子类可通过 DesktopWindow.chrome 覆盖 */

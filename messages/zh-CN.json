@@ -44,7 +44,6 @@
     "newSheet": "WPS 表格",
     "newSheetName": "新建表格.et",
     "createTextDocumentFail": "创建文本文档失败",
-    "vfsCorruptReset": "虚拟文件系统数据已损坏，已恢复为默认目录。",
     "cannotMoveVfsIntoFolder": "桌面 VFS 文件请使用资源管理器移动",
     "rename": "重命名",
     "renameTitle": "重命名",

@@ -111,12 +111,13 @@ export const useDesktopStore = create<DesktopStore>()(
     }),
     {
       name: STORAGE_KEYS.coordinates,
-      version: 1,
+      version: 3,
       storage: createJSONStorage(() => appStorage.createStateStorage()),
       partialize: (state) => ({
         coordinates: state.coordinates,
       }),
-      migrate: (persisted) => {
+      migrate: (persisted, fromVersion) => {
+        if (fromVersion < 3) return { coordinates: {} }
         const raw = (persisted ?? {}) as { coordinates?: unknown }
         const coordinates =
           raw.coordinates && typeof raw.coordinates === 'object' && !Array.isArray(raw.coordinates)

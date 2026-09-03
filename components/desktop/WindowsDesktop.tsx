@@ -47,20 +47,11 @@ export function WindowsDesktop() {
   const desktopIcons = useVisibleDesktopIcons()
   const [contextMenu, setContextMenu] = useState<Nullable<ContextMenuState>>(null)
 
-  const corruptReset = useVfsStore((s) => s.corruptReset)
   const closeContextMenu = () => setContextMenu(null)
 
   useEffect(() => {
     void useVfsStore.getState().hydrate()
   }, [])
-
-  useEffect(() => {
-    if (!corruptReset) return
-    void modal.alert({
-      title: tm('confirmTitle'),
-      message: td('vfsCorruptReset'),
-    }).then(() => useVfsStore.getState().clearCorruptFlag())
-  }, [corruptReset, td, tm])
 
   const handleArrangeIcons = (container: HTMLElement, align: ArrangeAlign) => {
     if (desktopIcons.length === 0) return

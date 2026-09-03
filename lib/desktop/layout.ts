@@ -184,14 +184,13 @@ export function arrangeIcons(
 
   return ids.map((id, index) => {
     const colOffset = Math.floor(index / rows)
-    const col =
-      align === 'right' ? Math.max(1, maxCols - colOffset) : colOffset + 1
+    const col = align === 'right' ? Math.max(1, maxCols - colOffset) : colOffset + 1
     const row = (index % rows) + 1
     return { id, coordinate: [col, row] as DesktopCoordinate }
   })
 }
 
-/** 按当前坐标排序（先列后行），用于重排时保持相对先后 */
+/** 按当前坐标排序（先列后行），用于重排时保持从上到下、从左到右的先后 */
 export function sortIdsByCoordinate(
   apps: Array<{ id: DesktopAppId; coordinate: DesktopCoordinate }>,
 ): DesktopAppId[] {
