@@ -264,7 +264,7 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: STORAGE_KEYS.settings,
-      version: 20,
+      version: 21,
       storage: createJSONStorage(() => settingsStorage),
       partialize: (state) => ({
         wallpaperId: state.wallpaperId,
@@ -283,7 +283,7 @@ export const useSettingsStore = create<SettingsStore>()(
         screensaverIdleMinutes: state.screensaverIdleMinutes,
         screensaverStyle: state.screensaverStyle,
       }),
-      migrate: (persisted) => {
+      migrate: (persisted, fromVersion) => {
         const raw = (persisted ?? {}) as Record<string, unknown>
         const wp = parsePersistedWallpaper(raw)
         const iconSize = raw.iconSize === 'sm' || raw.iconSize === 'md' || raw.iconSize === 'lg' ? raw.iconSize : 'md'
@@ -300,7 +300,7 @@ export const useSettingsStore = create<SettingsStore>()(
           hidePlaceholderIcons: raw.hidePlaceholderIcons === true,
           showTaskbarClock: raw.showTaskbarClock !== false,
           clockFormat,
-          openWindowsMaximized: raw.openWindowsMaximized !== false,
+          openWindowsMaximized: fromVersion >= 21 && raw.openWindowsMaximized === true,
           screensaverEnabled: raw.screensaverEnabled === true,
           screensaverIdleMinutes,
           screensaverStyle: normalizeScreensaverStyleId(raw.screensaverStyle),
@@ -325,7 +325,7 @@ export const useSettingsStore = create<SettingsStore>()(
           hidePlaceholderIcons: saved.hidePlaceholderIcons === true,
           showTaskbarClock: saved.showTaskbarClock !== false,
           clockFormat,
-          openWindowsMaximized: saved.openWindowsMaximized !== false,
+          openWindowsMaximized: saved.openWindowsMaximized === true,
           screensaverEnabled: saved.screensaverEnabled === true,
           screensaverIdleMinutes,
           screensaverStyle: normalizeScreensaverStyleId(saved.screensaverStyle),

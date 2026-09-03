@@ -53,7 +53,7 @@ export function DesktopWindowsLayer() {
         const canMaximize = chrome.maximizable
         const rememberedForChrome =
           remembered && !canMaximize && remembered.maximized ? { ...remembered, maximized: false } : remembered
-        const defaultMaximized = canMaximize && (remembered != null ? remembered.maximized : openWindowsMaximized)
+        const defaultMaximized = canMaximize && openWindowsMaximized
 
         return (
           <WindowsWindow
