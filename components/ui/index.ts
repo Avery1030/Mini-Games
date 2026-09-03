@@ -1,3 +1,7 @@
+/**
+ * 复古 Win95 UI 工具包（无桌面 store / VFS / 游戏业务）。
+ * 后续独立开源时以本文件为公共导出面：整目录 `components/ui` 可复制。
+ */
 export { Button, type ButtonProps, type ButtonSize, type ButtonVariant } from './Button'
 export { cn } from './cn'
 export {

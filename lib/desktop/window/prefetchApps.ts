@@ -1,5 +1,4 @@
-import { GAME_APP_IDS } from '@/features/games/ids'
-import { BuiltinAppId, type DesktopAppId } from '@/config/desktop'
+import { BuiltinAppId, GAME_APP_IDS, type DesktopAppId } from '@/config/desktop'
 import { DESKTOP_WINDOWS, getDesktopWindow } from './registry'
 
 /** 较大依赖，空闲预取时靠后 */

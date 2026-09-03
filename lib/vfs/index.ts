@@ -1,3 +1,7 @@
+/**
+ * 内存 VFS（路径树 + 适配器）。不依赖 React / 桌面 store / 具体 App。
+ * 后续独立开源以本文件为导出面。
+ */
 export type { FileContent, FileNode, StoredFileNode } from './types'
 export type { VfsItem, VfsItemType, VfsIconKey, VfsClipboard, VfsCatalogPersist } from './catalog'
 export {

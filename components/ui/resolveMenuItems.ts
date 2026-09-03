@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { ContextMenuItem } from '@/components/ui'
+import type { ContextMenuItem } from './ContextMenu'
 
 /**
  * 声明式菜单项：用 when / disabled 控制显示与可用性，避免散落的条件展开。

@@ -1,6 +1,4 @@
 import { getExtension, parseExeContent, vfs } from '@/lib/vfs'
-import { isImagePath } from '@/features/image-viewer/api'
-import { isIdeExplorerOpenPath } from '@/features/ide/languages'
 import { useImageViewerStore } from '@/features/image-viewer/store'
 import { useNotepadStore } from '@/features/notepad/store'
 import { requestOpenNote } from '@/features/notepad/pendingOpen'
@@ -15,6 +13,7 @@ export type OpenVfsFileKind = 'image' | 'text' | 'code' | 'office' | 'exe' | 'fo
 
 /**
  * 按应用注册表打开 VFS 路径（文件夹 → 资源管理器）。
+ * 本文件是桌面壳的业务组装点（依赖各 App store），不是可抽离基础设施。
  */
 export async function openVfsFile(filePath: string): Promise<OpenVfsFileKind> {
   try {
@@ -25,12 +24,13 @@ export async function openVfsFile(filePath: string): Promise<OpenVfsFileKind> {
     /* 按文件打开 */
   }
 
-  if (isImagePath(filePath)) {
+  const hint = resolveOpenTarget(filePath)
+  if (hint.kind === 'image') {
     useImageViewerStore.getState().openFile(filePath)
     return 'image'
   }
 
-  if (isIdeExplorerOpenPath(filePath)) {
+  if (hint.kind === 'ide') {
     openIdeFile(filePath)
     return 'code'
   }

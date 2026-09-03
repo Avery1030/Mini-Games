@@ -2,7 +2,8 @@
 
 import { Children, useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { cn } from './cn'
-import { isClient } from '@/lib/env'
+
+const canUseDom = typeof window !== 'undefined'
 
 export type SplitPaneProps = {
   /** 左侧（主栏）与右侧（次栏） */
@@ -19,7 +20,7 @@ export type SplitPaneProps = {
 }
 
 function readStored(key: string | undefined, fallback: number): number {
-  if (!key || !isClient) return fallback
+  if (!key || !canUseDom) return fallback
   try {
     const raw = localStorage.getItem(key)
     if (raw == null) return fallback
@@ -31,7 +32,7 @@ function readStored(key: string | undefined, fallback: number): number {
 }
 
 function writeStored(key: string | undefined, value: number) {
-  if (!key || !isClient) return
+  if (!key || !canUseDom) return
   try {
     localStorage.setItem(key, String(Math.round(value)))
   } catch {
