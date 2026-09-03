@@ -1,4 +1,14 @@
-import { SHEET_COLS, SHEET_MAX_COLS, SHEET_MAX_ROWS, SHEET_ROWS, cellKey, type SheetBody } from '../schema'
+import {
+  SHEET_COLS,
+  SHEET_MAX_COLS,
+  SHEET_MAX_ROWS,
+  SHEET_ROWS,
+  cellKey,
+  type SheetAlignH,
+  type SheetAlignV,
+  type SheetBody,
+  type SheetCellStyle,
+} from '../schema'
 import { isPlainNumber, parseCellRef } from './formula'
 
 export type CellPos = { col: number; row: number }
@@ -12,6 +22,8 @@ export const DEFAULT_COL_WIDTH = 72
 export const DEFAULT_ROW_HEIGHT = 24
 export const DEFAULT_ROW_HEAD_WIDTH = 32
 export const DEFAULT_COL_HEAD_HEIGHT = 24
+export const SHEET_PACK_COLS = 10
+export const SHEET_PACK_ROWS = 24
 export const MIN_COL_WIDTH = 36
 export const MAX_COL_WIDTH = 480
 export const MIN_ROW_HEIGHT = 16
@@ -37,24 +49,30 @@ export function clampColHeadHeight(n: number): number {
   return Math.round(clampIndex(n, MIN_COL_HEAD_HEIGHT, MAX_COL_HEAD_HEIGHT))
 }
 
-/** 全部仍是默认尺寸时，把剩余空间均分到各行/列，铺满可视区域。 */
+/** 未改过的格子用铺满 10×24 时的默认宽高；超出部分同样套这套默认，不再均分。 */
 export function fitSheetAxis(
   stored: number[] | undefined,
   count: number,
   fallback: number,
   available: number,
   clamp: (n: number) => number,
+  packCount: number,
 ): number[] {
-  const sizes = Array.from({ length: count }, (_, i) => clamp(stored?.[i] ?? fallback))
-  if (available <= 0 || sizes.some((n) => n !== fallback)) return sizes
-  const extra = available - fallback * count
-  if (extra <= 0) return sizes
-  const each = Math.floor(extra / count)
-  let rem = extra - each * count
-  return sizes.map((n) => {
-    const add = each + (rem > 0 ? 1 : 0)
-    if (rem > 0) rem -= 1
-    return clamp(n + add)
+  const packed = Math.max(1, packCount)
+  let each = 0
+  let rem = 0
+  if (available > 0) {
+    const extra = available - fallback * packed
+    if (extra > 0) {
+      each = Math.floor(extra / packed)
+      rem = extra - each * packed
+    }
+  }
+  const autoSize = (i: number) => clamp(fallback + each + (i < rem ? 1 : 0))
+  return Array.from({ length: count }, (_, i) => {
+    const raw = stored?.[i]
+    if (raw != null && clamp(raw) !== fallback) return clamp(raw)
+    return autoSize(i)
   })
 }
 
@@ -65,8 +83,23 @@ export function sheetSize(body: SheetBody): { cols: number; rows: number } {
   }
 }
 
-function padSizes(list: number[] | undefined, length: number, fallback: number, clamp: (n: number) => number): number[] {
+function padSizes(
+  list: number[] | undefined,
+  length: number,
+  fallback: number,
+  clamp: (n: number) => number,
+): number[] {
   return Array.from({ length }, (_, i) => clamp(list?.[i] ?? fallback))
+}
+
+/** 把当前画出来的行高/列宽写回，避免插入后被均分重算。 */
+export function applyAxisSizes(sheet: SheetBody, colWidths?: number[], rowHeights?: number[]): SheetBody {
+  const { cols, rows } = sheetSize(sheet)
+  return {
+    ...sheet,
+    colWidths: padSizes(colWidths ?? sheet.colWidths, cols, DEFAULT_COL_WIDTH, clampColWidth),
+    rowHeights: padSizes(rowHeights ?? sheet.rowHeights, rows, DEFAULT_ROW_HEIGHT, clampRowHeight),
+  }
 }
 
 export function normalizeSheet(body: SheetBody): SheetBody {
@@ -80,6 +113,7 @@ export function normalizeSheet(body: SheetBody): SheetBody {
     rowHeights: padSizes(body.rowHeights, rows, DEFAULT_ROW_HEIGHT, clampRowHeight),
     rowHeadWidth: clampRowHeadWidth(body.rowHeadWidth ?? DEFAULT_ROW_HEAD_WIDTH),
     colHeadHeight: clampColHeadHeight(body.colHeadHeight ?? DEFAULT_COL_HEAD_HEIGHT),
+    styles: body.styles ? { ...body.styles } : undefined,
   }
 }
 
@@ -92,6 +126,7 @@ export function snapshotSheet(body: SheetBody): string {
     rowHeights: body.rowHeights,
     rowHeadWidth: body.rowHeadWidth,
     colHeadHeight: body.colHeadHeight,
+    styles: body.styles,
   })
 }
 
@@ -113,6 +148,33 @@ export function normRange(a: CellPos, b: CellPos): SheetRange {
 
 export function inRange(range: SheetRange, col: number, row: number): boolean {
   return col >= range.c0 && col <= range.c1 && row >= range.r0 && row <= range.r1
+}
+
+export function rangeEq(a: SheetRange, b: SheetRange): boolean {
+  return a.c0 === b.c0 && a.r0 === b.r0 && a.c1 === b.c1 && a.r1 === b.r1
+}
+
+export function prefixAt(sizeAt: (i: number) => number, index: number, pad: number): number {
+  let acc = pad
+  for (let i = 0; i < index; i++) acc += sizeAt(i)
+  return acc
+}
+
+export function spanAt(sizeAt: (i: number) => number, from: number, to: number): number {
+  let acc = 0
+  for (let i = from; i <= to; i++) acc += sizeAt(i)
+  return acc
+}
+
+export function hitIndex(sizeAt: (i: number) => number, count: number, pos: number, pad: number): number {
+  if (count <= 0) return 0
+  if (pos < pad) return 0
+  let acc = pad
+  for (let i = 0; i < count; i++) {
+    acc += sizeAt(i)
+    if (pos < acc) return i
+  }
+  return count - 1
 }
 
 export function cellInRanges(ranges: SheetRange[], col: number, row: number): boolean {
@@ -211,6 +273,19 @@ function remapCells(sheet: SheetBody, mapCol: AxisMap, mapRow: AxisMap): Record<
   return cells
 }
 
+function remapStyles(sheet: SheetBody, mapCol: AxisMap, mapRow: AxisMap): Record<string, SheetCellStyle> {
+  const styles: Record<string, SheetCellStyle> = {}
+  for (const [key, value] of Object.entries(sheet.styles ?? {})) {
+    const pos = parseCellRef(key, SHEET_MAX_COLS, SHEET_MAX_ROWS)
+    if (!pos) continue
+    const col = mapCol(pos.col)
+    const row = mapRow(pos.row)
+    if (col == null || row == null) continue
+    styles[cellKey(col, row)] = value
+  }
+  return styles
+}
+
 export type SheetMutateResult = { ok: true; sheet: SheetBody } | { ok: false; reason: 'limit' | 'last' }
 
 export function insertCol(sheet: SheetBody, at: number): SheetMutateResult {
@@ -223,7 +298,14 @@ export function insertCol(sheet: SheetBody, at: number): SheetMutateResult {
   colWidths.splice(index, 0, DEFAULT_COL_WIDTH)
   return {
     ok: true,
-    sheet: { ...sheet, cols: cols + 1, rows, cells: remapCells(sheet, mapCol, mapRow), colWidths },
+    sheet: {
+      ...sheet,
+      cols: cols + 1,
+      rows,
+      cells: remapCells(sheet, mapCol, mapRow),
+      styles: remapStyles(sheet, mapCol, mapRow),
+      colWidths,
+    },
   }
 }
 
@@ -237,7 +319,14 @@ export function deleteCol(sheet: SheetBody, index: number): SheetMutateResult {
   colWidths.splice(i, 1)
   return {
     ok: true,
-    sheet: { ...sheet, cols: cols - 1, rows, cells: remapCells(sheet, mapCol, mapRow), colWidths },
+    sheet: {
+      ...sheet,
+      cols: cols - 1,
+      rows,
+      cells: remapCells(sheet, mapCol, mapRow),
+      styles: remapStyles(sheet, mapCol, mapRow),
+      colWidths,
+    },
   }
 }
 
@@ -251,7 +340,14 @@ export function insertRow(sheet: SheetBody, at: number): SheetMutateResult {
   rowHeights.splice(index, 0, DEFAULT_ROW_HEIGHT)
   return {
     ok: true,
-    sheet: { ...sheet, cols, rows: rows + 1, cells: remapCells(sheet, mapCol, mapRow), rowHeights },
+    sheet: {
+      ...sheet,
+      cols,
+      rows: rows + 1,
+      cells: remapCells(sheet, mapCol, mapRow),
+      styles: remapStyles(sheet, mapCol, mapRow),
+      rowHeights,
+    },
   }
 }
 
@@ -265,7 +361,14 @@ export function deleteRow(sheet: SheetBody, index: number): SheetMutateResult {
   rowHeights.splice(i, 1)
   return {
     ok: true,
-    sheet: { ...sheet, cols, rows: rows - 1, cells: remapCells(sheet, mapCol, mapRow), rowHeights },
+    sheet: {
+      ...sheet,
+      cols,
+      rows: rows - 1,
+      cells: remapCells(sheet, mapCol, mapRow),
+      styles: remapStyles(sheet, mapCol, mapRow),
+      rowHeights,
+    },
   }
 }
 
@@ -303,6 +406,7 @@ export function fillHandle(sheet: SheetBody, from: SheetRange, to: SheetRange): 
   const extraDown = dest.r0 < from.r0 || dest.r1 > from.r1
   const extraRight = dest.c0 < from.c0 || dest.c1 > from.c1
   const cells = { ...sheet.cells }
+  const styles = { ...(sheet.styles ?? {}) }
 
   for (let r = dest.r0; r <= dest.r1; r++) {
     for (let c = dest.c0; c <= dest.c1; c++) {
@@ -328,21 +432,39 @@ export function fillHandle(sheet: SheetBody, from: SheetRange, to: SheetRange): 
 
       if (next.trim()) cells[destKey] = next
       else delete cells[destKey]
+      const srcStyle = sheet.styles?.[cellKey(srcC, srcR)]
+      if (srcStyle) styles[destKey] = srcStyle
+      else delete styles[destKey]
     }
   }
+  return { ...sheet, cells, styles }
+}
+
+export function setCellValue(sheet: SheetBody, col: number, row: number, value: string): SheetBody {
+  const cells = { ...sheet.cells }
+  const key = cellKey(col, row)
+  if (value.trim()) cells[key] = value
+  else delete cells[key]
   return { ...sheet, cells }
 }
 
-export function clearCells(sheet: SheetBody, ranges: SheetRange[]): SheetBody {
+export function withDraft(sheet: SheetBody, editing: boolean, col: number, row: number, value: string): SheetBody {
+  return editing ? setCellValue(sheet, col, row, value) : sheet
+}
+
+export function clearCells(sheet: SheetBody, ranges: SheetRange[], wipeStyles = false): SheetBody {
   const cells = { ...sheet.cells }
+  const styles = wipeStyles ? { ...(sheet.styles ?? {}) } : sheet.styles
   for (const range of ranges) {
     for (let r = range.r0; r <= range.r1; r++) {
       for (let c = range.c0; c <= range.c1; c++) {
-        delete cells[cellKey(c, r)]
+        const key = cellKey(c, r)
+        delete cells[key]
+        if (wipeStyles && styles) delete styles[key]
       }
     }
   }
-  return { ...sheet, cells }
+  return { ...sheet, cells, styles }
 }
 
 export function copyGrid(sheet: SheetBody, ranges: SheetRange[]): string[][] {
@@ -389,7 +511,11 @@ export function pasteGrid(sheet: SheetBody, origin: CellPos, grid: string[][]): 
   return { ...sheet, cells }
 }
 
-export function rangeEdge(range: SheetRange, col: number, row: number): {
+export function rangeEdge(
+  range: SheetRange,
+  col: number,
+  row: number,
+): {
   top: boolean
   right: boolean
   bottom: boolean
@@ -401,4 +527,36 @@ export function rangeEdge(range: SheetRange, col: number, row: number): {
     bottom: row === range.r1,
     left: col === range.c0,
   }
+}
+
+export const DEFAULT_ALIGN_H: SheetAlignH = 'center'
+export const DEFAULT_ALIGN_V: SheetAlignV = 'middle'
+
+export function cellAlign(sheet: SheetBody, col: number, row: number): { align: SheetAlignH; valign: SheetAlignV } {
+  const style = sheet.styles?.[cellKey(col, row)]
+  return {
+    align: style?.align ?? DEFAULT_ALIGN_H,
+    valign: style?.valign ?? DEFAULT_ALIGN_V,
+  }
+}
+
+export function applyAlign(
+  sheet: SheetBody,
+  ranges: SheetRange[],
+  patch: { align?: SheetAlignH; valign?: SheetAlignV },
+): SheetBody {
+  const styles = { ...(sheet.styles ?? {}) }
+  for (const range of ranges) {
+    for (let r = range.r0; r <= range.r1; r++) {
+      for (let c = range.c0; c <= range.c1; c++) {
+        const key = cellKey(c, r)
+        const next: SheetCellStyle = { ...(styles[key] ?? {}), ...patch }
+        if ((next.align ?? DEFAULT_ALIGN_H) === DEFAULT_ALIGN_H) delete next.align
+        if ((next.valign ?? DEFAULT_ALIGN_V) === DEFAULT_ALIGN_V) delete next.valign
+        if (next.align || next.valign) styles[key] = next
+        else delete styles[key]
+      }
+    }
+  }
+  return { ...sheet, styles }
 }

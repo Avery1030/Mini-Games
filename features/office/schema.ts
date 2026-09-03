@@ -2,13 +2,20 @@ import { z } from 'zod'
 
 export const OFFICE_HTML_MAX = 400_000
 export const OFFICE_CELL_MAX = 4_000
-export const SHEET_COLS = 10
-export const SHEET_ROWS = 24
+export const SHEET_COLS = 26
+export const SHEET_ROWS = 50
 export const SHEET_MAX_COLS = 26
 export const SHEET_MAX_ROWS = 100
 
 export const WriterBodySchema = z.object({
   html: z.string().max(OFFICE_HTML_MAX),
+})
+
+export const SheetAlignHSchema = z.enum(['left', 'center', 'right'])
+export const SheetAlignVSchema = z.enum(['top', 'middle', 'bottom'])
+export const SheetCellStyleSchema = z.object({
+  align: SheetAlignHSchema.optional(),
+  valign: SheetAlignVSchema.optional(),
 })
 
 export const SheetBodySchema = z.object({
@@ -21,6 +28,7 @@ export const SheetBodySchema = z.object({
   rowHeights: z.array(z.number()).max(SHEET_MAX_ROWS).optional(),
   rowHeadWidth: z.number().optional(),
   colHeadHeight: z.number().optional(),
+  styles: z.record(z.string(), SheetCellStyleSchema).optional(),
 })
 
 export const OfficeFileSchema = z.object({
@@ -39,6 +47,9 @@ export const OfficePersistSchema = z.object({
 })
 
 export type WriterBody = z.infer<typeof WriterBodySchema>
+export type SheetAlignH = z.infer<typeof SheetAlignHSchema>
+export type SheetAlignV = z.infer<typeof SheetAlignVSchema>
+export type SheetCellStyle = z.infer<typeof SheetCellStyleSchema>
 export type SheetBody = z.infer<typeof SheetBodySchema>
 export type OfficeFile = z.infer<typeof OfficeFileSchema>
 export type OfficeKind = OfficeFile['kind']

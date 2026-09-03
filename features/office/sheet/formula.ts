@@ -4,7 +4,8 @@ export type SheetEvalError = '#ERROR!'
 
 /** A–Z 列，行 1–100 */
 export const CELL_RE = /^([A-Z])(100|[1-9]\d?)$/i
-const FUNCS = new Set(['SUM', 'AVERAGE', 'MAX', 'MIN'])
+const FUNCS = new Set(['SUM', 'AVERAGE', 'MAX', 'MIN', 'COUNT', 'COUNTA', 'PRODUCT', 'ABS', 'ROUND', 'INT', 'SQRT', 'MOD', 'POWER', 'IF'])
+const REL_OPS = new Set(['>=', '<=', '<>', '>', '<', '='])
 
 export function isPlainNumber(value: string): boolean {
   const t = value.trim()
@@ -52,6 +53,21 @@ function tokenize(src: string): string[] {
   while (i < s.length) {
     const ch = s[i]
     if (ch === ' ' || ch === '\t') {
+      i += 1
+      continue
+    }
+    if (ch === '<' || ch === '>' || ch === '=') {
+      if (ch === '<' && s[i + 1] === '>') {
+        tokens.push('<>')
+        i += 2
+        continue
+      }
+      if ((ch === '<' || ch === '>') && s[i + 1] === '=') {
+        tokens.push(`${ch}=`)
+        i += 2
+        continue
+      }
+      tokens.push(ch)
       i += 1
       continue
     }
@@ -126,11 +142,63 @@ function evalFormula(src: string, ctx: EvalCtx): number | SheetEvalError {
 
   const applyFn = (name: string, nums: number[]): number => {
     if (name === 'SUM') return nums.reduce((a, b) => a + b, 0)
+    if (name === 'COUNT' || name === 'COUNTA') return nums.length
+    if (name === 'IF') {
+      if (nums.length !== 3) throw new Error('bad')
+      return nums[0] ? nums[1] : nums[2]
+    }
     if (nums.length === 0) throw new Error('bad')
     if (name === 'AVERAGE') return nums.reduce((a, b) => a + b, 0) / nums.length
     if (name === 'MAX') return Math.max(...nums)
     if (name === 'MIN') return Math.min(...nums)
+    if (name === 'PRODUCT') return nums.reduce((a, b) => a * b, 1)
+    if (name === 'ABS') {
+      if (nums.length !== 1) throw new Error('bad')
+      return Math.abs(nums[0])
+    }
+    if (name === 'INT') {
+      if (nums.length !== 1) throw new Error('bad')
+      return Math.floor(nums[0])
+    }
+    if (name === 'SQRT') {
+      if (nums.length !== 1 || nums[0] < 0) throw new Error('bad')
+      return Math.sqrt(nums[0])
+    }
+    if (name === 'ROUND') {
+      if (nums.length < 1 || nums.length > 2) throw new Error('bad')
+      const digits = nums.length === 2 ? Math.trunc(nums[1]) : 0
+      const p = 10 ** digits
+      return Math.round(nums[0] * p) / p
+    }
+    if (name === 'MOD') {
+      if (nums.length !== 2 || nums[1] === 0) throw new Error('bad')
+      return nums[0] - nums[1] * Math.floor(nums[0] / nums[1])
+    }
+    if (name === 'POWER') {
+      if (nums.length !== 2) throw new Error('bad')
+      const v = nums[0] ** nums[1]
+      if (!Number.isFinite(v)) throw new Error('bad')
+      return v
+    }
     throw new Error('bad')
+  }
+
+  const compare = (a: number, op: string, b: number): number => {
+    if (op === '>') return a > b ? 1 : 0
+    if (op === '<') return a < b ? 1 : 0
+    if (op === '>=') return a >= b ? 1 : 0
+    if (op === '<=') return a <= b ? 1 : 0
+    if (op === '=') return a === b ? 1 : 0
+    if (op === '<>') return a !== b ? 1 : 0
+    throw new Error('bad')
+  }
+
+  const parseRel = (): number => {
+    const v = parseExpr()
+    const op = peek()
+    if (!op || !REL_OPS.has(op)) return v
+    eat()
+    return compare(v, op, parseExpr())
   }
 
   const parseExpr = (): number => {
@@ -156,7 +224,7 @@ function evalFormula(src: string, ctx: EvalCtx): number | SheetEvalError {
     return v
   }
 
-  const parseCallArgs = (): number[] => {
+  const parseCallArgs = (fnName: string): number[] => {
     eat('(')
     const nums: number[] = []
     if (peek() === ')') {
@@ -174,17 +242,25 @@ function evalFormula(src: string, ctx: EvalCtx): number | SheetEvalError {
         const cells = expandRange(start, end, ctx.cols, ctx.rows)
         if (!cells.length) throw new Error('bad')
         for (const cell of cells) {
+          if (fnName === 'COUNTA') {
+            if (ctx.getRaw(cell.col, cell.row).trim()) nums.push(1)
+            continue
+          }
           const n = collectAgg(cell.col, cell.row, ctx)
           if (n !== 'skip') nums.push(n)
         }
-      } else if (CELL_RE.test(start) && tokens[i + 1] !== '(') {
+      } else if (CELL_RE.test(start) && tokens[i + 1] !== '(' && !REL_OPS.has(tokens[i + 1] ?? '')) {
         eat()
         const ref = parseCellRef(start, ctx.cols, ctx.rows)
         if (!ref) throw new Error('bad')
-        const n = collectAgg(ref.col, ref.row, ctx)
-        if (n !== 'skip') nums.push(n)
+        if (fnName === 'COUNTA') {
+          if (ctx.getRaw(ref.col, ref.row).trim()) nums.push(1)
+        } else {
+          const n = collectAgg(ref.col, ref.row, ctx)
+          if (n !== 'skip') nums.push(n)
+        }
       } else {
-        nums.push(parseExpr())
+        nums.push(parseRel())
       }
       if (peek() === ',') {
         eat(',')
@@ -208,13 +284,13 @@ function evalFormula(src: string, ctx: EvalCtx): number | SheetEvalError {
     }
     if (t === '(') {
       eat()
-      const v = parseExpr()
+      const v = parseRel()
       eat(')')
       return v
     }
     if (t && FUNCS.has(t)) {
       eat()
-      return applyFn(t, parseCallArgs())
+      return applyFn(t, parseCallArgs(t))
     }
     if (t && CELL_RE.test(t)) {
       eat()
@@ -234,7 +310,7 @@ function evalFormula(src: string, ctx: EvalCtx): number | SheetEvalError {
   }
 
   try {
-    const value = parseExpr()
+    const value = parseRel()
     if (i !== tokens.length) return '#ERROR!'
     if (!Number.isFinite(value)) return '#ERROR!'
     return value
@@ -276,12 +352,16 @@ export function evaluateSheet(body: SheetBody): Record<string, string> {
     rows,
   }
   const out: Record<string, string> = {}
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const key = `${colLetter(c)}${r + 1}`
-      const raw = body.cells[key] ?? ''
-      out[key] = raw.startsWith('=') ? formatEval(evalCell(c, r, ctx)) : raw
+  for (const key of Object.keys(body.cells)) {
+    const raw = body.cells[key] ?? ''
+    if (!raw) continue
+    if (!raw.startsWith('=')) {
+      out[key] = raw
+      continue
     }
+    const pos = parseCellRef(key, cols, rows)
+    if (!pos) continue
+    out[key] = formatEval(evalCell(pos.col, pos.row, ctx))
   }
   return out
 }

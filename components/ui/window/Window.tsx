@@ -3,12 +3,7 @@
 import type { MouseEvent } from 'react'
 import { Button } from '../Button'
 import { cn } from '../cn'
-import {
-  WinCloseIcon,
-  WinMaximizeIcon,
-  WinMinimizeIcon,
-  WinRestoreIcon,
-} from '../WindowChromeIcons'
+import { WinCloseIcon, WinMaximizeIcon, WinMinimizeIcon, WinRestoreIcon } from '../WindowChromeIcons'
 import type { WindowProps, WindowResizeEdge } from './types'
 
 export type { WindowLabels, WindowProps, WindowResizeEdge } from './types'
@@ -69,20 +64,20 @@ export function Window({
         RESIZE_HANDLES.map(({ edge, className: handleClass, cursor }) => (
           <div
             key={edge}
+            aria-hidden
             className={cn('absolute z-10', handleClass)}
             style={{ cursor }}
             onMouseDown={(e) => {
               onFocus?.()
               onResizeMouseDown?.(e, edge)
             }}
-            aria-hidden
           />
         ))}
 
       <div className='flex flex-col h-full min-h-0 relative'>
         <div
           className={cn(
-            'flex items-center justify-between shrink-0 h-8 px-1 pr-0 select-none font-pixel',
+            'flex items-center justify-between shrink-0 h-8 px-1 pr-1 select-none font-pixel',
             maximized ? 'cursor-default' : 'cursor-grab active:cursor-grabbing',
           )}
           onMouseDown={(e: MouseEvent<HTMLDivElement>) => {
