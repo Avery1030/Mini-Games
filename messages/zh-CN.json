@@ -6,7 +6,6 @@
   "apps": {
     "games": "游戏",
     "minesweeper": "扫雷",
-    "tetris": "俄罗斯方块",
     "suika": "合成大西瓜",
     "imagePuzzle": "图片拼图",
     "canvasJigsaw": "不规则拼图",
@@ -176,7 +175,6 @@
     "timeNow": "当前时间: {time}",
     "dateNow": "当前日期: {date}",
     "launchedNotepad": "正在启动 NOTEPAD.EXE...",
-    "launchedTetris": "正在启动 TETRIS.EXE...",
     "launchedTaskmgr": "正在启动 TASKMGR.EXE...",
     "wallpaperChanged": "壁纸已切换为: {name}",
     "syncStart": "正在同步桌面布局到云端...",
@@ -191,7 +189,6 @@
     "helpTime": "显示系统时间",
     "helpNotepad": "启动记事本",
     "helpTaskmgr": "启动任务管理器",
-    "helpTetris": "启动俄罗斯方块",
     "helpWallpaper": "快速切换下一张壁纸",
     "helpSync": "手动同步桌面布局",
     "helpHelp": "显示帮助",
@@ -544,19 +541,20 @@
     "clockFormat": "时钟格式",
     "clock24": "24 小时制",
     "clock12": "12 小时制",
-    "backupHint": "导出本机全部偏好与桌面状态为 JSON，换设备时可导入还原。导入会覆盖同名配置并立即生效。",
+    "backupHint": "导出一份 JSON，包含本机偏好、桌面状态和虚拟磁盘里的文档。换浏览器或换电脑时导入即可还原。锁屏密码不会包含在内。",
     "backupExport": "导出",
-    "backupExportHint": "包含主题、壁纸、窗口、桌面图标、记事本/画图/K线等偏好（不含锁屏会话）。",
-    "backupExportAction": "导出为 JSON…",
+    "backupExportHint": "主题、窗口、图标位置、记事本/画图等偏好，以及 VFS 中的文本文件（笔记、表格、文稿）。图片等二进制仍只在本机 IndexedDB。",
+    "backupExportAction": "导出全部…",
     "backupExportOk": "已导出备份文件",
     "backupExportFail": "导出失败",
     "backupImport": "导入",
-    "backupImportHint": "选择此前导出的 JSON。导入内容优先于当前设置，写入后立即应用到本机。",
-    "backupImportAction": "从 JSON 导入…",
+    "backupImportHint": "选择此前导出的 JSON。会覆盖当前设置与文件树，导入后立即生效。",
+    "backupImportAction": "导入全部…",
+    "backupImportConfirm": "导入会覆盖本机当前的桌面设置和虚拟磁盘文件，确定继续？",
     "backupImportOk": "已导入并应用 {count} 项配置",
     "backupImportFail": "导入失败",
-    "vfsBackup": "虚拟文件系统",
-    "vfsBackupHint": "单独导出 / 导入整棵 VFS 目录树（含文档内容）。图片等二进制仍保存在本机 IndexedDB。",
+    "vfsBackup": "仅虚拟文件系统",
+    "vfsBackupHint": "只导出/导入文件树（不含桌面偏好）。旧版单独导出的 VFS JSON 也可以从这里导入。",
     "vfsExportAction": "导出 VFS JSON…",
     "vfsImportAction": "导入 VFS JSON…",
     "vfsExportOk": "已导出虚拟文件系统",
@@ -604,8 +602,8 @@
     "apps": {
       "title": "内置应用",
       "body": [
-        "扫雷、俄罗斯方块与合成大西瓜：几款经典小游戏，适合发呆。",
-        "设置：分区为显示、外观、任务栏与数据；数据页支持导出/导入本机偏好与桌面状态的 JSON 备份。",
+        "扫雷、合成大西瓜等：收在「游戏」文件夹里，适合发呆。清单已冻结，不再往里加新游戏。",
+        "设置：分区为显示、外观、任务栏与数据；数据页可导出/导入一份 JSON（偏好 + 虚拟磁盘文件）。",
         "文档：就是你现在看到的这个窗口。内容不会联网，也不会保存你的批注。",
         "日志：按日期记录桌面与应用的更新，可双击「日志」图标打开；文档里也有最近更新摘要。",
         "记事本：在浏览器 IndexedDB 中增删改查纯文本笔记，支持标题、自动换行与 Ctrl/⌘+S 保存。",
@@ -618,6 +616,100 @@
         "代码编辑器：多窗口编辑 HTML / CSS / JS / TS / JSON，带语法高亮、查找替换、Emmet 与 HTML 预览；文件保存在虚拟文件系统，可从资源管理器或桌面打开。",
         "WPS 文字 / WPS 表格：仿早期办公套件的富文本与电子表格，文件保存在「文档」文件夹，可从资源管理器打开；文字可导出 PDF、DOCX、TXT。"
       ]
+    },
+    "uiKit": {
+      "title": "UI 组件",
+      "intro": [
+        "components/ui 是 Win95 风格的通用控件，不绑定桌面 store、VFS 或游戏。抽成独立库时以这一夹和 index.ts 为准。",
+        "下面按类别说明用途和约定。可点的示例在对应小节里。更完整的 props 表见仓库 components/ui/README.md。"
+      ],
+      "sections": [
+        {
+          "id": "rules",
+          "title": "边界",
+          "items": [
+            "控件只通过 props 说话：文案、图标、是否打开、点了谁，都由外面传入。不要在这里读窗口列表或文件树。",
+            "全局层必须在应用根挂一次 ModalHost 和 ToastHost。分栏宽度要持久化时，先 registerUiKvStorage（注入 getItem/setItem）。",
+            "立体边框依赖 CSS 变量（chrome / chrome-light / chrome-dark 等）和像素字体。抽离时把 token 一起带走。"
+          ]
+        },
+        {
+          "id": "controls",
+          "title": "Button",
+          "items": [
+            "立体按钮。variant：raised 默认凸起、pressed 按下、title 用在窗口标题栏。size：sm / md / lg，以及 icon-sm / icon / icon-lg。",
+            "loading 会转圈并禁用点击。active 表示切换类按钮处于开。其余属性原样交给原生 button。"
+          ]
+        },
+        {
+          "id": "form",
+          "title": "Input / Select / Checkbox / Switch",
+          "items": [
+            "Input 是单行输入。size 为 sm / md。tone：chrome 灰底、field 表单底、dark 深色窗内。",
+            "Select 是自绘下拉，不是原生 select。受控用 value + onValueChange；options 为 { value, label, disabled? }。",
+            "Checkbox 用原生 checked / onChange，可带 label。Switch 用 checked + onCheckedChange；readOnly 只展示、不渲染 input，避免嵌在别的按钮里出现两个焦点。"
+          ]
+        },
+        {
+          "id": "surface",
+          "title": "Panel / Tab",
+          "items": [
+            "Panel 是凹陷分组。padded 默认带内边距；inset 换成内容井底色，适合设置页和文档正文。",
+            "Tab 用在深色内容区，靠 active 区分当前项，选中态自己管。"
+          ]
+        },
+        {
+          "id": "overlay",
+          "title": "Toast / Modal / 右键菜单",
+          "items": [
+            "toast.success / error / warning(message) 弹出全局提示。duration 默认 3 秒；传 false 则不自动关。须已挂 ToastHost。",
+            "modal.alert 只有确定；modal.confirm 返回 Promise<boolean>。自定义层用 modal.open。文案缺省时由 ModalHost 的 labels 填确定/取消。",
+            "ContextMenu 接收 { x, y, items }。items 可带 children 向右展开子菜单。safeBottom 用来避开任务栏。声明式菜单可用 resolveMenuItems（when / disabled 可以是函数）。"
+          ]
+        },
+        {
+          "id": "window",
+          "title": "Window（只有铬）",
+          "items": [
+            "Window 只画标题栏、最小化/最大化/还原/关闭和八角缩放柄。位置、宽高、拖拽、吸附都由外面用 style 和 onTitleMouseDown / onResizeMouseDown 注入。",
+            "labels 必填（minimize / maximize / restore / close），库内不写死中文。本项目的几何封装在 components/desktop/WindowsWindow.tsx，不要把桌面 store 写进 Window。"
+          ]
+        },
+        {
+          "id": "layout",
+          "title": "SplitPane / MasterDetail",
+          "items": [
+            "SplitPane 左右分栏，中间细槽可拖；双击恢复默认宽度；槽聚焦后可用方向键微调。children 必须是两列。storageKey 配合 registerUiKvStorage 可记住宽度。",
+            "MasterDetail 在桌面就是 SplitPane；窄屏则列表和详情互斥全屏。isMobile 和 detailOpen 由调用方传入，组件自己不读视口，以免断点和产品绑死。"
+          ]
+        },
+        {
+          "id": "extract",
+          "title": "抽离时带走什么",
+          "items": [
+            "带走：整个 components/ui，以及 chrome 相关 CSS 变量。根布局挂 ModalHost、ToastHost，需要时 registerUiKvStorage。",
+            "留下：components/desktop（图标、任务栏、锁屏）、store、lib/vfs、lib/desktop、features。那些是这台迷你桌面，不是控件库。"
+          ]
+        }
+      ],
+      "demo": {
+        "ok": "确定",
+        "pressed": "按下",
+        "toast": "提示",
+        "toastMsg": "这是一条 Toast",
+        "alert": "对话框",
+        "alertMsg": "这是 modal.alert",
+        "confirm": "确认框",
+        "confirmMsg": "这是 modal.confirm，选确定或取消。",
+        "input": "输入文字",
+        "check": "复选框",
+        "sw": "开关",
+        "tabA": "甲",
+        "tabB": "乙",
+        "menu": "右键菜单",
+        "copy": "复制",
+        "paste": "粘贴"
+      }
     },
     "changelog": {
       "title": "更新摘要",
@@ -800,7 +892,8 @@
       "items": [
         "资源管理器复刻 Win95：工具栏、地址栏、左侧树、大图标/详细列表、多选与框选、剪切复制粘贴、拖拽到文件夹/桌面。可多开窗口。",
         "VFS 由 vfsStore 统一提供新建/删除(回收站)/重命名/剪贴板/路径查询；桌面读取 /Desktop；游戏以 .exe 快捷方式放在 /Games。",
-        "设置里可单独导出/导入整棵虚拟文件系统 JSON；数据损坏时恢复默认目录并提示。"
+        "设置里可导出一份 JSON（偏好 + VFS 文件树）；旧数据损坏时静默恢复默认目录，不再弹窗。",
+        "游戏清单冻结。文档增加 UI 组件预览。"
       ]
     },
     "2026-09-02": {
@@ -840,7 +933,7 @@
       "title": "游戏合集、拼图与多语言",
       "items": [
         "新增小游戏「格子消消」：羊了个羊式分层卡牌三消；修复底部卡槽布局与棋盘缩放互相牵制导致的抖动。",
-        "桌面新增内置文件夹「游戏」：扫雷、俄罗斯方块、合成大西瓜、格子消消、图片拼图、不规则拼图收纳其中，不再单独出现在桌面与开始菜单。",
+        "桌面新增内置文件夹「游戏」：扫雷、合成大西瓜、格子消消、图片拼图、不规则拼图收纳其中，不再单独出现在桌面与开始菜单。",
         "新增「图片拼图」：滑动拼图（3×3 / 4×4 / 5×5），支持内置图与本地上传。",
         "新增「不规则拼图」：纯 Canvas 榫卯碎片；相邻相对磁吸成组，合成大块可继续拖动，无第三方拖拽/物理库。",
         "开始菜单「程序」子菜单最大高度限制为 400px，超出可滚动。",
@@ -960,7 +1053,7 @@
       "title": "桌面初版",
       "items": [
         "搭好 Win95 风格桌面：可拖拽图标、可叠放窗口、任务栏。",
-        "内置扫雷与俄罗斯方块。",
+        "内置扫雷。",
         "支持浅色 / 深色主题与中英文切换。",
         "文档应用上线，提供欢迎与使用说明。"
       ]

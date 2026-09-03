@@ -6,7 +6,6 @@
   "apps": {
     "games": "ゲーム",
     "minesweeper": "マインスイーパー",
-    "tetris": "テトリス",
     "suika": "スイカゲーム",
     "imagePuzzle": "画像パズル",
     "canvasJigsaw": "ジグソーパズル",
@@ -176,7 +175,6 @@
     "timeNow": "現在の時刻: {time}",
     "dateNow": "現在の日付: {date}",
     "launchedNotepad": "NOTEPAD.EXE を起動しています...",
-    "launchedTetris": "TETRIS.EXE を起動しています...",
     "launchedTaskmgr": "TASKMGR.EXE を起動しています...",
     "wallpaperChanged": "壁紙を変更しました: {name}",
     "syncStart": "デスクトップ レイアウトをクラウドに同期しています...",
@@ -191,7 +189,6 @@
     "helpTime": "システム時刻を表示",
     "helpNotepad": "メモ帳を起動",
     "helpTaskmgr": "タスク マネージャーを起動",
-    "helpTetris": "テトリスを起動",
     "helpWallpaper": "次の壁紙に切り替え",
     "helpSync": "デスクトップ レイアウトを手動同期",
     "helpHelp": "ヘルプを表示",
@@ -544,19 +541,20 @@
     "clockFormat": "時計の形式",
     "clock24": "24 時間制",
     "clock12": "12 時間制",
-    "backupHint": "すべてのローカル設定とデスクトップ状態を JSON としてエクスポートし、別のデバイスで復元できます。インポートは一致する設定を上書きし、すぐに適用されます。",
+    "backupHint": "設定・デスクトップ状態・仮想ディスク上の文書を 1 つの JSON に書き出します。別のブラウザで読み込めば復元できます。ロック画面のパスワードは含まれません。",
     "backupExport": "エクスポート",
-    "backupExportHint": "テーマ、壁紙、ウィンドウ、デスクトップ アイコン、メモ帳／ペイント／K線の設定を含みます（ロック セッションは除く）。",
-    "backupExportAction": "JSON をエクスポート…",
+    "backupExportHint": "テーマ、ウィンドウ、アイコン位置、メモ帳／ペイントなどの設定と、VFS 内のテキスト（メモ、表、文書）。画像などのバイナリはこのブラウザの IndexedDB に残ります。",
+    "backupExportAction": "すべて書き出す…",
     "backupExportOk": "バックアップ ファイルをダウンロードしました",
     "backupExportFail": "エクスポートに失敗しました",
     "backupImport": "インポート",
-    "backupImportHint": "以前エクスポートした JSON を選択してください。インポートした値は現在の設定より優先され、すぐに適用されます。",
-    "backupImportAction": "JSON からインポート…",
+    "backupImportHint": "以前書き出した JSON を選んでください。現在の設定とファイルツリーを上書きし、すぐに適用します。",
+    "backupImportAction": "すべて読み込む…",
+    "backupImportConfirm": "インポートすると、このマシンのデスクトップ設定と仮想ディスクのファイルが上書きされます。続行しますか？",
     "backupImportOk": "{count} 件の設定をインポートして適用しました",
     "backupImportFail": "インポートに失敗しました",
-    "vfsBackup": "仮想ファイルシステム",
-    "vfsBackupHint": "VFS ツリー全体（文書内容を含む）を書き出し／復元します。画像などのバイナリは IndexedDB に残ります。",
+    "vfsBackup": "仮想ファイルシステムのみ",
+    "vfsBackupHint": "ファイルツリーだけを書き出し／復元します（デスクトップ設定は含みません）。以前の VFS 専用 JSON もここから読み込めます。",
     "vfsExportAction": "VFS JSON を書き出す…",
     "vfsImportAction": "VFS JSON を読み込む…",
     "vfsExportOk": "仮想ファイルシステムを書き出しました",
@@ -604,8 +602,8 @@
     "apps": {
       "title": "組み込みアプリ",
       "body": [
-        "マインスイーパー、テトリス、スイカゲーム：ぼーっとするのにぴったりのクラシック ゲーム。",
-        "設定：表示、外観、タスクバー、データ。データではローカル設定とデスクトップ状態の JSON バックアップをエクスポート／インポートできます。",
+        "マインスイーパー、スイカゲームなどは「ゲーム」フォルダにあります。この一覧は凍結し、新規ゲームは追加しません。",
+        "設定：表示、外観、タスクバー、データ。データでは JSON 1 本（設定 + 仮想ディスク）を書き出し／読み込みできます。",
         "ドキュメント：今読んでいるこのウィンドウです。オフライン コンテンツで、注釈は保存されません。",
         "ログ：日付付きのリリースノート。「ログ」アイコンを開いてください。ドキュメントにも最近の更新概要があります。",
         "メモ帳：IndexedDB でプレーン テキストのメモを作成、編集、削除。タイトル、折り返し、Ctrl/⌘+S に対応。",
@@ -618,6 +616,100 @@
         "コードエディタ：HTML / CSS / JS / TS / JSON を複数ウィンドウで編集。シンタックスハイライト、検索と置換、Emmet、HTML プレビュー。ファイルは仮想ファイルシステムに保存し、エクスプローラーまたはデスクトップから開けます。",
         "WPS Writer / WPS Sheet：初期オフィス風の文書と表。ファイルは「ドキュメント」フォルダに保存し、エクスプローラーから開けます。文書は PDF / DOCX / TXT を書き出せます。"
       ]
+    },
+    "uiKit": {
+      "title": "UI キット",
+      "intro": [
+        "components/ui は Win95 風の汎用コントロールです。デスクトップ store、VFS、ゲームには依存しません。独立ライブラリにするときはこのフォルダと index.ts が境界です。",
+        "用途と約束を種類ごとに説明します。クリックできるサンプルは各見出しの下にあります。props の一覧は components/ui/README.md を見てください。"
+      ],
+      "sections": [
+        {
+          "id": "rules",
+          "title": "境界",
+          "items": [
+            "コントロールは props だけです。文言、アイコン、開閉、クリック先はホストが渡します。ここでウィンドウ一覧やファイルツリーを読まないでください。",
+            "ModalHost と ToastHost はアプリのルートに一度だけ載せます。分割幅を覚えるなら、先に registerUiKvStorage（getItem/setItem）を呼んでください。",
+            "ベベルは CSS 変数（chrome / chrome-light / chrome-dark など）とピクセル風フォントが必要です。切り出すときはトークンも一緒に持っていきます。"
+          ]
+        },
+        {
+          "id": "controls",
+          "title": "Button",
+          "items": [
+            "立体ボタン。variant は raised（既定）、pressed、title（タイトルバー用）。size は sm / md / lg と icon-sm / icon / icon-lg。",
+            "loading はスピナーを出してクリックを止めます。active はトグルのオンです。他の属性はそのまま button に渡ります。"
+          ]
+        },
+        {
+          "id": "form",
+          "title": "Input / Select / Checkbox / Switch",
+          "items": [
+            "Input は 1 行入力。size は sm / md。tone は chrome（灰色の井戸）、field（フォーム）、dark（暗い窓の中）。",
+            "Select は自前のドロップダウンで、ネイティブ select ではありません。value + onValueChange で制御。options は { value, label, disabled? }。",
+            "Checkbox はネイティブの checked / onChange と任意の label。Switch は checked + onCheckedChange。readOnly は表示のみ（input なし）で、他のボタンの中に置いてもフォーカスが二重になりません。"
+          ]
+        },
+        {
+          "id": "surface",
+          "title": "Panel / Tab",
+          "items": [
+            "Panel は沈み込みのグループ。padded は既定で余白あり。inset は本文井戸の背景（設定、ドキュメント）。",
+            "Tab は暗い本文向き。選択は active でホストが管理します。"
+          ]
+        },
+        {
+          "id": "overlay",
+          "title": "Toast / Modal / コンテキスト メニュー",
+          "items": [
+            "toast.success / error / warning(message) がグローバル通知です。duration の既定は 3 秒。false なら自動で閉じません。ToastHost が必要です。",
+            "modal.alert は OK のみ。modal.confirm は Promise<boolean>。独自の層は modal.open。ボタン文言が無いときは ModalHost の labels が補います。",
+            "ContextMenu は { x, y, items }。children で右へサブメニュー。safeBottom でタスクバーを避けます。resolveMenuItems は when / disabled 関数から項目を組み立てます。"
+          ]
+        },
+        {
+          "id": "window",
+          "title": "Window（クロムだけ）",
+          "items": [
+            "Window はタイトルバー、最小化／最大化／復元／閉じる、8 方向のリサイズだけを描きます。位置・サイズ・ドラッグ・スナップは style と onTitleMouseDown / onResizeMouseDown で渡します。",
+            "labels は必須（minimize / maximize / restore / close）。キット内に日本語は埋めません。このアプリの幾何は components/desktop/WindowsWindow.tsx にあり、デスクトップ store を Window に入れないでください。"
+          ]
+        },
+        {
+          "id": "layout",
+          "title": "SplitPane / MasterDetail",
+          "items": [
+            "SplitPane は左右 2 列。中央の溝をドラッグ、ダブルクリックで defaultSize に戻す、フォーカス時は矢印キー。children はちょうど 2 つ。storageKey と registerUiKvStorage で幅を覚えます。",
+            "MasterDetail はデスクトップでは SplitPane、狭い画面では一覧と詳細を全画面で切り替えます。isMobile と detailOpen はホストが渡します。コンポーネントはビューポートを自分では読みません。"
+          ]
+        },
+        {
+          "id": "extract",
+          "title": "持っていくもの / 残すもの",
+          "items": [
+            "持っていく：components/ui 一式と chrome の CSS 変数。ルートに ModalHost と ToastHost。分割の記憶が要るなら registerUiKvStorage。",
+            "残す：components/desktop（アイコン、タスクバー、ロック）、store、lib/vfs、lib/desktop、features。それはこのミニデスクトップであり、キットではありません。"
+          ]
+        }
+      ],
+      "demo": {
+        "ok": "OK",
+        "pressed": "押下",
+        "toast": "Toast",
+        "toastMsg": "これは Toast です",
+        "alert": "ダイアログ",
+        "alertMsg": "これは modal.alert です",
+        "confirm": "確認",
+        "confirmMsg": "これは modal.confirm です。OK かキャンセルを選んでください。",
+        "input": "入力",
+        "check": "チェックボックス",
+        "sw": "スイッチ",
+        "tabA": "甲",
+        "tabB": "乙",
+        "menu": "メニュー",
+        "copy": "コピー",
+        "paste": "貼り付け"
+      }
     },
     "changelog": {
       "title": "新着情報",
@@ -800,7 +892,8 @@
       "items": [
         "エクスプローラーを Win95 風に：ツールバー、アドレスバー、ツリー、大きいアイコン/詳細、複数選択、クリップボード、フォルダーやデスクトップへのドラッグ。複数ウィンドウ対応。",
         "ファイル操作は vfsStore に集約。デスクトップは /Desktop を表示。ゲームは /Games に .exe ショートカット。",
-        "設定から仮想ファイルシステム全体を JSON で書き出し/復元。破損時は初期フォルダーに戻して通知。"
+        "設定から JSON 1 本（設定 + VFS ツリー）を書き出せます。破損したカタログは通知なしで初期フォルダーに戻します。",
+        "ゲーム一覧を凍結。ドキュメントに UI キットのプレビューを追加。"
       ]
     },
     "2026-09-02": {
@@ -840,7 +933,7 @@
       "title": "ゲーム集約・パズル・多言語",
       "items": [
         "ミニゲーム「タイルマッチ」（羊了个羊風の階層三消し）を追加。スロットバーのレイアウトと盤面スケールのフィードバックによる揺れを修正。",
-        "デスクトップに組み込みフォルダ「ゲーム」を追加。マインスイーパ、テトリス、スイカ、タイルマッチ、画像パズル、ジグソーを格納（デスクトップ／スタートメニューの個別アイコンは非表示）。",
+        "デスクトップに組み込みフォルダ「ゲーム」を追加。マインスイーパ、スイカ、タイルマッチ、画像パズル、ジグソーを格納（デスクトップ／スタートメニューの個別アイコンは非表示）。",
         "「画像パズル」を追加：スライディングパズル（3×3 / 4×4 / 5×5）、内蔵画像とローカルアップロード対応。",
         "「ジグソー」を追加：純 Canvas のほぞ継ぎピース。隣接相対スナップでグループ化し、結合後も自由にドラッグ可能。第三者 DnD／物理ライブラリなし。",
         "スタートメニュー「プログラム」サブメニューの最大高さを 400px に制限（超過時はスクロール）。",
@@ -960,7 +1053,7 @@
       "title": "デスクトップ v1",
       "items": [
         "Win95 風デスクトップ：ドラッグ可能なアイコン、重ね合わせウィンドウ、タスクバー。",
-        "組み込みマインスイーパーとテトリス。",
+        "組み込みマインスイーパー。",
         "ライト／ダーク テーマと中国語／英語切り替え。",
         "ドキュメント アプリ：ようこそと使い方。"
       ]

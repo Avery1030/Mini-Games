@@ -5,7 +5,6 @@ import type { Locale } from '@/i18n/config'
 export enum BuiltinAppId {
   Games = 'games',
   Minesweeper = 'minesweeper',
-  Tetris = 'tetris',
   Suika = 'suika',
   ImagePuzzle = 'imagePuzzle',
   CanvasJigsaw = 'canvasJigsaw',
@@ -30,10 +29,9 @@ export enum BuiltinAppId {
   Sheet = 'sheet',
 }
 
-/** 收纳进「游戏」集合的内置小游戏 id（顺序即列表展示顺序） */
+/** 收纳进「游戏」集合的内置小游戏 id（顺序即列表展示顺序）。清单已冻结，勿再新增。 */
 export const GAME_APP_IDS: readonly BuiltinAppId[] = [
   BuiltinAppId.Minesweeper,
-  BuiltinAppId.Tetris,
   BuiltinAppId.Suika,
   BuiltinAppId.ImagePuzzle,
   BuiltinAppId.CanvasJigsaw,

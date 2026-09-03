@@ -298,7 +298,6 @@ function help(ctx: CmdContext): CmdRunResult {
       out('  CLS            ' + ctx.t('helpCls')),
       out('  TIME           ' + ctx.t('helpTime')),
       out('  NOTEPAD        ' + ctx.t('helpNotepad')),
-      out('  TETRIS         ' + ctx.t('helpTetris')),
       out('  WALLPAPER       ' + ctx.t('helpWallpaper')),
       out('  SYNC           ' + ctx.t('helpSync')),
       out('  HELP           ' + ctx.t('helpHelp')),
@@ -340,8 +339,6 @@ export async function runCmdCommand(rawInput: string, ctx: CmdContext): Promise<
     case 'taskmgr':
     case 'taskmanager':
       return openApp(ctx, 'taskManager', 'launchedTaskmgr')
-    case 'tetris':
-      return openApp(ctx, 'tetris', 'launchedTetris')
     case 'wallpaper':
       return cycleWallpaper(ctx)
     case 'sync':

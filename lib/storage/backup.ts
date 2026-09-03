@@ -1,9 +1,10 @@
 import { STORAGE_KEYS, STORAGE_KEY_LIST, isSplitStorageKey, isStorageKey, type StorageKey } from './keys'
 import { appStorage } from './local'
+import { VfsCatalogPersistSchema, type VfsCatalogPersist } from '@/lib/vfs/catalog'
 
 /** 备份文件标识，用于校验导入内容 */
 export const BACKUP_FORMAT = 'mini-windows-desktop-backup' as const
-export const BACKUP_VERSION = 1
+export const BACKUP_VERSION = 2
 
 /**
  * 参与导入导出的 storage key。
@@ -16,6 +17,8 @@ export type AppBackupSnapshot = {
   version: number
   exportedAt: string
   entries: Partial<Record<StorageKey, unknown>>
+  /** v2：整棵 VFS 目录树（含文本内容） */
+  vfs?: VfsCatalogPersist
 }
 
 export type ImportAppBackupResult = {
@@ -102,11 +105,21 @@ export function parseAppBackup(input: unknown): AppBackupSnapshot {
     entries[key] = value
   }
 
+  let vfs: VfsCatalogPersist | undefined
+  if (input.vfs !== undefined) {
+    const parsedVfs = VfsCatalogPersistSchema.safeParse(input.vfs)
+    if (!parsedVfs.success) {
+      throw new Error('Invalid VFS snapshot in backup')
+    }
+    vfs = parsedVfs.data
+  }
+
   return {
     format: BACKUP_FORMAT,
     version: input.version,
     exportedAt: typeof input.exportedAt === 'string' ? input.exportedAt : new Date().toISOString(),
     entries,
+    vfs,
   }
 }
 

@@ -6,7 +6,6 @@
   "apps": {
     "games": "Games",
     "minesweeper": "Minesweeper",
-    "tetris": "Tetris",
     "suika": "Suika Game",
     "imagePuzzle": "Image Puzzle",
     "canvasJigsaw": "Jigsaw",
@@ -176,7 +175,6 @@
     "timeNow": "Current time: {time}",
     "dateNow": "Current date: {date}",
     "launchedNotepad": "Starting NOTEPAD.EXE...",
-    "launchedTetris": "Starting TETRIS.EXE...",
     "launchedTaskmgr": "Starting TASKMGR.EXE...",
     "wallpaperChanged": "Wallpaper changed to: {name}",
     "syncStart": "Syncing desktop layout to the cloud...",
@@ -191,7 +189,6 @@
     "helpTime": "Show system time",
     "helpNotepad": "Launch Notepad",
     "helpTaskmgr": "Launch Task Manager",
-    "helpTetris": "Launch Tetris",
     "helpWallpaper": "Cycle to the next wallpaper",
     "helpSync": "Manually sync desktop layout",
     "helpHelp": "Show help",
@@ -544,19 +541,20 @@
     "clockFormat": "Clock format",
     "clock24": "24-hour",
     "clock12": "12-hour",
-    "backupHint": "Export all local preferences and desktop state as JSON so you can restore them on another device. Import overwrites matching settings and applies immediately.",
+    "backupHint": "Download one JSON with preferences, desktop layout, and virtual-disk documents. Import it in another browser to restore. Lock-screen passwords are not included.",
     "backupExport": "Export",
-    "backupExportHint": "Includes theme, wallpaper, windows, desktop icons, notepad/paint/kline preferences (lock session excluded).",
-    "backupExportAction": "Export JSON…",
+    "backupExportHint": "Theme, windows, icon positions, notepad/paint preferences, plus VFS text files (notes, sheets, documents). Binary images stay in this browser's IndexedDB.",
+    "backupExportAction": "Export everything…",
     "backupExportOk": "Backup file downloaded",
     "backupExportFail": "Export failed",
     "backupImport": "Import",
-    "backupImportHint": "Pick a previously exported JSON. Imported values take priority over current settings and apply immediately.",
-    "backupImportAction": "Import from JSON…",
+    "backupImportHint": "Pick a previously exported JSON. This overwrites current settings and the file tree, then applies immediately.",
+    "backupImportAction": "Import everything…",
+    "backupImportConfirm": "Import will overwrite this machine's desktop settings and virtual-disk files. Continue?",
     "backupImportOk": "Imported and applied {count} setting(s)",
     "backupImportFail": "Import failed",
-    "vfsBackup": "Virtual filesystem",
-    "vfsBackupHint": "Export or restore the full VFS tree (including document contents). Binary files such as images remain in IndexedDB.",
+    "vfsBackup": "Virtual filesystem only",
+    "vfsBackupHint": "Export or restore just the file tree (no desktop preferences). Older VFS-only JSON files can still be imported here.",
     "vfsExportAction": "Export VFS JSON…",
     "vfsImportAction": "Import VFS JSON…",
     "vfsExportOk": "Virtual filesystem exported",
@@ -604,8 +602,8 @@
     "apps": {
       "title": "Built-in apps",
       "body": [
-        "Minesweeper, Tetris, and Suika: classic games for zoning out.",
-        "Settings: Display, Appearance, Taskbar, and Data. Data lets you export/import a JSON backup of local preferences and desktop state.",
+        "Minesweeper, Suika, and other classics live in the Games folder. That list is frozen — no new games.",
+        "Settings: Display, Appearance, Taskbar, and Data. Data exports/imports one JSON (preferences + virtual-disk files).",
         "Document: the window you are reading. Offline content, no annotations saved.",
         "Log: dated release notes — open the Log icon; Document also shows a short recent summary.",
         "Notepad: create, edit, and delete plain-text notes in IndexedDB. Supports titles, word wrap, and Ctrl/⌘+S.",
@@ -618,6 +616,100 @@
         "Code Editor: multiple windows for HTML / CSS / JS / TS / JSON, with syntax highlighting, find/replace, Emmet, and HTML preview. Files live in the virtual file system and can be opened from File Explorer or the desktop.",
         "WPS Writer / WPS Sheet: retro office suite; files live in Documents on the virtual filesystem and can be opened from File Explorer. Writer can export PDF, DOCX, and TXT."
       ]
+    },
+    "uiKit": {
+      "title": "UI kit",
+      "intro": [
+        "components/ui is the Win95 control set. It does not touch the desktop store, VFS, or games. Treat this folder and index.ts as the extractable library.",
+        "Each section below covers purpose and conventions. Clickable samples sit under the matching heading. The full props table is in components/ui/README.md."
+      ],
+      "sections": [
+        {
+          "id": "rules",
+          "title": "Boundaries",
+          "items": [
+            "Controls are props-only: copy, icons, open state, and click handlers come from the host. Do not read the window list or file tree here.",
+            "Mount ModalHost and ToastHost once at the app root. To persist split widths, call registerUiKvStorage with getItem/setItem first.",
+            "Bevels need CSS variables (chrome / chrome-light / chrome-dark, …) and a pixel-style font. Take the tokens with the folder when you extract."
+          ]
+        },
+        {
+          "id": "controls",
+          "title": "Button",
+          "items": [
+            "Raised bevel button. variant: raised (default), pressed, or title (caption-bar). size: sm / md / lg, plus icon-sm / icon / icon-lg.",
+            "loading shows a spinner and disables the button. active marks a toggle as on. Other props pass through to the native button."
+          ]
+        },
+        {
+          "id": "form",
+          "title": "Input / Select / Checkbox / Switch",
+          "items": [
+            "Input is a single-line field. size is sm / md. tone: chrome (gray well), field (form well), dark (inside a dark window).",
+            "Select is custom, not a native select. Control it with value + onValueChange. options are { value, label, disabled? }.",
+            "Checkbox uses native checked / onChange and an optional label. Switch uses checked + onCheckedChange. readOnly is display-only (no input) so it can sit inside another button without a second focus target."
+          ]
+        },
+        {
+          "id": "surface",
+          "title": "Panel / Tab",
+          "items": [
+            "Panel is a sunken group. padded defaults to true; inset switches to the content-well background (settings, document body).",
+            "Tab is for dark content wells. Drive selection yourself with active."
+          ]
+        },
+        {
+          "id": "overlay",
+          "title": "Toast / Modal / context menu",
+          "items": [
+            "toast.success / error / warning(message) shows a global toast. duration defaults to 3s; false means it stays. ToastHost must be mounted.",
+            "modal.alert is OK-only; modal.confirm returns Promise<boolean>. Use modal.open for custom stacks. Missing button labels are filled from ModalHost labels.",
+            "ContextMenu takes { x, y, items }. Nested children open to the right. safeBottom clears the taskbar. resolveMenuItems builds items from when / disabled functions."
+          ]
+        },
+        {
+          "id": "window",
+          "title": "Window (chrome only)",
+          "items": [
+            "Window paints the caption, min/max/restore/close, and eight resize handles. Position, size, dragging, and snapping are injected via style and onTitleMouseDown / onResizeMouseDown.",
+            "labels is required (minimize / maximize / restore / close); the kit does not hard-code copy. This app wraps geometry in components/desktop/WindowsWindow.tsx — keep the desktop store out of Window."
+          ]
+        },
+        {
+          "id": "layout",
+          "title": "SplitPane / MasterDetail",
+          "items": [
+            "SplitPane is a two-column layout with a draggable gutter. Double-click resets defaultSize; arrow keys nudge when the gutter is focused. Pass exactly two children. storageKey plus registerUiKvStorage remembers width.",
+            "MasterDetail is SplitPane on desktop; on a narrow screen, list and detail swap fullscreen. The host passes isMobile and detailOpen — the component does not read the viewport."
+          ]
+        },
+        {
+          "id": "extract",
+          "title": "What to copy vs leave",
+          "items": [
+            "Copy: all of components/ui, plus chrome CSS variables. Mount ModalHost and ToastHost at the root; call registerUiKvStorage if you need persisted splits.",
+            "Leave: components/desktop (icons, taskbar, lock), store, lib/vfs, lib/desktop, features. That is this mini desktop, not the widget kit."
+          ]
+        }
+      ],
+      "demo": {
+        "ok": "OK",
+        "pressed": "Pressed",
+        "toast": "Toast",
+        "toastMsg": "This is a toast",
+        "alert": "Alert",
+        "alertMsg": "This is modal.alert",
+        "confirm": "Confirm",
+        "confirmMsg": "This is modal.confirm. Choose OK or Cancel.",
+        "input": "Type here",
+        "check": "Checkbox",
+        "sw": "Switch",
+        "tabA": "A",
+        "tabB": "B",
+        "menu": "Menu",
+        "copy": "Copy",
+        "paste": "Paste"
+      }
     },
     "changelog": {
       "title": "What's new",
@@ -800,7 +892,8 @@
       "items": [
         "File Explorer now follows Windows 95: toolbar, address bar, folder tree, large icons/details, multi-select, clipboard, and drag onto folders or the desktop. Multiple windows are supported.",
         "vfsStore is the file API: create/trash/rename/clipboard/path lookup. The desktop reads /Desktop; games live in /Games as .exe shortcuts.",
-        "Settings can export/import the whole virtual filesystem as JSON; a damaged catalog resets to the default folders with a prompt."
+        "Settings can export one JSON (preferences + VFS tree). A damaged catalog resets to default folders silently.",
+        "The games list is frozen. Document now includes a UI kit preview."
       ]
     },
     "2026-09-02": {
@@ -840,7 +933,7 @@
       "title": "Games hub, puzzles & locales",
       "items": [
         "Added Tile Match (sheep-style layered three-match) and fixed tray/board scale feedback that caused the slot bar to jitter.",
-        "Added a built-in Games folder: Minesweeper, Tetris, Suika, Tile Match, Image Puzzle, and Jigsaw live inside it (no longer separate desktop/Start Menu icons).",
+        "Added a built-in Games folder: Minesweeper, Suika, Tile Match, Image Puzzle, and Jigsaw live inside it (no longer separate desktop/Start Menu icons).",
         "Added Image Puzzle: sliding puzzle (3×3 / 4×4 / 5×5) with built-in or uploaded images.",
         "Added Jigsaw: pure Canvas tabbed pieces with neighbor relative snap into freely draggable clusters; no third-party DnD/physics libraries.",
         "Capped the Start Menu Programs submenu at 400px max height (scroll when needed).",
@@ -960,7 +1053,7 @@
       "title": "Desktop v1",
       "items": [
         "Win95-style desktop: draggable icons, stacked windows, and a taskbar.",
-        "Built-in Minesweeper and Tetris.",
+        "Built-in Minesweeper.",
         "Light / dark theme and Chinese / English switching.",
         "Document app with welcome and usage notes."
       ]

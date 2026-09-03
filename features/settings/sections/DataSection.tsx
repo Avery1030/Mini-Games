@@ -3,21 +3,22 @@
 import { useRef, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { useTranslations } from 'next-intl'
-import { Button, Panel, toast } from '@/components/ui'
+import { Button, Panel, modal, toast } from '@/components/ui'
 import { exportAndDownloadAppBackup, importAppBackupFromFile } from '@/lib/storage/backupRuntime'
 import { useVfsStore } from '@/store/vfsStore'
 
 export function DataSection() {
   const t = useTranslations('settings')
+  const tm = useTranslations('modal')
   const { setTheme } = useTheme()
   const fileRef = useRef<HTMLInputElement>(null)
   const vfsFileRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState<Nullable<'export' | 'import' | 'vfs-export' | 'vfs-import'>>(null)
 
-  const onExport = () => {
+  const onExport = async () => {
     setBusy('export')
     try {
-      exportAndDownloadAppBackup()
+      await exportAndDownloadAppBackup()
       toast.success(t('backupExportOk'))
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('backupExportFail'))
@@ -33,6 +34,14 @@ export function DataSection() {
   const onImportFile = async (files: Nullable<FileList>) => {
     const file = files?.[0]
     if (!file) return
+    const ok = await modal.confirm({
+      title: tm('confirmTitle'),
+      message: t('backupImportConfirm'),
+    })
+    if (!ok) {
+      if (fileRef.current) fileRef.current.value = ''
+      return
+    }
     setBusy('import')
     try {
       const { theme, appliedKeys } = await importAppBackupFromFile(file)
@@ -74,6 +83,14 @@ export function DataSection() {
   const onVfsImportFile = async (files: Nullable<FileList>) => {
     const file = files?.[0]
     if (!file) return
+    const ok = await modal.confirm({
+      title: tm('confirmTitle'),
+      message: t('backupImportConfirm'),
+    })
+    if (!ok) {
+      if (vfsFileRef.current) vfsFileRef.current.value = ''
+      return
+    }
     setBusy('vfs-import')
     try {
       const parsed = JSON.parse(await file.text()) as unknown
@@ -96,7 +113,7 @@ export function DataSection() {
         <div>
           <div className='text-xs font-bold mb-1.5'>{t('backupExport')}</div>
           <p className='mb-2 text-[10px] text-muted'>{t('backupExportHint')}</p>
-          <Button size='sm' loading={busy === 'export'} disabled={busy != null} onClick={onExport}>
+          <Button size='sm' loading={busy === 'export'} disabled={busy != null} onClick={() => void onExport()}>
             {t('backupExportAction')}
           </Button>
         </div>

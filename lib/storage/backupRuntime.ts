@@ -1,4 +1,5 @@
 import {
+  BACKUP_VERSION,
   downloadAppBackupJson,
   exportAppBackup,
   readBackupFile,
@@ -54,19 +55,31 @@ async function rehydrateAllStores(): Promise<void> {
   }
 }
 
-/** 导出当前全部可备份状态并下载 JSON */
-export function exportAndDownloadAppBackup(): void {
-  downloadAppBackupJson(exportAppBackup())
+/** 导出当前全部可备份状态并下载 JSON（含 VFS 文件树） */
+export async function exportAndDownloadAppBackup(): Promise<void> {
+  const snapshot = exportAppBackup()
+  try {
+    const { useVfsStore } = await import('@/store/vfsStore')
+    snapshot.vfs = await useVfsStore.getState().exportAll()
+    snapshot.version = BACKUP_VERSION
+  } catch {
+    /* 偏好仍可导出 */
+  }
+  downloadAppBackupJson(snapshot)
 }
 
 /**
  * 从文件导入：写入 storage（覆盖）→ rehydrate 内存 store，立即生效。
- * 返回主题，便于 UI 同步 next-themes。
+ * 含 VFS 快照时一并还原文件树。返回主题，便于 UI 同步 next-themes。
  */
 export async function importAppBackupFromFile(file: File): Promise<ImportAppBackupResult> {
   const snapshot = await readBackupFile(file)
   const result = writeAppBackupToStorage(snapshot)
   await rehydrateAllStores()
+  if (snapshot.vfs) {
+    const { useVfsStore } = await import('@/store/vfsStore')
+    await useVfsStore.getState().importAll(snapshot.vfs)
+  }
   return result
 }
 

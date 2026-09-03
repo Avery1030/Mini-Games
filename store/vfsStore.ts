@@ -330,6 +330,15 @@ async function seedGameExecutables(get: () => VfsStore): Promise<void> {
     if (await vfs.exists(path)) continue
     await vfs.writeFile(path, encodeExeContent(appId), EXE_MIME)
   }
+  await get().refresh()
+  const folder = get().getByPath(VFS_PATHS.games)
+  if (!folder) return
+  const keep = new Set(GAME_APP_IDS.map((id) => `${id}.exe`.toLowerCase()))
+  for (const child of get().getChildren(folder.id)) {
+    if (!child.name.toLowerCase().endsWith('.exe')) continue
+    if (keep.has(child.name.toLowerCase())) continue
+    await vfs.removeFile(child.path)
+  }
 }
 
 if (typeof window !== 'undefined') {

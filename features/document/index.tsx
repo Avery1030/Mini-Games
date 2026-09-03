@@ -5,12 +5,30 @@ import { useLocale, useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
 import { STORAGE_KEYS } from '@/lib/storage'
-import { MasterDetail, Panel } from '@/components/ui'
+import { MasterDetail, Panel, UiKitPreview, type UiKitDemoLabels } from '@/components/ui'
 import { useIsMobileViewport } from '@/hooks/desktop'
 import { CHANGELOG_DATES, formatChangelogDate } from '@/content/changelog'
 
-const DOC_IDS = ['welcome', 'desktop', 'apps', 'changelog', 'about'] as const
+const DOC_IDS = ['welcome', 'desktop', 'apps', 'uiKit', 'changelog', 'about'] as const
 type DocId = (typeof DOC_IDS)[number]
+
+type UiKitSection = { id: string; title: string; items: string[] }
+
+function isUiKitSections(raw: unknown): raw is UiKitSection[] {
+  return (
+    Array.isArray(raw) &&
+    raw.every((row) => {
+      if (!row || typeof row !== 'object') return false
+      const s = row as Partial<UiKitSection>
+      return (
+        typeof s.id === 'string' &&
+        typeof s.title === 'string' &&
+        Array.isArray(s.items) &&
+        s.items.every((item) => typeof item === 'string')
+      )
+    })
+  )
+}
 
 /** 文档里的更新摘要：只展示最近几条，完整列表见「日志」应用 */
 const DOC_CHANGELOG_PREVIEW = 3
@@ -25,7 +43,15 @@ export function DocumentApp() {
   /** 窄屏默认先看目录；桌面端忽略 */
   const [detailOpen, setDetailOpen] = useState(false)
   const title = t(`${activeId}.title`)
-  const body = activeId === 'changelog' ? null : (t.raw(`${activeId}.body`) as string[])
+  const body = activeId === 'changelog' || activeId === 'uiKit' ? null : (t.raw(`${activeId}.body`) as string[])
+  const uiKitIntro = activeId === 'uiKit' ? (t.raw('uiKit.intro') as string[]) : []
+  const rawUiKitSections = activeId === 'uiKit' ? t.raw('uiKit.sections') : null
+  const uiKitSections = isUiKitSections(rawUiKitSections) ? rawUiKitSections : []
+  const rawUiKitDemo = activeId === 'uiKit' ? t.raw('uiKit.demo') : null
+  const uiKitDemo =
+    rawUiKitDemo && typeof rawUiKitDemo === 'object' && !Array.isArray(rawUiKitDemo)
+      ? (rawUiKitDemo as Partial<UiKitDemoLabels>)
+      : undefined
   const previewIds = CHANGELOG_DATES.slice(0, DOC_CHANGELOG_PREVIEW)
 
   return (
@@ -82,7 +108,22 @@ export function DocumentApp() {
               {title}
             </h2>
             <div className='flex-1 min-h-0 overflow-y-auto space-y-3 text-[12px] leading-relaxed text-on-chrome max-md:text-[14px] max-md:space-y-3.5'>
-              {activeId === 'changelog' ? (
+              {activeId === 'uiKit' ? (
+                <>
+                  {(Array.isArray(uiKitIntro) ? uiKitIntro : []).map((para, i) => (
+                    <p key={`intro-${i}`}>{para}</p>
+                  ))}
+                  {uiKitSections.map((section) => (
+                    <section key={section.id} className='space-y-2'>
+                      <h3 className='font-bold text-[12px] max-md:text-[14px]'>{section.title}</h3>
+                      {section.items.map((para, i) => (
+                        <p key={i}>{para}</p>
+                      ))}
+                      <UiKitPreview section={section.id} labels={uiKitDemo} />
+                    </section>
+                  ))}
+                </>
+              ) : activeId === 'changelog' ? (
                 <>
                   {(t.raw('changelog.intro') as string[]).map((para, i) => (
                     <p key={`intro-${i}`}>{para}</p>

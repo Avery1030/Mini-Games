@@ -18,6 +18,7 @@ export { registerUiKvStorage, type UiKvStorage } from './kvStorage'
 export { MasterDetail, type MasterDetailProps } from './MasterDetail'
 export { Window, type WindowLabels, type WindowProps, type WindowResizeEdge } from './window'
 export { Tab, type TabProps } from './Tab'
+export { UiKitPreview, type UiKitDemoId, type UiKitDemoLabels } from './UiKitPreview'
 export { Checkbox, type CheckboxProps } from './Checkbox'
 export { Switch, type SwitchProps, type SwitchSize } from './Switch'
 export {

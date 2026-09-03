@@ -1,10 +1,10 @@
 /**
  * 内置桌面应用注册表（图标、默认窗口参数、打开钩子）。
  * 新增应用：在 features/<name>/ 实现 UI，再于此追加一条（显示名写 messages.*.apps.<id>）。
+ * 小游戏清单已冻结（见 GAME_APP_IDS），不要再往桌面/游戏夹加新游戏。
  */
 import {
   AppWindow,
-  Blocks,
   BookOpenText,
   Bomb,
   Bot,
@@ -56,16 +56,6 @@ export const BUILTIN_APPS: readonly RegisterBuiltinAppOptions[] = [
     showOnDesktop: false,
     showInStartMenu: false,
     loadApp: () => import('@/features/games/minesweeper').then((m) => m.Minesweeper),
-  },
-  {
-    id: BuiltinAppId.Tetris,
-    icon: Blocks,
-    defaultCoordinate: [1, 2],
-    width: 560,
-    height: 640,
-    showOnDesktop: false,
-    showInStartMenu: false,
-    loadApp: () => import('@/features/games/tetris').then((m) => m.Tetris),
   },
   {
     id: BuiltinAppId.Suika,
