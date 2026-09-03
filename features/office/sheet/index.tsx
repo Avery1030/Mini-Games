@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
@@ -38,6 +38,7 @@ import {
   DEFAULT_ROW_HEAD_WIDTH,
   DEFAULT_ROW_HEIGHT,
   fillHandle,
+  fitSheetAxis,
   formatRangesLabel,
   gridToTsv,
   inRange,
@@ -84,7 +85,11 @@ export function SheetApp({ windowId, initialFileId }: Props = {}) {
   const clipRef = useRef<string[][]>([])
   const formulaRef = useRef<HTMLInputElement>(null)
   const cellEditRef = useRef<HTMLInputElement>(null)
+  const scrollerRef = useRef<HTMLDivElement>(null)
   const leadRef = useRef<CellPos>({ col: 0, row: 0 })
+  const colSizesRef = useRef<number[]>([])
+  const rowSizesRef = useRef<number[]>([])
+  const [view, setView] = useState({ w: 0, h: 0 })
   const booted = useRef(false)
   const dragMode = useRef<DragMode>(null)
   const fillOrigin = useRef<SheetRange>({ c0: 0, r0: 0, c1: 0, r1: 0 })
@@ -170,6 +175,20 @@ export function SheetApp({ windowId, initialFileId }: Props = {}) {
       applyBlank()
     })()
   }, [applyBlank, hydrated, initialFileId, lastSheetId, openById, windowId])
+
+  useLayoutEffect(() => {
+    const el = scrollerRef.current
+    if (!el) return
+    const sync = () => {
+      const w = el.clientWidth
+      const h = el.clientHeight
+      setView((prev) => (prev.w === w && prev.h === h ? prev : { w, h }))
+    }
+    sync()
+    const ro = new ResizeObserver(sync)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   useEffect(() => {
     if (!windowId) return
@@ -755,20 +774,38 @@ export function SheetApp({ windowId, initialFileId }: Props = {}) {
   const { cols: colCount, rows: rowCount } = sheetSize(sheet)
   const cols = Array.from({ length: colCount }, (_, i) => i)
   const rows = Array.from({ length: rowCount }, (_, i) => i)
-  const colW = (i: number) => sheet.colWidths?.[i] ?? DEFAULT_COL_WIDTH
-  const rowH = (i: number) => sheet.rowHeights?.[i] ?? DEFAULT_ROW_HEIGHT
   const rowHeadW = sheet.rowHeadWidth ?? DEFAULT_ROW_HEAD_WIDTH
   const colHeadH = sheet.colHeadHeight ?? DEFAULT_COL_HEAD_HEIGHT
+  const colSizes = fitSheetAxis(
+    sheet.colWidths,
+    colCount,
+    DEFAULT_COL_WIDTH,
+    Math.max(0, view.w - rowHeadW),
+    clampColWidth,
+  )
+  const rowSizes = fitSheetAxis(
+    sheet.rowHeights,
+    rowCount,
+    DEFAULT_ROW_HEIGHT,
+    Math.max(0, view.h - colHeadH),
+    clampRowHeight,
+  )
+  colSizesRef.current = colSizes
+  rowSizesRef.current = rowSizes
+  const colW = (i: number) => colSizes[i] ?? DEFAULT_COL_WIDTH
+  const rowH = (i: number) => rowSizes[i] ?? DEFAULT_ROW_HEIGHT
   const tableWidth = rowHeadW + cols.reduce((sum, c) => sum + colW(c), 0)
+  const tableHeight = colHeadH + rows.reduce((sum, r) => sum + rowH(r), 0)
   const avgShown = stats.avg == null ? '—' : String(Math.round(stats.avg * 1e4) / 1e4)
 
   const setColW = (index: number, width: number) => {
     setSheet((prev) => {
       const { cols: n } = sheetSize(prev)
+      const shown = colSizesRef.current
       return {
         ...prev,
         colWidths: Array.from({ length: n }, (_, i) =>
-          i === index ? clampColWidth(width) : (prev.colWidths?.[i] ?? DEFAULT_COL_WIDTH),
+          i === index ? clampColWidth(width) : (shown[i] ?? prev.colWidths?.[i] ?? DEFAULT_COL_WIDTH),
         ),
       }
     })
@@ -777,10 +814,11 @@ export function SheetApp({ windowId, initialFileId }: Props = {}) {
   const setRowH = (index: number, height: number) => {
     setSheet((prev) => {
       const { rows: n } = sheetSize(prev)
+      const shown = rowSizesRef.current
       return {
         ...prev,
         rowHeights: Array.from({ length: n }, (_, i) =>
-          i === index ? clampRowHeight(height) : (prev.rowHeights?.[i] ?? DEFAULT_ROW_HEIGHT),
+          i === index ? clampRowHeight(height) : (shown[i] ?? prev.rowHeights?.[i] ?? DEFAULT_ROW_HEIGHT),
         ),
       }
     })
@@ -845,6 +883,7 @@ export function SheetApp({ windowId, initialFileId }: Props = {}) {
       </div>
 
       <div
+        ref={scrollerRef}
         className={cn(
           winChromeSunken,
           'flex-1 min-h-0 m-2 overflow-scroll bg-field overscroll-contain',
@@ -852,7 +891,12 @@ export function SheetApp({ windowId, initialFileId }: Props = {}) {
       >
         <table
           className='relative isolate table-fixed border-separate border-spacing-0 text-[11px] select-none'
-          style={{ width: '100%', minWidth: tableWidth }}
+          style={{
+            width: tableWidth,
+            minWidth: tableWidth,
+            maxWidth: tableWidth,
+            height: tableHeight,
+          }}
         >
           <colgroup>
             <col style={{ width: rowHeadW }} />
@@ -861,13 +905,21 @@ export function SheetApp({ windowId, initialFileId }: Props = {}) {
             ))}
           </colgroup>
           <thead>
-            <tr style={{ height: colHeadH }}>
+            <tr style={{ height: colHeadH, maxHeight: colHeadH }}>
               <th
                 className={cn(
                   winChrome,
                   'sticky top-0 left-0 z-30 font-normal bg-chrome cursor-pointer',
                 )}
-                style={{ width: rowHeadW, height: colHeadH, minWidth: rowHeadW }}
+                style={{
+                  width: rowHeadW,
+                    height: colHeadH,
+                    minHeight: colHeadH,
+                    maxHeight: colHeadH,
+                    minWidth: rowHeadW,
+                    maxWidth: rowHeadW,
+                  boxSizing: 'border-box',
+                }}
                 aria-label={t('selectAll')}
                 onMouseDown={startSelectAll}
               >
@@ -894,7 +946,15 @@ export function SheetApp({ windowId, initialFileId }: Props = {}) {
                     'sticky top-0 z-20 font-bold bg-chrome cursor-pointer',
                     ranges.some((range) => c >= range.c0 && c <= range.c1) && 'bg-chrome-hover',
                   )}
-                  style={{ width: colW(c), height: colHeadH, minWidth: colW(c) }}
+                  style={{
+                    width: colW(c),
+                    height: colHeadH,
+                    minHeight: colHeadH,
+                    maxHeight: colHeadH,
+                    minWidth: colW(c),
+                    maxWidth: colW(c),
+                    boxSizing: 'border-box',
+                  }}
                   onMouseDown={(e) => startColSelect(c, e)}
                   onMouseEnter={() => enterCell(c, 0)}
                   onContextMenu={(e) => openColMenu(e, c)}
@@ -913,14 +973,22 @@ export function SheetApp({ windowId, initialFileId }: Props = {}) {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r} style={{ height: rowH(r) }}>
+              <tr key={r} style={{ height: rowH(r), maxHeight: rowH(r) }}>
                 <th
                   className={cn(
                     winChrome,
                     'sticky left-0 z-10 font-normal bg-chrome cursor-pointer',
                     ranges.some((range) => r >= range.r0 && r <= range.r1) && 'bg-chrome-hover',
                   )}
-                  style={{ width: rowHeadW, height: rowH(r), minWidth: rowHeadW }}
+                  style={{
+                    width: rowHeadW,
+                    height: rowH(r),
+                    minHeight: rowH(r),
+                    maxHeight: rowH(r),
+                    minWidth: rowHeadW,
+                    maxWidth: rowHeadW,
+                    boxSizing: 'border-box',
+                  }}
                   onMouseDown={(e) => startRowSelect(r, e)}
                   onMouseEnter={() => enterCell(0, r)}
                   onContextMenu={(e) => openRowMenu(e, r)}
@@ -964,7 +1032,15 @@ export function SheetApp({ windowId, initialFileId }: Props = {}) {
                         !selected && 'bg-field',
                         editingHere && 'bg-field p-0',
                       )}
-                      style={{ width: colW(c), height: rowH(r), minWidth: colW(c) }}
+                      style={{
+                        width: colW(c),
+                        height: rowH(r),
+                        minHeight: rowH(r),
+                        maxHeight: rowH(r),
+                        minWidth: colW(c),
+                        maxWidth: colW(c),
+                        boxSizing: 'border-box',
+                      }}
                       onMouseDown={(e) => startSelect(c, r, e)}
                       onMouseEnter={() => enterCell(c, r)}
                       onDoubleClick={() => beginCellEdit(c, r)}

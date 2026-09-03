@@ -37,6 +37,27 @@ export function clampColHeadHeight(n: number): number {
   return Math.round(clampIndex(n, MIN_COL_HEAD_HEIGHT, MAX_COL_HEAD_HEIGHT))
 }
 
+/** 全部仍是默认尺寸时，把剩余空间均分到各行/列，铺满可视区域。 */
+export function fitSheetAxis(
+  stored: number[] | undefined,
+  count: number,
+  fallback: number,
+  available: number,
+  clamp: (n: number) => number,
+): number[] {
+  const sizes = Array.from({ length: count }, (_, i) => clamp(stored?.[i] ?? fallback))
+  if (available <= 0 || sizes.some((n) => n !== fallback)) return sizes
+  const extra = available - fallback * count
+  if (extra <= 0) return sizes
+  const each = Math.floor(extra / count)
+  let rem = extra - each * count
+  return sizes.map((n) => {
+    const add = each + (rem > 0 ? 1 : 0)
+    if (rem > 0) rem -= 1
+    return clamp(n + add)
+  })
+}
+
 export function sheetSize(body: SheetBody): { cols: number; rows: number } {
   return {
     cols: body.cols || SHEET_COLS,
