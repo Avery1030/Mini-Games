@@ -1,8 +1,13 @@
+import './bindUiKv'
+
 export {
   STORAGE_KEYS,
   STORAGE_KEY_LIST,
+  SPLIT_STORAGE_KEYS,
   isStorageKey,
+  isSplitStorageKey,
   type StorageKey,
+  type SplitStorageKey,
 } from './keys'
 
 export type {

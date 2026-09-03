@@ -691,7 +691,7 @@
           return () => this._listeners.remove(listener)
         },
 
-        // Load / persist fireworks settings to dedicated localStorage (not app zustand store).
+        // Key = STORAGE_KEYS.fireworks in lib/storage/keys.ts. Standalone iframe cannot import TS.
         // Mutates state because `store.load()` should only be called once immediately after store is created, before any subscriptions.
         load() {
           const STORAGE_KEY = 'avery_fireworks_v1'

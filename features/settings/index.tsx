@@ -4,6 +4,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
+import { STORAGE_KEYS } from '@/lib/storage'
+import {
+  importWallpaperImageFromUrl,
+  listWallpaperImages,
+  listWallpaperModels,
+  trashWallpaper,
+  uploadWallpaperImage,
+  uploadWallpaperModel,
+  type WallpaperAsset,
+} from '@/lib/wallpaper'
 import { MasterDetail, Panel } from '@/components/ui'
 import { useIsMobileViewport } from '@/hooks/desktop'
 import {
@@ -15,15 +25,6 @@ import {
 } from '@/config/wallpapers'
 import { useSettingsStore } from '@/store/settings'
 import { useWallpaperSettings } from '@/features/settings/hooks'
-import {
-  importWallpaperImageFromUrl,
-  listWallpaperImages,
-  listWallpaperModels,
-  trashWallpaper,
-  uploadWallpaperImage,
-  uploadWallpaperModel,
-  type WallpaperAsset,
-} from '@/lib/wallpaper'
 import { AppearanceSection, DataSection, DisplaySection, TaskbarSection } from './sections'
 import { SETTINGS_SECTIONS, type SectionId, type WallpaperDraft } from './types'
 
@@ -226,7 +227,7 @@ export function SettingsApp() {
           defaultSize={108}
           minSize={88}
           maxSize={200}
-          storageKey='split:settings'
+          storageKey={STORAGE_KEYS.splitSettings}
           isMobile={isMobile}
           backLabel={tm('backToList')}
           detailOpen={detailOpen}

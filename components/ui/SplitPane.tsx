@@ -2,6 +2,7 @@
 
 import { Children, useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { cn } from './cn'
+import { uiKvGet, uiKvSet } from './kvStorage'
 
 const canUseDom = typeof window !== 'undefined'
 
@@ -12,7 +13,7 @@ export type SplitPaneProps = {
   defaultSize?: number
   minSize?: number
   maxSize?: number
-  /** 若提供，宽度会写入 localStorage 记住 */
+  /** 若提供，宽度经 UI kv 适配器持久化（本应用注入 appStorage） */
   storageKey?: string
   className?: string
   /** 分隔条无障碍名称 */
@@ -21,23 +22,15 @@ export type SplitPaneProps = {
 
 function readStored(key: string | undefined, fallback: number): number {
   if (!key || !canUseDom) return fallback
-  try {
-    const raw = localStorage.getItem(key)
-    if (raw == null) return fallback
-    const n = Number(raw)
-    return Number.isFinite(n) ? n : fallback
-  } catch {
-    return fallback
-  }
+  const raw = uiKvGet(key)
+  if (raw == null) return fallback
+  const n = Number(raw)
+  return Number.isFinite(n) ? n : fallback
 }
 
 function writeStored(key: string | undefined, value: number) {
   if (!key || !canUseDom) return
-  try {
-    localStorage.setItem(key, String(Math.round(value)))
-  } catch {
-    /* ignore */
-  }
+  uiKvSet(key, String(Math.round(value)))
 }
 
 /**

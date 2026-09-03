@@ -2,7 +2,7 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getLocale } from 'next-intl/server'
 import { ThemeProvider } from 'next-themes'
 import { ModalHost, ToastHost, type ModalHostLabels } from '@/components/ui'
-import { STORAGE_KEYS } from '@/lib/storage'
+import { STORAGE_KEYS } from '@/lib/storage/keys'
 import './globals.css'
 
 const THEME_STORAGE_KEY = STORAGE_KEYS.theme
@@ -36,6 +36,7 @@ export default async function RootLayout({
                 const key = ${JSON.stringify(THEME_STORAGE_KEY)};
                 let theme;
                 try {
+                  // 水合前内联脚本：唯一允许在 appStorage 之外读 localStorage 的例外
                   theme = localStorage.getItem(key);
                 } catch {}
                 // 仅 light / dark；历史 system 或空值一律按 light
@@ -47,6 +48,7 @@ export default async function RootLayout({
       </head>
       <body className='antialiased'>
         <NextIntlClientProvider messages={messages}>
+          {/* next-themes 内部按同一 key 读写 localStorage；与 FOUC 脚本共用 STORAGE_KEYS.theme */}
           <ThemeProvider
             attribute='class'
             defaultTheme='light'

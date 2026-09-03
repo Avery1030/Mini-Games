@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronLeft, ChevronRight, FolderOpen, Link2, Trash2 } from 'lucide-react'
+import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
+import { STORAGE_KEYS } from '@/lib/storage'
 import { Button, Input, MasterDetail, modal, toast } from '@/components/ui'
 import { useIsMobileViewport } from '@/hooks/desktop'
 import {
@@ -16,7 +18,6 @@ import {
 import { ImagePreviewCarousel, type SlideDirection } from './ImagePreviewCarousel'
 import { ImageSidebar } from './ImageSidebar'
 import type { ImageItem } from './types'
-import { cn } from '@/lib/cn'
 import { useImageViewerStore } from '@/features/image-viewer/store'
 
 const SLIDE_LOCK_MS = 280
@@ -373,7 +374,7 @@ export function ImageViewerApp() {
         defaultSize={220}
         minSize={160}
         maxSize={320}
-        storageKey='split:image-viewer'
+        storageKey={STORAGE_KEYS.splitImageViewer}
         isMobile={isMobile}
         backLabel={tNav('backToList')}
         detailOpen={detailOpen}

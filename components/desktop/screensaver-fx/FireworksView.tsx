@@ -11,7 +11,9 @@ export type FireworksViewProps = {
 }
 
 /**
- * 原生 Canvas 烟花（Caleb Miller），iframe 嵌入；设置存独立 localStorage。
+ * 原生 Canvas 烟花（Caleb Miller），iframe 嵌入。
+ * 偏好 key 已登记为 STORAGE_KEYS.fireworks（`avery_fireworks_v1`）；
+ * iframe 为独立 HTML，无法 import TS，故仍在页内直读 localStorage。
  */
 export function FireworksView({ preview = false, className }: FireworksViewProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null)

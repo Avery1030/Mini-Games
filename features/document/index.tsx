@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
+import { STORAGE_KEYS } from '@/lib/storage'
 import { MasterDetail, Panel } from '@/components/ui'
 import { useIsMobileViewport } from '@/hooks/desktop'
 import { CHANGELOG_DATES, formatChangelogDate } from '@/content/changelog'
@@ -38,7 +39,7 @@ export function DocumentApp() {
           defaultSize={128}
           minSize={96}
           maxSize={240}
-          storageKey='split:document'
+          storageKey={STORAGE_KEYS.splitDocument}
           isMobile={isMobile}
           backLabel={tNav('backToList')}
           detailOpen={detailOpen}

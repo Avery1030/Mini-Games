@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
+import { STORAGE_KEYS } from '@/lib/storage'
 import { MasterDetail, Panel } from '@/components/ui'
 import { useIsMobileViewport } from '@/hooks/desktop'
 import { CHANGELOG_DATES, formatChangelogDate, type ChangelogDateId } from '@/content/changelog'
@@ -31,7 +32,7 @@ export function LogApp() {
           defaultSize={148}
           minSize={110}
           maxSize={280}
-          storageKey='split:log'
+          storageKey={STORAGE_KEYS.splitLog}
           isMobile={isMobile}
           backLabel={tNav('backToList')}
           detailOpen={detailOpen}

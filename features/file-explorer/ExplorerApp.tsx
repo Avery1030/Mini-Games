@@ -14,6 +14,7 @@ import { formatBytes, formatShortDateTime } from '@/lib/format'
 import { VFS_DRAG_MIME, VFS_PATHS, isVfsError, parseVfsDragPaths, type VfsItem } from '@/lib/vfs'
 import { openVfsFile } from '@/lib/desktop/openVfsFile'
 import { getExplorerWindow } from '@/lib/desktop/window/explorerWindows'
+import { STORAGE_KEYS } from '@/lib/storage'
 import { useVfsStore } from '@/store/vfsStore'
 import { ExplorerAddressBar } from './ExplorerAddressBar'
 import { ExplorerToolbar } from './ExplorerToolbar'
@@ -384,7 +385,7 @@ export function FileExplorerApp({ windowId, initialPath = '/' }: Props) {
         defaultSize={148}
         minSize={96}
         maxSize={360}
-        storageKey='split:file-explorer'
+        storageKey={STORAGE_KEYS.splitFileExplorer}
         handleLabel={t('resizeTree')}
       >
         <ExplorerTree cwd={cwd} items={items} onNavigate={go} />

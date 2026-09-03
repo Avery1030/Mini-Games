@@ -1,5 +1,5 @@
-import { isClient, isServer } from '@/lib/env'
-import { STORAGE_KEYS, isStorageKey, type StorageKey } from './keys'
+import { isClient } from '@/lib/env'
+import { STORAGE_KEYS, type StorageKey } from './keys'
 import type { JsonStorageKey, StorageSchema, ThemeStorageValue } from './schema'
 
 export type { StorageKey, JsonStorageKey, StorageSchema, ThemeStorageValue }
@@ -18,38 +18,62 @@ function canUseStorage(): boolean {
   return isClient && typeof localStorage !== 'undefined'
 }
 
+function readBrowser(key: string): Nullable<string> {
+  if (!canUseStorage()) return null
+  try {
+    return localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function writeBrowser(key: string, value: string): void {
+  if (!canUseStorage()) return
+  try {
+    localStorage.setItem(key, value)
+  } catch {
+    // quota / private mode
+  }
+}
+
+function removeBrowser(key: string): void {
+  if (!canUseStorage()) return
+  try {
+    localStorage.removeItem(key)
+  } catch {
+    // ignore
+  }
+}
+
 /**
- * 类型化 localStorage：
- * - getRaw / setRaw：字符串（zustand / next-themes）
- * - getJson / setJson：按 StorageSchema 解析
- * - createStateStorage：给 zustand persist 用
+ * 项目内唯一允许直接调用 `localStorage` 的实现。
+ * 业务代码请用 `appStorage`；key 必须先登记到 `STORAGE_KEYS`。
+ * 例外：主题 FOUC 内联脚本、烟花 iframe（无法 import 本模块）。
  */
 export const appStorage = {
+  /** 未登记 key 也走同一读写通道（唯一接触 localStorage 的实现） */
+  getLoose(key: string): Nullable<string> {
+    return readBrowser(key)
+  },
+
+  setLoose(key: string, value: string): void {
+    writeBrowser(key, value)
+  },
+
+  removeLoose(key: string): void {
+    removeBrowser(key)
+  },
+
   getRaw(key: StorageKey): Nullable<string> {
-    if (!canUseStorage()) return null
-    try {
-      return localStorage.getItem(key)
-    } catch {
-      return null
-    }
+    return appStorage.getLoose(key)
   },
 
   setRaw(key: StorageKey, value: string): void {
-    if (!canUseStorage()) return
-    try {
-      localStorage.setItem(key, value)
-    } catch {
-      // quota / private mode
-    }
+    appStorage.setLoose(key, value)
   },
 
   remove(key: StorageKey): void {
-    if (!canUseStorage()) return
-    try {
-      localStorage.removeItem(key)
-    } catch {
-      // ignore
-    }
+    appStorage.removeLoose(key)
   },
 
   has(key: StorageKey): boolean {
@@ -86,7 +110,6 @@ export const appStorage = {
 
   /**
    * Zustand `createJSONStorage(() => …)` 用的适配器。
-   * `name` 必须是已登记的 StorageKey。
    */
   createStateStorage(options?: {
     /** 每次读写前钩子 */
@@ -101,41 +124,15 @@ export const appStorage = {
     return {
       getItem: async (name) => {
         if (before) await before()
-        if (!isStorageKey(name)) {
-          if (isServer) return null
-          try {
-            return localStorage.getItem(name)
-          } catch {
-            return null
-          }
-        }
-        return appStorage.getRaw(name)
+        return appStorage.getLoose(name)
       },
       setItem: async (name, value) => {
         if (before) await before()
-        if (!isStorageKey(name)) {
-          if (isServer) return
-          try {
-            localStorage.setItem(name, value)
-          } catch {
-            // ignore
-          }
-          return
-        }
-        appStorage.setRaw(name, value)
+        appStorage.setLoose(name, value)
       },
       removeItem: async (name) => {
         if (before) await before()
-        if (!isStorageKey(name)) {
-          if (isServer) return
-          try {
-            localStorage.removeItem(name)
-          } catch {
-            // ignore
-          }
-          return
-        }
-        appStorage.remove(name)
+        appStorage.removeLoose(name)
       },
     }
   },

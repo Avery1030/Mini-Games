@@ -4,6 +4,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
+import { STORAGE_KEYS } from '@/lib/storage'
+import { getExtension, vfs } from '@/lib/vfs'
+import { preventVfsFileDrag, vfsPathsFromDrag } from '@/lib/desktop/vfsDrop'
 import { MasterDetail, modal, toast } from '@/components/ui'
 import { useIsMobileViewport } from '@/hooks/desktop'
 import { useNotepadStore } from '@/features/notepad/store'
@@ -12,8 +15,6 @@ import { NoteEditor } from './NoteEditor'
 import { NoteSidebar } from './NoteSidebar'
 import type { NoteMeta } from './types'
 import { subscribeOpenNote, takePendingOpenNote } from './pendingOpen'
-import { getExtension, vfs } from '@/lib/vfs'
-import { preventVfsFileDrag, vfsPathsFromDrag } from '@/lib/desktop/vfsDrop'
 
 export function NotepadApp() {
   const t = useTranslations('notepad')
@@ -233,7 +234,7 @@ export function NotepadApp() {
           defaultSize={168}
           minSize={120}
           maxSize={320}
-          storageKey='split:notepad'
+          storageKey={STORAGE_KEYS.splitNotepad}
           isMobile={isMobile}
           backLabel={tNav('backToList')}
           detailOpen={detailOpen}

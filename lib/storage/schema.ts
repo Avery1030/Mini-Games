@@ -154,7 +154,8 @@ export type OfficePersistState = {
 
 /**
  * 每个 key 对应的「语义值」类型。
- * - theme / suikaBest / ideFormatOnSave：纯字符串
+ * - theme / suikaBest / ideFormatOnSave / split*：纯字符串
+ * - fireworks：JSON 对象
  * - 其余：JSON（zustand 为 envelope；boot 为对象本身）
  */
 export type StorageSchema = {
@@ -205,10 +206,31 @@ export type StorageSchema = {
   [STORAGE_KEYS.suikaBest]: string
   /** `'1'` | `'0'`，缺省视为开启 */
   [STORAGE_KEYS.ideFormatOnSave]: '0' | '1'
+  /** 分栏宽度（像素字符串） */
+  [STORAGE_KEYS.splitNotepad]: string
+  [STORAGE_KEYS.splitPaint]: string
+  [STORAGE_KEYS.splitDocument]: string
+  [STORAGE_KEYS.splitLog]: string
+  [STORAGE_KEYS.splitSettings]: string
+  [STORAGE_KEYS.splitAiChat]: string
+  [STORAGE_KEYS.splitImageViewer]: string
+  [STORAGE_KEYS.splitFileExplorer]: string
+  /** 烟花屏保 iframe 偏好 JSON */
+  [STORAGE_KEYS.fireworks]: unknown
 }
 
 /** 以 JSON 读写的 key（不含纯字符串 key） */
 export type JsonStorageKey = Exclude<
   StorageKey,
-  typeof STORAGE_KEYS.theme | typeof STORAGE_KEYS.suikaBest | typeof STORAGE_KEYS.ideFormatOnSave
+  | typeof STORAGE_KEYS.theme
+  | typeof STORAGE_KEYS.suikaBest
+  | typeof STORAGE_KEYS.ideFormatOnSave
+  | typeof STORAGE_KEYS.splitNotepad
+  | typeof STORAGE_KEYS.splitPaint
+  | typeof STORAGE_KEYS.splitDocument
+  | typeof STORAGE_KEYS.splitLog
+  | typeof STORAGE_KEYS.splitSettings
+  | typeof STORAGE_KEYS.splitAiChat
+  | typeof STORAGE_KEYS.splitImageViewer
+  | typeof STORAGE_KEYS.splitFileExplorer
 >

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
+import { STORAGE_KEYS } from '@/lib/storage'
 import { Button, Input, MasterDetail, Panel, modal } from '@/components/ui'
 import { useIsMobileViewport } from '@/hooks/desktop'
 import { usePaintStore } from '@/features/paint/store'
@@ -260,7 +261,7 @@ export function PaintApp() {
           defaultSize={156}
           minSize={120}
           maxSize={300}
-          storageKey='split:paint'
+          storageKey={STORAGE_KEYS.splitPaint}
           isMobile={isMobile}
           backLabel={tNav('backToList')}
           detailOpen={detailOpen}

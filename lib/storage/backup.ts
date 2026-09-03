@@ -1,4 +1,4 @@
-import { STORAGE_KEYS, STORAGE_KEY_LIST, isStorageKey, type StorageKey } from './keys'
+import { STORAGE_KEYS, STORAGE_KEY_LIST, isSplitStorageKey, isStorageKey, type StorageKey } from './keys'
 import { appStorage } from './local'
 
 /** 备份文件标识，用于校验导入内容 */
@@ -30,7 +30,12 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 function isRawStringKey(key: StorageKey): boolean {
-  return key === STORAGE_KEYS.theme || key === STORAGE_KEYS.suikaBest || key === STORAGE_KEYS.ideFormatOnSave
+  return (
+    key === STORAGE_KEYS.theme ||
+    key === STORAGE_KEYS.suikaBest ||
+    key === STORAGE_KEYS.ideFormatOnSave ||
+    isSplitStorageKey(key)
+  )
 }
 
 function serializeEntry(key: StorageKey, value: unknown): string {

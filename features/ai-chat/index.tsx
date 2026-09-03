@@ -4,6 +4,7 @@ import { memo, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { embeddedAppShell } from '@/lib/embeddedAppShell'
+import { STORAGE_KEYS } from '@/lib/storage'
 import { MasterDetail } from '@/components/ui'
 import { useIsMobileViewport } from '@/hooks/desktop'
 import { ChatComposer } from './ChatComposer'
@@ -58,7 +59,7 @@ export const AiChatApp = memo(function AiChatApp() {
           defaultSize={140}
           minSize={110}
           maxSize={220}
-          storageKey='split:ai-chat'
+          storageKey={STORAGE_KEYS.splitAiChat}
           isMobile={isMobile}
           backLabel={tm('backToList')}
           detailOpen={detailOpen}
