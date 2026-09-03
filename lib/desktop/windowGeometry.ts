@@ -76,7 +76,7 @@ export function createWindowSeed(opts: {
     return {
       position: { x: normal.x, y: normal.y },
       size: { width: normal.width, height: normal.height },
-      maximized: defaultMaximized,
+      maximized: rememberedBounds.maximized === true,
     }
   }
   const pos =

@@ -19,7 +19,7 @@ export interface WindowsWindowProps {
   minimized?: boolean
   /** 无记忆时：首次是否最大化 */
   defaultMaximized?: boolean
-  /** 有记忆时优先恢复位置与尺寸；是否最大化由 defaultMaximized 决定 */
+  /** 有记忆时恢复位置、尺寸与最大化状态 */
   rememberedBounds?: Nullable<WindowBounds>
   children?: React.ReactNode
   defaultPosition?: { x: number; y: number }
