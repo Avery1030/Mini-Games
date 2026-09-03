@@ -4,15 +4,23 @@ export const OFFICE_HTML_MAX = 400_000
 export const OFFICE_CELL_MAX = 4_000
 export const SHEET_COLS = 10
 export const SHEET_ROWS = 24
+export const SHEET_MAX_COLS = 26
+export const SHEET_MAX_ROWS = 100
 
 export const WriterBodySchema = z.object({
   html: z.string().max(OFFICE_HTML_MAX),
 })
 
 export const SheetBodySchema = z.object({
-  cols: z.number().int().min(1).max(26),
-  rows: z.number().int().min(1).max(100),
+  cols: z.number().int().min(1).max(SHEET_MAX_COLS),
+  rows: z.number().int().min(1).max(SHEET_MAX_ROWS),
   cells: z.record(z.string(), z.string().max(OFFICE_CELL_MAX)),
+  /** 列宽（px），缺省按默认列宽 */
+  colWidths: z.array(z.number()).max(SHEET_MAX_COLS).optional(),
+  /** 行高（px），缺省按默认行高 */
+  rowHeights: z.array(z.number()).max(SHEET_MAX_ROWS).optional(),
+  rowHeadWidth: z.number().optional(),
+  colHeadHeight: z.number().optional(),
 })
 
 export const OfficeFileSchema = z.object({
