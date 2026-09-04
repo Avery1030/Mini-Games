@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type 
 import { createPortal } from 'react-dom'
 import { ChevronRight } from 'lucide-react'
 import { cn } from './cn'
-import { winChrome } from './theme'
+import { winChromePanel } from './theme'
 
 export type ContextMenuItem = {
   id: string
@@ -86,7 +86,7 @@ function MenuList({
     <ul
       ref={listRef}
       role='menu'
-      className={cn(winChrome, 'min-w-[140px] p-0.5 shadow-[2px_2px_0_rgba(0,0,0,0.35)] font-pixel', className)}
+      className={cn(winChromePanel, 'min-w-[140px] p-0.5 shadow-[1px_1px_0_rgba(0,0,0,0.35)] font-pixel', className)}
       style={style}
       onContextMenu={(e) => e.preventDefault()}
     >

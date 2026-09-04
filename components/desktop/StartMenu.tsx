@@ -226,7 +226,7 @@ export function StartMenu({ open, onClose, onOpenApp }: StartMenuProps) {
               className={cn(
                 winChrome,
                 'absolute left-full z-[1] min-w-[180px] overflow-y-auto overflow-x-hidden py-1',
-                'shadow-[2px_2px_0_rgba(0,0,0,0.35)]',
+                'shadow-[1px_1px_0_rgba(0,0,0,0.35)]',
               )}
               style={{
                 top: submenuOffsetTop,

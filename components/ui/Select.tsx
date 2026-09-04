@@ -210,7 +210,7 @@ export function Select({
           className={cn(
             winChromePanel,
             'absolute z-[1300] left-0 min-w-full w-max max-w-60 max-h-48 overflow-y-auto p-0.5',
-            'shadow-[2px_2px_0_rgba(0,0,0,0.35)]',
+            'shadow-[1px_1px_0_rgba(0,0,0,0.35)]',
             placement === 'bottom' ? 'top-full mt-0.5' : 'bottom-full mb-0.5',
             menuClassName,
           )}
