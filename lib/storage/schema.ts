@@ -33,6 +33,9 @@ export type SettingsPersistState = {
   /** `0` = 永不自动启动 */
   screensaverIdleMinutes: 0 | 1 | 5 | 10 | 15 | 30
   screensaverStyle: 'fireworks'
+  uiStyle: 'classic' | 'luna' | 'aqua' | 'flat'
+  uiPalette: 'follow' | 'luna' | 'olive' | 'candy' | 'midnight' | 'custom'
+  customUiTheme: Nullable<{ chrome: string; title: string; accent: string; field: string }>
 }
 
 export type WindowsPersistState = {

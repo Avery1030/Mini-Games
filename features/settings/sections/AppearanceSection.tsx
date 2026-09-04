@@ -3,9 +3,20 @@
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Checkbox, Panel, Select } from '@/components/ui'
+import { Button, Checkbox, Panel, Select } from '@/components/ui'
 import { UI_SCALE_OPTIONS, uiScalePercent, type UiScale } from '@/lib/uiScale'
+import { resolveThemeSwatch } from '@/lib/uiTheme'
 import { useAppearanceSettings } from '@/features/settings/hooks'
+import { ThemeStylePicker } from '@/features/settings/ThemeStylePicker'
+import {
+  DEFAULT_CUSTOM_THEME,
+  DEFAULT_UI_PALETTE,
+  DEFAULT_UI_STYLE,
+  UI_PALETTE_OPTIONS,
+  type CustomUiTheme,
+  type UiPaletteId,
+  type UiStyleId,
+} from '@/config/uiThemes'
 import {
   SCREENSAVER_IDLE_OPTIONS,
   patchSettings,
@@ -21,12 +32,24 @@ export function AppearanceSection() {
     openWindowsMaximized,
     screensaverEnabled,
     screensaverIdleMinutes,
+    uiStyle,
+    uiPalette,
+    customUiTheme,
   } = useAppearanceSettings()
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [themeMounted, setThemeMounted] = useState(false)
   useEffect(() => setThemeMounted(true), [])
   const themeValue = themeMounted ? (theme ?? 'light') : 'light'
   const scalePercent = uiScalePercent(uiScale)
+
+  const paletteLabelKey = {
+    follow: 'uiPaletteFollow',
+    luna: 'uiPaletteLuna',
+    olive: 'uiPaletteOlive',
+    candy: 'uiPaletteCandy',
+    midnight: 'uiPaletteMidnight',
+    custom: 'uiPaletteCustom',
+  } as const satisfies Record<UiPaletteId, string>
 
   const scaleLabelKey = {
     xs: 'uiScaleXs',
@@ -44,6 +67,82 @@ export function AppearanceSection() {
       <p className='text-xs text-muted'>{t('appearanceHint')}</p>
 
       <Panel inset className='space-y-3'>
+        <div>
+          <div className='text-xs font-bold mb-1.5'>{t('uiStyle')}</div>
+          <ThemeStylePicker
+            value={uiStyle}
+            onChange={(id: UiStyleId) => patchSettings({ uiStyle: id })}
+          />
+          <p className='mt-1 text-[10px] text-muted'>{t('uiStyleHint')}</p>
+        </div>
+
+        <div>
+          <div className='text-xs font-bold mb-1.5'>{t('uiPalette')}</div>
+          <Select
+            size='sm'
+            className='min-w-[180px] max-md:min-w-0 max-md:w-full'
+            value={uiPalette}
+            onValueChange={(v) => patchSettings({ uiPalette: v as UiPaletteId })}
+            options={UI_PALETTE_OPTIONS.map((value) => ({
+              value,
+              label: t(paletteLabelKey[value]),
+            }))}
+          />
+          <p className='mt-1 text-[10px] text-muted'>{t('uiPaletteHint')}</p>
+        </div>
+
+        <div>
+          <div className='text-xs font-bold mb-1.5'>{t('customColors')}</div>
+          <div className='grid grid-cols-2 gap-2'>
+            {(
+              [
+                ['chrome', 'customChrome'],
+                ['title', 'customTitle'],
+                ['accent', 'customAccent'],
+                ['field', 'customField'],
+              ] as const
+            ).map(([key, labelKey]) => (
+              <label key={key} className='flex items-center gap-2 text-[11px]'>
+                <input
+                  type='color'
+                  className='h-6 w-8 shrink-0 cursor-pointer bg-transparent p-0 border border-chrome-dark'
+                  value={resolveThemeSwatch(uiPalette, customUiTheme)[key]}
+                  onChange={(e) => {
+                    const next: CustomUiTheme = {
+                      ...(customUiTheme ?? DEFAULT_CUSTOM_THEME),
+                      ...resolveThemeSwatch(uiPalette, customUiTheme),
+                      [key]: e.target.value,
+                    }
+                    patchSettings({ uiPalette: 'custom', customUiTheme: next })
+                  }}
+                />
+                <span>{t(labelKey)}</span>
+              </label>
+            ))}
+          </div>
+          <p className='mt-1 text-[10px] text-muted'>{t('customColorsHint')}</p>
+          <Button
+            size='sm'
+            className='mt-2'
+            disabled={
+              uiStyle === DEFAULT_UI_STYLE &&
+              uiPalette === DEFAULT_UI_PALETTE &&
+              customUiTheme == null &&
+              themeValue === 'light'
+            }
+            onClick={() => {
+              patchSettings({
+                uiStyle: DEFAULT_UI_STYLE,
+                uiPalette: DEFAULT_UI_PALETTE,
+                customUiTheme: null,
+              })
+              setTheme('light')
+            }}
+          >
+            {t('resetTheme')}
+          </Button>
+        </div>
+
         <div>
           <div className='text-xs font-bold mb-1.5'>{t('uiScale')}</div>
           <Select
@@ -78,7 +177,8 @@ export function AppearanceSection() {
                   ? t('themeResolvedDark')
                   : t('themeResolvedLight')
                 : '…',
-            })}
+            })}{' '}
+            {t('themeFollowHint')}
           </p>
         </div>
 

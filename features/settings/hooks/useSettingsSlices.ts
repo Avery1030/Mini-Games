@@ -11,6 +11,9 @@ export function useAppearanceSettings() {
       openWindowsMaximized: s.openWindowsMaximized,
       screensaverEnabled: s.screensaverEnabled,
       screensaverIdleMinutes: s.screensaverIdleMinutes,
+      uiStyle: s.uiStyle,
+      uiPalette: s.uiPalette,
+      customUiTheme: s.customUiTheme,
     })),
   )
 }

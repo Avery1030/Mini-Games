@@ -34,14 +34,20 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
                 const key = ${JSON.stringify(THEME_STORAGE_KEY)};
+                const settingsKey = ${JSON.stringify(STORAGE_KEYS.settings)};
                 let theme;
                 try {
-                  // 水合前内联脚本：唯一允许在 appStorage 之外读 localStorage 的例外
                   theme = localStorage.getItem(key);
                 } catch {}
-                // 仅 light / dark；历史 system 或空值一律按 light
                 const isDark = theme === 'dark';
                 document.documentElement.classList.toggle('dark', isDark);
+                try {
+                  const raw = localStorage.getItem(settingsKey);
+                  const style = raw && JSON.parse(raw).state && JSON.parse(raw).state.uiStyle;
+                  if (style === 'luna' || style === 'aqua' || style === 'flat') {
+                    document.documentElement.setAttribute('data-ui-style', style);
+                  }
+                } catch {}
               `,
           }}
         />

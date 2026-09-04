@@ -1,17 +1,13 @@
-/** Win95 立体控件常用 Tailwind 组合，避免在 JSX 里重复长串 border 类 */
+/** 语义铬：具体圆角/立体边由 globals.css 的 [data-ui-style] 决定 */
 
 /** 凸起按钮 */
-export const winChrome =
-  'bg-chrome text-on-chrome border-2 border-t-chrome-light border-l-chrome-light border-r-chrome-dark border-b-chrome-dark hover:bg-chrome-hover active:bg-chrome-active active:border-t-chrome-dark active:border-l-chrome-dark active:border-r-chrome-light active:border-b-chrome-light'
+export const winChrome = 'ui-raised bg-chrome text-on-chrome hover:bg-chrome-hover active:bg-chrome-active'
 
 /** 凸起面板（无 hover/active，适合下拉菜单等容器） */
-export const winChromePanel =
-  'bg-chrome text-on-chrome border-2 border-t-chrome-light border-l-chrome-light border-r-chrome-dark border-b-chrome-dark'
+export const winChromePanel = 'ui-raised bg-chrome text-on-chrome'
 
 /** 按下 / 激活态 */
-export const winChromePressed =
-  'bg-chrome-active text-on-chrome border-2 border-t-chrome-dark border-l-chrome-dark border-r-chrome-light border-b-chrome-light'
+export const winChromePressed = 'ui-pressed bg-chrome-active text-on-chrome'
 
 /** 凹陷输入框 */
-export const winChromeSunken =
-  'bg-chrome text-on-chrome border-2 border-t-chrome-dark border-l-chrome-dark border-r-chrome-light border-b-chrome-light'
+export const winChromeSunken = 'ui-sunken bg-chrome text-on-chrome'

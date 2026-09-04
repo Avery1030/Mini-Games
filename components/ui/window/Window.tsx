@@ -51,10 +51,8 @@ export function Window({
       data-window-id={id}
       data-window-snap={snapAttr ? '1' : undefined}
       className={cn(
-        'fixed flex flex-col bg-window text-on-chrome font-pixel',
-        maximized
-          ? 'border-0 rounded-none'
-          : 'border-2 border-t-chrome-light border-l-chrome-light border-r-chrome-dark border-b-chrome-dark',
+        'fixed flex flex-col bg-window text-on-chrome font-pixel ui-window',
+        maximized && 'ui-window-max',
         className,
       )}
       style={{ ...style, zIndex }}
@@ -77,14 +75,14 @@ export function Window({
       <div className='flex flex-col h-full min-h-0 relative'>
         <div
           className={cn(
-            'flex items-center justify-between shrink-0 h-8 px-1 pr-1 select-none font-pixel',
+            'ui-titlebar flex items-center justify-between shrink-0 h-8 px-1 pr-1 select-none font-pixel',
             maximized ? 'cursor-default' : 'cursor-grab active:cursor-grabbing',
           )}
+          data-inactive={isActive ? undefined : ''}
           onMouseDown={(e: MouseEvent<HTMLDivElement>) => {
             onFocus?.()
             onTitleMouseDown?.(e)
           }}
-          style={{ background: isActive ? 'var(--window-title-active)' : 'var(--window-title-inactive)' }}
         >
           <span className='text-[var(--window-title-text)] text-sm font-bold pl-2 truncate'>{title}</span>
           <div className='flex items-stretch shrink-0'>
@@ -133,9 +131,7 @@ export function Window({
         <div
           className={cn(
             'relative flex-1 min-h-0 bg-window-body font-pixel',
-            maximized
-              ? 'border-0'
-              : 'border-2 border-t-chrome-dark border-l-chrome-dark border-r-chrome-light border-b-chrome-light',
+            maximized ? 'border-0' : 'ui-sunken',
           )}
         >
           <div className='absolute inset-0 overflow-hidden'>{children}</div>

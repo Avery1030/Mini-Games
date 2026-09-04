@@ -58,12 +58,14 @@ export function ModalFrame({
         aria-labelledby={title != null ? titleId : undefined}
         className={cn(
           winChromePanel,
-          'relative flex flex-col shadow-[4px_4px_0_rgba(0,0,0,0.35)] font-pixel',
+          'relative flex flex-col font-pixel shadow-[var(--window-shadow)]',
           'box-border min-w-0 max-w-full shrink-0',
           widthClassName,
         )}
       >
-        <div className='flex items-center gap-2 h-7 px-1 bg-[var(--window-title-active)] text-[var(--window-title-text)] select-none'>
+        <div
+          className='ui-titlebar flex items-center gap-2 h-7 px-1 text-[var(--window-title-text)] select-none'
+        >
           <div id={titleId} className='flex-1 min-w-0 px-1 text-[12px] font-bold truncate'>
             {title}
           </div>

@@ -19,9 +19,22 @@ import {
   normalizeScreensaverStyleId,
   type ScreensaverStyleId,
 } from '@/config/screensavers'
+import {
+  DEFAULT_UI_PALETTE,
+  DEFAULT_UI_STYLE,
+  isUiPaletteId,
+  isUiStyleId,
+  normalizeCustomUiTheme,
+  normalizeUiPaletteId,
+  normalizeUiStyleId,
+  type CustomUiTheme,
+  type UiPaletteId,
+  type UiStyleId,
+} from '@/config/uiThemes'
 import { STORAGE_KEYS, appStorage } from '@/lib/storage'
 
 export type { ScreensaverStyleId } from '@/config/screensavers'
+export type { CustomUiTheme, UiPaletteId, UiStyleId } from '@/config/uiThemes'
 export {
   SCREENSAVER_STYLE_OPTIONS,
   DEFAULT_SCREENSAVER_STYLE,
@@ -85,6 +98,9 @@ interface SettingsState {
   screensaverEnabled: boolean
   screensaverIdleMinutes: ScreensaverIdleMinutes
   screensaverStyle: ScreensaverStyleId
+  uiStyle: UiStyleId
+  uiPalette: UiPaletteId
+  customUiTheme: Nullable<CustomUiTheme>
   _hasHydrated: boolean
 }
 
@@ -115,6 +131,9 @@ export type SettingsPatch = Partial<
     | 'screensaverEnabled'
     | 'screensaverIdleMinutes'
     | 'screensaverStyle'
+    | 'uiStyle'
+    | 'uiPalette'
+    | 'customUiTheme'
   >
 >
 
@@ -134,6 +153,15 @@ function sanitizeSettingsPatch(partial: SettingsPatch): SettingsPatch {
   }
   if (next.screensaverStyle != null && !isScreensaverStyleId(next.screensaverStyle)) {
     delete next.screensaverStyle
+  }
+  if (next.uiStyle != null && !isUiStyleId(next.uiStyle)) {
+    delete next.uiStyle
+  }
+  if (next.uiPalette != null && !isUiPaletteId(next.uiPalette)) {
+    delete next.uiPalette
+  }
+  if (next.customUiTheme !== undefined) {
+    next.customUiTheme = next.customUiTheme ? normalizeCustomUiTheme(next.customUiTheme) : null
   }
   return next
 }
@@ -182,6 +210,9 @@ export const useSettingsStore = create<SettingsStore>()(
       screensaverEnabled: false,
       screensaverIdleMinutes: 5,
       screensaverStyle: DEFAULT_SCREENSAVER_STYLE,
+      uiStyle: DEFAULT_UI_STYLE,
+      uiPalette: DEFAULT_UI_PALETTE,
+      customUiTheme: null,
       _hasHydrated: false,
 
       setHasHydrated: (value) => set({ _hasHydrated: value }),
@@ -264,7 +295,7 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: STORAGE_KEYS.settings,
-      version: 21,
+      version: 22,
       storage: createJSONStorage(() => settingsStorage),
       partialize: (state) => ({
         wallpaperId: state.wallpaperId,
@@ -282,6 +313,9 @@ export const useSettingsStore = create<SettingsStore>()(
         screensaverEnabled: state.screensaverEnabled,
         screensaverIdleMinutes: state.screensaverIdleMinutes,
         screensaverStyle: state.screensaverStyle,
+        uiStyle: state.uiStyle,
+        uiPalette: state.uiPalette,
+        customUiTheme: state.customUiTheme,
       }),
       migrate: (persisted, fromVersion) => {
         const raw = (persisted ?? {}) as Record<string, unknown>
@@ -304,6 +338,9 @@ export const useSettingsStore = create<SettingsStore>()(
           screensaverEnabled: raw.screensaverEnabled === true,
           screensaverIdleMinutes,
           screensaverStyle: normalizeScreensaverStyleId(raw.screensaverStyle),
+          uiStyle: normalizeUiStyleId(raw.uiStyle),
+          uiPalette: normalizeUiPaletteId(raw.uiPalette),
+          customUiTheme: normalizeCustomUiTheme(raw.customUiTheme),
         }
       },
       merge: (persisted, current) => {
@@ -329,6 +366,9 @@ export const useSettingsStore = create<SettingsStore>()(
           screensaverEnabled: saved.screensaverEnabled === true,
           screensaverIdleMinutes,
           screensaverStyle: normalizeScreensaverStyleId(saved.screensaverStyle),
+          uiStyle: normalizeUiStyleId(saved.uiStyle),
+          uiPalette: normalizeUiPaletteId(saved.uiPalette),
+          customUiTheme: normalizeCustomUiTheme(saved.customUiTheme),
         }
       },
       onRehydrateStorage: () => (state) => {

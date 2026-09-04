@@ -175,8 +175,8 @@ export function DisplaySection({
           <p className='text-xs text-muted'>{t('displayHint')}</p>
         </div>
 
-        <Panel inset className='flex flex-col overflow-hidden'>
-          <div className='flex shrink-0 items-center justify-between gap-2 mb-2'>
+        <Panel inset className='flex flex-col'>
+          <div className='flex items-center justify-between gap-2 mb-2'>
             <div className='text-xs font-bold'>{t('myImages')}</div>
             <Button size='sm' loading={uploading} disabled={uploading} onClick={() => imageInputRef.current?.click()}>
               {!uploading && <FolderOpen size={12} />}
@@ -194,7 +194,7 @@ export function DisplaySection({
           {loadingList ? (
             <p className='text-[11px] text-muted mb-2'>{t('loadingWallpapers')}</p>
           ) : images.length > 0 ? (
-            <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 content-start pr-1 mb-2 max-h-48 overflow-y-auto'>
+            <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 content-start mb-2'>
               {images.map((item) => (
                 <ImageTile
                   key={item.path}
@@ -212,7 +212,7 @@ export function DisplaySection({
             <p className='text-[11px] text-muted mb-2'>{t('noImages')}</p>
           )}
 
-          <div className='flex shrink-0 gap-1 items-center'>
+          <div className='flex gap-1 items-center'>
             <Input
               value={importUrl}
               onChange={(e) => onImportUrlChange(e.target.value)}
@@ -254,8 +254,8 @@ export function DisplaySection({
           </div>
         </Panel>
 
-        <Panel inset className='flex flex-col overflow-hidden'>
-          <div className='flex shrink-0 flex-wrap items-center justify-between gap-2 mb-2'>
+        <Panel inset className='flex flex-col'>
+          <div className='flex flex-wrap items-center justify-between gap-2 mb-2'>
             <div className='text-xs font-bold'>{t('models3d')}</div>
             <Button size='sm' loading={uploading} disabled={uploading} onClick={() => modelInputRef.current?.click()}>
               {!uploading && <Box size={12} />}
@@ -270,7 +270,7 @@ export function DisplaySection({
             />
           </div>
           {models.length > 0 ? (
-            <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 content-start pr-1 max-h-40 overflow-y-auto'>
+            <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 content-start'>
               {models.map((item) => (
                 <ModelTile
                   key={item.path}
@@ -289,9 +289,9 @@ export function DisplaySection({
           )}
         </Panel>
 
-        <Panel inset className='flex flex-col overflow-hidden'>
-          <div className='text-xs font-bold mb-2 shrink-0'>{t('presets')}</div>
-          <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 content-start pr-1 max-h-48 overflow-y-auto'>
+        <Panel inset className='flex flex-col'>
+          <div className='text-xs font-bold mb-2'>{t('presets')}</div>
+          <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 content-start'>
             {WALLPAPERS.map((paper) => {
               const selected = draft.kind === 'preset' && draft.id === paper.id
               return (
